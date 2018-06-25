@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <memory>
 #include <cmath>
 #include <tbb/tbb.h>
@@ -90,7 +91,7 @@ void operator delete[](void *ptr, const std::nothrow_t &) throw() {
     operator delete(ptr, std::nothrow);
 }
 
-bool file_exist(const string &name){
+bool file_exist(const string &name) {
     fstream in(name);
     return in.good();
 }
@@ -1408,9 +1409,10 @@ class CoordinateNumPerFrame : public BasicAnalysis {
     double dist_cutoff;
     list<int> cn_list;
 public:
-    CoordinateNumPerFrame(){
+    CoordinateNumPerFrame() {
         enable_outfile = true;
     }
+
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print() override;
@@ -1440,19 +1442,142 @@ void CoordinateNumPerFrame::print() {
     outfile << "******* CN per Frame ******" << endl;
     outfile << "type 1 :" << typ1 << endl;
     outfile << "type 2 :" << typ2 << endl;
+    outfile << "cutoff :" << dist_cutoff << endl;
     outfile << "***************************" << endl;
     int cyc = 1;
     for (auto &cn : cn_list) {
         outfile << cyc << "   " << cn << endl;
+        cyc++;
     }
     outfile << "***************************" << endl;
 }
 
 void CoordinateNumPerFrame::readInfo() {
     typ1 = choose(1, INT32_MAX, "Please enter typ1:");
-    typ1 = choose(1, INT32_MAX, "Please enter typ2:");
+    typ2 = choose(1, INT32_MAX, "Please enter typ2:");
     dist_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
+}
 
+
+class FirstCoordExchangeSearch : public BasicAnalysis {
+    int typ1, typ2;
+    double dist_cutoff,tol_dist, time_cutoff;
+    enum Direction{ IN, OUT};
+    typedef struct {
+        Direction direction;
+        int seq;
+        int exchange_frame;
+    } ExchangeItem;
+
+    list<ExchangeItem> exchange_list;
+
+    int step = 0;
+
+    typedef struct {
+       bool inner;
+    } State;
+    map<int,State> state_machine;
+
+public:
+    FirstCoordExchangeSearch() {
+        enable_outfile = true;
+    }
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print() override;
+
+    void readInfo() override;
+};
+
+void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
+    step++;
+
+    for (auto &atom1 : frame->atom_list) {
+        if (atom1->typ == typ1) {
+            for (auto &atom2 : frame->atom_list) {
+                if (atom2->typ == typ2) {
+                    if (step == 1) {
+                        State state;
+                        state.inner = atom_distance(atom1, atom2, frame) <= this->dist_cutoff;
+                        state_machine[atom2->seq] = state;
+                    }else{
+                        auto &state = state_machine[atom2->seq];
+                        if (state.inner){
+                            if (atom_distance(atom1, atom2, frame) >= this->dist_cutoff + tol_dist) {
+                                state.inner = false;
+                                ExchangeItem item;
+                                item.seq = atom2->seq;
+                                item.direction = OUT;
+                                item.exchange_frame = step;
+                                exchange_list.push_back(item);
+                            }
+                        }else {
+                            if (atom_distance(atom1, atom2, frame) <= this->dist_cutoff - tol_dist) {
+                                state.inner = true;
+                                ExchangeItem item;
+                                item.seq = atom2->seq;
+                                item.direction = IN;
+                                item.exchange_frame = step;
+                                exchange_list.push_back(item);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void FirstCoordExchangeSearch::print() {
+    outfile << "***************************" << endl;
+    outfile << "***** Exchange Search *****" << endl;
+    outfile << "type 1 :" << typ1 << endl;
+    outfile << "type 2 :" << typ2 << endl;
+    outfile << "cutoff :" << dist_cutoff << endl;
+    outfile << "tol dist :" << tol_dist << endl;
+    outfile << "time_cutoff :" << time_cutoff << endl;
+    outfile << "***************************" << endl;
+    outfile << "** seq **  direction ***** exchange frame *****" << endl;
+    for (auto it = exchange_list.begin() ; it !=exchange_list.end();it++) {
+
+        string direc1;
+        switch (it->direction){
+            case IN: direc1 = "IN";break;
+            case OUT:direc1 = "OUT"; break;
+        }
+        int num1 = it->seq;
+        double exchange_time1 = it->exchange_frame;
+        it++;
+        string direc2;
+        switch (it->direction){
+            case IN: direc2 = "IN";break;
+            case OUT:direc2 = "OUT"; break;
+        }
+
+        int num2 = it->seq;
+        double exchange_time2 = it->exchange_frame;
+        if (abs(exchange_time1 - exchange_time2 ) < time_cutoff and num1 == num2 ){
+            if ((direc1 == "IN" and direc2 == "OUT" ) || (direc1 == "OUT" and direc2 == "IN" ))
+                continue;
+        }
+        if (direc1 == "IN") {
+            outfile << num1 << "  IN  " << exchange_time1 << " : "
+                    << num2 << "  OUT " << exchange_time2 << endl;
+        }else{
+            outfile << num2 << "  IN  " << exchange_time2 << " : "
+                    << num1 << "  OUT " << exchange_time1 << endl;
+        }
+    }
+    outfile << "***************************" << endl;
+}
+
+void FirstCoordExchangeSearch::readInfo() {
+    typ1 = choose(1, INT32_MAX, "Please enter typ1:");
+    typ2 = choose(1, INT32_MAX, "Please enter typ2:");
+    dist_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
+    tol_dist = choose(0.0, GMX_DOUBLE_MAX, "Please enter tol dist:");
+    time_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter timecutoff:");
 }
 
 
@@ -2159,8 +2284,10 @@ void RMSFCal::print() {
     for (auto i : this->group) outfile << i << "   ";
     outfile << endl;
     outfile << "***************************" << endl;
-    for (int cyc = 1; cyc <= steps; cyc++) {
-        outfile << cyc << "     " << rmsvalue(cyc) << endl;
+    int index = 0;
+    for (auto at : group) {
+        outfile << at << "     " << rmsvalue(index) << endl;
+        index++;
     }
     outfile << "***************************" << endl;
 }
@@ -2190,19 +2317,17 @@ double RMSFCal::rmsvalue(int index) {
 
     double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
 
-    auto &f2x = x[index];
-    auto &f2y = y[index];
-    auto &f2z = z[index];
-    for (int i = 0; i < n; i++) {
-        x2[i] = f2x[i];
-        y2[i] = f2y[i];
-        z2[i] = f2z[i];
+    double dx2_y2_z2 = 0.0;
+    double dx,dy,dz;
+    for (int frame = 1; frame <= steps ; frame++){
+        dx = x[frame][index] - x_avg[index];
+        dy = y[frame][index] - y_avg[index];
+        dz = z[frame][index] - z_avg[index];
+        dx2_y2_z2 += dx*dx + dy*dy + dz*dz;
 
     }
 
-    // double mid[3];
-    quatfit(n, x_avg, y_avg, z_avg, n, x2, y2, z2, nfit);
-    return rmsfit(x_avg, y_avg, z_avg, x2, y2, z2, nfit);
+    return sqrt(dx2_y2_z2/steps);
 
 }
 
@@ -2630,19 +2755,15 @@ void ResidenceTime::calculate() {
 
     auto atom_star_map = new std::list<pair<unsigned int, unsigned int>>[atom_num];
     for (int atom = 0; atom < atom_num; atom++) {
-        unsigned int count = 0;
         unsigned int count1 = 0;
-        unsigned int count2 = 0;
         bool swi = true;
         for (unsigned int k = 0; k < steps; k++) {
-            count++;
             if ((!mark[atom][k]) && swi) {
                 swi = false;
-                count1 = count;
+                count1 = k;
             } else if (mark[atom][k] && (!swi)) {
-                count2 = count;
                 swi = true;
-                atom_star_map[atom].emplace_back(count1, count2 - 1);
+                atom_star_map[atom].emplace_back(count1, k - 1);
             }
         }
 
@@ -2704,10 +2825,14 @@ void ResidenceTime::calculate() {
                                 unsigned int a = pi.first;
                                 unsigned int b = pi.second;
                                 if (i < a and j < b) continue;
-                                else if (i < a and j > b) {
+                                else if (i < a and b < j) {
                                     if (maxcount < b - a) maxcount = b - a;
-                                    if (maxcount > time_star) break;
-                                } else if (i > a) break;
+                                } else if ( a < i and b < j) continue;
+                                else{
+                                    cerr << fmt::sprintf(" i = %d, j = %d, a = %d, d = %d\n",i,j,a,b);
+                                    cerr << "error " << __FILE__ << " : "<< __LINE__ << endl;
+                                    exit(1);
+                                }
                             }
                             if (maxcount <= time_star) value++;
                         }
@@ -3525,10 +3650,12 @@ public:
     double time_increment_ps = 0.1;
     int total_mol = 0;
     set<int> exclude_atom;
+    bool bSerial = true;
+    bool bTradition = true;
 
     Diffuse() {
         enable_forcefield = true;
-        enable_tbb = true;
+
         enable_outfile = true;
     }
 
@@ -3599,65 +3726,14 @@ void Diffuse::process(std::shared_ptr<Frame> &frame) {
 
 void Diffuse::print() {
 
-    //
-    //    vector<int> ntime(total_frame_number,0);
-    //    vector<double> xmsd(total_frame_number,0.0);
-    //    vector<double> ymsd(total_frame_number,0.0);
-    //    vector<double> zmsd(total_frame_number,0.0);
-    //
-    //    for(int i =0; i < total_frame_number-1; i++){
-    //        for (int j = i+1; j < total_frame_number; j++){
-    //            int m = j - i - 1;
-    //            ntime[m]++;
-    //            for(int k = 0; k < total_mol; k++){
-    //                double xdiff = xcm(j,k) - xcm(i,k);
-    //                double ydiff = ycm(j,k) - ycm(i,k);
-    //                double zdiff = zcm(j,k) - zcm(i,k);
-    //                xmsd[m] += xdiff * xdiff;
-    //                ymsd[m] += ydiff * ydiff;
-    //                zmsd[m] += zdiff * zdiff;
-    //
-    //            }
-    //        }
-    //    }
+    vector<int> ntime(total_frame_number, 0);
+    vector<double> xmsd(total_frame_number, 0.0);
+    vector<double> ymsd(total_frame_number, 0.0);
+    vector<double> zmsd(total_frame_number, 0.0);
 
-    class Body {
-    public:
-        int total_frame_number;
-        vector<int> ntime;
-        vector<double> xmsd;
-        vector<double> ymsd;
-        vector<double> zmsd;
-
-        int total_mol;
-        Eigen::MatrixXd &xcm;
-        Eigen::MatrixXd &ycm;
-        Eigen::MatrixXd &zcm;
-
-        Body(int total_frame_number, int total_mol, Eigen::MatrixXd &xcm, Eigen::MatrixXd &ycm, Eigen::MatrixXd &zcm) :
-                total_frame_number(total_frame_number),
-                ntime(total_frame_number - 1), xmsd(total_frame_number - 1),
-                ymsd(total_frame_number - 1), zmsd(total_frame_number - 1),
-                total_mol(total_mol), xcm(xcm), ycm(ycm), zcm(zcm) {}
-
-        Body(const Body &body, tbb::split) :
-                total_frame_number(body.total_frame_number),
-                ntime(body.total_frame_number - 1), xmsd(body.total_frame_number - 1),
-                ymsd(body.total_frame_number - 1), zmsd(body.total_frame_number - 1),
-                total_mol(body.total_mol), xcm(body.xcm), ycm(body.ycm), zcm(body.zcm) {}
-
-        void join(const Body &body) {
+    if(bSerial) {
+        if (bTradition) {
             for (int i = 0; i < total_frame_number - 1; i++) {
-                ntime[i] += body.ntime[i];
-                xmsd[i] += body.xmsd[i];
-                ymsd[i] += body.ymsd[i];
-                zmsd[i] += body.zmsd[i];
-            }
-
-        }
-
-        void operator()(const tbb::blocked_range<int> &range) {
-            for (int i = range.begin(); i != range.end(); i++) {
                 for (int j = i + 1; j < total_frame_number; j++) {
                     int m = j - i - 1;
                     ntime[m]++;
@@ -3672,16 +3748,90 @@ void Diffuse::print() {
                     }
                 }
             }
+        }else{
+            for (int m = 0 ; m < total_frame_number-1 ; m++){
+                for (int i = 0; i < total_frame_number - 1; i += m+1){
+                    int j = i + m +1;
+                    if (j < total_frame_number){
+                        ntime[m]++;
+                        for (int k = 0; k < total_mol; k++) {
+                            double xdiff = xcm(j, k) - xcm(i, k);
+                            double ydiff = ycm(j, k) - ycm(i, k);
+                            double zdiff = zcm(j, k) - zcm(i, k);
+                            xmsd[m] += xdiff * xdiff;
+                            ymsd[m] += ydiff * ydiff;
+                            zmsd[m] += zdiff * zdiff;
+                        }
+                    }
+                }
+            }
         }
-    } body(total_frame_number, total_mol, xcm, ycm, zcm);
 
-    tbb::parallel_reduce(tbb::blocked_range<int>(0, total_frame_number - 1), body, tbb::auto_partitioner());
+    } else {
+
+        class Body {
+        public:
+            int total_frame_number;
+            vector<int> ntime;
+            vector<double> xmsd;
+            vector<double> ymsd;
+            vector<double> zmsd;
+
+            int total_mol;
+            Eigen::MatrixXd &xcm;
+            Eigen::MatrixXd &ycm;
+            Eigen::MatrixXd &zcm;
+
+            Body(int total_frame_number, int total_mol, Eigen::MatrixXd &xcm, Eigen::MatrixXd &ycm,
+                 Eigen::MatrixXd &zcm) :
+                    total_frame_number(total_frame_number),
+                    ntime(total_frame_number - 1), xmsd(total_frame_number - 1),
+                    ymsd(total_frame_number - 1), zmsd(total_frame_number - 1),
+                    total_mol(total_mol), xcm(xcm), ycm(ycm), zcm(zcm) {}
+
+            Body(const Body &body, tbb::split) :
+                    total_frame_number(body.total_frame_number),
+                    ntime(body.total_frame_number - 1), xmsd(body.total_frame_number - 1),
+                    ymsd(body.total_frame_number - 1), zmsd(body.total_frame_number - 1),
+                    total_mol(body.total_mol), xcm(body.xcm), ycm(body.ycm), zcm(body.zcm) {}
+
+            void join(const Body &body) {
+                for (int i = 0; i < total_frame_number - 1; i++) {
+                    ntime[i] += body.ntime[i];
+                    xmsd[i] += body.xmsd[i];
+                    ymsd[i] += body.ymsd[i];
+                    zmsd[i] += body.zmsd[i];
+                }
+
+            }
+
+            void operator()(const tbb::blocked_range<int> &range) {
+                for (int i = range.begin(); i != range.end(); i++) {
+                    for (int j = i + 1; j < total_frame_number; j++) {
+                        int m = j - i - 1;
+                        ntime[m]++;
+                        for (int k = 0; k < total_mol; k++) {
+                            double xdiff = xcm(j, k) - xcm(i, k);
+                            double ydiff = ycm(j, k) - ycm(i, k);
+                            double zdiff = zcm(j, k) - zcm(i, k);
+                            xmsd[m] += xdiff * xdiff;
+                            ymsd[m] += ydiff * ydiff;
+                            zmsd[m] += zdiff * zdiff;
+
+                        }
+                    }
+                }
+            }
+        } body(total_frame_number, total_mol, xcm, ycm, zcm);
+
+        tbb::parallel_reduce(tbb::blocked_range<int>(0, total_frame_number - 1), body, tbb::auto_partitioner());
 
 
-    vector<int> &ntime = body.ntime;
-    vector<double> &xmsd = body.xmsd;
-    vector<double> &ymsd = body.ymsd;
-    vector<double> &zmsd = body.zmsd;
+        ntime = body.ntime;
+        xmsd = body.xmsd;
+        ymsd = body.ymsd;
+        zmsd = body.zmsd;
+    }
 
     const double dunits = 10.0;
 
@@ -3761,6 +3911,35 @@ void Diffuse::readInfo() {
         }
     }
 
+    while (true) {
+        string input_line = input(" serial ? [T]:");
+        trim(input_line);
+        if (!input_line.empty()) {
+            if (input_line.compare("T") == 0) {
+                bSerial = true;
+                while (true) {
+                    string input_line = input(" trandition ? [T]:");
+                    trim(input_line);
+                    if (!input_line.empty()) {
+                        if (input_line.compare("T") == 0) {
+                            bTradition = true;
+                            break;
+                        } else if (input_line.compare("F") == 0) {
+                            bTradition = false;
+                            break;
+                        }
+                    }
+                }
+                break;
+            } else if (input_line.compare("F") == 0) {
+                bSerial = false;
+                enable_tbb = true;
+                break;
+            }
+        }
+    }
+
+
 
 }
 
@@ -3788,8 +3967,9 @@ auto getTasks() {
         std::cout << "(9) Cluster Analysis(linkage) " << std::endl;
         std::cout << "(10) NMRRange Analysis " << std::endl;
         std::cout << "(11) Diffusion Coefficient by Einstein equation" << std::endl;
-        std::cout << "(12) Start" << std::endl;
-        return choose(0, 12, "select :");
+        std::cout << "(12) Water exchange analysis" << std::endl;
+        std::cout << "(13) Start" << std::endl;
+        return choose(0, 13, "select :");
     };
     while (true) {
         int num = menu1();
@@ -3830,6 +4010,9 @@ auto getTasks() {
                 break;
             case 11:
                 task = std::make_shared<Diffuse>();
+                break;
+            case 12:
+                task = std::make_shared<FirstCoordExchangeSearch>();
                 break;
             default:
                 return task_list;
@@ -3878,19 +4061,19 @@ int main(int argc, char *argv[]) {
 
     po::options_description desc("Allowed options");
     desc.add_options()
-            ("help,h","produce hellp message")
-            ("topology,p",po::value<string>(),"topology file")
-            ("file,f",po::value<string>(),"trajectory file")
-            ("output,o",po::value<string>(),"output file")
-            ("prm",po::value<string>(),"force field file");
+            ("help,h", "produce hellp message")
+            ("topology,p", po::value<string>(), "topology file")
+            ("file,f", po::value<string>(), "trajectory file")
+            ("output,o", po::value<string>(), "output file")
+            ("prm", po::value<string>(), "force field file");
     po::positional_options_description p;
-    p.add("file",1).add("output",1);
+    p.add("file", 1).add("output", 1);
     po::variables_map vm;
 
-    po::store(po::command_line_parser(argc,argv).options(desc).positional(p).run(),vm);
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
 
     po::notify(vm);
-    if (vm.count("help")){
+    if (vm.count("help")) {
         cout << desc;
         return 0;
     }
@@ -3912,7 +4095,7 @@ int main(int argc, char *argv[]) {
     }
     auto task_list = getTasks();
     while (enable_forcefield) {
-        if (vm.count("prm")){
+        if (vm.count("prm")) {
             auto ff = vm["prm"].as<string>();
             if (file_exist(ff) and ext_filename(ff) == "prm") {
                 forcefield.read(ff);
@@ -3939,12 +4122,12 @@ int main(int argc, char *argv[]) {
     auto reader = make_shared<TrajectoryReader>();
     reader->add_filename(xyzfile);
     string ext = ext_filename(xyzfile);
-    while(ext == "nc" or ext == "trr" or ext == "xtc") {
-        if (vm.count("topology")){
+    while (ext == "nc" or ext == "trr" or ext == "xtc") {
+        if (vm.count("topology")) {
             string topol = vm["topology"].as<string>();
-            if (file_exist(topol)){
-                 reader->add_topology(topol);
-                 break;
+            if (file_exist(topol)) {
+                reader->add_topology(topol);
+                break;
             }
             cout << "topology file " << topol << " is bad ! please retype !" << endl;
         }
@@ -3973,7 +4156,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (enable_outfile) {
-        outfile.open( vm.count("output") ? vm["output"].as<string>() : choose_file("Output file: ", false) , std::fstream::out);
+        outfile.open(vm.count("output") ? vm["output"].as<string>() : choose_file("Output file: ", false),
+                     std::fstream::out);
     }
     shared_ptr<Frame> frame;
     int Clear = 0;

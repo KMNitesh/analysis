@@ -1059,7 +1059,6 @@ int netcdfWriteFrame(struct AmberNetcdf *A, int set, double *X, double *box) {
     fprintf(stderr,"Error: Could not allocate memory for netcdf coords.\n");
     return 1;
   }
-       fprintf(stderr,"7\n");
   // Convert to single precision
   for (i=0; i < A->ncatom3; i++)
     Coord[i]=(float) X[i];
@@ -1079,7 +1078,6 @@ int netcdfWriteFrame(struct AmberNetcdf *A, int set, double *X, double *box) {
     count[2]=0;
     if (checkNCerr(nc_put_vara_double(A->ncid,A->cellLengthVID,start,count,box),
         "Writing cell lengths.")) return 1;
-    fprintf(stderr,"write box angle\n");
     if (checkNCerr(nc_put_vara_double(A->ncid,A->cellAngleVID,start,count,box+3),
         "Writing cell angles.")) return 1;
   }

@@ -4,11 +4,31 @@ enable_language(Fortran C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -ggdb -Wall")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -no-ipo -no-prec-div -xHost -axCORE-AVX2 -qopenmp")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -DINTEL -O3 -no-prec-div -xHost -axCORE-AVX2 -qopenmp")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -ffast-math -march=native -fopenmp")
+endif()
 
-set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -g -ggdb -Wall")
-set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -no-ipo -no-prec-div -xHost -axCORE-AVX2 -qopenmp")
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
+    set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
+    set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -DINTEL -O3 -no-prec-div -xHost -axCORE-AVX2 -qopenmp")
+elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb3 -Wall -Wextra")
+    set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O3 -ffast-math -march=native -fopenmp")
+endif()
+
+
+if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-DNDEBUG -DINTEL -O3 -no-prec-div -xHost -axCORE-AVX2 -qopenmp")
+elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_Fotran_FLAGS_DEBUG "-O0 -ggdb3 -Wall -Wextra")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-DNDEBUG -O3 -ffast-math -march=native -fopenmp")
+endif()
+
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 include_directories(
