@@ -18,6 +18,7 @@
 #include <fmt/format.h>
 #include <fmt/printf.h>
 #include <string>
+#include <unistd.h>
 
 using namespace std;
 
@@ -145,10 +146,13 @@ std::string &str_tolower(string &str) {
 }
 
 string input(const string &prompt = "") {
-    char *str = readline(prompt.c_str());
-    string ret(str);
-    free(str);
-    return ret;
+    std::cout << prompt;
+    string inputline;
+    std::getline(std::cin,inputline);
+    if (isatty(STDIN_FILENO) == 0){
+        std::cout << inputline << std::endl;
+    }
+    return  inputline;
 }
 
 int choose(int min, int max, const string &prompt, bool hasdefault = false, int value = 0) {
@@ -4172,7 +4176,7 @@ int main(int argc, char *argv[]) {
             cout << "Processing Coordinate Frame  " << current_frame_num << "   " << std::flush;
             Clear = 1;
         }
-        if ((current_frame_num - start) % step_size == 0)
+        if (current_frame_num >= start && (current_frame_num - start) % step_size == 0)
             processOneFrame(frame, task_list);
     }
     std::cout << std::endl;
