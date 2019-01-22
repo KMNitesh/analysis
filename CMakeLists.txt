@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.13)
 project(Tinker)
 enable_language(Fortran C CXX)
 
@@ -34,21 +34,39 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 include_directories(
    "/public/home/xiamr/prog/gromacs-5.1.4/src"
    "/public/soft/software/netcdf-4.3.0/include"
-   "/public/soft/software/boost-1.67.0/include"
     "lib"
 )
+
 link_directories(
    "/public/soft/software/gromacs-5.1.4/lib64"
-   "/public/soft/software/boost-1.67.0/lib/"
 )
 
 file(GLOB LIBTINKER_SRC  lib/*.f lib/*.f90 lib/*.cpp)
 
-ADD_LIBRARY(libtinker_shared SHARED ${LIBTINKER_SRC} )
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+string(REPLACE ":" ";" LIBRARY_DIRS $ENV{LIBRARY_PATH})
+string(REPLACE ":" ";" CPATH_DIRS $ENV{CPATH})
+if ($ENV{C_INCLUDE_PATH})
+    string(REPLACE ":" ";" C_INCLUDE_DIRS $ENV{C_INCLUDE_PATH})
+endif()
+if ($ENV{CPLUS_INCLUDE_PATH})
+    string(REPLACE ":" ";" CPLUS_INCLUDE_DIRS $ENV{CPLUS_INCLUDE_PATH})
+endif ()
+set(DEFAULT_INCLUDE_DIRS "/usr/include;/usr/local/include")
+
+
+# Boost
+set(BOOST_INCLUDEDIR ${CPATH_DIRS} ${C_INCLUDE_DIRS} ${CPLUS_INCLUDE_DIRS} ${DEFAULT_INCLUDE_DIRS})
+set(BOOST_LIBRARYDIR ${LIBRARY_DIRS})
+find_package(Boost 1.67 REQUIRED COMPONENTS regex program_options)
+include_directories(${Boost_INCLUDE_DIRS})
+link_libraries(${Boost_LIBRARIES})
+
+
+add_library(libtinker_shared SHARED ${LIBTINKER_SRC} )
 set_target_properties(libtinker_shared PROPERTIES OUTPUT_NAME "tinker_shared")
 target_link_libraries(libtinker_shared gromacs_mpi)
-
-
 
 link_libraries(fftw3_threads fftw3 netcdf libtinker_shared fmt tbb readline tbbmalloc ncurses)
 add_executable(dynamic dynamic.f)
@@ -61,7 +79,6 @@ add_executable(bar bar.f)
 add_executable(xyzpdb xyzpdb.f)
 add_executable(pdbxyz pdbxyz.f)
 add_executable(minimize minimize.f)
-
-
 add_executable(analysis analysis.cpp)
-target_link_libraries(analysis boost_program_options)
+
+

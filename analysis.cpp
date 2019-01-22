@@ -20,6 +20,8 @@
 #include <string>
 #include <unistd.h>
 
+#include <functional>
+
 using namespace std;
 
 
@@ -38,10 +40,26 @@ namespace gmx {
 #include "amber_netcdf.h"
 #include "gmxtrr.h"
 
+#define BOOST_RESULT_OF_USE_DECLTYPE
+#define BOOST_SPIRIT_USE_PHOENIX_V3
+
 #include <boost/program_options.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 namespace po = boost::program_options;
 
+
+#include <boost/format.hpp>
+
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
+#include <boost/spirit/include/support.hpp>
+#include <boost/spirit/include/lex.hpp>
+#include <boost/bind.hpp>
+#include <boost/lambda/lambda.hpp>
 
 const int ATOM_MAX = 10000;
 
@@ -93,7 +111,7 @@ void operator delete[](void *ptr, const std::nothrow_t &) throw() {
 }
 
 bool file_exist(const string &name) {
-    fstream in(name);
+    fstream in(name, ofstream::in);
     return in.good();
 }
 
@@ -148,11 +166,11 @@ std::string &str_tolower(string &str) {
 string input(const string &prompt = "") {
     std::cout << prompt;
     string inputline;
-    std::getline(std::cin,inputline);
-    if (isatty(STDIN_FILENO) == 0){
+    std::getline(std::cin, inputline);
+    if (isatty(STDIN_FILENO) == 0) {
         std::cout << inputline << std::endl;
     }
-    return  inputline;
+    return inputline;
 }
 
 int choose(int min, int max, const string &prompt, bool hasdefault = false, int value = 0) {
@@ -211,7 +229,7 @@ string choose_file(const string &prompt, bool exist, string ext = "", bool canem
                 }
             }
             if (!exist) return input_line;
-            fstream in(input_line);
+            fstream in(input_line, ofstream::in);
             if (in.good()) {
                 return input_line;
                 break;
@@ -239,6 +257,7 @@ public:
     double vx = 0.0, vy = 0.0, vz = 0.0; // velocity
 
     int typ; // atom type
+    std::string type_name;
 
     std::list<int> con_list; // atom num that connect to
 
@@ -336,6 +355,11 @@ class TrajectoryReader {
     bool enable_binaray_file = false;
     string topology_filename;
 
+    enum class TOPOLOGY_TYPE {
+        ARC, MOL2
+    } topology_type;
+
+
     struct AmberNetcdf NC;
     std::shared_ptr<Frame> frame;
 
@@ -349,6 +373,8 @@ class TrajectoryReader {
     gmx::real prec, time;
 
     std::list<std::string> arc_filename_list; // the continuous trajectory files
+
+
 
     void close() {
         if (isnetcdf) {
@@ -483,7 +509,7 @@ class TrajectoryReader {
         gmx::rvec *coord = nullptr;
         if (gmx::fread_trnheader(fio, &trnheader, &bOK)) {
             if (bOK) {
-                coord = new gmx::rvec[trnheader.x_size];
+                coord = new gmx::rvec[trnheader.natoms];
                 if (trnheader.box_size) {
                     gmx::fread_htrn(fio, &trnheader, box, coord, NULL, NULL);
                     translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
@@ -507,7 +533,7 @@ class TrajectoryReader {
                     frame->enable_bound = false;
                     gmx::fread_htrn(fio, &trnheader, NULL, coord, NULL, NULL);
                 }
-                if (frame->atom_list.size() != trnheader.x_size) {
+                if (frame->atom_list.size() != trnheader.natoms) {
                     cerr << "ERROR! the atom number do not match" << endl;
                     exit(1);
                 }
@@ -561,6 +587,103 @@ class TrajectoryReader {
         }
         cerr << fmt::sprintf("\nWARNING: Incomplete frame at time %g\n", time);
         return 0;
+    }
+
+    shared_ptr<Frame> readOneFrameMol2() {
+        std::string line;
+        std::vector<std::string> fields;
+
+        enum class State {
+            NONE, MOLECULE, ATOM, BOND, SUBSTRUCTURE
+        } state;
+        state = State::NONE;
+        auto whitespace_regex = boost::regex("\\s+");
+        // watch out memery leak
+
+        if (!frame) {
+            frame = std::make_shared<Frame>();
+            if (enable_binaray_file) frame->enable_bound = true;
+        }
+
+        auto iter = frame->atom_list.begin();
+
+        for (;;) {
+            std::getline(position_file, line);
+            boost::trim(line);
+            if (line.empty()) continue;
+            fields.clear();
+
+            bool break_loop = false;
+
+            if (boost::starts_with(line, "@<TRIPOS>MOLECULE")) {
+                state = State::MOLECULE;
+            } else if (boost::starts_with(line, "@<TRIPOS>ATOM")) {
+                state = State::ATOM;
+            } else if (boost::starts_with(line, "@<TRIPOS>BOND")) {
+                state = State::BOND;
+            } else if (boost::starts_with(line, "@<TRIPOS>SUBSTRUCTURE")) {
+                state = State::SUBSTRUCTURE;
+            } else {
+                switch (state) {
+                    case State::MOLECULE:
+                        continue;
+                    case State::ATOM: {
+                        boost::regex_split(std::back_inserter(fields), line, whitespace_regex);
+                        shared_ptr<Atom> atom;
+                        if (first_time) {
+                            atom = std::make_shared<Atom>();
+                            atom->seq = boost::lexical_cast<int>(fields[0]);
+                            atom->symbol = fields[1];
+                            atom->type_name = fields[5];
+                            frame->atom_list.push_back(atom);
+                            frame->atom_map[atom->seq] = atom;
+                        } else {
+                            atom = *iter;
+                            ++iter;
+                        }
+                        atom->x = boost::lexical_cast<double>(fields[2]);
+                        atom->y = boost::lexical_cast<double>(fields[3]);
+                        atom->z = boost::lexical_cast<double>(fields[4]);
+                    }
+                        break;
+                    case State::BOND: {
+                        if (!first_time) {
+                            break_loop = true;
+                            break;
+                        }
+                        boost::regex_split(std::back_inserter(fields), line, whitespace_regex);
+                        int atom_num1 = boost::lexical_cast<int>(fields[1]);
+                        int atom_num2 = boost::lexical_cast<int>(fields[2]);
+
+                        auto atom1 = frame->atom_map[atom_num1];
+                        auto atom2 = frame->atom_map[atom_num2];
+
+                        atom1->con_list.push_back(atom_num2);
+                        atom2->con_list.push_back(atom_num1);
+                    }
+                        break;
+                    case State::SUBSTRUCTURE:
+                        break_loop = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (break_loop) {
+                break;
+            }
+        }
+        if (first_time) {
+            for (auto &atom : frame->atom_list) {
+                if (!atom->molecule.lock()) {
+                    auto molecule = std::make_shared<Molecule>();
+                    add_to_mol(atom, molecule, frame);
+                    frame->molecule_list.push_back(molecule);
+                }
+            }
+        }
+        return frame;
+
     }
 
     shared_ptr<Frame> readOneFrameArc() {
@@ -708,13 +831,32 @@ public:
     void add_topology(const string &filename) {
         enable_binaray_file = true;
         topology_filename = filename;
+        std::string ext_name = ext_filename(filename);
+        boost::to_lower(ext_name);
+
+        if (ext_name == "arc" or ext_name == "xyz") {
+            topology_type = TOPOLOGY_TYPE::ARC;
+        } else if (ext_name == "mol2") {
+            topology_type = TOPOLOGY_TYPE::MOL2;
+        } else {
+            std::cerr << " Error file type of topology file [ " << filename << "] " << std::endl;
+            exit(1);
+        }
+
     }
 
     std::shared_ptr<Frame> readOneFrame() {
         if (first_time) {
             if (enable_binaray_file) {
-                position_file.open(topology_filename);
-                frame = readOneFrameArc();
+                position_file.open(topology_filename, ofstream::in);
+                switch (topology_type) {
+                    case TOPOLOGY_TYPE::ARC:
+                        frame = readOneFrameArc();
+                        break;
+                    case TOPOLOGY_TYPE::MOL2:
+                        frame = readOneFrameMol2();
+                        break;
+                }
                 position_file.close();
             }
             std::string filename = arc_filename_list.front();
@@ -778,7 +920,7 @@ public:
 
     void read(const string &filename) {
         fstream f;
-        f.open(filename);
+        f.open(filename, ofstream::in);
         f.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
         string line;
         while (true) {
@@ -1465,8 +1607,12 @@ void CoordinateNumPerFrame::readInfo() {
 
 class FirstCoordExchangeSearch : public BasicAnalysis {
     int typ1, typ2;
-    double dist_cutoff,tol_dist, time_cutoff;
-    enum Direction{ IN, OUT};
+    std::string type_name1, type_name2;
+    bool use_name = false;
+    double dist_cutoff, tol_dist, time_cutoff;
+    enum class Direction {
+        IN, OUT
+    };
     typedef struct {
         Direction direction;
         int seq;
@@ -1478,9 +1624,11 @@ class FirstCoordExchangeSearch : public BasicAnalysis {
     int step = 0;
 
     typedef struct {
-       bool inner;
+        bool inner;
     } State;
-    map<int,State> state_machine;
+    map<int, State> state_machine;
+
+    std::set<int> init_seq_in_shell;
 
 public:
     FirstCoordExchangeSearch() {
@@ -1498,30 +1646,31 @@ void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
     step++;
 
     for (auto &atom1 : frame->atom_list) {
-        if (atom1->typ == typ1) {
+        if (use_name ? atom1->type_name == type_name1 : atom1->typ == typ1) {
             for (auto &atom2 : frame->atom_list) {
-                if (atom2->typ == typ2) {
+                if (use_name ? atom2->type_name == type_name2 : atom2->typ == typ2) {
                     if (step == 1) {
                         State state;
                         state.inner = atom_distance(atom1, atom2, frame) <= this->dist_cutoff;
                         state_machine[atom2->seq] = state;
-                    }else{
+                        if (state.inner) init_seq_in_shell.insert(atom2->seq);
+                    } else {
                         auto &state = state_machine[atom2->seq];
-                        if (state.inner){
+                        if (state.inner) {
                             if (atom_distance(atom1, atom2, frame) >= this->dist_cutoff + tol_dist) {
                                 state.inner = false;
                                 ExchangeItem item;
                                 item.seq = atom2->seq;
-                                item.direction = OUT;
+                                item.direction = Direction::OUT;
                                 item.exchange_frame = step;
                                 exchange_list.push_back(item);
                             }
-                        }else {
+                        } else {
                             if (atom_distance(atom1, atom2, frame) <= this->dist_cutoff - tol_dist) {
                                 state.inner = true;
                                 ExchangeItem item;
                                 item.seq = atom2->seq;
-                                item.direction = IN;
+                                item.direction = Direction::IN;
                                 item.exchange_frame = step;
                                 exchange_list.push_back(item);
                             }
@@ -1536,49 +1685,59 @@ void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
 void FirstCoordExchangeSearch::print() {
     outfile << "***************************" << endl;
     outfile << "***** Exchange Search *****" << endl;
-    outfile << "type 1 :" << typ1 << endl;
-    outfile << "type 2 :" << typ2 << endl;
+    outfile << "type 1 :";
+    use_name ? outfile << type_name1 : outfile << typ1;
+    outfile << std::endl;
+    outfile << "type 2 :";
+    use_name ? outfile << type_name2 : outfile << typ2;
+    outfile << std::endl;
+
     outfile << "cutoff :" << dist_cutoff << endl;
     outfile << "tol dist :" << tol_dist << endl;
     outfile << "time_cutoff :" << time_cutoff << endl;
     outfile << "***************************" << endl;
+    for (int seq : init_seq_in_shell) {
+        outfile << "  " << seq;
+    }
+    outfile << "\n***************************" << endl;
+
     outfile << "** seq **  direction ***** exchange frame *****" << endl;
-    for (auto it = exchange_list.begin() ; it !=exchange_list.end();it++) {
-
-        string direc1;
-        switch (it->direction){
-            case IN: direc1 = "IN";break;
-            case OUT:direc1 = "OUT"; break;
+    for (auto it = exchange_list.begin(); it != exchange_list.end(); it++) {
+        outfile << boost::format("%10d%6s%15d   !   ")
+                   % it->seq
+                   % (it->direction == Direction::IN ? "IN" : "OUT")
+                   % it->exchange_frame;
+        if (it->direction == Direction::IN) {
+            init_seq_in_shell.insert(it->seq);
+        } else {
+            init_seq_in_shell.erase(it->seq);
         }
-        int num1 = it->seq;
-        double exchange_time1 = it->exchange_frame;
-        it++;
-        string direc2;
-        switch (it->direction){
-            case IN: direc2 = "IN";break;
-            case OUT:direc2 = "OUT"; break;
+        for (int seq : init_seq_in_shell) {
+            outfile << "  " << seq;
         }
-
-        int num2 = it->seq;
-        double exchange_time2 = it->exchange_frame;
-        if (abs(exchange_time1 - exchange_time2 ) < time_cutoff and num1 == num2 ){
-            if ((direc1 == "IN" and direc2 == "OUT" ) || (direc1 == "OUT" and direc2 == "IN" ))
-                continue;
-        }
-        if (direc1 == "IN") {
-            outfile << num1 << "  IN  " << exchange_time1 << " : "
-                    << num2 << "  OUT " << exchange_time2 << endl;
-        }else{
-            outfile << num2 << "  IN  " << exchange_time2 << " : "
-                    << num1 << "  OUT " << exchange_time1 << endl;
-        }
+        outfile << std::endl;
     }
     outfile << "***************************" << endl;
+
+
 }
 
 void FirstCoordExchangeSearch::readInfo() {
-    typ1 = choose(1, INT32_MAX, "Please enter typ1:");
-    typ2 = choose(1, INT32_MAX, "Please enter typ2:");
+
+    use_name = (choose(1, 2, "(1) use_name \n(2) use type\n") == 1);
+    if (use_name) {
+        while (!type_name1.length()) {
+            type_name1 = input("Please enter typ1:");
+            boost::trim(type_name1);
+        }
+        while (!type_name2.length()) {
+            type_name2 = input("Please enter typ2:");
+            boost::trim(type_name2);
+        }
+    } else {
+        typ1 = choose(1, INT32_MAX, "Please enter typ1:");
+        typ2 = choose(1, INT32_MAX, "Please enter typ2:");
+    }
     dist_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
     tol_dist = choose(0.0, GMX_DOUBLE_MAX, "Please enter tol dist:");
     time_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter timecutoff:");
@@ -1586,7 +1745,7 @@ void FirstCoordExchangeSearch::readInfo() {
 
 
 class RadicalDistribtuionFunction : public BasicAnalysis {
-    int typ1, typ2;
+
     double rmax;
     double width;
 
@@ -1600,6 +1759,53 @@ class RadicalDistribtuionFunction : public BasicAnalysis {
 
     double xbox, ybox, zbox;
 public:
+    enum class SelectType {
+        Symbol, TypeName, TypeNumber
+    };
+
+    struct AtomIndenter {
+
+        AtomIndenter(SelectType t, std::string name) {
+            this->t = t;
+            boost::trim(name);
+            switch (t) {
+                case SelectType::Symbol:
+                case SelectType::TypeName:
+                    this->name = name;
+                    break;
+                case SelectType::TypeNumber:
+                    type_number = boost::lexical_cast<int>(name);
+                    break;
+            }
+        }
+
+        enum SelectType t;
+
+        std::string name;
+        int type_number;
+
+    };
+
+    std::vector<struct AtomIndenter> ids1;
+    std::vector<struct AtomIndenter> ids2;
+
+    bool is_match(std::shared_ptr<Atom> &atom, std::vector<struct AtomIndenter> &ids) {
+        for (auto &id : ids) {
+            switch (id.t) {
+                case SelectType::Symbol:
+                    if (atom->symbol == id.name) return true;
+                    break;
+                case SelectType::TypeName:
+                    if (atom->type_name == id.name) return true;
+                    break;
+                case SelectType::TypeNumber:
+                    if (atom->typ == id.type_number) return true;
+                    break;
+            }
+        }
+        return false;
+    }
+
     RadicalDistribtuionFunction() {
         enable_outfile = true;
     }
@@ -1609,14 +1815,33 @@ public:
     void print() override;
 
     void readInfo() override;
+
+
 };
+
+ostream &operator<<(ostream &out, std::vector<struct RadicalDistribtuionFunction::AtomIndenter> &ids) {
+    for (auto &id : ids) {
+        switch (id.t) {
+            case RadicalDistribtuionFunction::SelectType::Symbol:
+                out << "S:" << id.name << " ";
+                break;
+            case RadicalDistribtuionFunction::SelectType::TypeName:
+                out << "T:" << id.name << " ";
+                break;
+            case RadicalDistribtuionFunction::SelectType::TypeNumber:
+                out << "N:" << id.type_number << " ";
+                break;
+        }
+    }
+    return out;
+}
 
 void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
     nframe++;
     if (nframe == 1) {
         for (auto &atom : frame->atom_list) {
-            if (atom->typ == typ1) numj++;
-            else if (atom->typ == typ2) numk++;
+            if (is_match(atom, ids1)) numj++;
+            else if (is_match(atom, ids2)) numk++;
         }
     }
     xbox = frame->a_axis;
@@ -1624,14 +1849,14 @@ void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
     zbox = frame->c_axis;
 
     for (auto &atom_j : frame->atom_list) {
-        if (atom_j->typ == typ1) {
+        if (is_match(atom_j, ids1)) {
             double xj = atom_j->x;
             double yj = atom_j->y;
             double zj = atom_j->z;
             auto molj = atom_j->molecule.lock();
 
             for (auto &atom_k : frame->atom_list) {
-                if (atom_k->typ == typ2) {
+                if (is_match(atom_k, ids2)) {
                     if (atom_j != atom_k) {
                         auto mol_k = atom_k->molecule.lock();
                         if (intramol or (molj not_eq mol_k)) {
@@ -1653,8 +1878,47 @@ void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 }
 
 void RadicalDistribtuionFunction::readInfo() {
-    typ1 = choose(1, INT32_MAX, "Enter 1st Atom Type Number:");
-    typ2 = choose(1, INT32_MAX, "Enter 2nd Atom Type Number:");
+
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    using ascii::char_;
+
+    auto action = [](auto& v, auto ids, auto &message, auto type){
+        std::string result(v.begin(),v.end());
+        std::cout << "<"<< message <<":" << result << ">" << std::endl;
+        const_cast<std::vector<struct AtomIndenter>*>(ids)->emplace_back(type,result);
+    };
+    for(;;) {
+        const string &line = input("Enter mask : ");
+        if (qi::phrase_parse(line.cbegin(),line.cend(),
+                    +(( qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                            boost::phoenix::bind(action,qi::_1,&this->ids1,"mask1:name",SelectType::Symbol)
+                            ]) >> "}")
+                    | ( qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                            boost::phoenix::bind(action,qi::_1,&this->ids1,"mask1:type",SelectType::TypeName)
+                            ]) >> "}")
+                    | ( qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                            boost::phoenix::bind(action,qi::_1,&this->ids1,"mask1:typenumber",SelectType::TypeNumber)
+                            ]) >> "}"))
+                    >> qi::lit("and")
+                    >> +(( qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                            boost::phoenix::bind(action,qi::_1,&this->ids2,"mask2:name",SelectType::Symbol)
+                            ]) >> "}")
+                    | ( qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                            boost::phoenix::bind(action,qi::_1,&this->ids2,"mask2:type",SelectType::TypeName)
+                            ]) >> "}")
+                    | ( qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                            boost::phoenix::bind(action,qi::_1,&this->ids2,"mask2:typenumber",SelectType::TypeNumber)
+                            ]) >> "}")),
+            ascii::space)){
+            break;
+        }
+        std::cout << "Syntax error , Please Reenter !" << std::endl;
+        ids1.clear();
+        ids2.clear();
+    }
+    std::cout << "First Type : " << ids1 << " Second Type : " << ids2 << std::endl;
+
     rmax = choose(0.0, GMX_DOUBLE_MAX, "Enter Maximum Distance to Accumulate[10.0 Ang]:", true, 10.0);
     width = choose(0.0, GMX_DOUBLE_MAX, "Enter Width of Distance Bins [0.01 Ang]:", true, 0.01);
     string inputline = input("Include Intramolecular Pairs in Distribution[N]:");
@@ -1715,7 +1979,9 @@ void RadicalDistribtuionFunction::print() {
 
     outfile << "************************************************" << endl;
     outfile << "***** Pairwise Radial Distribution Function ****" << endl;
-    outfile << "First Type : " << typ1 << " Second Type :" << typ2 << endl;
+
+    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
+
     outfile << "************************************************" << endl;
     outfile << "Bin    Counts    Distance    Raw g(r)  Smooth g(r)   Integral" << endl;
 
@@ -2322,16 +2588,16 @@ double RMSFCal::rmsvalue(int index) {
     double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
 
     double dx2_y2_z2 = 0.0;
-    double dx,dy,dz;
-    for (int frame = 1; frame <= steps ; frame++){
+    double dx, dy, dz;
+    for (int frame = 1; frame <= steps; frame++) {
         dx = x[frame][index] - x_avg[index];
         dy = y[frame][index] - y_avg[index];
         dz = z[frame][index] - z_avg[index];
-        dx2_y2_z2 += dx*dx + dy*dy + dz*dz;
+        dx2_y2_z2 += dx * dx + dy * dy + dz * dz;
 
     }
 
-    return sqrt(dx2_y2_z2/steps);
+    return sqrt(dx2_y2_z2 / steps);
 
 }
 
@@ -2706,7 +2972,10 @@ class ResidenceTime : public BasicAnalysis {
     int **mark = nullptr;
     double time_star = 0;
 
-    int typ1, typ2;
+    int typ1 = 0, typ2 = 0;
+    std::string type_name1, type_name2;
+
+    bool use_name = false;
 
     std::map<int, std::list<bool>> mark_map;
 
@@ -2831,10 +3100,10 @@ void ResidenceTime::calculate() {
                                 if (i < a and j < b) continue;
                                 else if (i < a and b < j) {
                                     if (maxcount < b - a) maxcount = b - a;
-                                } else if ( a < i and b < j) continue;
-                                else{
-                                    cerr << fmt::sprintf(" i = %d, j = %d, a = %d, d = %d\n",i,j,a,b);
-                                    cerr << "error " << __FILE__ << " : "<< __LINE__ << endl;
+                                } else if (a < i and b < j) continue;
+                                else {
+                                    cerr << fmt::sprintf(" i = %d, j = %d, a = %d, d = %d\n", i, j, a, b);
+                                    cerr << "error " << __FILE__ << " : " << __LINE__ << endl;
                                     exit(1);
                                 }
                             }
@@ -2864,9 +3133,9 @@ void ResidenceTime::process(std::shared_ptr<Frame> &frame) {
     steps++;
     int atom_no = 0;
     for (auto &atom1 : frame->atom_list) {
-        if (atom1->typ == typ1) {
+        if (use_name ? atom1->type_name == type_name1 : atom1->typ == typ1) {
             for (auto &atom2 : frame->atom_list) {
-                if (atom2->typ == typ2) {
+                if (use_name ? atom2->type_name == type_name2 : atom2->typ == typ2) {
                     double xr = atom1->x - atom2->x;
                     double yr = atom1->y - atom2->y;
                     double zr = atom1->z - atom2->z;
@@ -2900,20 +3169,52 @@ void ResidenceTime::print() {
         }
     }
     calculate();
-    outfile << "typ1: " << typ1 << ",  typ2: " << typ2 << "  dist_cutoff = " << dis_cutoff << " t* = " << time_star
-            << std::endl;
+    if (use_name) {
+        outfile << "typ1: " << type_name1 << ",  typ2: " << type_name2 << "  dist_cutoff = " << dis_cutoff << " t* = "
+                << time_star
+                << std::endl;
+    } else {
+        outfile << "typ1: " << typ1 << ",  typ2: " << typ2 << "  dist_cutoff = " << dis_cutoff << " t* = " << time_star
+                << std::endl;
+    }
+    outfile << "# Frame        R " << std::endl;
     for (unsigned int i = 0; i < steps - 1; i++)
         outfile << i + 1 << "    " << Rt_array[i] << std::endl;
 }
 
 void ResidenceTime::readInfo() {
+
+    begin:
+    std::cout << "(1) use name\n(2) use number\n";
+    int num;
+    std::cin >> num;
+    if (num == 1) {
+        use_name = true;
+    } else if (num == 2) {
+        use_name = false;
+    } else {
+        std::cerr << "wront number" << std::endl;
+        goto begin;
+    }
+
     std::cout << "Please enter typ1:";
-    std::cin >> typ1;
+    if (use_name) {
+        std::cin >> type_name1;
+        boost::trim(type_name1);
+    } else {
+        std::cin >> typ1;
+    }
     std::cout << "Please enter typ2:";
-    std::cin >> typ2;
+    if (use_name) {
+        std::cin >> type_name2;
+        boost::trim(type_name2);
+    } else {
+        std::cin >> typ2;
+    }
+
     std::cout << "Please enter distance cutoff1:";
     std::cin >> dis_cutoff;
-    std::cout << "Please enter t*:";
+    std::cout << "Please enter t*: ( unit: frame)";
     std::cin >> time_star;
 
 }
@@ -3516,16 +3817,18 @@ void NMRRange::process(std::shared_ptr<Frame> &frame) {
 void NMRRange::print() {
 
     for (auto &item : dist_range_map) {
-        double min = item.second.front();
-        double max = item.second.front();
 
-        for (auto num : item.second) {
-            if (num < min) min = num;
-            else if (num > max) max = num;
+        double sum = 0.0;
+        int count = 0;
+        for (auto v : item.second) {
+            sum += pow(v, -6);
+            count++;
         }
-
+        double avg = sum / count;
+        double e = -1.0 / 6;
+        double value = pow(avg, e);
         outfile << name_map[item.first.first] << " <->\t"
-                << name_map[item.first.second] << "\t" << min << "\t" << max << endl;
+                << name_map[item.first.second] << "\t" << value << endl;
     }
 }
 
@@ -3735,7 +4038,7 @@ void Diffuse::print() {
     vector<double> ymsd(total_frame_number, 0.0);
     vector<double> zmsd(total_frame_number, 0.0);
 
-    if(bSerial) {
+    if (bSerial) {
         if (bTradition) {
             for (int i = 0; i < total_frame_number - 1; i++) {
                 for (int j = i + 1; j < total_frame_number; j++) {
@@ -3752,11 +4055,11 @@ void Diffuse::print() {
                     }
                 }
             }
-        }else{
-            for (int m = 0 ; m < total_frame_number-1 ; m++){
-                for (int i = 0; i < total_frame_number - 1; i += m+1){
-                    int j = i + m +1;
-                    if (j < total_frame_number){
+        } else {
+            for (int m = 0; m < total_frame_number - 1; m++) {
+                for (int i = 0; i < total_frame_number - 1; i += m + 1) {
+                    int j = i + m + 1;
+                    if (j < total_frame_number) {
                         ntime[m]++;
                         for (int k = 0; k < total_mol; k++) {
                             double xdiff = xcm(j, k) - xcm(i, k);
@@ -3944,7 +4247,6 @@ void Diffuse::readInfo() {
     }
 
 
-
 }
 
 
@@ -4063,6 +4365,13 @@ void init() {
 
 int main(int argc, char *argv[]) {
 
+    std::cout << "Build DateTime : " << __DATE__ << " " << __TIME__ << endl;
+    {
+        char buffer[1024];
+        getcwd(buffer, 1024);
+        std::cout << "current work dir : " << buffer << std::endl;
+    }
+
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help,h", "produce hellp message")
@@ -4091,7 +4400,7 @@ int main(int argc, char *argv[]) {
     std::string xyzfile = vm["file"].as<string>();
 
     {
-        fstream in(xyzfile);
+        fstream in(xyzfile, ofstream::in);
         if (!in.good()) {
             cerr << "The file " << xyzfile << " is bad !" << endl;
             exit(2);
