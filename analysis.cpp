@@ -19,7 +19,6 @@
 #include <fmt/printf.h>
 #include <string>
 #include <unistd.h>
-
 #include <functional>
 
 using namespace std;
@@ -60,6 +59,8 @@ namespace po = boost::program_options;
 #include <boost/spirit/include/lex.hpp>
 #include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
+
+#include <boost/variant.hpp>
 
 const int ATOM_MAX = 10000;
 
@@ -259,6 +260,8 @@ public:
     int typ; // atom type
     std::string type_name;
 
+    double charge;
+
     std::list<int> con_list; // atom num that connect to
 
     std::weak_ptr<Molecule> molecule;
@@ -272,7 +275,166 @@ public:
         return false;
     }
 
+    enum class SelectType {
+        Symbol, TypeName, TypeNumber
+    };
+
+    struct Atom_Indenter_Symbol {
+        std::string name;
+    };
+    struct Atom_Indenter_TypeName {
+        std::string name;
+    };
+    struct Atom_Indenter_TypeNumber {
+        int type_number;
+    };
+    typedef boost::variant<Atom_Indenter_Symbol, Atom_Indenter_TypeName, Atom_Indenter_TypeNumber> AtomIndenter;
+
+    static bool is_match(std::shared_ptr<Atom> &atom, const std::vector<AtomIndenter> &ids);
+
+    static bool is_match(std::shared_ptr<Atom> &atom, const AtomIndenter &id);
+
+    static void select2group(std::vector<AtomIndenter> &ids1, std::vector<AtomIndenter> &ids2);
 };
+
+ostream &operator<<(ostream &out, std::vector<Atom::AtomIndenter> &ids) {
+    struct Output : public boost::static_visitor<> {
+        ostream &out;
+    public:
+        Output(ostream &out) : out(out) {}
+
+        void operator()(Atom::Atom_Indenter_Symbol &t) const {
+            out << "S:" << t.name << " ";
+        }
+
+        void operator()(Atom::Atom_Indenter_TypeName &t) const {
+            out << "T:" << t.name << " ";
+        }
+
+        void operator()(Atom::Atom_Indenter_TypeNumber &t) const {
+            out << "N:" << t.type_number << " ";
+        }
+    } output(out);
+
+    for (auto &id : ids) {
+        boost::apply_visitor(output, id);
+    }
+    return out;
+}
+
+void Atom::select2group(std::vector<AtomIndenter> &ids1, std::vector<AtomIndenter> &ids2) {
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    using ascii::char_;
+
+    auto action = [](auto &v, auto ids, auto &message, auto type) {
+        std::string result(v.begin(), v.end());
+        std::cout << "<" << message << ":" << result << ">" << std::endl;
+        switch (type) {
+            case SelectType::Symbol:
+                const_cast<std::vector<AtomIndenter> *>(ids)->emplace_back(Atom_Indenter_Symbol{result});
+                break;
+            case SelectType::TypeName:
+                const_cast<std::vector<AtomIndenter> *>(ids)->emplace_back(Atom_Indenter_TypeName{result});
+                break;
+            case SelectType::TypeNumber:
+                const_cast<std::vector<AtomIndenter> *>(ids)->emplace_back(
+                        Atom_Indenter_TypeNumber{boost::lexical_cast<int>(result)});
+                break;
+        }
+
+    };
+
+
+    for (;;) {
+        const string &line = input("Enter mask (expample: name{Am} && type{OW}) : ");
+        if (qi::phrase_parse(line.cbegin(), line.cend(),
+                             +((qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                                     boost::phoenix::bind(action, qi::_1, &ids1, "mask1:name", SelectType::Symbol)
+                             ]) >> "}")
+                               | (qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                                     boost::phoenix::bind(action, qi::_1, &ids1, "mask1:type",
+                                                          SelectType::TypeName)
+                             ]) >> "}")
+                               | (qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                                     boost::phoenix::bind(action, qi::_1, &ids1, "mask1:typenumber",
+                                                          SelectType::TypeNumber)
+                             ]) >> "}"))
+                                     >> qi::lit("&&")
+                                     >> +((qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                                             boost::phoenix::bind(action, qi::_1, &ids2, "mask2:name",
+                                                                  SelectType::Symbol)
+                                     ]) >> "}")
+                                          | (qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                                             boost::phoenix::bind(action, qi::_1, &ids2, "mask2:type",
+                                                                  SelectType::TypeName)
+                                     ]) >> "}")
+                                          |
+                                          (qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
+                                                  boost::phoenix::bind(action, qi::_1, &ids2, "mask2:typenumber",
+                                                                       SelectType::TypeNumber)
+                                          ]) >> "}")),
+                             ascii::space)) {
+            break;
+        }
+        std::cout << "Syntax error , Please Reenter !" << std::endl;
+        ids1.clear();
+        ids2.clear();
+    }
+    std::cout << "First Type : " << ids1 << " Second Type : " << ids2 << std::endl;
+}
+
+bool Atom::is_match(std::shared_ptr<Atom> &atom, const std::vector<AtomIndenter> &ids) {
+
+    struct Equal : public boost::static_visitor<bool> {
+    public:
+        Equal(shared_ptr<Atom> &atom) : atom(atom) {}
+
+        bool operator()(const Atom::Atom_Indenter_Symbol &t) const {
+            return atom->symbol == t.name;
+        }
+
+        bool operator()(const Atom::Atom_Indenter_TypeName &t) const {
+            return atom->type_name == t.name;
+        }
+
+        bool operator()(const Atom::Atom_Indenter_TypeNumber &t) const {
+            return atom->typ == t.type_number;
+        }
+
+    private:
+        shared_ptr<Atom> &atom;
+    };
+    for (auto &id : ids) {
+        if (boost::apply_visitor(Equal(atom), id)) return true;
+    }
+    return false;
+}
+
+bool Atom::is_match(std::shared_ptr<Atom> &atom, const AtomIndenter &id) {
+
+    struct Equal : public boost::static_visitor<bool> {
+    public:
+        Equal(shared_ptr<Atom> &atom) : atom(atom) {}
+
+        bool operator()(const Atom::Atom_Indenter_Symbol &t) const {
+            return atom->symbol == t.name;
+        }
+
+        bool operator()(const Atom::Atom_Indenter_TypeName &t) const {
+            return atom->type_name == t.name;
+        }
+
+        bool operator()(const Atom::Atom_Indenter_TypeNumber &t) const {
+            return atom->typ == t.type_number;
+        }
+
+    private:
+        shared_ptr<Atom> &atom;
+    };
+    return boost::apply_visitor(Equal(atom), id);
+
+}
 
 
 class Frame;
@@ -291,6 +453,19 @@ public:
     void calc_mass();
 
     tuple<double, double, double> calc_weigh_center(shared_ptr<Frame> &frame);
+
+    tuple<double, double, double> calc_dipole(shared_ptr<Frame> &frame);
+
+    /**
+     * @return return seq of first atom for temporary use
+     *         else return 0
+     */
+    int seq() {
+        if (atom_list.empty()) return 0;
+        return atom_list.front()->seq;
+    }
+
+    shared_ptr<Atom> ow;
 };
 
 
@@ -635,6 +810,7 @@ class TrajectoryReader {
                             atom->seq = boost::lexical_cast<int>(fields[0]);
                             atom->symbol = fields[1];
                             atom->type_name = fields[5];
+                            atom->charge = boost::lexical_cast<double>(fields[8]);
                             frame->atom_list.push_back(atom);
                             frame->atom_map[atom->seq] = atom;
                         } else {
@@ -916,30 +1092,97 @@ public:
 
 class Forcefield {
 public:
-    map<int, shared_ptr<AtomItem>> items;
 
-    void read(const string &filename) {
-        fstream f;
-        f.open(filename, ofstream::in);
-        f.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
-        string line;
-        while (true) {
-            try {
-                std::getline(f, line);
-                auto field = split(line);
-                if (field.empty()) continue;
-                if (field[0] != "atom") continue;
-                auto item = make_shared<AtomItem>();
-                item->typ = stoi(field[1]);
-                item->mass = stod(field[field.size() - 2]);
-                items[item->typ] = item;
-            } catch (std::exception &e) {
-                f.close();
-                return;
-            }
+    void read(const string &filename);
+
+    void read_tinker_prm(const string &filename);
+
+    void read_mass_map(const string &filename);
+
+    double find_mass(shared_ptr<Atom> &atom) {
+        for (auto &id : items) {
+            if (Atom::is_match(atom, id.first)) return id.second;
+        }
+        std::cerr << "Atom mass not found !" << std::endl;
+        exit(7);
+    }
+
+private:
+    std::list<std::pair<Atom::AtomIndenter, double>> items;
+};
+
+void Forcefield::read(const string &filename) {
+    auto ext = ext_filename(filename);
+    if (ext == "prm") {
+        read_tinker_prm(filename);
+    } else if (ext == "map") {
+        read_mass_map(filename);
+    } else {
+        std::cerr << "Unrecognized file extension" << std::endl;
+        exit(6);
+    }
+}
+
+void Forcefield::read_tinker_prm(const string &filename) {
+    fstream f;
+    f.open(filename, ofstream::in);
+    f.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
+    string line;
+    while (true) {
+        try {
+            std::getline(f, line);
+            auto field = split(line);
+            if (field.empty()) continue;
+            if (field[0] != "atom") continue;
+            int type = stoi(field[1]);
+            double mass = stod(field[field.size() - 2]);
+            items.emplace_back(Atom::Atom_Indenter_TypeNumber{type}, mass);
+        } catch (std::exception &e) {
+            f.close();
+            return;
         }
     }
-};
+}
+
+void Forcefield::read_mass_map(const string &filename) {
+    fstream f;
+    f.open(filename, ofstream::in);
+    f.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
+    string line;
+    while (true) {
+        try {
+            std::getline(f, line);
+            boost::trim(line);
+            auto field = split(line);
+            if (field.empty()) continue;
+            if (field.size() != 3) {
+                std::cerr << "Force field mass map syntax error : " << line << std::endl;
+                exit(8);
+            }
+            auto type = field[0];
+            double mass = boost::lexical_cast<double>(field[2]);
+
+            if (type == "name") {
+                items.emplace_back(Atom::Atom_Indenter_Symbol{field[1]}, mass);
+            } else if (type == "type") {
+                items.emplace_back(Atom::Atom_Indenter_TypeName{field[1]}, mass);
+            } else if (type == "typenumber") {
+                items.emplace_back(Atom::Atom_Indenter_TypeNumber{boost::lexical_cast<int>(field[1])}, mass);
+            } else {
+                std::cerr << "unrecognized keyword : " << type << std::endl;
+                exit(8);
+            }
+
+        } catch (boost::bad_lexical_cast &e) {
+            std::cerr << "boost::bad_lexical_cast  " << e.what() << std::endl;
+            exit(9);
+        } catch (std::exception &e) {
+            f.close();
+            return;
+        }
+    }
+}
+
 
 Forcefield forcefield;
 bool enable_forcefield = false;
@@ -948,7 +1191,7 @@ bool enable_forcefield = false;
 void Molecule::calc_mass() {
     double mol_mass = 0.0;
     for (auto &atom : atom_list) {
-        mol_mass += forcefield.items[atom->typ]->mass;
+        mol_mass += forcefield.find_mass(atom);
     }
     mass = mol_mass;
 }
@@ -966,7 +1209,7 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
             first_x = atom->x;
             first_y = atom->y;
             first_z = atom->z;
-            double weigh = forcefield.items[atom->typ]->mass;
+            double weigh = forcefield.find_mass(atom);
             mol_mass += weigh;
             xmid = first_x * weigh;
             ymid = first_y * weigh;
@@ -977,7 +1220,7 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
             double yr = atom->y - first_y;
             double zr = atom->z - first_z;
             frame->image(xr, yr, zr);
-            double weigh = forcefield.items[atom->typ]->mass;
+            double weigh = forcefield.find_mass(atom);
             mol_mass += weigh;
             xmid += (first_x + xr) * weigh;
             ymid += (first_y + yr) * weigh;
@@ -986,6 +1229,27 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
     }
 
     return make_tuple(xmid / mol_mass, ymid / mol_mass, zmid / mol_mass);
+}
+
+tuple<double, double, double> Molecule::calc_dipole(shared_ptr<Frame> &frame) {
+    auto mass_center = calc_weigh_center(frame);
+
+    double dipole_x = 0.0;
+    double dipole_y = 0.0;
+    double dipole_z = 0.0;
+
+    for (auto &atom : atom_list) {
+        double xr = atom->x - get<0>(mass_center);
+        double yr = atom->y - get<1>(mass_center);
+        double zr = atom->z - get<2>(mass_center);
+
+        frame->image(xr, yr, zr);
+
+        dipole_x += atom->charge * (xr + get<0>(mass_center));
+        dipole_y += atom->charge * (yr + get<1>(mass_center));
+        dipole_z += atom->charge * (zr + get<2>(mass_center));
+    }
+    return make_tuple(dipole_x, dipole_y, dipole_z);
 }
 
 void Molecule::calc_center(std::shared_ptr<Frame> &frame) {
@@ -1454,7 +1718,7 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
     weigh1 = weigh2 = 0.0;
     for (auto &num1 : group1) {
         auto &atom1 = frame->atom_map[num1];
-        double mass = forcefield.items[atom1->typ]->mass;
+        double mass = forcefield.find_mass(atom1);
         x1 += atom1->x * mass;
         y1 += atom1->y * mass;
         z1 += atom1->z * mass;
@@ -1466,7 +1730,7 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
 
     for (auto &num2 : group2) {
         auto &atom2 = frame->atom_map[num2];
-        double mass = forcefield.items[atom2->typ]->mass;
+        double mass = forcefield.find_mass(atom2);
         x2 += atom2->x * mass;
         y2 += atom2->y * mass;
         z2 += atom2->z * mass;
@@ -1759,52 +2023,9 @@ class RadicalDistribtuionFunction : public BasicAnalysis {
 
     double xbox, ybox, zbox;
 public:
-    enum class SelectType {
-        Symbol, TypeName, TypeNumber
-    };
 
-    struct AtomIndenter {
-
-        AtomIndenter(SelectType t, std::string name) {
-            this->t = t;
-            boost::trim(name);
-            switch (t) {
-                case SelectType::Symbol:
-                case SelectType::TypeName:
-                    this->name = name;
-                    break;
-                case SelectType::TypeNumber:
-                    type_number = boost::lexical_cast<int>(name);
-                    break;
-            }
-        }
-
-        enum SelectType t;
-
-        std::string name;
-        int type_number;
-
-    };
-
-    std::vector<struct AtomIndenter> ids1;
-    std::vector<struct AtomIndenter> ids2;
-
-    bool is_match(std::shared_ptr<Atom> &atom, std::vector<struct AtomIndenter> &ids) {
-        for (auto &id : ids) {
-            switch (id.t) {
-                case SelectType::Symbol:
-                    if (atom->symbol == id.name) return true;
-                    break;
-                case SelectType::TypeName:
-                    if (atom->type_name == id.name) return true;
-                    break;
-                case SelectType::TypeNumber:
-                    if (atom->typ == id.type_number) return true;
-                    break;
-            }
-        }
-        return false;
-    }
+    std::vector<Atom::AtomIndenter> ids1;
+    std::vector<Atom::AtomIndenter> ids2;
 
     RadicalDistribtuionFunction() {
         enable_outfile = true;
@@ -1819,29 +2040,13 @@ public:
 
 };
 
-ostream &operator<<(ostream &out, std::vector<struct RadicalDistribtuionFunction::AtomIndenter> &ids) {
-    for (auto &id : ids) {
-        switch (id.t) {
-            case RadicalDistribtuionFunction::SelectType::Symbol:
-                out << "S:" << id.name << " ";
-                break;
-            case RadicalDistribtuionFunction::SelectType::TypeName:
-                out << "T:" << id.name << " ";
-                break;
-            case RadicalDistribtuionFunction::SelectType::TypeNumber:
-                out << "N:" << id.type_number << " ";
-                break;
-        }
-    }
-    return out;
-}
 
 void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
     nframe++;
     if (nframe == 1) {
         for (auto &atom : frame->atom_list) {
-            if (is_match(atom, ids1)) numj++;
-            else if (is_match(atom, ids2)) numk++;
+            if (Atom::is_match(atom, ids1)) numj++;
+            else if (Atom::is_match(atom, ids2)) numk++;
         }
     }
     xbox = frame->a_axis;
@@ -1849,14 +2054,14 @@ void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
     zbox = frame->c_axis;
 
     for (auto &atom_j : frame->atom_list) {
-        if (is_match(atom_j, ids1)) {
+        if (Atom::is_match(atom_j, ids1)) {
             double xj = atom_j->x;
             double yj = atom_j->y;
             double zj = atom_j->z;
             auto molj = atom_j->molecule.lock();
 
             for (auto &atom_k : frame->atom_list) {
-                if (is_match(atom_k, ids2)) {
+                if (Atom::is_match(atom_k, ids2)) {
                     if (atom_j != atom_k) {
                         auto mol_k = atom_k->molecule.lock();
                         if (intramol or (molj not_eq mol_k)) {
@@ -1879,46 +2084,7 @@ void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 
 void RadicalDistribtuionFunction::readInfo() {
 
-    namespace qi = boost::spirit::qi;
-    namespace ascii = boost::spirit::ascii;
-    using ascii::char_;
-
-    auto action = [](auto& v, auto ids, auto &message, auto type){
-        std::string result(v.begin(),v.end());
-        std::cout << "<"<< message <<":" << result << ">" << std::endl;
-        const_cast<std::vector<struct AtomIndenter>*>(ids)->emplace_back(type,result);
-    };
-    for(;;) {
-        const string &line = input("Enter mask : ");
-        if (qi::phrase_parse(line.cbegin(),line.cend(),
-                    +(( qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                            boost::phoenix::bind(action,qi::_1,&this->ids1,"mask1:name",SelectType::Symbol)
-                            ]) >> "}")
-                    | ( qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                            boost::phoenix::bind(action,qi::_1,&this->ids1,"mask1:type",SelectType::TypeName)
-                            ]) >> "}")
-                    | ( qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                            boost::phoenix::bind(action,qi::_1,&this->ids1,"mask1:typenumber",SelectType::TypeNumber)
-                            ]) >> "}"))
-                    >> qi::lit("and")
-                    >> +(( qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                            boost::phoenix::bind(action,qi::_1,&this->ids2,"mask2:name",SelectType::Symbol)
-                            ]) >> "}")
-                    | ( qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                            boost::phoenix::bind(action,qi::_1,&this->ids2,"mask2:type",SelectType::TypeName)
-                            ]) >> "}")
-                    | ( qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                            boost::phoenix::bind(action,qi::_1,&this->ids2,"mask2:typenumber",SelectType::TypeNumber)
-                            ]) >> "}")),
-            ascii::space)){
-            break;
-        }
-        std::cout << "Syntax error , Please Reenter !" << std::endl;
-        ids1.clear();
-        ids2.clear();
-    }
-    std::cout << "First Type : " << ids1 << " Second Type : " << ids2 << std::endl;
-
+    Atom::select2group(ids1, ids2);
     rmax = choose(0.0, GMX_DOUBLE_MAX, "Enter Maximum Distance to Accumulate[10.0 Ang]:", true, 10.0);
     width = choose(0.0, GMX_DOUBLE_MAX, "Enter Width of Distance Bins [0.01 Ang]:", true, 0.01);
     string inputline = input("Include Intramolecular Pairs in Distribution[N]:");
@@ -1928,7 +2094,6 @@ void RadicalDistribtuionFunction::readInfo() {
             intramol = true;
         }
     }
-
     nbin = int(rmax / width);
     for (int i = 0; i <= nbin; i++) {
         hist[i] = 0;
@@ -2612,7 +2777,7 @@ enum class Symbol {
 
 
 Symbol which(shared_ptr<Atom> &atom) {
-    double mass = forcefield.items[atom->typ]->mass;
+    double mass = forcefield.find_mass(atom);
     if (mass < 2.0)
         return Symbol::Hydrogen;
     else if (mass > 11.5 and mass < 13.0)
@@ -3949,6 +4114,443 @@ bool NMRRange::recognize_walk(shared_ptr<Atom> atom, shared_ptr<AminoTop::AminoI
     return false;
 }
 
+class RotAcfCutoff : public BasicAnalysis {
+public:
+    double time_increment_ps = 0.1;
+    double cutoff2;
+
+    std::vector<Atom::AtomIndenter> ids1;
+    std::vector<Atom::AtomIndenter> ids2;
+
+    explicit RotAcfCutoff() {
+        enable_outfile = true;
+        enable_forcefield = true;
+    }
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print() override;
+
+    void readInfo() override;
+
+    struct InnerAtom {
+        int index;
+        std::list<std::tuple<double, double, double>> *list_ptr = nullptr;
+
+        InnerAtom(int index, std::list<std::tuple<double, double, double>> *list_ptr)
+                : index(index), list_ptr(list_ptr) {}
+    };
+
+    struct InnerAtomHasher {
+        typedef InnerAtom argument_type;
+        typedef std::size_t result_type;
+
+        result_type operator()(argument_type const &s) const noexcept {
+            result_type seed = 0;
+            boost::hash_combine(seed, s.index);
+            boost::hash_combine(seed, s.list_ptr);
+            return seed;
+        }
+    };
+
+    std::unordered_set<InnerAtom, InnerAtomHasher> inner_atoms;
+
+    std::list<std::list<std::tuple<double, double, double>> *> rots;
+
+    auto find_in(int seq);
+
+    tuple<double, double, double> calVector(shared_ptr<Molecule> &mol, shared_ptr<Frame> &frame);
+
+};
+
+bool operator==(const RotAcfCutoff::InnerAtom &i1, const RotAcfCutoff::InnerAtom &i2) {
+    return i1.index == i2.index and i1.list_ptr == i2.list_ptr;
+}
+
+auto RotAcfCutoff::find_in(int seq) {
+    for (auto iter = inner_atoms.begin(); iter != inner_atoms.end(); ++iter) {
+        if (seq == iter->index) return iter;
+    }
+    return inner_atoms.end();
+}
+
+void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
+    shared_ptr<Atom> ref;
+
+    for (auto &mol : frame->molecule_list) {
+        mol->bExculde = true;
+        for (auto &atom : mol->atom_list) {
+            if (Atom::is_match(atom, ids1)) {
+                ref = atom;
+            } else if (Atom::is_match(atom, ids2)) {
+                mol->bExculde = false;
+            }
+        }
+        mol->calc_mass();
+    }
+    if (!ref) {
+        std::cerr << "reference atom not found" << std::endl;
+        exit(5);
+    }
+    double ref_x = ref->x;
+    double ref_y = ref->y;
+    double ref_z = ref->z;
+    for (auto &mol: frame->molecule_list) {
+        if (!mol->bExculde) {
+            auto coord = mol->calc_weigh_center(frame);
+            double x1 = get<0>(coord);
+            double y1 = get<1>(coord);
+            double z1 = get<2>(coord);
+
+            double xr = x1 - ref_x;
+            double yr = y1 - ref_y;
+            double zr = z1 - ref_z;
+
+            frame->image(xr, yr, zr);
+
+            auto it = find_in(mol->seq());
+            if (xr * xr + yr * yr + zr * zr < cutoff2) {
+                // in the shell
+                if (it != inner_atoms.end()) {
+                    it->list_ptr->push_back(calVector(mol, frame));
+                } else {
+                    auto list_ptr = new std::list<std::tuple<double, double, double>>();
+                    list_ptr->push_back(calVector(mol, frame));
+                    inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
+                    rots.emplace_back(list_ptr);
+                }
+            } else {
+                if (it != inner_atoms.end()) {
+                    inner_atoms.erase(it);
+                }
+            }
+        }
+    }
+}
+
+void RotAcfCutoff::readInfo() {
+
+    Atom::select2group(ids1, ids2);
+
+    double cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
+    this->cutoff2 = cutoff * cutoff;
+
+    while (true) {
+        time_increment_ps = 0.1;
+        string input_line = input(" Enter the Time Increment in Picoseconds [0.1]: ");
+        trim(input_line);
+        if (!input_line.empty()) {
+            time_increment_ps = stod(input_line);
+            if (time_increment_ps <= 0.0) {
+                cout << "error time increment " << time_increment_ps << endl;
+                continue;
+            }
+        }
+        break;
+    }
+
+}
+
+tuple<double, double, double> RotAcfCutoff::calVector(shared_ptr<Molecule> &mol, shared_ptr<Frame> &frame) {
+    auto iter = mol->atom_list.begin();
+
+    auto atom_i = *iter;
+    iter++;
+    auto atom_j = *iter;
+    iter++;
+    auto atom_k = *iter;
+
+    auto u1 = atom_i->x - atom_j->x;
+    auto u2 = atom_i->y - atom_j->y;
+    auto u3 = atom_i->z - atom_j->z;
+
+    auto v1 = atom_k->x - atom_j->x;
+    auto v2 = atom_k->y - atom_j->y;
+    auto v3 = atom_k->z - atom_j->z;
+
+    frame->image(u1, u2, u3);
+    frame->image(v1, v2, v3);
+
+    auto xv3 = u2 * v3 - u3 * v2;
+    auto yv3 = u3 * v1 - u1 * v3;
+    auto zv3 = u1 * v2 - u2 * v1;
+
+    return std::make_tuple(xv3, yv3, zv3);
+}
+
+void RotAcfCutoff::print() {
+    std::vector<std::pair<int, double>> acf;
+    acf.emplace_back(0, 0.0);
+    for (auto list_ptr : this->rots) {
+        int i = 0;
+        for (auto it1 = list_ptr->begin(); it1 != --list_ptr->end(); it1++) {
+            i++;
+            int j = i;
+            auto it2 = it1;
+            for (it2++; it2 != list_ptr->end(); it2++) {
+                j++;
+                int m = j - i;
+                if (m >= acf.size()) acf.emplace_back(0, 0.0);
+
+                double xr1 = get<0>(*it1);
+                double yr1 = get<1>(*it1);
+                double zr1 = get<2>(*it1);
+
+                double xr2 = get<0>(*it2);
+                double yr2 = get<1>(*it2);
+                double zr2 = get<2>(*it2);
+
+
+                double r1_2 = xr1 * xr1 + yr1 * yr1 + zr1 * zr1;
+                double r2_2 = xr2 * xr2 + yr2 * yr2 + zr2 * zr2;
+
+                double dot = xr1 * xr2 + yr1 * yr2 + zr1 * zr2;
+
+                double cos = dot / std::sqrt(r1_2 * r2_2);
+
+                acf[m].second += cos;
+                acf[m].first++;
+            }
+        }
+    }
+
+    for (int i = 1; i < acf.size(); i++) {
+        double counts = acf[i].first;
+        acf[i].second /= counts;
+    }
+
+    acf[0].second = 1.0;
+    // intergrate;
+
+    std::vector<double> integrate(acf.size());
+    integrate[0] = 0.0;
+
+    for (std::size_t i = 1; i < integrate.size(); i++) {
+        integrate[i] = integrate[i - 1] + 0.5 * (acf[i - 1].second + acf[i].second) * time_increment_ps;
+    }
+
+    outfile << "*********************************************************" << endl;
+    outfile << "cutoff : " << std::sqrt(cutoff2) << std::endl;
+    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
+    outfile << " rotational autocorrelation function" << endl;
+
+    outfile << "    Time Gap      ACF       intergrate" << endl;
+    outfile << "      (ps)                    (ps)" << endl;
+
+    for (std::size_t t = 0; t < acf.size(); t++) {
+        outfile << boost::format("%12.2f%18.14f%15.5f") % (t * time_increment_ps) % acf[t].second % integrate[t]
+                << endl;
+    }
+    outfile << "*********************************************************" << endl;
+
+}
+
+
+class DiffuseCutoff : public BasicAnalysis {
+public:
+    double time_increment_ps = 0.1;
+    double cutoff2;
+
+    std::vector<Atom::AtomIndenter> ids1;
+    std::vector<Atom::AtomIndenter> ids2;
+
+
+    DiffuseCutoff() {
+        enable_outfile = true;
+        enable_forcefield = true;
+    }
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print() override;
+
+    void readInfo() override;
+
+    struct InnerAtom {
+        int index;
+        std::list<std::tuple<double, double, double>> *list_ptr = nullptr;
+
+        InnerAtom(int index, std::list<std::tuple<double, double, double>> *list_ptr)
+                : index(index), list_ptr(list_ptr) {}
+    };
+
+    struct InnerAtomHasher {
+        typedef InnerAtom argument_type;
+        typedef std::size_t result_type;
+
+        result_type operator()(argument_type const &s) const noexcept {
+            result_type
+            const h1 ( std::hash<int>()
+            (s.index));
+            result_type
+            const h2 ( std::hash<std::list<std::tuple<double, double, double>> *>()
+            (s.list_ptr));
+            return h1 ^ (h2 << 1); // or use boost::hash_combine (see Discussion)
+        }
+    };
+
+    std::unordered_set<InnerAtom, InnerAtomHasher> inner_atoms;
+
+    std::list<std::list<std::tuple<double, double, double>> *> rcm;
+
+    auto find_in(int seq);
+
+};
+
+bool operator==(const DiffuseCutoff::InnerAtom &i1, const DiffuseCutoff::InnerAtom &i2) {
+    return i1.index == i2.index and i1.list_ptr == i2.list_ptr;
+}
+
+auto DiffuseCutoff::find_in(int seq) {
+    for (auto iter = inner_atoms.begin(); iter != inner_atoms.end(); ++iter) {
+        if (seq == iter->index) return iter;
+    }
+    return inner_atoms.end();
+}
+
+void DiffuseCutoff::process(std::shared_ptr<Frame> &frame) {
+    shared_ptr<Atom> ref;
+
+    for (auto &mol : frame->molecule_list) {
+        mol->bExculde = true;
+        for (auto &atom : mol->atom_list) {
+            if (Atom::is_match(atom, ids1)) {
+                ref = atom;
+            } else if (Atom::is_match(atom, ids2)) {
+                mol->bExculde = false;
+            }
+        }
+        mol->calc_mass();
+    }
+    if (!ref) {
+        std::cerr << "reference atom not found" << std::endl;
+        exit(5);
+    }
+    double ref_x = ref->x;
+    double ref_y = ref->y;
+    double ref_z = ref->z;
+    for (auto &mol: frame->molecule_list) {
+        if (!mol->bExculde) {
+            auto coord = mol->calc_weigh_center(frame);
+            double x1 = get<0>(coord);
+            double y1 = get<1>(coord);
+            double z1 = get<2>(coord);
+
+            double xr = x1 - ref_x;
+            double yr = y1 - ref_y;
+            double zr = z1 - ref_z;
+
+            frame->image(xr, yr, zr);
+
+            auto it = find_in(mol->seq());
+            if (xr * xr + yr * yr + zr * zr < cutoff2) {
+                // in the shell
+                if (it != inner_atoms.end()) {
+                    auto &old = it->list_ptr->back();
+
+                    double xold = get<0>(old);
+                    double yold = get<1>(old);
+                    double zold = get<2>(old);
+
+                    xr = x1 - xold;
+                    yr = y1 - yold;
+                    zr = z1 - zold;
+
+                    frame->image(xr, yr, zr);
+
+                    it->list_ptr->emplace_back(xr + xold, yr + yold, zr + zold);
+                } else {
+                    auto list_ptr = new std::list<std::tuple<double, double, double>>();
+                    list_ptr->emplace_back(x1, y1, z1);
+                    inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
+                    rcm.emplace_back(list_ptr);
+                }
+            } else {
+                if (it != inner_atoms.end()) {
+                    inner_atoms.erase(it);
+                }
+            }
+
+        }
+    }
+}
+
+void DiffuseCutoff::print() {
+    std::vector<std::pair<int, tuple<double, double, double>>> msd;
+    for (auto list_ptr : this->rcm) {
+        int i = 0;
+        for (auto it1 = list_ptr->begin(); it1 != --list_ptr->end(); it1++) {
+            i++;
+            int j = i;
+            auto it2 = it1;
+            for (it2++; it2 != list_ptr->end(); it2++) {
+                j++;
+                int m = j - i - 1;
+                if (m >= msd.size()) msd.emplace_back(0, std::make_tuple(0.0, 0.0, 0.0));
+                double xdiff = get<0>(*it2) - get<0>(*it1);
+                double ydiff = get<1>(*it2) - get<1>(*it1);
+                double zdiff = get<2>(*it2) - get<2>(*it1);
+                get<0>(msd[m].second) += xdiff * xdiff;
+                get<1>(msd[m].second) += ydiff * ydiff;
+                get<2>(msd[m].second) += zdiff * zdiff;
+                msd[m].first++;
+            }
+        }
+    }
+
+    const double dunits = 10.0;
+
+    for (int i = 0; i < msd.size(); i++) {
+        double counts = msd[i].first;
+        get<0>(msd[i].second) /= counts;
+        get<1>(msd[i].second) /= counts;
+        get<2>(msd[i].second) /= counts;
+    }
+
+    outfile << "*********************************************************" << endl;
+    outfile << "cutoff : " << std::sqrt(cutoff2) << std::endl;
+    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
+    outfile << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
+    outfile << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD       Diff Const" << endl;
+    outfile << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)    (x 10^-5 cm**2/sec)" << endl;
+
+    for (int i = 0; i < msd.size(); i++) {
+        double delta = time_increment_ps * (i + 1);
+        double xvalue = get<0>(msd[i].second);
+        double yvalue = get<1>(msd[i].second);
+        double zvalue = get<2>(msd[i].second);
+        double rvalue = xvalue + yvalue + zvalue;
+        double dvalue = dunits * rvalue / delta / 6.0;
+        outfile << fmt::sprintf("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f",
+                                delta, xvalue, yvalue, zvalue, rvalue, dvalue) << endl;
+    }
+    outfile << "*********************************************************" << endl;
+}
+
+void DiffuseCutoff::readInfo() {
+
+    Atom::select2group(ids1, ids2);
+
+    double cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
+    this->cutoff2 = cutoff * cutoff;
+
+    while (true) {
+        time_increment_ps = 0.1;
+        string input_line = input(" Enter the Time Increment in Picoseconds [0.1]: ");
+        trim(input_line);
+        if (!input_line.empty()) {
+            time_increment_ps = stod(input_line);
+            if (time_increment_ps <= 0.0) {
+                cout << "error time increment " << time_increment_ps << endl;
+                continue;
+            }
+        }
+        break;
+    }
+
+}
+
+
 class Diffuse : public BasicAnalysis {
 public:
     bool first_frame = true;
@@ -3962,7 +4564,6 @@ public:
 
     Diffuse() {
         enable_forcefield = true;
-
         enable_outfile = true;
     }
 
@@ -4142,25 +4743,26 @@ void Diffuse::print() {
 
     const double dunits = 10.0;
 
+
     for (int i = 0; i < total_frame_number - 1; i++) {
         double counts = total_mol * ntime[i];
-        xmsd[i] *= dunits / counts;
-        ymsd[i] *= dunits / counts;
-        zmsd[i] *= dunits / counts;
+        xmsd[i] /= counts;
+        ymsd[i] /= counts;
+        zmsd[i] /= counts;
     }
 
     outfile << "*********************************************************" << endl;
     outfile << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
     outfile << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD        Diff Const" << endl;
-    outfile << "      (ps)         (/2)        (/2)        (/2)        (/6)      (x 10^-5 cm**2/sec)" << endl;
+    outfile << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)     (x 10^-5 cm**2/sec)" << endl;
 
     for (int i = 0; i < total_frame_number - 1; i++) {
         double delta = time_increment_ps * (i + 1);
-        double xvalue = xmsd[i] / 2;
-        double yvalue = ymsd[i] / 2;
-        double zvalue = zmsd[i] / 2;
-        double rvalue = (xmsd[i] + ymsd[i] + zmsd[i]) / 6;
-        double dvalue = rvalue / delta;
+        double xvalue = xmsd[i];
+        double yvalue = ymsd[i];
+        double zvalue = zmsd[i];
+        double rvalue = xmsd[i] + ymsd[i] + zmsd[i];
+        double dvalue = dunits * rvalue / delta / 6.0;
         outfile << fmt::sprintf("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f",
                                 delta, xvalue, yvalue, zvalue, rvalue, dvalue) << endl;
 
@@ -4250,12 +4852,336 @@ void Diffuse::readInfo() {
 }
 
 
+class DipoleAngle : public BasicAnalysis {
+public:
+    DipoleAngle() {
+        enable_forcefield = true;
+        enable_outfile = true;
+    }
+
+    virtual ~DipoleAngle() = default;
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print() override;
+
+    void readInfo() override;
+
+protected:
+
+    std::vector<Atom::AtomIndenter> ids1;
+    std::vector<Atom::AtomIndenter> ids2;
+
+    double distance_width;
+    double angle_width;
+
+    int distance_bins;
+    int angle_bins;
+
+    map<pair<int, int>, size_t> hist;
+};
+
+void DipoleAngle::process(std::shared_ptr<Frame> &frame) {
+    shared_ptr<Atom> ref;
+
+    for (auto &mol : frame->molecule_list) {
+        mol->bExculde = true;
+        for (auto &atom : mol->atom_list) {
+            if (Atom::is_match(atom, ids1)) {
+                ref = atom;
+            } else if (Atom::is_match(atom, ids2)) {
+                mol->ow = atom;
+                mol->bExculde = false;
+            }
+        }
+        mol->calc_mass();
+    }
+    if (!ref) {
+        std::cerr << "reference atom not found" << std::endl;
+        exit(5);
+    }
+    double ref_x = ref->x;
+    double ref_y = ref->y;
+    double ref_z = ref->z;
+    for (auto &mol: frame->molecule_list) {
+        if (!mol->bExculde) {
+
+            double x1 = mol->ow->x;
+            double y1 = mol->ow->y;
+            double z1 = mol->ow->z;
+
+            double xr = x1 - ref_x;
+            double yr = y1 - ref_y;
+            double zr = z1 - ref_z;
+
+            frame->image(xr, yr, zr);
+
+            double distance = sqrt(xr * xr + yr * yr + zr * zr);
+
+            auto dipole = mol->calc_dipole(frame);
+
+            double dipole_scalar = sqrt(pow(get<0>(dipole), 2) + pow(get<1>(dipole), 2) + pow(get<2>(dipole), 2));
+
+            double _cos =
+                    (xr * get<0>(dipole) + yr * get<1>(dipole) + zr * get<2>(dipole)) / (distance * dipole_scalar);
+
+            double angle = acos(_cos) * 180.0 / 3.1415926;
+
+            int i_distance_bin = int(distance / distance_width) + 1;
+            int i_angle_bin = int(angle / angle_width) + 1;
+
+            if (i_distance_bin <= distance_bins and i_angle_bin <= angle_bins) {
+                hist[make_pair(i_distance_bin, i_angle_bin)] += 1;
+            }
+        }
+    }
+}
+
+void DipoleAngle::print() {
+
+//    outfile << boost::format("%5s") % "Dist";
+//    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+//        outfile << boost::format("%7.1f") % (i_angle  * angle_width);
+//    }
+//    outfile << endl;
+//    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+//        outfile << boost::format("%5.3f") % (i_distance * distance_width);
+//        size_t total = 0;
+//        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+//            total += hist[make_pair(i_distance,i_angle)];
+//        }
+//        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+//            outfile << boost::format("%7.4f") % ( total == 0 ? 0.0 : double(hist[make_pair(i_distance,i_angle)]) / total);
+//        }
+//        outfile << endl;
+//    }
+    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        size_t total = 0;
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            total += hist[make_pair(i_distance, i_angle)];
+        }
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            outfile << boost::format("%5.3f%10.3f%10.4f\n")
+                       % ((i_distance - 0.5) * distance_width)
+                       % ((i_angle - 0.5) * angle_width)
+                       % (total == 0 ? 0.0 : double(hist[make_pair(i_distance, i_angle)]) / total);
+        }
+    }
+}
+
+void DipoleAngle::readInfo() {
+    Atom::select2group(ids1, ids2);
+    double rmax = choose(0.0, GMX_DOUBLE_MAX, "Enter Maximum Distance to Accumulate[10.0 Ang]:", true, 10.0);
+    distance_width = choose(0.0, GMX_DOUBLE_MAX, "Enter Width of Distance Bins [0.01 Ang]:", true, 0.01);
+    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
+    angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
+
+    distance_bins = int(rmax / distance_width);
+    angle_bins = int(angle_max / angle_width);
+
+    for (int i_distance = 1; i_distance <= distance_bins; i_distance++) {
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            hist[make_pair(i_distance, i_angle)] = 0;
+        }
+    }
+}
+
+class DipoleAngleSingleDistanceNormal : public DipoleAngle {
+public:
+    void print() override;
+
+};
+
+void DipoleAngleSingleDistanceNormal::print() {
+    outfile << "DipoleAngleSingleDistanceNormal : " << std::endl;
+     double factor = (4.0 / 3.0) * M_PI;
+    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        size_t total = 0;
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            total += hist[make_pair(i_distance, i_angle)];
+        }
+        double dv = factor * (pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3));
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            outfile << boost::format("%5.3f   %10.2f   %g\n")
+                       % ((i_distance - 0.5) * distance_width)
+                       % ((i_angle - 0.5) * angle_width)
+                       % (total == 0 ? 0.0 : double(hist[make_pair(i_distance, i_angle)]) / (total * dv * angle_width));
+        }
+    }
+}
+
+class DipoleAngleVolumeNormal : public DipoleAngle {
+public:
+    void print() override;
+};
+
+void DipoleAngleVolumeNormal::print() {
+    outfile << "DipoleAngleVolumeNormal : " << std::endl;
+    size_t total = 0;
+     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            total += hist[make_pair(i_distance, i_angle)];
+        }
+
+    }
+     double factor = (4.0 / 3.0) * M_PI ;
+    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        double dv = factor * (pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3));
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            outfile << boost::format("%5.3f   %10.3f   %g\n")
+                       % ((i_distance - 0.5 )* distance_width)
+                       % ((i_angle - 0.5)* angle_width)
+                       % (total == 0 ? 0.0 : double(hist[make_pair(i_distance, i_angle)]) / ( total * dv * angle_width));
+        }
+    }
+}
+
+
+class DipoleAngle2Gibbs : public DipoleAngle {
+public:
+    void print() override;
+
+    void readInfo() override;
+
+protected:
+
+    const double kb = 1.380649e-23; // unit: J/K
+    double temperature;  // unit: K
+    const double avogadro_constant = 6.022140857e23;
+
+};
+
+void DipoleAngle2Gibbs::print() {
+
+    double factor = -kb * temperature * avogadro_constant / 4184.0;
+    double max_value = 0.0;
+
+    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            max_value = max(max_value,hist[make_pair(i_distance, i_angle)] / (dv));
+        }
+    }
+    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            double pop = double(hist[make_pair(i_distance, i_angle)]) / (max_value * dv);
+            outfile << boost::format("%5.3f   %10.3f   %15.6f\n")
+                       % ((i_distance - 0.5) * distance_width)
+                       % ((i_angle - 0.5) * angle_width)
+                       % (pop == 0.0 ? 100.0 : factor * log(pop));
+        //               %  pop;
+        }
+    }
+
+    /*for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            max_value = max(max_value,hist[make_pair(i_distance, i_angle)] / (angle_width));
+        }
+    }
+    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+        double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
+        for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+            double pop = double(hist[make_pair(i_distance, i_angle)]) / (max_value * angle_width);
+            outfile << boost::format("%5.3f%7.1f%10.6f\n")
+                       % (i_distance * distance_width)
+                       % (i_angle * angle_width)
+                     //  % (pop == 0.0 ? 10000.0 : factor * log(pop));
+                       %  pop;
+        }
+    }
+    */
+}
+
+void DipoleAngle2Gibbs::readInfo() {
+    DipoleAngle::readInfo();
+    temperature = choose(0.0, 10000.0, "Temperature [298] (K):", true, 298.0);
+}
+
+
+
+class ShellDensity : public BasicAnalysis {
+public:
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print() override;
+
+    ShellDensity();
+
+    void readInfo() override;
+
+protected:
+    std::vector<Atom::AtomIndenter> ids1;
+    std::vector<Atom::AtomIndenter> ids2;
+
+    double distance_width;
+
+    int distance_bins;
+
+    map<int, size_t> hist;
+
+    size_t nframe = 0;
+
+};
+
+void ShellDensity::process(std::shared_ptr<Frame> &frame) {
+    nframe++;
+    for( auto & ref : frame->atom_list){
+        if (Atom::is_match(ref,ids1)) {
+            for (auto &atom : frame->atom_list){
+                if (Atom::is_match(atom,ids2)) {
+                    int ibin = int(atom_distance(ref,atom,frame) / distance_width) + 1;
+                    if ( ibin <= distance_bins){
+                        hist[ibin]++;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ShellDensity::print() {
+    outfile << "************************************************" << endl;
+    outfile << "***** Shell Density Function ****" << endl;
+
+    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
+
+    outfile << "************************************************" << endl;
+    outfile << "Bin    Distance    Densitry (count / Ang3 / frame)" << endl;
+
+    for (int i = 1; i <= distance_bins; i++) {
+        double dv = (4.0 / 3.0) * M_PI * (pow(i*distance_width,3) -  pow((i-1)*distance_width,3));
+        outfile << fmt::sprintf("%d      %.4f      %g \n",
+                                i, (i - 0.5) * distance_width, hist[i] / (nframe * dv));
+    }
+
+    outfile << "************************************************" << endl;
+}
+
+
+void ShellDensity::readInfo() {
+    Atom::select2group(ids1, ids2);
+    double rmax = choose(0.0, GMX_DOUBLE_MAX, "Enter Maximum Distance to Accumulate[10.0 Ang]:", true, 10.0);
+    distance_width = choose(0.0, GMX_DOUBLE_MAX, "Enter Width of Distance Bins [0.01 Ang]:", true, 0.01);
+    distance_bins = int(rmax / distance_width);
+    for (int i = 1; i <= distance_bins; i++) {
+        hist[i] = 0;
+    }
+}
+
+ShellDensity::ShellDensity() {
+    enable_outfile = true;
+}
+
 void processOneFrame(shared_ptr<Frame> &frame,
                      shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
     for (auto &task : *task_list) {
         task->process(frame);
     }
 }
+
+
+
 
 auto getTasks() {
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
@@ -4273,9 +5199,16 @@ auto getTasks() {
         std::cout << "(9) Cluster Analysis(linkage) " << std::endl;
         std::cout << "(10) NMRRange Analysis " << std::endl;
         std::cout << "(11) Diffusion Coefficient by Einstein equation" << std::endl;
-        std::cout << "(12) Water exchange analysis" << std::endl;
-        std::cout << "(13) Start" << std::endl;
-        return choose(0, 13, "select :");
+        std::cout << "(12) Diffusion Cutoff Coefficient by Einstein equation" << std::endl;
+        std::cout << "(13) Water exchange analysis" << std::endl;
+        std::cout << "(14) Rotational autocorrelation function" << std::endl;
+        std::cout << "(15) Dipole Angle" << std::endl;
+        std::cout << "(16) Dipole Angle to Gibbs Free Energy" << std::endl;
+        std::cout << "(17) Dipole Angle of single distance normal" << std::endl;
+        std::cout << "(18) Dipole Angle of volume normal" << std::endl;
+        std::cout << "(19) Shell Density function" << std::endl;
+        std::cout << "(20) Start" << std::endl;
+        return choose(0, 20, "select :");
     };
     while (true) {
         int num = menu1();
@@ -4297,28 +5230,49 @@ auto getTasks() {
                 task = std::make_shared<ResidenceTime>();
                 break;
             case 5:
-                task = make_shared<GreenKubo>();
+                task = std::make_shared<GreenKubo>();
                 break;
             case 6:
-                task = make_shared<HBond>();
+                task = std::make_shared<HBond>();
                 break;
             case 7:
-                task = make_shared<RMSDCal>();
+                task = std::make_shared<RMSDCal>();
                 break;
             case 8:
-                task = make_shared<RMSFCal>();
+                task = std::make_shared<RMSFCal>();
                 break;
             case 9:
-                task = make_shared<Cluster>();
+                task = std::make_shared<Cluster>();
                 break;
             case 10:
-                task = make_shared<NMRRange>();
+                task = std::make_shared<NMRRange>();
                 break;
             case 11:
                 task = std::make_shared<Diffuse>();
                 break;
             case 12:
+                task = std::make_shared<DiffuseCutoff>();
+                break;
+            case 13:
                 task = std::make_shared<FirstCoordExchangeSearch>();
+                break;
+            case 14:
+                task = std::make_shared<RotAcfCutoff>();
+                break;
+            case 15:
+                task = std::make_shared<DipoleAngle>();
+                break;
+            case 16:
+                task = std::make_shared<DipoleAngle2Gibbs>();
+                break;
+            case 17:
+                task = std::make_shared<DipoleAngleSingleDistanceNormal>();
+                break;
+            case 18:
+                task = std::make_shared<DipoleAngleVolumeNormal>();
+                break;
+            case 19:
+                task = std::make_shared<ShellDensity>();
                 break;
             default:
                 return task_list;
@@ -4374,7 +5328,7 @@ int main(int argc, char *argv[]) {
 
     po::options_description desc("Allowed options");
     desc.add_options()
-            ("help,h", "produce hellp message")
+            ("help,h", "show this help message")
             ("topology,p", po::value<string>(), "topology file")
             ("file,f", po::value<string>(), "trajectory file")
             ("output,o", po::value<string>(), "output file")
@@ -4410,14 +5364,14 @@ int main(int argc, char *argv[]) {
     while (enable_forcefield) {
         if (vm.count("prm")) {
             auto ff = vm["prm"].as<string>();
-            if (file_exist(ff) and ext_filename(ff) == "prm") {
+            if (file_exist(ff)) {
                 forcefield.read(ff);
                 break;
             }
             cout << "force field file " << ff << " is bad ! please retype !" << endl;
 
         }
-        forcefield.read(choose_file("force field filename:", true, "prm"));
+        forcefield.read(choose_file("force field filename:", true));
         break;
     }
     int start = choose(1, INT32_MAX, "Enter the start frame[1]:", true, 1);
@@ -4426,7 +5380,8 @@ int main(int argc, char *argv[]) {
 
     tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
     if (enable_tbb) {
-        int threads = choose(0, sysconf(_SC_NPROCESSORS_ONLN), "How many cores to used in parallel[automatic]:", true,
+        int threads = choose(0, sysconf(_SC_NPROCESSORS_ONLN), "How many cores to used in parallel[automatic]:",
+                             true,
                              0);
         tbb_init.initialize(threads == 0 ? tbb::task_scheduler_init::automatic : threads);
     }
