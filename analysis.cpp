@@ -20,6 +20,8 @@
 #include <string>
 #include <unistd.h>
 #include <functional>
+#include <fnmatch.h>
+
 
 using namespace std;
 
@@ -44,23 +46,33 @@ namespace gmx {
 
 #include <boost/program_options.hpp>
 
+namespace po = boost::program_options;
+
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 
-namespace po = boost::program_options;
+// Boost metaprograming library
+#include <boost/mpl/vector.hpp>
+#include <boost/mpl/for_each.hpp>
+#include <boost/mpl/size.hpp>
+
+namespace mpl = boost::mpl;
 
 
 #include <boost/format.hpp>
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include <boost/spirit/include/support.hpp>
-#include <boost/spirit/include/lex.hpp>
 #include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
-
+#include <boost/phoenix.hpp>
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
+#include <boost/fusion/sequence/intrinsic/at_c.hpp>
+#include <boost/fusion/include/at_c.hpp>
+#include <boost/phoenix/function/adapt_function.hpp>
+
 
 const int ATOM_MAX = 10000;
 
@@ -111,58 +123,19 @@ void operator delete[](void *ptr, const std::nothrow_t &) throw() {
     operator delete(ptr, std::nothrow);
 }
 
+
 bool file_exist(const string &name) {
     fstream in(name, ofstream::in);
     return in.good();
 }
 
-std::vector<std::string> split(const std::string &str, char sep = ' ') {
+
+std::vector<std::string> split(const std::string &str, const string &sep = " ") {
     std::vector<std::string> ret_;
-    if (str.empty()) {
-        return ret_;
-    }
-    std::string::size_type pos1 = 0;
-    std::string::size_type pos2 = 0;
-    std::string::size_type i = 0;
-
-    bool prev = false;
-    for (auto &ch : str) {
-        if (ch != sep && ch != '\t') {
-            if (!prev)
-                pos1 = i;
-            prev = true;
-        } else {
-            if (prev) {
-                pos2 = i;
-                prev = false;
-                ret_.push_back(str.substr(pos1, pos2 - pos1));
-            }
-        }
-        i++;
-    }
-    if (prev) ret_.push_back(str.substr(pos1, str.size() - pos1));
-
+    boost::split(ret_, str, boost::is_any_of(sep));
     return ret_;
 }
 
-std::string &trim(std::string &str) {
-    if (str.empty()) {
-        return str;
-    }
-    str.erase(0, str.find_first_not_of(' '));
-    str.erase(str.find_last_not_of(' ') + 1);
-    return str;
-}
-
-std::string &str_toupper(string &str) {
-    for (auto &c: str) c = toupper(c);
-    return str;
-}
-
-std::string &str_tolower(string &str) {
-    for (auto &c: str) c = tolower(c);
-    return str;
-}
 
 string input(const string &prompt = "") {
     std::cout << prompt;
@@ -174,57 +147,58 @@ string input(const string &prompt = "") {
     return inputline;
 }
 
-int choose(int min, int max, const string &prompt, bool hasdefault = false, int value = 0) {
+
+template<typename T>
+struct type_name_string {
+
+};
+
+template<>
+struct type_name_string<int> {
+    constexpr static auto value = "int";
+};
+
+template<>
+struct type_name_string<double> {
+    constexpr static auto value = "double";
+};
+
+
+template<typename T, typename = std::enable_if_t<std::is_same<T, int>::value || std::is_same<T, double>::value>>
+T choose(T min, T max, const string &prompt, bool hasdefault = false, T value = T()) {
     while (true) {
         string input_line = input(prompt);
-        trim(input_line);
+        boost::trim(input_line);
         if (input_line.empty()) {
             if (!hasdefault) continue;
             return value;
         }
         try {
-            int option = stoi(input_line);
+            int option = boost::lexical_cast<T>(input_line);
             if (option >= min and option <= max) return option;
 
-            cerr << fmt::sprintf("must be a integer range %d and %d ! please retype!\n", min, max);
-        } catch (std::invalid_argument) {
-            cerr << "must be a integer ! please retype!" << endl;
-        }
-    }
-}
-
-double choose(double min, double max, const string &prompt, bool hasdefault = false, double value = 0.0) {
-    while (true) {
-        string input_line = input(prompt);
-        trim(input_line);
-        if (input_line.empty()) {
-            if (!hasdefault) continue;
-            return value;
-        }
-        try {
-            double option = stod(input_line);
-            if (option > min and option <= max) return option;
-
-            cerr << fmt::sprintf("must be a float range %f and %f ! please retype!\n", min, max);
-        } catch (std::invalid_argument) {
-            cerr << "invalid_argument ! please retype!" << endl;
+            cerr << "must be a " << type_name_string<T>::value << " range " << min << " and " << max
+                 << "! please retype!\n";
+        } catch (boost::bad_lexical_cast &e) {
+            cerr << "must be a " << type_name_string<T>::value << " ! please retype!" << e.what() << endl;
         }
     }
 }
 
 
 string ext_filename(const string &filename) {
-    auto field = split(filename, '.');
-    return str_tolower(field[field.size() - 1]);
+    auto field = split(filename, ".");
+
+    return boost::to_lower_copy(field[field.size() - 1]);
 }
 
-string choose_file(const string &prompt, bool exist, string ext = "", bool canempty = false) {
+string choose_file(const string &prompt, bool exist, string ext = "", bool can_empty = false) {
     while (true) {
         string input_line = input(prompt);
-        trim(input_line);
+        boost::trim(input_line);
         if (!input_line.empty()) {
             if (ext.length()) {
-                if (ext_filename(input_line) != str_tolower(ext)) {
+                if (ext_filename(input_line) != boost::to_lower_copy(ext)) {
                     cerr << "wrong file extesion name : must be " << ext << endl;
                     continue;
                 }
@@ -238,7 +212,7 @@ string choose_file(const string &prompt, bool exist, string ext = "", bool canem
                 cerr << "The file is bad [retype]" << endl;
             }
         }
-        if (canempty) return "";
+        if (can_empty) return "";
     }
 }
 
@@ -246,11 +220,18 @@ string choose_file(const string &prompt, bool exist, string ext = "", bool canem
 template<typename T>
 T sign(T &x, T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
 
+
+using boost::variant;
+
 class Molecule;
+
+namespace qi = boost::spirit::qi;
+namespace fusion = boost::fusion;
+namespace phoenix = boost::phoenix;
 
 class Atom {
 public:
-    int seq;
+    size_t seq;
     std::string symbol;
 
     double x, y, z;  // position
@@ -262,178 +243,553 @@ public:
 
     double charge;
 
-    std::list<int> con_list; // atom num that connect to
+    std::list<size_t> con_list; // atom num that connect to
 
     std::weak_ptr<Molecule> molecule;
 
+    boost::optional<std::string> residue_name;
+    boost::optional<uint> residue_num;
+
+    boost::optional<std::string> atom_symbol;
+
     bool mark = false; // used in NMR analysis
 
-    bool adj(std::shared_ptr<Atom> &atom) {
-        for (int i : con_list) {
+    bool adj(const std::shared_ptr<Atom> &atom) {
+        for (auto i : con_list) {
             if (atom->seq == i) return true;
         }
         return false;
     }
 
-    enum class SelectType {
-        Symbol, TypeName, TypeNumber
+
+    enum class Op {
+        NOT, AND, OR
     };
 
-    struct Atom_Indenter_Symbol {
-        std::string name;
-    };
-    struct Atom_Indenter_TypeName {
-        std::string name;
-    };
-    struct Atom_Indenter_TypeNumber {
-        int type_number;
-    };
-    typedef boost::variant<Atom_Indenter_Symbol, Atom_Indenter_TypeName, Atom_Indenter_TypeNumber> AtomIndenter;
 
-    static bool is_match(std::shared_ptr<Atom> &atom, const std::vector<AtomIndenter> &ids);
+    struct Operator;
+    struct atom_name_nums;
+    struct atom_types;
+    struct residue_name_nums;
+    struct atom_element_names;
 
-    static bool is_match(std::shared_ptr<Atom> &atom, const AtomIndenter &id);
+    using Node =  variant<shared_ptr<Operator>, shared_ptr<residue_name_nums>,
+            shared_ptr<atom_name_nums>, shared_ptr<atom_types>, shared_ptr<atom_element_names>>;
 
-    static void select2group(std::vector<AtomIndenter> &ids1, std::vector<AtomIndenter> &ids2);
+    struct Operator {
+        explicit Operator(Op op, Node node1 = Node(), Node node2 = Node()) : op(op), node1(node1), node2(node2) {}
+
+        Op op;
+        Node node1;
+        Node node2;
+    };
+
+    typedef std::vector<variant<fusion::vector<uint, boost::optional<uint>>, std::string>> select_ranges;
+
+    struct residue_name_nums {
+        select_ranges val;
+
+        explicit residue_name_nums(const select_ranges &val) : val(val) {}
+
+    };
+
+    struct atom_name_nums {
+        select_ranges val;
+
+        explicit atom_name_nums(const select_ranges &val) : val(val) {}
+
+        explicit atom_name_nums(const std::string &name) {
+            val.emplace_back(name);
+        }
+    };
+
+
+    struct atom_types {
+        select_ranges val;
+
+        explicit atom_types(const select_ranges &val) : val(val) {}
+
+        explicit atom_types(const std::string &type) {
+            val.push_back(type);
+        }
+
+        explicit atom_types(int typenum) {
+            fusion::vector<uint, boost::optional<uint>> t;
+            fusion::at_c<0>(t) = typenum;
+            val.emplace_back(t);
+        }
+    };
+
+    struct atom_element_names {
+        std::vector<std::string> val;
+
+        explicit atom_element_names(const std::vector<std::string> &val) : val(val) {}
+    };
+
+
+    typedef struct {
+        Node ast;
+        std::string input_string;
+    } AtomIndenter;
+
+    static bool is_match(const std::shared_ptr<Atom> &atom, const AtomIndenter &id);
+
+    static void
+    select2group(Atom::AtomIndenter &ids1, Atom::AtomIndenter &ids2,
+                 const string &prompt1 = "Enter mask for atom1 : ",
+                 const string &prompt2 = "Enter mask for atom2 : ");
+
+    static void select1group(AtomIndenter &ids, const string &prompt = "Enter mask for atom : ");
+
 };
 
-ostream &operator<<(ostream &out, std::vector<Atom::AtomIndenter> &ids) {
-    struct Output : public boost::static_visitor<> {
-        ostream &out;
-    public:
-        Output(ostream &out) : out(out) {}
+template<typename Iterator>
+struct Grammar : qi::grammar<Iterator, Atom::Node()> {
+    Grammar();
 
-        void operator()(Atom::Atom_Indenter_Symbol &t) const {
-            out << "S:" << t.name << " ";
-        }
 
-        void operator()(Atom::Atom_Indenter_TypeName &t) const {
-            out << "T:" << t.name << " ";
-        }
+    qi::rule<Iterator, variant<fusion::vector<uint, boost::optional<uint>>, std::string>()> select_item_rule;
+    qi::rule<Iterator, Atom::Node()> residue_select_rule;
+    qi::rule<Iterator, Atom::Node()> nametype_select_rule;
+    qi::rule<Iterator, Atom::Node()> select_rule;
+    qi::rule<Iterator, Atom::Node()> factor, factor2;
+    qi::rule<Iterator, Atom::Node()> term;
+    qi::rule<Iterator, Atom::Node()> expr;
 
-        void operator()(Atom::Atom_Indenter_TypeNumber &t) const {
-            out << "N:" << t.type_number << " ";
-        }
-    } output(out);
+    qi::rule<Iterator, std::string()> string_with_wildcard;
 
-    for (auto &id : ids) {
-        boost::apply_visitor(output, id);
+
+};
+
+
+BOOST_PHOENIX_ADAPT_FUNCTION(std::string, replace_all_copy, boost::replace_all_copy, 3)
+
+template<typename T>
+struct make_shared_f {
+    template<typename... A>
+    struct result {
+        typedef std::shared_ptr<T> type;
+    };
+
+    template<typename... A>
+    typename result<A...>::type operator()(A &&... a) const {
+        return std::make_shared<T>(std::forward<A>(a)...);
     }
+};
+
+
+template<typename T, typename... _Args>
+inline auto make_shared_(_Args &&... __args) {
+    return boost::phoenix::function<make_shared_f<T>>()(std::forward<_Args>(__args)...);
+}
+
+template<typename Iterator>
+Grammar<Iterator>::Grammar() : Grammar::base_type(expr) {
+    using qi::uint_;
+    using qi::eps;
+    using qi::as_string;
+    using qi::lexeme;
+    using qi::alpha;
+    using qi::alnum;
+    using qi::ascii::char_;
+    using qi::_val;
+    using qi::_1;
+    using qi::_2;
+    using qi::_3;
+    using qi::_4;
+    using phoenix::new_;
+    using phoenix::val;
+    using phoenix::bind;
+    using phoenix::ref;
+    using qi::on_error;
+    using qi::fail;
+
+
+    string_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]]
+    [_val = replace_all_copy(_1, "=", "*")];
+
+    select_item_rule = uint_ >> ("-" >> uint_ | eps) | string_with_wildcard;
+
+    residue_select_rule = ":" >> (select_item_rule % ",")[_val = make_shared_<Atom::residue_name_nums>(_1)];
+
+    nametype_select_rule = "@" >>
+                               ((select_item_rule % ",")[_val = make_shared_<Atom::atom_name_nums>(_1)]
+                                | "%" >> (select_item_rule % ",")[_val = make_shared_<Atom::atom_types>(_1)]
+                                |
+                                "/" >> (string_with_wildcard % ",")[_val = make_shared_<Atom::atom_element_names>(_1)]);
+
+    select_rule = (residue_select_rule | nametype_select_rule)[_val = _1];
+
+    factor2 = "(" >> expr[_val = _1] >> ")" | select_rule[_val = _1];
+
+    factor = "!" >> factor2[_val = make_shared_<Atom::Operator>(Atom::Op::NOT, _1)] | factor2[_val = _1];
+
+    term = factor[_val = _1] >> *("&" >> factor[_val = make_shared_<Atom::Operator>(Atom::Op::AND, _val, _1)]);
+
+    expr = term[_val = _1] >> *("|" >> term[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
+
+    string_with_wildcard.name("string_with_wildcard");
+    select_item_rule.name("select_item_rule");
+    residue_select_rule.name("residue_select_rule");
+    nametype_select_rule.name("nametype_select_rule");
+    select_rule.name("select_rule");
+    factor2.name("factor2");
+    factor.name("factor");
+    term.name("term");
+    expr.name("expr");
+
+    on_error<fail>(
+            expr,
+            std::cout
+                    << val("Error! Expecting")
+                    << _4
+                    << val(" here: \"")
+                    << phoenix::construct<std::string>(_3, _2)
+                    << val("\"")
+                    << std::endl
+    );
+
+}
+
+struct print : boost::static_visitor<> {
+    int space_num;
+
+    explicit print(int space_num = 0) : space_num(space_num) {}
+
+    void indent(int space_num) const {
+        std::cout << string(3 * space_num, ' ');
+    }
+
+    void operator()(const shared_ptr<Atom::residue_name_nums> &residues) const;
+
+    void operator()(const shared_ptr<Atom::atom_name_nums> &names) const;
+
+    void operator()(const shared_ptr<Atom::atom_types> &types) const;
+
+    void operator()(const shared_ptr<Atom::atom_element_names> &ele) const;
+
+    void operator()(const shared_ptr<Atom::Operator> &op) const;
+};
+
+void print::operator()(const shared_ptr<Atom::residue_name_nums> &residues) const {
+    indent(space_num);
+    bool first = true;
+    struct print_res : boost::static_visitor<> {
+        void operator()(fusion::vector<uint, boost::optional<uint>> &i) {
+            std::cout << fusion::at_c<0>(i);
+            auto op = fusion::at_c<1>(i);
+            if (op) std::cout << "-" << op.get();
+        }
+
+        void operator()(std::string &i) {
+            std::cout << i;
+        }
+    } p;
+    for (auto &i : residues->val) {
+        if (first) {
+            std::cout << "residues : ";
+            first = false;
+        } else {
+            std::cout << ",";
+        }
+        boost::apply_visitor(p, i);
+    }
+    std::cout << std::endl;
+}
+
+void print::operator()(const shared_ptr<Atom::atom_name_nums> &names) const {
+    struct print_res : boost::static_visitor<> {
+        void operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+            std::cout << fusion::at_c<0>(i);
+            auto op = fusion::at_c<1>(i);
+            if (op) std::cout << "-" << op.get();
+        }
+
+        void operator()(const std::string &i) {
+            std::cout << i;
+        }
+    } p;
+    indent(space_num);
+    bool first = true;
+    for (auto &i : names->val) {
+        if (first) {
+            std::cout << "names : ";
+            first = false;
+        } else {
+            std::cout << ",";
+        }
+        boost::apply_visitor(p, i);
+    }
+    std::cout << std::endl;
+}
+
+void print::operator()(const shared_ptr<Atom::atom_types> &types) const {
+    indent(space_num);
+    struct print_types : boost::static_visitor<> {
+        void operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+            std::cout << fusion::at_c<0>(i);
+            auto op = fusion::at_c<1>(i);
+            if (op) std::cout << "-" << op.get();
+        }
+
+        void operator()(const std::string &i) {
+            std::cout << i;
+        }
+    } p;
+    bool first = true;
+    for (auto &i : types->val) {
+        if (first) {
+            std::cout << "types : ";
+            first = false;
+        } else {
+            std::cout << ",";
+        }
+        boost::apply_visitor(p, i);
+    }
+    std::cout << std::endl;
+}
+
+void print::operator()(const shared_ptr<Atom::atom_element_names> &ele) const {
+    indent(space_num);
+    bool first = true;
+    for (auto &i : ele->val) {
+        if (first) {
+            std::cout << "elements : ";
+            first = false;
+        } else {
+            std::cout << ",";
+        }
+        std::cout << i;
+    }
+    std::cout << std::endl;
+}
+
+void print::operator()(const shared_ptr<Atom::Operator> &op) const {
+    switch (op->op) {
+        case Atom::Op::NOT:
+            indent(space_num);
+            std::cout << "!" << std::endl;
+            boost::apply_visitor(print(space_num + 1), op->node1);
+            break;
+        case Atom::Op::AND:
+            indent(space_num);
+            std::cout << "&" << std::endl;
+            boost::apply_visitor(print(space_num + 1), op->node1);
+            boost::apply_visitor(print(space_num + 1), op->node2);
+            break;
+        case Atom::Op::OR:
+            indent(space_num);
+            std::cout << "|" << std::endl;
+            boost::apply_visitor(print(space_num + 1), op->node1);
+            boost::apply_visitor(print(space_num + 1), op->node2);
+            break;
+    }
+}
+
+ostream &operator<<(ostream &out, const Atom::AtomIndenter &ids) {
+    out << ids.input_string;
     return out;
 }
 
-void Atom::select2group(std::vector<AtomIndenter> &ids1, std::vector<AtomIndenter> &ids2) {
+
+template<typename Iterator>
+Atom::AtomIndenter input_atom_selection(const Grammar<Iterator> &grammar, const std::string &promot) {
+    for (;;) {
+        Atom::AtomIndenter mask;
+        mask.input_string = input(promot);
+        boost::trim(mask.input_string);
+        auto it = mask.input_string.begin();
+
+        bool status = qi::parse(it, mask.input_string.end(), grammar, mask.ast);
+
+        if (status) {
+            std::cout << "Parsed Abstract Syntax Tree :" << std::endl;
+            boost::apply_visitor(print(), mask.ast);
+        }
+
+        if (!(status and (it == mask.input_string.end()))) {
+            std::cout << "error-pos : " << std::endl;
+            std::cout << mask.input_string << std::endl;
+            for (auto iter = mask.input_string.begin(); iter != it; ++iter) std::cout << " ";
+            std::cout << "^" << std::endl;
+
+            continue;
+        }
+        return mask;
+
+    }
+}
+
+
+void
+Atom::select2group(Atom::AtomIndenter &ids1, Atom::AtomIndenter &ids2,
+                   const string &prompt1, const string &prompt2) {
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
     using ascii::char_;
 
-    auto action = [](auto &v, auto ids, auto &message, auto type) {
-        std::string result(v.begin(), v.end());
-        std::cout << "<" << message << ":" << result << ">" << std::endl;
-        switch (type) {
-            case SelectType::Symbol:
-                const_cast<std::vector<AtomIndenter> *>(ids)->emplace_back(Atom_Indenter_Symbol{result});
-                break;
-            case SelectType::TypeName:
-                const_cast<std::vector<AtomIndenter> *>(ids)->emplace_back(Atom_Indenter_TypeName{result});
-                break;
-            case SelectType::TypeNumber:
-                const_cast<std::vector<AtomIndenter> *>(ids)->emplace_back(
-                        Atom_Indenter_TypeNumber{boost::lexical_cast<int>(result)});
-                break;
-        }
+    Grammar<std::string::iterator> grammar;
 
-    };
+    ids1 = input_atom_selection(grammar, prompt1);
+    ids2 = input_atom_selection(grammar, prompt2);
 
-
-    for (;;) {
-        const string &line = input("Enter mask (expample: name{Am} && type{OW}) : ");
-        if (qi::phrase_parse(line.cbegin(), line.cend(),
-                             +((qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                                     boost::phoenix::bind(action, qi::_1, &ids1, "mask1:name", SelectType::Symbol)
-                             ]) >> "}")
-                               | (qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                                     boost::phoenix::bind(action, qi::_1, &ids1, "mask1:type",
-                                                          SelectType::TypeName)
-                             ]) >> "}")
-                               | (qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                                     boost::phoenix::bind(action, qi::_1, &ids1, "mask1:typenumber",
-                                                          SelectType::TypeNumber)
-                             ]) >> "}"))
-                                     >> qi::lit("&&")
-                                     >> +((qi::lit("name") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                                             boost::phoenix::bind(action, qi::_1, &ids2, "mask2:name",
-                                                                  SelectType::Symbol)
-                                     ]) >> "}")
-                                          | (qi::lit("type") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                                             boost::phoenix::bind(action, qi::_1, &ids2, "mask2:type",
-                                                                  SelectType::TypeName)
-                                     ]) >> "}")
-                                          |
-                                          (qi::lit("typenumber") >> "{" >> +(qi::lexeme[+(char_ - qi::space - '}')][
-                                                  boost::phoenix::bind(action, qi::_1, &ids2, "mask2:typenumber",
-                                                                       SelectType::TypeNumber)
-                                          ]) >> "}")),
-                             ascii::space)) {
-            break;
-        }
-        std::cout << "Syntax error , Please Reenter !" << std::endl;
-        ids1.clear();
-        ids2.clear();
-    }
-    std::cout << "First Type : " << ids1 << " Second Type : " << ids2 << std::endl;
 }
 
-bool Atom::is_match(std::shared_ptr<Atom> &atom, const std::vector<AtomIndenter> &ids) {
+void Atom::select1group(AtomIndenter &ids, const string &prompt) {
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    using ascii::char_;
 
-    struct Equal : public boost::static_visitor<bool> {
-    public:
-        Equal(shared_ptr<Atom> &atom) : atom(atom) {}
+    Grammar<std::string::iterator> grammar;
 
-        bool operator()(const Atom::Atom_Indenter_Symbol &t) const {
-            return atom->symbol == t.name;
+    ids = input_atom_selection(grammar, prompt);
+}
+
+
+bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AtomIndenter &id) {
+    struct Equal : boost::static_visitor<bool> {
+
+        explicit Equal(const shared_ptr<Atom> &atom) : atom(atom) {}
+
+
+        bool operator()(const shared_ptr<residue_name_nums> &residues) const {
+            if (!atom->residue_name or !atom->residue_num) {
+                std::cerr << "residue selection syntax is invaild in current context" << std::endl;
+                exit(1);
+            }
+            struct Equal_residue : boost::static_visitor<bool> {
+                explicit Equal_residue(const shared_ptr<Atom> &atom) : atom(atom) {}
+
+                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+                    auto op = fusion::at_c<1>(i);
+                    if (op) {
+                        if (op.get() >= fusion::at_c<0>(i))
+                            return atom->residue_num >= fusion::at_c<0>(i) and atom->residue_num <= op.get();
+                        else
+                            return atom->residue_num >= op.get() and atom->residue_num <= fusion::at_c<0>(i);
+                    } else {
+                        return atom->residue_num == fusion::at_c<0>(i);
+                    }
+                }
+
+                bool operator()(const std::string &pattern) {
+                    if (fnmatch(pattern.c_str(), atom->residue_name.get().c_str(), FNM_CASEFOLD) == 0) return true;
+                    std::string num_str = boost::lexical_cast<std::string>(atom->residue_num.get());
+                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
+                }
+
+            private:
+                const shared_ptr<Atom> &atom;
+            } equal(atom);
+
+            for (auto &i : residues->val) {
+                if (boost::apply_visitor(equal, i)) return true;
+            }
+            return false;
         }
 
-        bool operator()(const Atom::Atom_Indenter_TypeName &t) const {
-            return atom->type_name == t.name;
+        bool operator()(const shared_ptr<atom_name_nums> &names) const {
+            struct Equal_atom : boost::static_visitor<bool> {
+                explicit Equal_atom(const shared_ptr<Atom> &atom) : atom(atom) {}
+
+                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+                    auto op = fusion::at_c<1>(i);
+                    if (op) {
+                        if (op.get() >= fusion::at_c<0>(i))
+                            return atom->seq >= fusion::at_c<0>(i) and atom->seq <= op.get();
+                        else
+                            return atom->seq >= op.get() and atom->seq <= fusion::at_c<0>(i);
+                    } else {
+                        return atom->seq == fusion::at_c<0>(i);
+                    }
+                }
+
+                bool operator()(const std::string &pattern) {
+                    if (fnmatch(pattern.c_str(), atom->symbol.c_str(), FNM_CASEFOLD) == 0) return true;
+                    std::string num_str = boost::lexical_cast<std::string>(atom->seq);
+                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
+                }
+
+            private:
+                const shared_ptr<Atom> &atom;
+            } equal(atom);
+
+            for (auto &i : names->val) {
+                if (boost::apply_visitor(equal, i)) return true;
+            }
+            return false;
         }
 
-        bool operator()(const Atom::Atom_Indenter_TypeNumber &t) const {
-            return atom->typ == t.type_number;
+        bool operator()(const shared_ptr<atom_types> types) const {
+            struct Equal_types : boost::static_visitor<bool> {
+                explicit Equal_types(const shared_ptr<Atom> &atom) : atom(atom) {}
+
+                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+                    auto op = fusion::at_c<1>(i);
+                    if (op) {
+                        if (op.get() >= fusion::at_c<0>(i))
+                            return atom->typ >= fusion::at_c<0>(i) and atom->typ <= op.get();
+                        else
+                            return atom->typ >= op.get() and atom->typ <= fusion::at_c<0>(i);
+                    } else {
+                        return atom->typ == fusion::at_c<0>(i);
+                    }
+                }
+
+                bool operator()(const std::string &pattern) {
+                    return fnmatch(pattern.c_str(), atom->type_name.c_str(), FNM_CASEFOLD) == 0;
+                    std::string num_str = boost::lexical_cast<std::string>(atom->typ);
+                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
+                }
+
+            private:
+                const shared_ptr<Atom> &atom;
+            } equal(atom);
+
+            for (auto &i : types->val) {
+                if (boost::apply_visitor(equal, i)) return true;
+            }
+            return false;
+        }
+
+        bool operator()(const shared_ptr<atom_element_names> &ele) const {
+            if (!atom->atom_symbol) {
+                std::cerr << "atom element symbol selection syntax is invaild in current context" << std::endl;
+                exit(1);
+            }
+            for (auto &pattern : ele->val) {
+                if (fnmatch(pattern.c_str(), atom->atom_symbol.get().c_str(), FNM_CASEFOLD) == 0) return true;
+            }
+            return false;
+
+        }
+
+        bool operator()(const shared_ptr<Operator> &op) const {
+            switch (op->op) {
+                case Op::NOT:
+                    return not boost::apply_visitor(Equal(atom), op->node1);
+                    break;
+                case Op::AND: {
+                    Equal equal(atom);
+                    return boost::apply_visitor(equal, op->node1) and boost::apply_visitor(equal, op->node2);
+                }
+                    break;
+                case Op::OR: {
+                    Equal equal(atom);
+                    return boost::apply_visitor(equal, op->node1) or boost::apply_visitor(equal, op->node2);
+                }
+                    break;
+                default:
+                    std::abort();
+            }
         }
 
     private:
-        shared_ptr<Atom> &atom;
+        const shared_ptr<Atom> &atom;
     };
-    for (auto &id : ids) {
-        if (boost::apply_visitor(Equal(atom), id)) return true;
-    }
-    return false;
-}
 
-bool Atom::is_match(std::shared_ptr<Atom> &atom, const AtomIndenter &id) {
 
-    struct Equal : public boost::static_visitor<bool> {
-    public:
-        Equal(shared_ptr<Atom> &atom) : atom(atom) {}
-
-        bool operator()(const Atom::Atom_Indenter_Symbol &t) const {
-            return atom->symbol == t.name;
-        }
-
-        bool operator()(const Atom::Atom_Indenter_TypeName &t) const {
-            return atom->type_name == t.name;
-        }
-
-        bool operator()(const Atom::Atom_Indenter_TypeNumber &t) const {
-            return atom->typ == t.type_number;
-        }
-
-    private:
-        shared_ptr<Atom> &atom;
-    };
-    return boost::apply_visitor(Equal(atom), id);
-
+    return boost::apply_visitor(Equal(atom), id.ast);
 }
 
 
@@ -501,7 +857,8 @@ public:
 };
 
 
-double atom_distance(std::shared_ptr<Atom> &atom1, std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame) {
+double
+atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame) {
     auto xr = atom1->x - atom2->x;
     auto yr = atom1->y - atom2->y;
     auto zr = atom1->z - atom2->z;
@@ -810,6 +1167,8 @@ class TrajectoryReader {
                             atom->seq = boost::lexical_cast<int>(fields[0]);
                             atom->symbol = fields[1];
                             atom->type_name = fields[5];
+                            atom->residue_name = fields[7];
+                            atom->residue_num = boost::lexical_cast<uint>(fields[6]);
                             atom->charge = boost::lexical_cast<double>(fields[8]);
                             frame->atom_list.push_back(atom);
                             frame->atom_map[atom->seq] = atom;
@@ -872,7 +1231,7 @@ class TrajectoryReader {
             field = split(line);
             atom_num = std::stoi(field[0]);
             frame->title = line.substr(line.rfind(field[0]) + field[0].size());
-            trim(frame->title);
+            boost::trim(frame->title);
         } else {
             std::getline(position_file, line);
             if (line.empty()) throw std::exception();
@@ -956,7 +1315,7 @@ class TrajectoryReader {
 
 
     void open(const string &filename) {
-        auto field = split(filename, '.');
+        auto field = split(filename, ".");
         auto ext = ext_filename(filename);
         if (enable_binaray_file) {
             if (ext == "nc") {
@@ -1099,7 +1458,7 @@ public:
 
     void read_mass_map(const string &filename);
 
-    double find_mass(shared_ptr<Atom> &atom) {
+    double find_mass(const shared_ptr<Atom> &atom) {
         for (auto &id : items) {
             if (Atom::is_match(atom, id.first)) return id.second;
         }
@@ -1136,7 +1495,7 @@ void Forcefield::read_tinker_prm(const string &filename) {
             if (field[0] != "atom") continue;
             int type = stoi(field[1]);
             double mass = stod(field[field.size() - 2]);
-            items.emplace_back(Atom::Atom_Indenter_TypeNumber{type}, mass);
+            items.emplace_back(Atom::AtomIndenter{make_shared<Atom::atom_types>(type)}, mass);
         } catch (std::exception &e) {
             f.close();
             return;
@@ -1163,11 +1522,12 @@ void Forcefield::read_mass_map(const string &filename) {
             double mass = boost::lexical_cast<double>(field[2]);
 
             if (type == "name") {
-                items.emplace_back(Atom::Atom_Indenter_Symbol{field[1]}, mass);
+                items.emplace_back(Atom::AtomIndenter{make_shared<Atom::atom_name_nums>(field[1])}, mass);
             } else if (type == "type") {
-                items.emplace_back(Atom::Atom_Indenter_TypeName{field[1]}, mass);
+                items.emplace_back(Atom::AtomIndenter{make_shared<Atom::atom_types>(field[1])}, mass);
             } else if (type == "typenumber") {
-                items.emplace_back(Atom::Atom_Indenter_TypeNumber{boost::lexical_cast<int>(field[1])}, mass);
+                items.emplace_back(
+                        Atom::AtomIndenter{make_shared<Atom::atom_types>(boost::lexical_cast<int>(field[1]))}, mass);
             } else {
                 std::cerr << "unrecognized keyword : " << type << std::endl;
                 exit(8);
@@ -1421,7 +1781,7 @@ public:
         netcdfClose(&NC);
     }
 
-    void write(shared_ptr<Frame> &frame) {
+    void write(const shared_ptr<Frame> &frame) {
         if (step == 0) {
             x = new double[NC.ncatom3];
 
@@ -1457,6 +1817,10 @@ public:
     virtual void print() = 0;
 
     virtual void readInfo() = 0;
+
+    static const string title() { return "Base Class"; }
+
+    virtual ~BasicAnalysis() = default;
 };
 
 
@@ -1487,6 +1851,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Gromacs XTC & TRR & GRO & NetCDF Output";
+    }
 
 
 };
@@ -1577,7 +1945,7 @@ void GmxTrj::print() {
 
 void GmxTrj::readInfo() {
     string line = input("output gro file [Y]: ");
-    trim(line);
+    boost::trim(line);
     if (!line.empty()) {
         if (line[0] == 'N' or line[0] == 'n') {
             enable_gro = false;
@@ -1585,10 +1953,10 @@ void GmxTrj::readInfo() {
     }
     if (enable_gro) {
         grofilename = input("GRO filename : ");
-        trim(grofilename);
+        boost::trim(grofilename);
     }
     line = input("output xtc file [Y]: ");
-    trim(line);
+    boost::trim(line);
     if (!line.empty()) {
         if (line[0] == 'N' or line[0] == 'n') {
             enable_xtc = false;
@@ -1596,11 +1964,11 @@ void GmxTrj::readInfo() {
     }
     if (enable_xtc) {
         xtcfilename = input("XTC filename : ");
-        trim(xtcfilename);
+        boost::trim(xtcfilename);
     }
 
     line = input("output trr file [Y]: ");
-    trim(line);
+    boost::trim(line);
     if (!line.empty()) {
         if (line[0] == 'N' or line[0] == 'n') {
             enable_trr = false;
@@ -1608,11 +1976,11 @@ void GmxTrj::readInfo() {
     }
     if (enable_trr) {
         trrfilename = input("TRR filename : ");
-        trim(trrfilename);
+        boost::trim(trrfilename);
     }
 
     line = input("output amber nc file [Y]: ");
-    trim(line);
+    boost::trim(line);
     if (!line.empty()) {
         if (line[0] == 'N' or line[0] == 'n') {
             enable_mdcrd = false;
@@ -1620,7 +1988,7 @@ void GmxTrj::readInfo() {
     }
     if (enable_mdcrd) {
         mdcrdfilename = input("nc filename : ");
-        trim(mdcrdfilename);
+        boost::trim(mdcrdfilename);
     }
     cout << "PBC transform option" << endl;
     cout << "(0) Do nothing" << endl;
@@ -1630,7 +1998,7 @@ void GmxTrj::readInfo() {
     int option = 0;
     while (true) {
         line = input("Choose:");
-        trim(line);
+        boost::trim(line);
 
         if (!line.empty()) {
 
@@ -1647,8 +2015,8 @@ void GmxTrj::readInfo() {
                             line2 = input("Plese enter the atom NO. : ");
                             try {
                                 num = std::stoi(line2);
-                            } catch (std::invalid_argument) {
-                                cerr << "must be a number !" << endl;
+                            } catch (std::invalid_argument &e) {
+                                cerr << "must be a number !" << e.what() << endl;
                                 continue;
                             }
 
@@ -1666,8 +2034,8 @@ void GmxTrj::readInfo() {
                             line2 = input("Plese enter one atom NO. that the molecule include:");
                             try {
                                 num = std::stoi(line2);
-                            } catch (std::invalid_argument) {
-                                cerr << "must be a number !" << endl;
+                            } catch (std::invalid_argument &e) {
+                                cerr << "must be a number !" << e.what() << endl;
                                 continue;
                             }
                             if (num <= 0) {
@@ -1683,8 +2051,8 @@ void GmxTrj::readInfo() {
                 }
                 break;
 
-            } catch (std::invalid_argument) {
-                cerr << "must be a number !" << endl;
+            } catch (std::invalid_argument &e) {
+                cerr << "must be a number !" << e.what() << endl;
             }
         }
     }
@@ -1693,11 +2061,30 @@ void GmxTrj::readInfo() {
 }
 
 
-// Distance 
+// Distance
 class Distance : public BasicAnalysis {
     std::list<double> group_dist_list;
-    std::set<int> group1;
-    std::set<int> group2;
+
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
+
 public:
     Distance() {
         enable_outfile = true;
@@ -1709,15 +2096,20 @@ public:
 
     void readInfo() override;
 
+    static const string title() {
+        return "Distance";
+    }
+
 };
 
 void Distance::process(std::shared_ptr<Frame> &frame) {
+    find_matched_atoms(frame);
+
     double x1, y1, z1, x2, y2, z2;
     x1 = y1 = z1 = x2 = y2 = z2 = 0.0;
     double weigh1, weigh2;
     weigh1 = weigh2 = 0.0;
-    for (auto &num1 : group1) {
-        auto &atom1 = frame->atom_map[num1];
+    for (auto &atom1 : group1) {
         double mass = forcefield.find_mass(atom1);
         x1 += atom1->x * mass;
         y1 += atom1->y * mass;
@@ -1728,8 +2120,7 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
     y1 /= weigh1;
     z1 /= weigh1;
 
-    for (auto &num2 : group2) {
-        auto &atom2 = frame->atom_map[num2];
+    for (auto &atom2 : group2) {
         double mass = forcefield.find_mass(atom2);
         x2 += atom2->x * mass;
         y2 += atom2->y * mass;
@@ -1754,17 +2145,9 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
 void Distance::print() {
     outfile << "****************************************" << endl;
     outfile << "Distance between " << endl;
-    outfile << "group 1 :";
-    for (auto num1 : group1) {
-        outfile << num1 << "  ";
-    }
-    outfile << endl << "group 2 :";
-    for (auto num2 : group2) {
-        outfile << num2 << "  ";
-    }
-    outfile << endl;
+    outfile << "group 1 :" << ids1 << std::endl;
+    outfile << "group 2 :" << ids2 << std::endl;
     outfile << "****************************************" << endl;
-
 
     int cyc = 1;
     for (auto &dist : group_dist_list) {
@@ -1775,47 +2158,34 @@ void Distance::print() {
 
 void Distance::readInfo() {
     enable_forcefield = true;
-    std::string input_line;
-    std::vector<std::string> field;
-    input_line = input("Please enter group 1:");
-    field = split(input_line);
-    for (auto it = field.cbegin(); it != field.cend(); ++it) {
-        auto i = std::stoi(*it);
-        if (i > 0) {
-            group1.insert(i);
-        } else if (i < 0) {
-            ++it;
-            auto j = std::stoi(*it);
-            for (int k = std::abs(i); k <= j; k++) group1.insert(k);
-        } else {
-            cerr << "error of atom num select" << endl;
-            exit(1);
-        }
-    }
-    input_line = input("Please enter group 2:");
-    field = split(input_line);
-    for (auto it = field.cbegin(); it != field.cend(); ++it) {
-        auto i = std::stoi(*it);
-        if (i > 0) {
-            group2.insert(i);
-        } else if (i < 0) {
-            ++it;
-            auto j = std::stoi(*it);
-            for (int k = std::abs(i); k <= j; k++) group2.insert(k);
-        } else {
-            cerr << "error of atom num select" << endl;
-            exit(1);
-        }
-    }
-
-
+    Atom::select2group(ids1, ids2);
 }
 // End of Distance
 
 
 class CoordinateNumPerFrame : public BasicAnalysis {
 
-    int typ1, typ2;
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
+
     double dist_cutoff;
     list<int> cn_list;
 public:
@@ -1828,18 +2198,19 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Coordinate Number per Frame";
+    }
 };
 
 void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
+    find_matched_atoms(frame);
     int cn_sum = 0;
-    for (auto &atom1 : frame->atom_list) {
-        if (atom1->typ == typ1) {
-            for (auto &atom2 : frame->atom_list) {
-                if (atom2->typ == typ2) {
-                    if (atom_distance(atom1, atom2, frame) <= this->dist_cutoff) {
-                        cn_sum++;
-                    }
-                }
+    for (auto &atom1 : group1) {
+        for (auto &atom2 : group2) {
+            if (atom_distance(atom1, atom2, frame) <= this->dist_cutoff) {
+                cn_sum++;
             }
         }
     }
@@ -1850,8 +2221,8 @@ void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
 void CoordinateNumPerFrame::print() {
     outfile << "***************************" << endl;
     outfile << "******* CN per Frame ******" << endl;
-    outfile << "type 1 :" << typ1 << endl;
-    outfile << "type 2 :" << typ2 << endl;
+    outfile << "type 1 :" << ids1 << endl;
+    outfile << "type 2 :" << ids2 << endl;
     outfile << "cutoff :" << dist_cutoff << endl;
     outfile << "***************************" << endl;
     int cyc = 1;
@@ -1863,16 +2234,35 @@ void CoordinateNumPerFrame::print() {
 }
 
 void CoordinateNumPerFrame::readInfo() {
-    typ1 = choose(1, INT32_MAX, "Please enter typ1:");
-    typ2 = choose(1, INT32_MAX, "Please enter typ2:");
+    Atom::select2group(ids1, ids2);
     dist_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
 }
 
 
 class FirstCoordExchangeSearch : public BasicAnalysis {
-    int typ1, typ2;
-    std::string type_name1, type_name2;
-    bool use_name = false;
+
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
+
+
     double dist_cutoff, tol_dist, time_cutoff;
     enum class Direction {
         IN, OUT
@@ -1904,57 +2294,56 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Water exchange analysis";
+    }
 };
 
 void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
+
+    find_matched_atoms(frame);
     step++;
 
-    for (auto &atom1 : frame->atom_list) {
-        if (use_name ? atom1->type_name == type_name1 : atom1->typ == typ1) {
-            for (auto &atom2 : frame->atom_list) {
-                if (use_name ? atom2->type_name == type_name2 : atom2->typ == typ2) {
-                    if (step == 1) {
-                        State state;
-                        state.inner = atom_distance(atom1, atom2, frame) <= this->dist_cutoff;
-                        state_machine[atom2->seq] = state;
-                        if (state.inner) init_seq_in_shell.insert(atom2->seq);
-                    } else {
-                        auto &state = state_machine[atom2->seq];
-                        if (state.inner) {
-                            if (atom_distance(atom1, atom2, frame) >= this->dist_cutoff + tol_dist) {
-                                state.inner = false;
-                                ExchangeItem item;
-                                item.seq = atom2->seq;
-                                item.direction = Direction::OUT;
-                                item.exchange_frame = step;
-                                exchange_list.push_back(item);
-                            }
-                        } else {
-                            if (atom_distance(atom1, atom2, frame) <= this->dist_cutoff - tol_dist) {
-                                state.inner = true;
-                                ExchangeItem item;
-                                item.seq = atom2->seq;
-                                item.direction = Direction::IN;
-                                item.exchange_frame = step;
-                                exchange_list.push_back(item);
-                            }
-                        }
+    for (auto &atom1 : group1) {
+        for (auto &atom2 : group2) {
+            if (step == 1) {
+                State state;
+                state.inner = atom_distance(atom1, atom2, frame) <= this->dist_cutoff;
+                state_machine[atom2->seq] = state;
+                if (state.inner) init_seq_in_shell.insert(atom2->seq);
+            } else {
+                auto &state = state_machine[atom2->seq];
+                if (state.inner) {
+                    if (atom_distance(atom1, atom2, frame) >= this->dist_cutoff + tol_dist) {
+                        state.inner = false;
+                        ExchangeItem item;
+                        item.seq = atom2->seq;
+                        item.direction = Direction::OUT;
+                        item.exchange_frame = step;
+                        exchange_list.push_back(item);
+                    }
+                } else {
+                    if (atom_distance(atom1, atom2, frame) <= this->dist_cutoff - tol_dist) {
+                        state.inner = true;
+                        ExchangeItem item;
+                        item.seq = atom2->seq;
+                        item.direction = Direction::IN;
+                        item.exchange_frame = step;
+                        exchange_list.push_back(item);
                     }
                 }
             }
         }
+
     }
 }
 
 void FirstCoordExchangeSearch::print() {
     outfile << "***************************" << endl;
     outfile << "***** Exchange Search *****" << endl;
-    outfile << "type 1 :";
-    use_name ? outfile << type_name1 : outfile << typ1;
-    outfile << std::endl;
-    outfile << "type 2 :";
-    use_name ? outfile << type_name2 : outfile << typ2;
-    outfile << std::endl;
+    outfile << "type 1 :" << ids1 << endl;
+    outfile << "type 2 :" << ids2 << endl;
 
     outfile << "cutoff :" << dist_cutoff << endl;
     outfile << "tol dist :" << tol_dist << endl;
@@ -1987,21 +2376,7 @@ void FirstCoordExchangeSearch::print() {
 }
 
 void FirstCoordExchangeSearch::readInfo() {
-
-    use_name = (choose(1, 2, "(1) use_name \n(2) use type\n") == 1);
-    if (use_name) {
-        while (!type_name1.length()) {
-            type_name1 = input("Please enter typ1:");
-            boost::trim(type_name1);
-        }
-        while (!type_name2.length()) {
-            type_name2 = input("Please enter typ2:");
-            boost::trim(type_name2);
-        }
-    } else {
-        typ1 = choose(1, INT32_MAX, "Please enter typ1:");
-        typ2 = choose(1, INT32_MAX, "Please enter typ2:");
-    }
+    Atom::select2group(ids1, ids2);
     dist_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
     tol_dist = choose(0.0, GMX_DOUBLE_MAX, "Please enter tol dist:");
     time_cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter timecutoff:");
@@ -2022,11 +2397,32 @@ class RadicalDistribtuionFunction : public BasicAnalysis {
     map<int, double> gr, gs, integral;
 
     double xbox, ybox, zbox;
+
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+            numj = group1.size();
+            numk = group2.size();
+
+        }
+    }
+
 public:
-
-    std::vector<Atom::AtomIndenter> ids1;
-    std::vector<Atom::AtomIndenter> ids2;
-
     RadicalDistribtuionFunction() {
         enable_outfile = true;
     }
@@ -2037,44 +2433,38 @@ public:
 
     void readInfo() override;
 
-
+    static const string title() {
+        return "Radical Distribution Function";
+    }
 };
 
 
 void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
+
+    find_matched_atoms(frame);
     nframe++;
-    if (nframe == 1) {
-        for (auto &atom : frame->atom_list) {
-            if (Atom::is_match(atom, ids1)) numj++;
-            else if (Atom::is_match(atom, ids2)) numk++;
-        }
-    }
     xbox = frame->a_axis;
     ybox = frame->b_axis;
     zbox = frame->c_axis;
 
-    for (auto &atom_j : frame->atom_list) {
-        if (Atom::is_match(atom_j, ids1)) {
-            double xj = atom_j->x;
-            double yj = atom_j->y;
-            double zj = atom_j->z;
-            auto molj = atom_j->molecule.lock();
+    for (auto &atom_j : group1) {
+        double xj = atom_j->x;
+        double yj = atom_j->y;
+        double zj = atom_j->z;
+        auto molj = atom_j->molecule.lock();
 
-            for (auto &atom_k : frame->atom_list) {
-                if (Atom::is_match(atom_k, ids2)) {
-                    if (atom_j != atom_k) {
-                        auto mol_k = atom_k->molecule.lock();
-                        if (intramol or (molj not_eq mol_k)) {
-                            double dx = atom_k->x - xj;
-                            double dy = atom_k->y - yj;
-                            double dz = atom_k->z - zj;
-                            frame->image(dx, dy, dz);
-                            double rjk = sqrt(dx * dx + dy * dy + dz * dz);
-                            int ibin = int(rjk / width) + 1;
-                            if (ibin <= nbin) {
-                                hist[ibin] += 1;
-                            }
-                        }
+        for (auto &atom_k : group2) {
+            if (atom_j != atom_k) {
+                auto mol_k = atom_k->molecule.lock();
+                if (intramol or (molj not_eq mol_k)) {
+                    double dx = atom_k->x - xj;
+                    double dy = atom_k->y - yj;
+                    double dz = atom_k->z - zj;
+                    frame->image(dx, dy, dz);
+                    double rjk = sqrt(dx * dx + dy * dy + dz * dz);
+                    int ibin = int(rjk / width) + 1;
+                    if (ibin <= nbin) {
+                        hist[ibin] += 1;
                     }
                 }
             }
@@ -2088,9 +2478,9 @@ void RadicalDistribtuionFunction::readInfo() {
     rmax = choose(0.0, GMX_DOUBLE_MAX, "Enter Maximum Distance to Accumulate[10.0 Ang]:", true, 10.0);
     width = choose(0.0, GMX_DOUBLE_MAX, "Enter Width of Distance Bins [0.01 Ang]:", true, 0.01);
     string inputline = input("Include Intramolecular Pairs in Distribution[N]:");
-    trim(inputline);
+    boost::trim(inputline);
     if (!inputline.empty()) {
-        if (str_tolower(inputline) == "y") {
+        if (boost::to_lower_copy(inputline) == "y") {
             intramol = true;
         }
     }
@@ -2181,6 +2571,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "RMSD Calculator";
+    }
 
     static double rmsfit(double x1[], double y1[], double z1[],
                          double x2[], double y2[], double z2[], int nfit);
@@ -2619,6 +3013,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "RMSF Calculator";
+    }
 };
 
 void RMSFCal::process(std::shared_ptr<Frame> &frame) {
@@ -2776,7 +3174,7 @@ enum class Symbol {
 };
 
 
-Symbol which(shared_ptr<Atom> &atom) {
+Symbol which(const shared_ptr<Atom> &atom) {
     double mass = forcefield.find_mass(atom);
     if (mass < 2.0)
         return Symbol::Hydrogen;
@@ -2802,9 +3200,28 @@ enum class HBondType {
 
 class HBond : public BasicAnalysis {
 
-    set<int> group1;
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (this->mode not_eq Selector::Both && Atom::is_match(atom, this->ids2))
+                                  this->group2.insert(atom);
+                          });
+        }
+    }
+
     Selector mode;
-    set<int> group2;
     double donor_acceptor_dist_cutoff;
     double angle_cutoff;
     int steps = 0;
@@ -2813,174 +3230,16 @@ class HBond : public BasicAnalysis {
     HBondType hbond_type = HBondType::VMDVerion;
 
 
-    void Selector_Both(std::shared_ptr<Frame> &frame) {
-        for (int atom2_no : group1) {
-            // Atom2
-            auto &atom2 = frame->atom_map[atom2_no];
-            if (which(atom2) == Symbol::Hydrogen) {
-                // Atom1
-                auto &atom1 = frame->atom_map[atom2->con_list.front()];
-                auto atom1_symbol = which(atom1);
-                if (atom1_symbol == Symbol::Nitrogen or atom1_symbol == Symbol::Oxygen) {
-                    for (int atom3_no : group1) {
-                        // Atom3
-                        auto &atom3 = frame->atom_map[atom3_no];
-                        // atom1 and atom3 can not the same atom
-                        if (atom1 == atom3) continue;
-                        auto atom3_symbol = which(atom3);
-                        if (atom3_symbol == Symbol::Nitrogen or atom3_symbol == Symbol::Oxygen) {
-                            auto distance = atom_distance(atom1, atom3, frame);
-                            if (distance <= this->donor_acceptor_dist_cutoff) {
-                                if (atom1 != atom3 && !atom1->adj(atom3)) {
-                                    auto vx1 = atom2->x - atom1->x;
-                                    auto vy1 = atom2->y - atom1->y;
-                                    auto vz1 = atom2->z - atom1->z;
-                                    // atom1 -> atom2
-                                    frame->image(vx1, vy1, vz1);
-                                    auto len1 = std::sqrt(vx1 * vx1 + vy1 * vy1 + vz1 * vz1);
+    void Selector_Both(std::shared_ptr<Frame> &frame);
 
-                                    double vx2, vy2, vz2;
-                                    switch (hbond_type) {
-                                        case HBondType::VMDVerion:
-                                            // atom2 -> atom3
-                                            vx2 = atom3->x - atom2->x;
-                                            vy2 = atom3->y - atom2->y;
-                                            vz2 = atom3->z - atom2->z;
-                                            break;
-                                        case HBondType::GMXVersion:
-                                            // atom1 -> atom3
-                                            vx2 = atom3->x - atom1->x;
-                                            vy2 = atom3->y - atom1->y;
-                                            vz2 = atom3->z - atom1->z;
-                                            break;
-                                    }
+    void Selector_Donor(std::shared_ptr<Frame> &frame);
 
-                                    frame->image(vx2, vy2, vz2);
-                                    auto len2 = std::sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2);
-
-                                    auto cosine = (vx1 * vx2 + vy1 * vy2 + vz1 * vz2) / (len1 * len2);
-                                    auto ang = radian * std::acos(cosine);
-                                    if (std::abs(ang) <= this->angle_cutoff) {
-                                        hbonds[steps]++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    void Selector_Donor(std::shared_ptr<Frame> &frame) {
-        for (int atom2_no : group1) {
-            // Atom2
-            auto &atom2 = frame->atom_map[atom2_no];
-            if (which(atom2) == Symbol::Hydrogen) {
-                // Atom1
-                auto atom1 = frame->atom_map[atom2->con_list.front()];
-                auto atom1_symbol = which(atom1);
-                if (atom1_symbol == Symbol::Nitrogen or atom1_symbol == Symbol::Oxygen) {
-                    for (int atom3_no : group2) {
-                        // Atom3
-                        auto atom3 = frame->atom_map[atom3_no];
-                        auto atom3_symbol = which(atom3);
-                        if (atom3_symbol == Symbol::Nitrogen or atom3_symbol == Symbol::Oxygen) {
-                            auto distance = atom_distance(atom1, atom3, frame);
-                            if (distance <= this->donor_acceptor_dist_cutoff) {
-                                auto vx1 = atom2->x - atom1->x;
-                                auto vy1 = atom2->y - atom1->y;
-                                auto vz1 = atom2->z - atom1->z;
-                                frame->image(vx1, vy1, vz1);
-                                auto len1 = std::sqrt(vx1 * vx1 + vy1 * vy1 + vz1 * vz1);
-
-                                double vx2, vy2, vz2;
-                                switch (hbond_type) {
-                                    case HBondType::VMDVerion:
-                                        // atom2 -> atom3
-                                        vx2 = atom3->x - atom2->x;
-                                        vy2 = atom3->y - atom2->y;
-                                        vz2 = atom3->z - atom2->z;
-                                        break;
-                                    case HBondType::GMXVersion:
-                                        // atom1 -> atom3
-                                        vx2 = atom3->x - atom1->x;
-                                        vy2 = atom3->y - atom1->y;
-                                        vz2 = atom3->z - atom1->z;
-                                        break;
-                                }
-
-                                frame->image(vx2, vy2, vz2);
-                                auto len2 = std::sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2);
-                                auto cosine = (vx1 * vx2 + vy1 * vy2 + vz1 * vz2) / (len1 * len2);
-                                auto ang = radian * std::acos(cosine);
-                                if (std::abs(ang) <= this->angle_cutoff) {
-                                    hbonds[steps]++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    void Selector_Acceptor(std::shared_ptr<Frame> &frame) {
-        for (int atom2_no : group2) {
-            // Atom2
-            auto &atom2 = frame->atom_map[atom2_no];
-            if (which(atom2) == Symbol::Hydrogen) {
-                // Atom1
-                auto atom1 = frame->atom_map[atom2->con_list.front()];
-                auto atom1_symbol = which(atom1);
-                if (atom1_symbol == Symbol::Nitrogen or atom1_symbol == Symbol::Oxygen) {
-                    for (int atom3_no : group1) {
-                        // Atom3
-                        auto atom3 = frame->atom_map[atom3_no];
-                        auto atom3_symbol = which(atom3);
-                        if (atom3_symbol == Symbol::Nitrogen or atom3_symbol == Symbol::Oxygen) {
-                            auto distance = atom_distance(atom1, atom3, frame);
-                            if (distance <= this->donor_acceptor_dist_cutoff) {
-                                auto vx1 = atom2->x - atom1->x;
-                                auto vy1 = atom2->y - atom1->y;
-                                auto vz1 = atom2->z - atom1->z;
-                                frame->image(vx1, vy1, vz1);
-                                auto len1 = std::sqrt(vx1 * vx1 + vy1 * vy1 + vz1 * vz1);
-
-                                double vx2, vy2, vz2;
-                                switch (hbond_type) {
-                                    case HBondType::VMDVerion:
-                                        // atom2 -> atom3
-                                        vx2 = atom3->x - atom2->x;
-                                        vy2 = atom3->y - atom2->y;
-                                        vz2 = atom3->z - atom2->z;
-                                        break;
-                                    case HBondType::GMXVersion:
-                                        // atom1 -> atom3
-                                        vx2 = atom3->x - atom1->x;
-                                        vy2 = atom3->y - atom1->y;
-                                        vz2 = atom3->z - atom1->z;
-                                        break;
-                                }
-
-                                frame->image(vx2, vy2, vz2);
-                                auto len2 = std::sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2);
-                                auto cosine = (vx1 * vx2 + vy1 * vy2 + vz1 * vz2) / (len1 * len2);
-                                auto ang = radian * std::acos(cosine);
-                                if (std::abs(ang) <= this->angle_cutoff) {
-                                    hbonds[steps]++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    void Selector_Acceptor(std::shared_ptr<Frame> &frame);
 
 public:
     HBond() {
         enable_outfile = true;
+        enable_forcefield = true;
     }
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -2988,6 +3247,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Hydrogen Bond";
+    }
 
 };
 
@@ -2999,27 +3262,17 @@ void HBond::print() {
     switch (mode) {
         case Selector::Both:
             outfile << "Both" << endl;
-            outfile << "SET1:";
-            for (auto i : group1) outfile << i << "  ";
-            outfile << endl;
+            outfile << "SET1:" << ids1 << endl;
             break;
         case Selector::Donor:
             outfile << "Donor" << endl;
-            outfile << "SET1:";
-            for (auto i : group1) outfile << i << "  ";
-            outfile << endl;
-            outfile << "SET2:";
-            for (auto i : group2) outfile << i << "  ";
-            outfile << endl;
+            outfile << "SET1:" << ids1 << endl;
+            outfile << "SET2:" << ids2 << endl;
             break;
         case Selector::Acceptor:
             outfile << "Acceptor" << endl;
-            outfile << "SET1:";
-            for (auto i : group1) outfile << i << "  ";
-            outfile << endl;
-            outfile << "SET2:";
-            for (auto i : group2) outfile << i << "  ";
-            outfile << endl;
+            outfile << "SET1:" << ids1 << endl;
+            outfile << "SET2:" << ids2 << endl;
             break;
     }
     switch (hbond_type) {
@@ -3040,6 +3293,8 @@ void HBond::print() {
 }
 
 void HBond::process(std::shared_ptr<Frame> &frame) {
+
+    find_matched_atoms(frame);
     steps++;
     hbonds[steps] = 0;
     switch (mode) {
@@ -3059,22 +3314,9 @@ void HBond::process(std::shared_ptr<Frame> &frame) {
 
 void HBond::readInfo() {
 
-    auto input_line = input("Please enter group:");
-    auto field = split(input_line);
-    for (auto it = field.cbegin(); it != field.cend(); ++it) {
-        auto i = std::stoi(*it);
-        if (i > 0) {
-            group1.insert(i);
-        } else if (i < 0) {
-            ++it;
-            auto j = std::stoi(*it);
-            for (int k = abs(i); k <= j; k++) group1.insert(k);
-        } else {
-            cerr << "error of atom num select" << endl;
-            exit(1);
-        }
-    }
-    input_line = input("Which selector: [(1)Acceptor | (2)Donor | (3)Both]:");
+    Atom::select1group(ids1, "Please enter group:");
+
+    auto input_line = input("Which selector: [(1)Acceptor | (2)Donor | (3)Both]:");
     auto mode_no = stoi(input_line);
     switch (mode_no) {
         case 1:
@@ -3091,21 +3333,7 @@ void HBond::readInfo() {
             exit(1);
     }
     if (this->mode not_eq Selector::Both) {
-        input_line = input("Please enter group2:");
-        field = split(input_line);
-        for (auto it = field.cbegin(); it != field.cend(); ++it) {
-            auto i = std::stoi(*it);
-            if (i > 0) {
-                group2.insert(i);
-            } else if (i < 0) {
-                ++it;
-                auto j = std::stoi(*it);
-                for (int k = abs(i); k <= j; k++) group2.insert(k);
-            } else {
-                cerr << "error of atom num select" << endl;
-                exit(1);
-            }
-        }
+        Atom::select1group(ids2, "Please enter group2:");
     }
     cout << "HBond criteria:\n(1)VMD version\n(2)GMX version\n";
     switch (choose(1, 2, "choose:")) {
@@ -3120,11 +3348,169 @@ void HBond::readInfo() {
             exit(2);
     }
 
-    input_line = input("Donor-Acceptor Distance:");
-    this->donor_acceptor_dist_cutoff = std::stod(input_line);
-    input_line = input("Angle cutoff:");
-    this->angle_cutoff = std::stod(input_line);
-    enable_forcefield = true;
+    this->donor_acceptor_dist_cutoff =
+            choose(0.0, static_cast<double>(std::numeric_limits<int>::max()), "Donor-Acceptor Distance:");
+    this->angle_cutoff =
+            choose(0.0, static_cast<double>(std::numeric_limits<int>::max()), "Angle cutoff:");
+
+}
+
+void HBond::Selector_Acceptor(std::shared_ptr<Frame> &frame) {
+    for (auto &atom2 : group2) {
+        // Atom2
+        if (which(atom2) == Symbol::Hydrogen) {
+            // Atom1
+            auto atom1 = frame->atom_map[atom2->con_list.front()];
+            auto atom1_symbol = which(atom1);
+            if (atom1_symbol == Symbol::Nitrogen or atom1_symbol == Symbol::Oxygen) {
+                for (auto &atom3 : group1) {
+                    // Atom3
+                    auto atom3_symbol = which(atom3);
+                    if (atom3_symbol == Symbol::Nitrogen or atom3_symbol == Symbol::Oxygen) {
+                        auto distance = atom_distance(atom1, atom3, frame);
+                        if (distance <= this->donor_acceptor_dist_cutoff) {
+                            auto vx1 = atom2->x - atom1->x;
+                            auto vy1 = atom2->y - atom1->y;
+                            auto vz1 = atom2->z - atom1->z;
+                            frame->image(vx1, vy1, vz1);
+                            auto len1 = std::sqrt(vx1 * vx1 + vy1 * vy1 + vz1 * vz1);
+
+                            double vx2, vy2, vz2;
+                            switch (hbond_type) {
+                                case HBondType::VMDVerion:
+                                    // atom2 -> atom3
+                                    vx2 = atom3->x - atom2->x;
+                                    vy2 = atom3->y - atom2->y;
+                                    vz2 = atom3->z - atom2->z;
+                                    break;
+                                case HBondType::GMXVersion:
+                                    // atom1 -> atom3
+                                    vx2 = atom3->x - atom1->x;
+                                    vy2 = atom3->y - atom1->y;
+                                    vz2 = atom3->z - atom1->z;
+                                    break;
+                            }
+
+                            frame->image(vx2, vy2, vz2);
+                            auto len2 = std::sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2);
+                            auto cosine = (vx1 * vx2 + vy1 * vy2 + vz1 * vz2) / (len1 * len2);
+                            auto ang = radian * std::acos(cosine);
+                            if (std::abs(ang) <= this->angle_cutoff) {
+                                hbonds[steps]++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void HBond::Selector_Donor(std::shared_ptr<Frame> &frame) {
+    for (auto &atom2 : group1) {
+        // Atom2
+        if (which(atom2) == Symbol::Hydrogen) {
+            // Atom1
+            auto atom1 = frame->atom_map[atom2->con_list.front()];
+            auto atom1_symbol = which(atom1);
+            if (atom1_symbol == Symbol::Nitrogen or atom1_symbol == Symbol::Oxygen) {
+                for (auto &atom3: group2) {
+                    // Atom3
+                    auto atom3_symbol = which(atom3);
+                    if (atom3_symbol == Symbol::Nitrogen or atom3_symbol == Symbol::Oxygen) {
+                        auto distance = atom_distance(atom1, atom3, frame);
+                        if (distance <= this->donor_acceptor_dist_cutoff) {
+                            auto vx1 = atom2->x - atom1->x;
+                            auto vy1 = atom2->y - atom1->y;
+                            auto vz1 = atom2->z - atom1->z;
+                            frame->image(vx1, vy1, vz1);
+                            auto len1 = std::sqrt(vx1 * vx1 + vy1 * vy1 + vz1 * vz1);
+
+                            double vx2, vy2, vz2;
+                            switch (hbond_type) {
+                                case HBondType::VMDVerion:
+                                    // atom2 -> atom3
+                                    vx2 = atom3->x - atom2->x;
+                                    vy2 = atom3->y - atom2->y;
+                                    vz2 = atom3->z - atom2->z;
+                                    break;
+                                case HBondType::GMXVersion:
+                                    // atom1 -> atom3
+                                    vx2 = atom3->x - atom1->x;
+                                    vy2 = atom3->y - atom1->y;
+                                    vz2 = atom3->z - atom1->z;
+                                    break;
+                            }
+
+                            frame->image(vx2, vy2, vz2);
+                            auto len2 = std::sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2);
+                            auto cosine = (vx1 * vx2 + vy1 * vy2 + vz1 * vz2) / (len1 * len2);
+                            auto ang = radian * std::acos(cosine);
+                            if (std::abs(ang) <= this->angle_cutoff) {
+                                hbonds[steps]++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void HBond::Selector_Both(std::shared_ptr<Frame> &frame) {
+    for (auto &atom2 : group1) {
+        // Atom2
+        if (which(atom2) == Symbol::Hydrogen) {
+            // Atom1
+            auto &atom1 = frame->atom_map[atom2->con_list.front()];
+            auto atom1_symbol = which(atom1);
+            if (atom1_symbol == Symbol::Nitrogen or atom1_symbol == Symbol::Oxygen) {
+                for (auto &atom3 : group1) {
+                    // atom1 and atom3 can not the same atom
+                    if (atom1 == atom3) continue;
+                    auto atom3_symbol = which(atom3);
+                    if (atom3_symbol == Symbol::Nitrogen or atom3_symbol == Symbol::Oxygen) {
+                        auto distance = atom_distance(atom1, atom3, frame);
+                        if (distance <= this->donor_acceptor_dist_cutoff) {
+                            if (atom1 != atom3 && !atom1->adj(atom3)) {
+                                auto vx1 = atom2->x - atom1->x;
+                                auto vy1 = atom2->y - atom1->y;
+                                auto vz1 = atom2->z - atom1->z;
+                                // atom1 -> atom2
+                                frame->image(vx1, vy1, vz1);
+                                auto len1 = std::sqrt(vx1 * vx1 + vy1 * vy1 + vz1 * vz1);
+
+                                double vx2, vy2, vz2;
+                                switch (hbond_type) {
+                                    case HBondType::VMDVerion:
+                                        // atom2 -> atom3
+                                        vx2 = atom3->x - atom2->x;
+                                        vy2 = atom3->y - atom2->y;
+                                        vz2 = atom3->z - atom2->z;
+                                        break;
+                                    case HBondType::GMXVersion:
+                                        // atom1 -> atom3
+                                        vx2 = atom3->x - atom1->x;
+                                        vy2 = atom3->y - atom1->y;
+                                        vz2 = atom3->z - atom1->z;
+                                        break;
+                                }
+
+                                frame->image(vx2, vy2, vz2);
+                                auto len2 = std::sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2);
+
+                                auto cosine = (vx1 * vx2 + vy1 * vy2 + vz1 * vz2) / (len1 * len2);
+                                auto ang = radian * std::acos(cosine);
+                                if (std::abs(ang) <= this->angle_cutoff) {
+                                    hbonds[steps]++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 class ResidenceTime : public BasicAnalysis {
@@ -3137,10 +3523,25 @@ class ResidenceTime : public BasicAnalysis {
     int **mark = nullptr;
     double time_star = 0;
 
-    int typ1 = 0, typ2 = 0;
-    std::string type_name1, type_name2;
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
 
-    bool use_name = false;
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
 
     std::map<int, std::list<bool>> mark_map;
 
@@ -3155,13 +3556,12 @@ public:
     }
 
     ~ResidenceTime() {
-        delete[] time_array;
-        delete[] Rt_array;
+        boost::checked_array_delete(time_array);
+        boost::checked_array_delete(Rt_array);
         if (mark) {
             for (int i = 0; i < atom_num; ++i)
-                delete[] mark[i];
-            delete[] mark;
-
+                boost::checked_array_delete(mark[i]);
+            boost::checked_array_delete(mark);
         }
     };
 
@@ -3170,6 +3570,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "ResidenceTime";
+    }
 
 };
 
@@ -3295,26 +3699,23 @@ void ResidenceTime::calculate() {
 
 
 void ResidenceTime::process(std::shared_ptr<Frame> &frame) {
+    find_matched_atoms(frame);
     steps++;
     int atom_no = 0;
-    for (auto &atom1 : frame->atom_list) {
-        if (use_name ? atom1->type_name == type_name1 : atom1->typ == typ1) {
-            for (auto &atom2 : frame->atom_list) {
-                if (use_name ? atom2->type_name == type_name2 : atom2->typ == typ2) {
-                    double xr = atom1->x - atom2->x;
-                    double yr = atom1->y - atom2->y;
-                    double zr = atom1->z - atom2->z;
-                    frame->image(xr, yr, zr);
-                    double dist = std::sqrt(xr * xr + yr * yr + zr * zr);
-                    try {
-                        mark_map[atom_no].push_back(dist <= dis_cutoff);
-                    } catch (std::out_of_range &e) {
-                        mark_map[atom_no] = std::list<bool>();
-                        mark_map[atom_no].push_back(dist <= dis_cutoff);
-                    }
-                    atom_no += 1;
-                }
+    for (auto &atom1 : group1) {
+        for (auto &atom2 : group2) {
+            double xr = atom1->x - atom2->x;
+            double yr = atom1->y - atom2->y;
+            double zr = atom1->z - atom2->z;
+            frame->image(xr, yr, zr);
+            double dist = std::sqrt(xr * xr + yr * yr + zr * zr);
+            try {
+                mark_map[atom_no].push_back(dist <= dis_cutoff);
+            } catch (std::out_of_range &e) {
+                mark_map[atom_no] = std::list<bool>();
+                mark_map[atom_no].push_back(dist <= dis_cutoff);
             }
+            atom_no += 1;
         }
     }
 }
@@ -3334,14 +3735,11 @@ void ResidenceTime::print() {
         }
     }
     calculate();
-    if (use_name) {
-        outfile << "typ1: " << type_name1 << ",  typ2: " << type_name2 << "  dist_cutoff = " << dis_cutoff << " t* = "
-                << time_star
-                << std::endl;
-    } else {
-        outfile << "typ1: " << typ1 << ",  typ2: " << typ2 << "  dist_cutoff = " << dis_cutoff << " t* = " << time_star
-                << std::endl;
-    }
+
+    outfile << "typ1: " << ids1 << ",  typ2: " << ids2 << "  dist_cutoff = " << dis_cutoff << " t* = "
+            << time_star
+            << std::endl;
+
     outfile << "# Frame        R " << std::endl;
     for (unsigned int i = 0; i < steps - 1; i++)
         outfile << i + 1 << "    " << Rt_array[i] << std::endl;
@@ -3349,33 +3747,7 @@ void ResidenceTime::print() {
 
 void ResidenceTime::readInfo() {
 
-    begin:
-    std::cout << "(1) use name\n(2) use number\n";
-    int num;
-    std::cin >> num;
-    if (num == 1) {
-        use_name = true;
-    } else if (num == 2) {
-        use_name = false;
-    } else {
-        std::cerr << "wront number" << std::endl;
-        goto begin;
-    }
-
-    std::cout << "Please enter typ1:";
-    if (use_name) {
-        std::cin >> type_name1;
-        boost::trim(type_name1);
-    } else {
-        std::cin >> typ1;
-    }
-    std::cout << "Please enter typ2:";
-    if (use_name) {
-        std::cin >> type_name2;
-        boost::trim(type_name2);
-    } else {
-        std::cin >> typ2;
-    }
+    Atom::select2group(ids1, ids2);
 
     std::cout << "Please enter distance cutoff1:";
     std::cin >> dis_cutoff;
@@ -3388,8 +3760,22 @@ void ResidenceTime::readInfo() {
 // Use Green-Kubo equation to calculate self-diffuse coefficients
 class GreenKubo : public BasicAnalysis {
 
-    list<int> atom_seqs_list;
-    //        list<double> atom_mass_list;
+    Atom::AtomIndenter ids;
+    std::unordered_set<shared_ptr<Atom>> group;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+        if (first_round) {
+            first_round = false;
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
+                          });
+
+        }
+    }
+
     double timestep;
     size_t steps = 0;
 
@@ -3409,6 +3795,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Green-Kubo";
+    }
 };
 
 
@@ -3500,6 +3890,7 @@ void GreenKubo::print() {
         body.czz[i] /= no;
     }
     outfile << "Green-Kubo self-diffuse " << endl;
+    outfile << "selected group : " << ids << endl;
     outfile << "Time (ps)             DA(10^-9 m2/s)" << endl;
     double pre_c = body.cxx[0] + body.cyy[0] + body.czz[0];
     double integral = 0.0;
@@ -3516,39 +3907,28 @@ void GreenKubo::print() {
 
 
 void GreenKubo::readInfo() {
-    string value;
-    while ((value = input("Please enter atom no seq(s):")).empty());
-    auto field = split(value);
-    for (auto &num : field) {
-        atom_seqs_list.push_back(stoi(num));
-    }
-    //   while(!(value = input("Please enter mass for each atom:").size()));
-    //   field = spilt(value);
-    //   for (auto &mass : field){
-    //       atom_mass_list.push_back(stod(mass));
-    //   }
-    while ((value = input("Please enter time step for each frame(ps):")).empty());
-    timestep = stod(value);
-
+    Atom::select1group(ids, "Please enter atom group");
+    this->timestep = choose(0.0, static_cast<double>(numeric_limits<int>::max()),
+                            "Please enter time step for each frame(ps):");
 
 }
 
 void GreenKubo::process(shared_ptr<Frame> &frame) {
+
+    find_matched_atoms(frame);
     steps++;
     double xv, yv, zv;
     xv = yv = zv = 0.0;
-    for (auto &atom_ptr : frame->atom_list) {
-        for (auto &atom_no : atom_seqs_list) {
-            if (atom_ptr->seq == atom_no) {
-                xv += atom_ptr->vx;
-                yv += atom_ptr->vy;
-                zv += atom_ptr->vz;
-                break;
-            }
-        }
+    for (auto &atom_ptr : group) {
+
+        xv += atom_ptr->vx;
+        yv += atom_ptr->vy;
+        zv += atom_ptr->vz;
+        break;
+
     }
 
-    int atom_nums = static_cast<int>(atom_seqs_list.size());
+    auto atom_nums = group.size();
     xv /= atom_nums;
     yv /= atom_nums;
     zv /= atom_nums;
@@ -3560,12 +3940,26 @@ void GreenKubo::process(shared_ptr<Frame> &frame) {
 }
 
 class Cluster : public BasicAnalysis {
-public:
-    std::set<int> set1; // contain the NO. of fitting atom
+
+    Atom::AtomIndenter ids;
+    std::unordered_set<shared_ptr<Atom>> group;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+        if (first_round) {
+            first_round = false;
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
+                          });
+
+        }
+    }
+
     double cutoff = 0.0;
     int steps = 0; // current frame number
     map<pair<int, int>, double> rmsd_map;
-
 
     double rmsfit(double x1[], double y1[], double z1[],
                   double x2[], double y2[], double z2[], int nfit) {
@@ -3602,17 +3996,21 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Cluster Analysis(linkage)";
+    }
 };
 
 
 void Cluster::process(std::shared_ptr<Frame> &frame) {
 
+    find_matched_atoms(frame);
     map<int, double> xx, yy, zz;
     int index = 0;
     bool first_atom = true;
     double first_x, first_y, first_z;
-    for (auto i : this->set1) {
-        auto atom = frame->atom_map[i];
+    for (auto &atom : group) {
         if (first_atom) {
             first_atom = false;
             first_x = xx[index] = atom->x;
@@ -3637,7 +4035,7 @@ void Cluster::process(std::shared_ptr<Frame> &frame) {
 
 double Cluster::rmsvalue(int index1, int index2) {
     int nfit, n;
-    nfit = n = static_cast<int>(this->set1.size());
+    nfit = n = group.size();
 
     double x1[ATOM_MAX], y1[ATOM_MAX], z1[ATOM_MAX];
     double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
@@ -3802,11 +4200,8 @@ void Cluster::print() {
     tbb::parallel_sort(c.begin(), c.end(), [](const rms_m2 &i, const rms_m2 &j) { return (i.conf < j.conf); });
     outfile << "***************************" << endl;
     outfile << "*Cluster Analysis(Linkage)*" << endl;
-    outfile << "SET:";
-    for (auto i : this->set1) {
-        outfile << i << "  ";
-    }
-    outfile << endl << "cutoff : " << this->cutoff << endl;
+    outfile << "SET:" << ids << endl;
+    outfile << "cutoff : " << this->cutoff << endl;
     outfile << "***************************" << endl;
     for (unsigned int k = 0; k < c.size(); k++) {
         outfile << k + 1 << "   " << c[k].clust << endl;
@@ -3816,23 +4211,9 @@ void Cluster::print() {
 }
 
 void Cluster::readInfo() {
-    string str = input("Please enter group:");
-    auto vec1 = split(str);
-    for (auto it = vec1.cbegin(); it != vec1.cend(); ++it) {
-        auto i = std::stoi(*it);
-        if (i > 0) {
-            set1.insert(i);
-        } else if (i < 0) {
-            ++it;
-            auto j = std::stoi(*it);
-            for (int k = -i; k <= j; k++) set1.insert(k);
-        } else {
-            cerr << "error of atom num select" << endl;
-            exit(1);
-        }
-    }
-    str = input("Cutoff : ");
-    this->cutoff = std::stod(str);
+
+    Atom::select1group(ids, "Please enter group:");
+    this->cutoff = choose(0.0, static_cast<double>(numeric_limits<int>::max()), "Cutoff : ");
 
 }
 
@@ -3949,6 +4330,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "NMRRange Analysis";
+    }
 };
 
 void NMRRange::process(std::shared_ptr<Frame> &frame) {
@@ -4115,12 +4500,34 @@ bool NMRRange::recognize_walk(shared_ptr<Atom> atom, shared_ptr<AminoTop::AminoI
 }
 
 class RotAcfCutoff : public BasicAnalysis {
-public:
+
     double time_increment_ps = 0.1;
     double cutoff2;
 
-    std::vector<Atom::AtomIndenter> ids1;
-    std::vector<Atom::AtomIndenter> ids2;
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
+
+
+public:
+
 
     explicit RotAcfCutoff() {
         enable_outfile = true;
@@ -4132,6 +4539,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Rotational autocorrelation function (Cutoff)";
+    }
 
     struct InnerAtom {
         int index;
@@ -4153,6 +4564,8 @@ public:
         }
     };
 
+
+private:
     std::unordered_set<InnerAtom, InnerAtomHasher> inner_atoms;
 
     std::list<std::list<std::tuple<double, double, double>> *> rots;
@@ -4160,6 +4573,7 @@ public:
     auto find_in(int seq);
 
     tuple<double, double, double> calVector(shared_ptr<Molecule> &mol, shared_ptr<Frame> &frame);
+
 
 };
 
@@ -4175,19 +4589,28 @@ auto RotAcfCutoff::find_in(int seq) {
 }
 
 void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
+
+    find_matched_atoms(frame);
     shared_ptr<Atom> ref;
 
     for (auto &mol : frame->molecule_list) {
         mol->bExculde = true;
-        for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, ids1)) {
-                ref = atom;
-            } else if (Atom::is_match(atom, ids2)) {
-                mol->bExculde = false;
-            }
-        }
-        mol->calc_mass();
     }
+
+    for (auto &atom : group1) {
+        ref = atom;
+        if (!atom->molecule.expired()) atom->molecule.lock()->calc_mass();
+    }
+
+    for (auto &atom : group2) {
+        if (!atom->molecule.expired()) {
+            auto mol = atom->molecule.lock();
+
+            mol->calc_mass();
+            mol->bExculde = false;
+        }
+    }
+
     if (!ref) {
         std::cerr << "reference atom not found" << std::endl;
         exit(5);
@@ -4235,19 +4658,7 @@ void RotAcfCutoff::readInfo() {
     double cutoff = choose(0.0, GMX_DOUBLE_MAX, "Please enter distance cutoff:");
     this->cutoff2 = cutoff * cutoff;
 
-    while (true) {
-        time_increment_ps = 0.1;
-        string input_line = input(" Enter the Time Increment in Picoseconds [0.1]: ");
-        trim(input_line);
-        if (!input_line.empty()) {
-            time_increment_ps = stod(input_line);
-            if (time_increment_ps <= 0.0) {
-                cout << "error time increment " << time_increment_ps << endl;
-                continue;
-            }
-        }
-        break;
-    }
+    this->time_increment_ps = choose(0.0, GMX_DOUBLE_MAX, "Enter the Time Increment in Picoseconds [0.1]:", true, 0.1);
 
 }
 
@@ -4282,14 +4693,14 @@ void RotAcfCutoff::print() {
     std::vector<std::pair<int, double>> acf;
     acf.emplace_back(0, 0.0);
     for (auto list_ptr : this->rots) {
-        int i = 0;
+        size_t i = 0;
         for (auto it1 = list_ptr->begin(); it1 != --list_ptr->end(); it1++) {
             i++;
-            int j = i;
+            auto j = i;
             auto it2 = it1;
             for (it2++; it2 != list_ptr->end(); it2++) {
                 j++;
-                int m = j - i;
+                auto m = j - i;
                 if (m >= acf.size()) acf.emplace_back(0, 0.0);
 
                 double xr1 = get<0>(*it1);
@@ -4314,7 +4725,7 @@ void RotAcfCutoff::print() {
         }
     }
 
-    for (int i = 1; i < acf.size(); i++) {
+    for (size_t i = 1; i < acf.size(); i++) {
         double counts = acf[i].first;
         acf[i].second /= counts;
     }
@@ -4347,12 +4758,31 @@ void RotAcfCutoff::print() {
 
 
 class DiffuseCutoff : public BasicAnalysis {
-public:
+
     double time_increment_ps = 0.1;
     double cutoff2;
 
-    std::vector<Atom::AtomIndenter> ids1;
-    std::vector<Atom::AtomIndenter> ids2;
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
+
+public:
 
 
     DiffuseCutoff() {
@@ -4365,6 +4795,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Diffusion Cutoff Coefficient by Einstein equation";
+    }
 
     struct InnerAtom {
         int index;
@@ -4389,6 +4823,8 @@ public:
         }
     };
 
+private:
+
     std::unordered_set<InnerAtom, InnerAtomHasher> inner_atoms;
 
     std::list<std::list<std::tuple<double, double, double>> *> rcm;
@@ -4409,19 +4845,29 @@ auto DiffuseCutoff::find_in(int seq) {
 }
 
 void DiffuseCutoff::process(std::shared_ptr<Frame> &frame) {
+
+    find_matched_atoms(frame);
     shared_ptr<Atom> ref;
+
 
     for (auto &mol : frame->molecule_list) {
         mol->bExculde = true;
-        for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, ids1)) {
-                ref = atom;
-            } else if (Atom::is_match(atom, ids2)) {
-                mol->bExculde = false;
-            }
-        }
-        mol->calc_mass();
     }
+
+    for (auto &atom : group1) {
+        ref = atom;
+        if (!atom->molecule.expired()) atom->molecule.lock()->calc_mass();
+    }
+
+    for (auto &atom : group2) {
+        if (!atom->molecule.expired()) {
+            auto mol = atom->molecule.lock();
+
+            mol->calc_mass();
+            mol->bExculde = false;
+        }
+    }
+
     if (!ref) {
         std::cerr << "reference atom not found" << std::endl;
         exit(5);
@@ -4478,14 +4924,14 @@ void DiffuseCutoff::process(std::shared_ptr<Frame> &frame) {
 void DiffuseCutoff::print() {
     std::vector<std::pair<int, tuple<double, double, double>>> msd;
     for (auto list_ptr : this->rcm) {
-        int i = 0;
+        size_t i = 0;
         for (auto it1 = list_ptr->begin(); it1 != --list_ptr->end(); it1++) {
             i++;
-            int j = i;
+            auto j = i;
             auto it2 = it1;
             for (it2++; it2 != list_ptr->end(); it2++) {
                 j++;
-                int m = j - i - 1;
+                auto m = j - i - 1;
                 if (m >= msd.size()) msd.emplace_back(0, std::make_tuple(0.0, 0.0, 0.0));
                 double xdiff = get<0>(*it2) - get<0>(*it1);
                 double ydiff = get<1>(*it2) - get<1>(*it1);
@@ -4500,7 +4946,7 @@ void DiffuseCutoff::print() {
 
     const double dunits = 10.0;
 
-    for (int i = 0; i < msd.size(); i++) {
+    for (size_t i = 0; i < msd.size(); i++) {
         double counts = msd[i].first;
         get<0>(msd[i].second) /= counts;
         get<1>(msd[i].second) /= counts;
@@ -4514,7 +4960,7 @@ void DiffuseCutoff::print() {
     outfile << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD       Diff Const" << endl;
     outfile << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)    (x 10^-5 cm**2/sec)" << endl;
 
-    for (int i = 0; i < msd.size(); i++) {
+    for (size_t i = 0; i < msd.size(); i++) {
         double delta = time_increment_ps * (i + 1);
         double xvalue = get<0>(msd[i].second);
         double yvalue = get<1>(msd[i].second);
@@ -4537,7 +4983,7 @@ void DiffuseCutoff::readInfo() {
     while (true) {
         time_increment_ps = 0.1;
         string input_line = input(" Enter the Time Increment in Picoseconds [0.1]: ");
-        trim(input_line);
+        boost::trim(input_line);
         if (!input_line.empty()) {
             time_increment_ps = stod(input_line);
             if (time_increment_ps <= 0.0) {
@@ -4552,16 +4998,38 @@ void DiffuseCutoff::readInfo() {
 
 
 class Diffuse : public BasicAnalysis {
-public:
+
+    Atom::AtomIndenter ids;
+
+    std::unordered_set<shared_ptr<Atom>> group;
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
+                          });
+        }
+    }
+
     bool first_frame = true;
     int total_frame_number;
     int steps = 0;
     double time_increment_ps = 0.1;
     int total_mol = 0;
-    set<int> exclude_atom;
+
+
     bool bSerial = true;
     bool bTradition = true;
 
+    Eigen::MatrixXd xcm;
+    Eigen::MatrixXd ycm;
+    Eigen::MatrixXd zcm;
+public:
     Diffuse() {
         enable_forcefield = true;
         enable_outfile = true;
@@ -4573,23 +5041,28 @@ public:
 
     void readInfo() override;
 
-    Eigen::MatrixXd xcm;
-    Eigen::MatrixXd ycm;
-    Eigen::MatrixXd zcm;
+    static const string title() {
+        return "Diffusion Coefficient by Einstein equation";
+    }
 
 };
 
 void Diffuse::process(std::shared_ptr<Frame> &frame) {
+    find_matched_atoms(frame);
     if (first_frame) {
         first_frame = false;
+        for (auto &mol : frame->molecule_list) {
+            mol->bExculde = true;
+        }
+
+        for (auto &atom : group) {
+            auto mol = atom->molecule.lock();
+            if (mol) {
+                mol->bExculde = false;
+            }
+        }
 
         for (auto &mol : frame->molecule_list) {
-            for (auto &atom : mol->atom_list) {
-                if (exclude_atom.count(atom->seq)) {
-                    mol->bExculde = true;
-                    break;
-                }
-            }
             if (mol->bExculde) continue;
             mol->calc_mass();
             total_mol++;
@@ -4752,6 +5225,7 @@ void Diffuse::print() {
     }
 
     outfile << "*********************************************************" << endl;
+    outfile << "Group :" << ids << endl;
     outfile << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
     outfile << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD        Diff Const" << endl;
     outfile << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)     (x 10^-5 cm**2/sec)" << endl;
@@ -4775,7 +5249,7 @@ void Diffuse::readInfo() {
     while (true) {
         time_increment_ps = 0.1;
         string input_line = input(" Enter the Time Increment in Picoseconds [0.1]: ");
-        trim(input_line);
+        boost::trim(input_line);
         if (!input_line.empty()) {
             time_increment_ps = stod(input_line);
             if (time_increment_ps <= 0.0) {
@@ -4787,7 +5261,7 @@ void Diffuse::readInfo() {
     }
     while (true) {
         string input_line = input(" Enter the Total Frame Number: ");
-        trim(input_line);
+        boost::trim(input_line);
         if (!input_line.empty()) {
             total_frame_number = stoi(input_line);
             if (total_frame_number <= 0) {
@@ -4797,38 +5271,17 @@ void Diffuse::readInfo() {
             break;
         }
     }
-    while (true) {
-        string input_line = input(" Numbers of any Atoms to be Removed :  ");
-        trim(input_line);
-        exclude_atom.clear();
-        if (!input_line.empty()) {
-            auto field = split(input_line);
-            for (auto it = field.cbegin(); it != field.cend(); ++it) {
-                auto i = std::stoi(*it);
-                if (i > 0) {
-                    exclude_atom.insert(i);
-                } else if (i < 0) {
-                    ++it;
-                    auto j = std::stoi(*it);
-                    for (int k = -i; k <= j; k++) exclude_atom.insert(k);
-                } else {
-                    cerr << "error of atom num select" << endl;
-                    continue;
-                }
-            }
-            break;
-        }
-    }
+    Atom::select1group(ids, "select group :");
 
     while (true) {
         string input_line = input(" serial ? [T]:");
-        trim(input_line);
+        boost::trim(input_line);
         if (!input_line.empty()) {
             if (input_line.compare("T") == 0) {
                 bSerial = true;
                 while (true) {
                     string input_line = input(" trandition ? [T]:");
-                    trim(input_line);
+                    boost::trim(input_line);
                     if (!input_line.empty()) {
                         if (input_line.compare("T") == 0) {
                             bTradition = true;
@@ -4867,10 +5320,32 @@ public:
 
     void readInfo() override;
 
+    static const string title() {
+        return "Dipole Angle";
+    }
+
 protected:
 
-    std::vector<Atom::AtomIndenter> ids1;
-    std::vector<Atom::AtomIndenter> ids2;
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
+
 
     double distance_width;
     double angle_width;
@@ -4882,20 +5357,28 @@ protected:
 };
 
 void DipoleAngle::process(std::shared_ptr<Frame> &frame) {
+
+    find_matched_atoms(frame);
     shared_ptr<Atom> ref;
 
     for (auto &mol : frame->molecule_list) {
         mol->bExculde = true;
-        for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, ids1)) {
-                ref = atom;
-            } else if (Atom::is_match(atom, ids2)) {
-                mol->ow = atom;
-                mol->bExculde = false;
-            }
-        }
-        mol->calc_mass();
     }
+
+    for (auto &atom : group1) {
+        ref = atom;
+        if (!atom->molecule.expired()) atom->molecule.lock()->calc_mass();
+    }
+
+    for (auto &atom : group2) {
+        if (!atom->molecule.expired()) {
+            auto mol = atom->molecule.lock();
+            mol->ow = atom;
+            mol->calc_mass();
+            mol->bExculde = false;
+        }
+    }
+
     if (!ref) {
         std::cerr << "reference atom not found" << std::endl;
         exit(5);
@@ -4990,11 +5473,15 @@ class DipoleAngleSingleDistanceNormal : public DipoleAngle {
 public:
     void print() override;
 
+    static const string title() {
+        return "Dipole Angle of single distance normal";
+    };
+
 };
 
 void DipoleAngleSingleDistanceNormal::print() {
     outfile << "DipoleAngleSingleDistanceNormal : " << std::endl;
-     double factor = (4.0 / 3.0) * M_PI;
+    double factor = (4.0 / 3.0) * M_PI;
     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
         size_t total = 0;
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
@@ -5013,25 +5500,29 @@ void DipoleAngleSingleDistanceNormal::print() {
 class DipoleAngleVolumeNormal : public DipoleAngle {
 public:
     void print() override;
+
+    static const string title() {
+        return "Dipole Angle of volume normal";
+    }
 };
 
 void DipoleAngleVolumeNormal::print() {
     outfile << "DipoleAngleVolumeNormal : " << std::endl;
     size_t total = 0;
-     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
+    for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
             total += hist[make_pair(i_distance, i_angle)];
         }
 
     }
-     double factor = (4.0 / 3.0) * M_PI ;
+    double factor = (4.0 / 3.0) * M_PI;
     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
         double dv = factor * (pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3));
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
             outfile << boost::format("%5.3f   %10.3f   %g\n")
-                       % ((i_distance - 0.5 )* distance_width)
-                       % ((i_angle - 0.5)* angle_width)
-                       % (total == 0 ? 0.0 : double(hist[make_pair(i_distance, i_angle)]) / ( total * dv * angle_width));
+                       % ((i_distance - 0.5) * distance_width)
+                       % ((i_angle - 0.5) * angle_width)
+                       % (total == 0 ? 0.0 : double(hist[make_pair(i_distance, i_angle)]) / (total * dv * angle_width));
         }
     }
 }
@@ -5042,6 +5533,10 @@ public:
     void print() override;
 
     void readInfo() override;
+
+    static const string title() {
+        return "Dipole Angle to Gibbs Free Energy";
+    };
 
 protected:
 
@@ -5059,7 +5554,7 @@ void DipoleAngle2Gibbs::print() {
     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
         double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-            max_value = max(max_value,hist[make_pair(i_distance, i_angle)] / (dv));
+            max_value = max(max_value, hist[make_pair(i_distance, i_angle)] / (dv));
         }
     }
     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
@@ -5070,7 +5565,7 @@ void DipoleAngle2Gibbs::print() {
                        % ((i_distance - 0.5) * distance_width)
                        % ((i_angle - 0.5) * angle_width)
                        % (pop == 0.0 ? 100.0 : factor * log(pop));
-        //               %  pop;
+            //               %  pop;
         }
     }
 
@@ -5099,20 +5594,40 @@ void DipoleAngle2Gibbs::readInfo() {
 }
 
 
-
 class ShellDensity : public BasicAnalysis {
 public:
+    ShellDensity() {enable_outfile = true;}
+
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print() override;
 
-    ShellDensity();
-
     void readInfo() override;
 
+    static const string title() {
+        return "Shell Density function";
+    }
+
 protected:
-    std::vector<Atom::AtomIndenter> ids1;
-    std::vector<Atom::AtomIndenter> ids2;
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
 
     double distance_width;
 
@@ -5125,18 +5640,16 @@ protected:
 };
 
 void ShellDensity::process(std::shared_ptr<Frame> &frame) {
+    find_matched_atoms(frame);
     nframe++;
-    for( auto & ref : frame->atom_list){
-        if (Atom::is_match(ref,ids1)) {
-            for (auto &atom : frame->atom_list){
-                if (Atom::is_match(atom,ids2)) {
-                    int ibin = int(atom_distance(ref,atom,frame) / distance_width) + 1;
-                    if ( ibin <= distance_bins){
-                        hist[ibin]++;
-                    }
-                }
+    for (auto &ref :group1) {
+        for (auto &atom : group2) {
+            int ibin = int(atom_distance(ref, atom, frame) / distance_width) + 1;
+            if (ibin <= distance_bins) {
+                hist[ibin]++;
             }
         }
+
     }
 }
 
@@ -5150,7 +5663,7 @@ void ShellDensity::print() {
     outfile << "Bin    Distance    Densitry (count / Ang3 / frame)" << endl;
 
     for (int i = 1; i <= distance_bins; i++) {
-        double dv = (4.0 / 3.0) * M_PI * (pow(i*distance_width,3) -  pow((i-1)*distance_width,3));
+        double dv = (4.0 / 3.0) * M_PI * (pow(i * distance_width, 3) - pow((i - 1) * distance_width, 3));
         outfile << fmt::sprintf("%d      %.4f      %g \n",
                                 i, (i - 0.5) * distance_width, hist[i] / (nframe * dv));
     }
@@ -5169,9 +5682,6 @@ void ShellDensity::readInfo() {
     }
 }
 
-ShellDensity::ShellDensity() {
-    enable_outfile = true;
-}
 
 void processOneFrame(shared_ptr<Frame> &frame,
                      shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
@@ -5181,103 +5691,64 @@ void processOneFrame(shared_ptr<Frame> &frame,
 }
 
 
+template<typename T1, typename T2>
+struct add_item {
+    add_item(T1 &v1, T2 &v2) : v1(v1), v2(v2) {};
 
+    template<typename T>
+    void operator()(boost::type<T>) {
+        v1.emplace_back(bind(make_shared<T>));
+        v2.emplace_back((boost::format("(%d) %s\n") % v1.size() % T::title()).str());
+    }
+
+    T1 &v1;
+    T2 &v2;
+};
 
 auto getTasks() {
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
-    auto menu1 = []() {
+
+    std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
+    std::vector<string> item_menu;
+
+    using components = mpl::vector<
+            GmxTrj,
+            Distance,
+            CoordinateNumPerFrame,
+            RadicalDistribtuionFunction,
+            ResidenceTime,
+            GreenKubo,
+            HBond,
+            RMSDCal,
+            RMSFCal,
+            Cluster,
+            NMRRange,
+            Diffuse,
+            DiffuseCutoff,
+            FirstCoordExchangeSearch,
+            RotAcfCutoff,
+            DipoleAngle,
+            DipoleAngle2Gibbs,
+            DipoleAngleSingleDistanceNormal,
+            DipoleAngleVolumeNormal,
+            ShellDensity
+    >;
+
+    mpl::for_each<components, boost::type<mpl::_>>(add_item<
+            std::vector<std::function<shared_ptr<BasicAnalysis>()>>,
+            std::vector<string>
+    >(task_vec, item_menu));
+
+    auto menu1 = [&item_menu]() {
         std::cout << "Please select the desired operation" << std::endl;
-        std::cout << "(0) Gromacs XTC & TRR & GRO & NetCDF Output" << std::endl;
-        std::cout << "(1) Distance" << std::endl;
-        std::cout << "(2) Coordinate Number per Frame" << std::endl;
-        std::cout << "(3) Radical Distribution Function" << std::endl;
-        std::cout << "(4) ResidenceTime" << std::endl;
-        std::cout << "(5) Green-Kubo " << std::endl;
-        std::cout << "(6) Hydrogen Bond " << std::endl;
-        std::cout << "(7) RMSD Calculator " << std::endl;
-        std::cout << "(8) RMSF Calculator " << std::endl;
-        std::cout << "(9) Cluster Analysis(linkage) " << std::endl;
-        std::cout << "(10) NMRRange Analysis " << std::endl;
-        std::cout << "(11) Diffusion Coefficient by Einstein equation" << std::endl;
-        std::cout << "(12) Diffusion Cutoff Coefficient by Einstein equation" << std::endl;
-        std::cout << "(13) Water exchange analysis" << std::endl;
-        std::cout << "(14) Rotational autocorrelation function" << std::endl;
-        std::cout << "(15) Dipole Angle" << std::endl;
-        std::cout << "(16) Dipole Angle to Gibbs Free Energy" << std::endl;
-        std::cout << "(17) Dipole Angle of single distance normal" << std::endl;
-        std::cout << "(18) Dipole Angle of volume normal" << std::endl;
-        std::cout << "(19) Shell Density function" << std::endl;
-        std::cout << "(20) Start" << std::endl;
-        return choose(0, 20, "select :");
+        std::cout << "(0) Start\n";
+        for_each(item_menu.cbegin(), item_menu.cend(), std::cout << phoenix::placeholders::_1);
+        return choose<int>(0, mpl::size<components>::value, "select :");
     };
     while (true) {
         int num = menu1();
-        shared_ptr<BasicAnalysis> task;
-        switch (num) {
-            case 0:
-                task = std::make_shared<GmxTrj>();
-                break;
-            case 1:
-                task = std::make_shared<Distance>();
-                break;
-            case 2:
-                task = std::make_shared<CoordinateNumPerFrame>();
-                break;
-            case 3:
-                task = std::make_shared<RadicalDistribtuionFunction>();
-                break;
-            case 4:
-                task = std::make_shared<ResidenceTime>();
-                break;
-            case 5:
-                task = std::make_shared<GreenKubo>();
-                break;
-            case 6:
-                task = std::make_shared<HBond>();
-                break;
-            case 7:
-                task = std::make_shared<RMSDCal>();
-                break;
-            case 8:
-                task = std::make_shared<RMSFCal>();
-                break;
-            case 9:
-                task = std::make_shared<Cluster>();
-                break;
-            case 10:
-                task = std::make_shared<NMRRange>();
-                break;
-            case 11:
-                task = std::make_shared<Diffuse>();
-                break;
-            case 12:
-                task = std::make_shared<DiffuseCutoff>();
-                break;
-            case 13:
-                task = std::make_shared<FirstCoordExchangeSearch>();
-                break;
-            case 14:
-                task = std::make_shared<RotAcfCutoff>();
-                break;
-            case 15:
-                task = std::make_shared<DipoleAngle>();
-                break;
-            case 16:
-                task = std::make_shared<DipoleAngle2Gibbs>();
-                break;
-            case 17:
-                task = std::make_shared<DipoleAngleSingleDistanceNormal>();
-                break;
-            case 18:
-                task = std::make_shared<DipoleAngleVolumeNormal>();
-                break;
-            case 19:
-                task = std::make_shared<ShellDensity>();
-                break;
-            default:
-                return task_list;
-
-        }
+        if (num >= mpl::size<components>::value) return task_list;
+        shared_ptr<BasicAnalysis> task = task_vec[num]();
         task->readInfo();
         task_list->push_back(task);
 
@@ -5376,13 +5847,12 @@ int main(int argc, char *argv[]) {
     }
     int start = choose(1, INT32_MAX, "Enter the start frame[1]:", true, 1);
     int step_size = choose(1, INT32_MAX, "Enter the step size[1]:", true, 1);
-    int total_frames = choose(0, INT32_MAX, "How many frames to read [all]:", true, 0);
+    int total_frames = choose(0, INT32_MAX, "How many frames to read [all]:", true);
 
     tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
     if (enable_tbb) {
-        int threads = choose(0, sysconf(_SC_NPROCESSORS_ONLN), "How many cores to used in parallel[automatic]:",
-                             true,
-                             0);
+        int threads = choose<int>(0, sysconf(_SC_NPROCESSORS_ONLN),
+                                  "How many cores to used in parallel[automatic]:", true);
         tbb_init.initialize(threads == 0 ? tbb::task_scheduler_init::automatic : threads);
     }
     int current_frame_num = 0;
@@ -5407,7 +5877,7 @@ int main(int argc, char *argv[]) {
         cout << "traj file can not use multiple files" << endl;
     } else {
         input_line = input("Do you want to use multiple files [No]:");
-        trim(input_line);
+        boost::trim(input_line);
         if (!input_line.empty()) {
             if (input_line[0] == 'Y' or input_line[0] == 'y') {
                 while (true) {
