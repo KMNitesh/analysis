@@ -11,7 +11,8 @@ add_executable(bar bar.f)
 add_executable(xyzpdb xyzpdb.f)
 add_executable(pdbxyz pdbxyz.f)
 add_executable(minimize minimize.f)
-add_executable(analysis analysis.cpp memory.cpp atom.cpp common.cpp)
+add_executable(analysis analysis.cpp memory.cpp atom.cpp common.cpp
+        molecule.cpp frame.cpp trajectoryreader.cpp forcefield.cpp)
 
 
 add_executable(test_grammar test_grammar.cpp atom.cpp common.cpp)

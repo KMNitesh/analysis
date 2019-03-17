@@ -2,11 +2,20 @@
 // Created by xiamr on 3/17/19.
 //
 
+#include "config.h"
 #include <fstream>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include "common.hpp"
+#include "forcefield.hpp"
 
+
+bool enable_read_velocity = false;
+bool enable_tbb = false;
+bool enable_outfile = false;
+
+Forcefield forcefield;
+bool enable_forcefield = false;
 
 bool file_exist(const std::string &name) {
     std::fstream in(name, std::ofstream::in);

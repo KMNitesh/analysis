@@ -5,6 +5,7 @@
 #ifndef TINKER_ATOM_HPP
 #define TINKER_ATOM_HPP
 
+#include "config.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -15,9 +16,6 @@
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
 
-namespace qi = boost::spirit::qi;
-namespace fusion = boost::fusion;
-namespace phoenix = boost::phoenix;
 
 
 class Molecule;
@@ -77,7 +75,7 @@ public:
         Node node2;
     };
 
-    typedef std::vector<boost::variant<fusion::vector<uint, boost::optional<uint>>, std::string>> select_ranges;
+    typedef std::vector<boost::variant<boost::fusion::vector<uint, boost::optional<uint>>, std::string>> select_ranges;
 
     struct residue_name_nums {
         select_ranges val;
@@ -107,8 +105,8 @@ public:
         }
 
         explicit atom_types(int typenum) {
-            fusion::vector<uint, boost::optional<uint>> t;
-            fusion::at_c<0>(t) = typenum;
+            boost::fusion::vector<uint, boost::optional<uint>> t;
+            boost::fusion::at_c<0>(t) = typenum;
             val.emplace_back(t);
         }
     };
@@ -148,9 +146,7 @@ struct print : boost::static_visitor<> {
 
     explicit print(int space_num = 0) : space_num(space_num) {}
 
-    void indent(int space_num) const {
-        std::cout << std::string(3 * space_num, ' ');
-    }
+    void indent(int space_num) const;
 
     void operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const;
 

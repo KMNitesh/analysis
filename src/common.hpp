@@ -5,11 +5,24 @@
 #ifndef TINKER_COMMON_HPP
 #define TINKER_COMMON_HPP
 
+#include "config.h"
 #include <string>
 #include <vector>
 #include <type_traits>
+#include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+
+class Forcefield;
+
+// global variables
+
+extern bool enable_read_velocity;
+extern bool enable_tbb;
+extern bool enable_outfile;
+
+extern Forcefield forcefield;
+extern bool enable_forcefield;
 
 bool file_exist(const std::string &name);
 
@@ -31,7 +44,7 @@ struct type_name_string<double> {
 };
 
 
-template<typename T, typename = std::enable_if_t<std::is_same<T, int>::value || std::is_same<T, double>::value>>
+template<typename T, typename = std::enable_if_t<std::is_same_v<T, int> or std::is_same_v<T, double>>>
 T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T value = T()) {
     while (true) {
         std::string input_line = input(prompt);

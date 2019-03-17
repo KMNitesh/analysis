@@ -29,18 +29,7 @@ using namespace std;
 
 #include <Eigen/Eigen>
 
-namespace gmx {
 
-#include "gromacs/fileio/xtcio.h"
-#include "gromacs/fileio/trnio.h"
-#include "gromacs/utility/smalloc.h"
-
-}
-
-
-#include "AmberNetcdf.h"
-#include "amber_netcdf.h"
-#include "gmxtrr.h"
 
 #define BOOST_RESULT_OF_USE_DECLTYPE
 #define BOOST_SPIRIT_USE_PHOENIX_V3
@@ -78,94 +67,31 @@ namespace mpl = boost::mpl;
 
 #include <boost/assert.hpp>
 
+#include <boost/bimap.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+#include <boost/bimap/set_of.hpp>
+#include <boost/bimap/list_of.hpp>
+#include <boost/assign.hpp>
+
 #include "common.hpp"
 #include "atom.hpp"
 #include "grammar.hpp"
+#include "molecule.hpp"
+#include "frame.hpp"
+#include "trajectoryreader.hpp"
+#include "forcefield.hpp"
 
 
 constexpr int ATOM_MAX = 10000;
-
-// global variables
-
-bool enable_read_velocity = false;
-bool enable_tbb = false;
-bool enable_outfile = false;
 
 std::fstream outfile;
 
 using boost::variant;
 
-class Molecule;
 
 namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
-
-
-
-
-class Frame;
-
-class Molecule {
-public:
-    double mass;  // molecular mass
-    std::list<std::shared_ptr<Atom>> atom_list;
-
-    double center_x, center_y, center_z;
-
-    bool bExculde = false;
-
-    void calc_center(shared_ptr<Frame> &frame);
-
-    void calc_mass();
-
-    tuple<double, double, double> calc_weigh_center(shared_ptr<Frame> &frame);
-
-    tuple<double, double, double> calc_dipole(shared_ptr<Frame> &frame);
-
-    /**
-     * @return return seq of first atom for temporary use
-     *         else return 0
-     */
-    int seq() {
-        if (atom_list.empty()) return 0;
-        return atom_list.front()->seq;
-    }
-
-    shared_ptr<Atom> ow;
-};
-
-
-class Frame {
-public:
-    double a_axis = 0.0;
-    double b_axis = 0.0;
-    double c_axis = 0.0;
-
-    double a_axis_half = 0.0;
-    double b_axis_half = 0.0;
-    double c_axis_half = 0.0;
-
-    double alpha = 0.0;
-    double beta = 0.0;
-    double gamma = 0.0;
-
-    std::string title;
-
-    std::list<std::shared_ptr<Atom>> atom_list;
-    std::map<int, std::shared_ptr<Atom>> atom_map;
-
-    std::list<std::shared_ptr<Molecule>> molecule_list;
-
-    bool enable_bound = false;
-
-    void image(double &xr, double &yr, double &zr) {
-        if (!enable_bound) return;
-        while (std::abs(xr) > a_axis_half) xr -= sign(a_axis, xr);
-        while (std::abs(yr) > b_axis_half) yr -= sign(b_axis, yr);
-        while (std::abs(zr) > c_axis_half) zr -= sign(c_axis, zr);
-    }
-};
 
 
 double
@@ -175,780 +101,6 @@ atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &a
     auto zr = atom1->z - atom2->z;
     frame->image(xr, yr, zr);
     return std::sqrt(xr * xr + yr * yr + zr * zr);
-}
-
-
-void add_to_mol(std::shared_ptr<Atom> &atom, std::shared_ptr<Molecule> &mol, std::shared_ptr<Frame> &frame) {
-    if (atom->molecule.lock()) return;
-    mol->atom_list.push_back(atom);
-    atom->molecule = mol;
-    for (auto &i : atom->con_list)
-        add_to_mol(frame->atom_map[i], mol, frame);
-}
-
-class TrajectoryReader {
-    std::fstream position_file;
-    std::fstream velocity_file; // The velocity file
-
-    bool isbin = false;
-    bool isnetcdf = false;
-    bool istrr = false;
-    bool isxtc = false;
-
-    bool enable_binaray_file = false;
-    string topology_filename;
-
-    enum class TOPOLOGY_TYPE {
-        ARC, MOL2
-    } topology_type;
-
-
-    struct AmberNetcdf NC;
-    std::shared_ptr<Frame> frame;
-
-    gmx::t_fileio *fio = nullptr;
-
-    bool first_time = true;
-    bool openvel = false;
-
-    int natoms, step;
-    gmx::rvec *x = nullptr;
-    gmx::real prec, time;
-
-    std::list<std::string> arc_filename_list; // the continuous trajectory files
-
-
-
-    void close() {
-        if (isnetcdf) {
-            netcdfClose(&NC);
-            isnetcdf = false;
-        } else if (istrr) {
-            gmx::close_trn(fio);
-            fio = nullptr;
-            istrr = false;
-        } else if (isxtc) {
-            gmx::sfree(x);
-            x = nullptr;
-            gmx::close_xtc(fio);
-            fio = nullptr;
-
-            isxtc = false;
-        } else {
-            position_file.close();
-        }
-        if (velocity_file.is_open()) velocity_file.close();
-    }
-
-    void readOneFrameVel() {
-        std::string line;
-        std::vector<std::string> field;
-        getline(velocity_file, line);
-        for (auto &atom : frame->atom_list) {
-            std::getline(velocity_file, line);
-            field = split(line);
-            auto len1 = field[2].length();
-            auto len2 = field[3].length();
-            auto len3 = field[4].length();
-            atom->vx = std::stod(field[2].replace(len1 - 4, 1, "E"));
-            atom->vy = std::stod(field[3].replace(len2 - 4, 1, "E"));
-            atom->vz = std::stod(field[4].replace(len3 - 4, 1, "E"));
-        }
-    }
-
-    shared_ptr<Frame> readOneFrameTraj() {
-        char str[256];
-        if (!frame) {
-            frame = make_shared<Frame>();
-            int length;
-            position_file.read((char *) &length, 4);
-            int atom_num;
-            position_file.read((char *) &atom_num, 4);
-            position_file.read(str, length - 4);
-            frame->title = std::string(str, static_cast<unsigned long>(length - 4));
-            for (int i = 0; i < atom_num; i++) {
-                auto atom_ptr = make_shared<Atom>();
-                position_file.read((char *) &length, 4);
-                position_file.read((char *) &atom_ptr->seq, 4);
-                position_file.read((char *) &atom_ptr->typ, 4);
-                position_file.read((char *) &str, length - 8);
-                atom_ptr->atom_name = std::string(str, static_cast<unsigned long>(length - 8));
-                int num;
-                position_file.read((char *) &num, 4);
-                int n;
-                for (int k = 0; k < num; k++) {
-                    position_file.read((char *) &n, 4);
-                    atom_ptr->con_list.push_back(n);
-                }
-
-                frame->atom_list.push_back(atom_ptr);
-                frame->atom_map[atom_ptr->seq] = atom_ptr;
-            }
-            for (auto &atom : frame->atom_list) {
-                if (!atom->molecule.lock()) {
-                    auto molecule = std::make_shared<Molecule>();
-                    add_to_mol(atom, molecule, frame);
-                    frame->molecule_list.push_back(molecule);
-                }
-            }
-        }
-        float box[6];
-        position_file.read((char *) box, 24);
-        frame->a_axis = box[0];
-        frame->b_axis = box[1];
-        frame->c_axis = box[2];
-        frame->alpha = box[3];
-        frame->beta = box[4];
-        frame->gamma = box[5];
-        for (auto &atom : frame->atom_list) {
-            float vect[3];
-            position_file.read((char *) vect, 12);
-            atom->x = vect[0];
-            atom->y = vect[1];
-            atom->z = vect[2];
-        }
-        frame->a_axis_half = frame->a_axis / 2;
-        frame->b_axis_half = frame->b_axis / 2;
-        frame->c_axis_half = frame->c_axis / 2;
-
-        return frame;
-
-
-    }
-
-    int readOneFrameNetCDF() {
-        auto coord = new double[NC.ncatom3];
-        double box[6];
-        int ret = netcdfGetNextFrame(&NC, coord, box);
-        if (ret == 0) return ret;
-        int i = 0;
-        for (auto &atom : frame->atom_list) {
-            atom->x = coord[3 * i];
-            atom->y = coord[3 * i + 1];
-            atom->z = coord[3 * i + 2];
-            i++;
-        }
-        frame->a_axis = box[0];
-        frame->b_axis = box[1];
-        frame->c_axis = box[2];
-        frame->alpha = box[3];
-        frame->beta = box[4];
-        frame->gamma = box[5];
-
-        if (frame->enable_bound) {
-            frame->a_axis_half = frame->a_axis / 2;
-            frame->b_axis_half = frame->b_axis / 2;
-            frame->c_axis_half = frame->c_axis / 2;
-        }
-
-        delete[] coord;
-        return ret;
-    }
-
-    int readOneFrameTrr() {
-        gmx::t_trnheader trnheader;
-        gmx::gmx_bool bOK;
-        gmx::rvec box[3];
-        gmx::rvec *coord = nullptr;
-        if (gmx::fread_trnheader(fio, &trnheader, &bOK)) {
-            if (bOK) {
-                coord = new gmx::rvec[trnheader.natoms];
-                if (trnheader.box_size) {
-                    gmx::fread_htrn(fio, &trnheader, box, coord, NULL, NULL);
-                    translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
-                              &(frame->alpha), &(frame->beta), &(frame->gamma));
-                    if (frame->enable_bound) {
-                        frame->a_axis_half = frame->a_axis / 2;
-                        frame->b_axis_half = frame->b_axis / 2;
-                        frame->c_axis_half = frame->c_axis / 2;
-                    }
-                } else {
-                    if (frame->enable_bound) {
-                        cerr << "WARING ! then trajectory have PBC enabled" << endl;
-                        exit(1);
-                    }
-                    frame->a_axis = 0.0;
-                    frame->b_axis = 0.0;
-                    frame->c_axis = 0.0;
-                    frame->alpha = 0.0;
-                    frame->beta = 0.0;
-                    frame->gamma = 0.0;
-                    frame->enable_bound = false;
-                    gmx::fread_htrn(fio, &trnheader, NULL, coord, NULL, NULL);
-                }
-                if (static_cast<int>(frame->atom_list.size()) != trnheader.natoms) {
-                    cerr << "ERROR! the atom number do not match" << endl;
-                    exit(1);
-                }
-                int i = 0;
-                for (auto &atom : frame->atom_list) {
-                    atom->x = coord[i][0] * 10;
-                    atom->y = coord[i][1] * 10;
-                    atom->z = coord[i][2] * 10;
-                    i++;
-                }
-                delete[] coord;
-                return 1;
-            }
-        }
-        return 0;
-
-    }
-
-    int readOneFrameXtc() {
-        gmx::matrix box;
-        gmx::gmx_bool bOK;
-
-        int ret;
-        if (!x) {
-            ret = gmx::read_first_xtc(fio, &natoms, &step, &time, box, &x, &prec, &bOK);
-        } else {
-            ret = gmx::read_next_xtc(fio, natoms, &step, &time, box, x, &prec, &bOK);
-        }
-        if (!ret) return 0;
-
-        if (bOK) {
-            if (natoms != static_cast<int>(frame->atom_list.size())) {
-                cerr << "ERROR! the atom number do not match" << endl;
-                exit(1);
-            }
-            if (frame->enable_bound) {
-                translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
-                          &(frame->alpha), &(frame->beta), &(frame->gamma));
-                frame->a_axis_half = frame->a_axis / 2;
-                frame->b_axis_half = frame->b_axis / 2;
-                frame->c_axis_half = frame->c_axis / 2;
-            }
-            int i = 0;
-            for (auto &atom : frame->atom_list) {
-                atom->x = x[i][0] * 10;
-                atom->y = x[i][1] * 10;
-                atom->z = x[i][2] * 10;
-                i++;
-            }
-            return 1;
-        }
-        cerr << fmt::sprintf("\nWARNING: Incomplete frame at time %g\n", time);
-        return 0;
-    }
-
-    shared_ptr<Frame> readOneFrameMol2() {
-        std::string line;
-        std::vector<std::string> fields;
-
-        enum class State {
-            NONE, MOLECULE, ATOM, BOND, SUBSTRUCTURE
-        } state;
-        state = State::NONE;
-        auto whitespace_regex = boost::regex("\\s+");
-        // watch out memery leak
-
-        if (!frame) {
-            frame = std::make_shared<Frame>();
-            if (enable_binaray_file) frame->enable_bound = true;
-        }
-
-        auto iter = frame->atom_list.begin();
-
-        for (;;) {
-            std::getline(position_file, line);
-            boost::trim(line);
-            if (line.empty()) continue;
-            fields.clear();
-
-            bool break_loop = false;
-
-            if (boost::starts_with(line, "@<TRIPOS>MOLECULE")) {
-                state = State::MOLECULE;
-            } else if (boost::starts_with(line, "@<TRIPOS>ATOM")) {
-                state = State::ATOM;
-            } else if (boost::starts_with(line, "@<TRIPOS>BOND")) {
-                state = State::BOND;
-            } else if (boost::starts_with(line, "@<TRIPOS>SUBSTRUCTURE")) {
-                state = State::SUBSTRUCTURE;
-            } else {
-                switch (state) {
-                    case State::MOLECULE:
-                        continue;
-                    case State::ATOM: {
-                        boost::regex_split(std::back_inserter(fields), line, whitespace_regex);
-                        shared_ptr<Atom> atom;
-                        if (first_time) {
-                            atom = std::make_shared<Atom>();
-                            atom->seq = boost::lexical_cast<int>(fields[0]);
-                            atom->atom_name = fields[1];
-                            atom->type_name = fields[5];
-                            atom->residue_name = fields[7];
-                            atom->residue_num = boost::lexical_cast<uint>(fields[6]);
-                            atom->charge = boost::lexical_cast<double>(fields[8]);
-                            frame->atom_list.push_back(atom);
-                            frame->atom_map[atom->seq] = atom;
-                        } else {
-                            atom = *iter;
-                            ++iter;
-                        }
-                        atom->x = boost::lexical_cast<double>(fields[2]);
-                        atom->y = boost::lexical_cast<double>(fields[3]);
-                        atom->z = boost::lexical_cast<double>(fields[4]);
-                    }
-                        break;
-                    case State::BOND: {
-                        if (!first_time) {
-                            break_loop = true;
-                            break;
-                        }
-                        boost::regex_split(std::back_inserter(fields), line, whitespace_regex);
-                        int atom_num1 = boost::lexical_cast<int>(fields[1]);
-                        int atom_num2 = boost::lexical_cast<int>(fields[2]);
-
-                        auto atom1 = frame->atom_map[atom_num1];
-                        auto atom2 = frame->atom_map[atom_num2];
-
-                        atom1->con_list.push_back(atom_num2);
-                        atom2->con_list.push_back(atom_num1);
-                    }
-                        break;
-                    case State::SUBSTRUCTURE:
-                        break_loop = true;
-                        break;
-                    default:
-                        break;
-                }
-            }
-            if (break_loop) {
-                break;
-            }
-        }
-        if (first_time) {
-            for (auto &atom : frame->atom_list) {
-                if (!atom->molecule.lock()) {
-                    auto molecule = std::make_shared<Molecule>();
-                    add_to_mol(atom, molecule, frame);
-                    frame->molecule_list.push_back(molecule);
-                }
-            }
-        }
-        return frame;
-
-    }
-
-    shared_ptr<Frame> readOneFrameArc() {
-        int atom_num = 0;
-        std::string line;
-        std::vector<std::string> field;
-        if (!frame) {
-            frame = std::make_shared<Frame>();
-            std::getline(position_file, line);
-            field = split(line);
-            atom_num = std::stoi(field[0]);
-            frame->title = line.substr(line.rfind(field[0]) + field[0].size());
-            boost::trim(frame->title);
-        } else {
-            std::getline(position_file, line);
-            if (line.empty()) throw std::exception();
-        }
-
-        if (frame->enable_bound) {
-            std::getline(position_file, line);
-            field = split(line);
-            if (field.empty()) throw std::exception();
-            frame->a_axis = std::stod(field[0]);
-            frame->b_axis = std::stod(field[1]);
-            frame->c_axis = std::stod(field[2]);
-            frame->alpha = std::stod(field[3]);
-            frame->beta = std::stod(field[4]);
-            frame->gamma = std::stod(field[5]);
-        }
-
-        if (first_time) {
-            bool first_loop = true;
-            for (int i = 0; i < atom_num; i++) {
-                std::getline(position_file, line);
-                field = split(line);
-                if (first_loop) {
-                    first_loop = false;
-                    if (field.empty()) throw std::exception();
-                    try {
-                        std::stod(field[1]);
-                        frame->a_axis = std::stod(field[0]);
-                        frame->b_axis = std::stod(field[1]);
-                        frame->c_axis = std::stod(field[2]);
-                        frame->alpha = std::stod(field[3]);
-                        frame->beta = std::stod(field[4]);
-                        frame->gamma = std::stod(field[5]);
-                        frame->enable_bound = true;
-                        i--;
-                        continue;
-                    } catch (std::exception &e) {
-
-                    }
-                }
-
-                auto atom = std::make_shared<Atom>();
-                atom->seq = std::stoi(field[0]);
-                atom->atom_name = field[1];
-                atom->x = std::stod(field[2]);
-                atom->y = std::stod(field[3]);
-                atom->z = std::stod(field[4]);
-                atom->typ = std::stoi(field[5]);
-                for (size_t j = 6; j < field.size(); j++) {
-                    atom->con_list.push_back(std::stoi(field[j]));
-                }
-                frame->atom_list.push_back(atom);
-                frame->atom_map[atom->seq] = atom;
-            }
-
-            for (auto &atom : frame->atom_list) {
-                if (!atom->molecule.lock()) {
-                    auto molecule = std::make_shared<Molecule>();
-                    add_to_mol(atom, molecule, frame);
-                    frame->molecule_list.push_back(molecule);
-                }
-            }
-
-        } else {
-            for (auto &atom : frame->atom_list) {
-                std::getline(position_file, line);
-                field = split(line);
-                atom->x = std::stod(field[2]);
-                atom->y = std::stod(field[3]);
-                atom->z = std::stod(field[4]);
-            }
-        }
-        if (frame->enable_bound) {
-            frame->a_axis_half = frame->a_axis / 2;
-            frame->b_axis_half = frame->b_axis / 2;
-            frame->c_axis_half = frame->c_axis / 2;
-        }
-
-        return frame;
-    }
-
-
-    void open(const string &filename) {
-        auto field = split(filename, ".");
-        auto ext = ext_filename(filename);
-        if (enable_binaray_file) {
-            if (ext == "nc") {
-                if (netcdfLoad(&NC, filename.c_str())) {
-                    cerr << "error open NETCDF file: " << filename << endl;
-                    exit(2);
-                }
-                isnetcdf = true;
-                istrr = false;
-                isxtc = false;
-            } else if (ext == "trr") {
-                fio = gmx::open_trn(filename.c_str(), "r");
-                isnetcdf = false;
-                istrr = true;
-                isxtc = false;
-
-            } else if (ext == "xtc") {
-                fio = gmx::open_xtc(filename.c_str(), "r");
-                isnetcdf = false;
-                istrr = false;
-                isxtc = true;
-            }
-        } else if (ext == "traj") {
-            isbin = true;
-            position_file.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
-            position_file.open(filename, std::fstream::in | std::fstream::binary);
-        } else {
-            isbin = false;
-            position_file.open(filename);
-        }
-        if (enable_read_velocity) {
-            velocity_file.open(field[0] + ".vel");
-            velocity_file.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
-            if (velocity_file.good()) this->openvel = true;
-            else {
-                cerr << "Error open velocity file" << endl;
-                exit(3);
-            }
-        }
-    }
-
-
-public:
-    void add_filename(const string &filename) {
-        arc_filename_list.push_back(filename);
-    }
-
-    void add_topology(const string &filename) {
-        enable_binaray_file = true;
-        topology_filename = filename;
-        std::string ext_name = ext_filename(filename);
-        boost::to_lower(ext_name);
-
-        if (ext_name == "arc" or ext_name == "xyz") {
-            topology_type = TOPOLOGY_TYPE::ARC;
-        } else if (ext_name == "mol2") {
-            topology_type = TOPOLOGY_TYPE::MOL2;
-        } else {
-            std::cerr << " Error file type of topology file [ " << filename << "] " << std::endl;
-            exit(1);
-        }
-
-    }
-
-    std::shared_ptr<Frame> readOneFrame() {
-        if (first_time) {
-            if (enable_binaray_file) {
-                position_file.open(topology_filename, ofstream::in);
-                switch (topology_type) {
-                    case TOPOLOGY_TYPE::ARC:
-                        frame = readOneFrameArc();
-                        break;
-                    case TOPOLOGY_TYPE::MOL2:
-                        frame = readOneFrameMol2();
-                        break;
-                }
-                position_file.close();
-            }
-            std::string filename = arc_filename_list.front();
-            open(filename);
-            arc_filename_list.pop_front();
-        }
-        loop:
-        try {
-            if (isnetcdf) {
-                if (!readOneFrameNetCDF()) {
-                    throw std::exception();
-                }
-            } else if (istrr) {
-                if (!readOneFrameTrr()) {
-                    throw std::exception();
-                }
-            } else if (isxtc) {
-                if (!readOneFrameXtc()) {
-                    throw std::exception();
-                }
-            } else if (isbin) {
-                frame = readOneFrameTraj();
-                frame->enable_bound = frame->a_axis != 0.0;
-            } else {
-                frame = readOneFrameArc();
-            }
-
-            if (openvel && frame) {
-                readOneFrameVel();
-            }
-        } catch (std::exception &e) {
-            if (arc_filename_list.empty()) {
-                frame.reset();
-                close();
-            } else {
-                close();
-                string filename = arc_filename_list.front();
-                open(filename);
-                arc_filename_list.pop_front();
-                goto loop;
-            }
-        }
-
-        first_time = false;
-
-        return frame;
-    }
-
-};
-
-
-class AtomItem {
-public:
-    int typ;
-    double mass;
-};
-
-class Forcefield {
-public:
-
-    void read(const string &filename);
-
-    void read_tinker_prm(const string &filename);
-
-    void read_mass_map(const string &filename);
-
-    double find_mass(const shared_ptr<Atom> &atom) {
-        for (auto &id : items) {
-            if (Atom::is_match(atom, id.first)) return id.second;
-        }
-        std::cerr << "Atom mass not found !" << std::endl;
-        exit(7);
-    }
-
-private:
-    std::list<std::pair<Atom::AtomIndenter, double>> items;
-};
-
-void Forcefield::read(const string &filename) {
-    auto ext = ext_filename(filename);
-    if (ext == "prm") {
-        read_tinker_prm(filename);
-    } else if (ext == "map") {
-        read_mass_map(filename);
-    } else {
-        std::cerr << "Unrecognized file extension" << std::endl;
-        exit(6);
-    }
-}
-
-void Forcefield::read_tinker_prm(const string &filename) {
-    fstream f;
-    f.open(filename, ofstream::in);
-    f.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
-    string line;
-    while (true) {
-        try {
-            std::getline(f, line);
-            auto field = split(line);
-            if (field.empty()) continue;
-            if (field[0] != "atom") continue;
-            int type = stoi(field[1]);
-            double mass = stod(field[field.size() - 2]);
-            items.emplace_back(Atom::AtomIndenter(make_shared<Atom::atom_types>(type)), mass);
-        } catch (std::exception &e) {
-            f.close();
-            return;
-        }
-    }
-}
-
-void Forcefield::read_mass_map(const string &filename) {
-    fstream f;
-    f.open(filename, ofstream::in);
-    f.exceptions(fstream::eofbit | fstream::failbit | fstream::badbit);
-    string line;
-    while (true) {
-        try {
-            std::getline(f, line);
-            boost::trim(line);
-            auto field = split(line);
-            if (field.empty()) continue;
-            if (field.size() != 3) {
-                std::cerr << "Force field mass map syntax error : " << line << std::endl;
-                exit(8);
-            }
-            auto type = field[0];
-            double mass = boost::lexical_cast<double>(field[2]);
-
-            if (type == "name") {
-                items.emplace_back(Atom::AtomIndenter(make_shared<Atom::atom_name_nums>(field[1])), mass);
-            } else if (type == "type") {
-                items.emplace_back(Atom::AtomIndenter(make_shared<Atom::atom_types>(field[1])), mass);
-            } else if (type == "typenumber") {
-                items.emplace_back(
-                        Atom::AtomIndenter(make_shared<Atom::atom_types>(boost::lexical_cast<int>(field[1]))), mass);
-            } else {
-                std::cerr << "unrecognized keyword : " << type << std::endl;
-                exit(8);
-            }
-
-        } catch (boost::bad_lexical_cast &e) {
-            std::cerr << "boost::bad_lexical_cast  " << e.what() << std::endl;
-            exit(9);
-        } catch (std::exception &e) {
-            f.close();
-            return;
-        }
-    }
-}
-
-
-Forcefield forcefield;
-bool enable_forcefield = false;
-
-
-void Molecule::calc_mass() {
-    double mol_mass = 0.0;
-    for (auto &atom : atom_list) {
-        mol_mass += forcefield.find_mass(atom);
-    }
-    mass = mol_mass;
-}
-
-std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<Frame> &frame) {
-    double xmid = 0.0;
-    double ymid = 0.0;
-    double zmid = 0.0;
-    bool first_atom = true;
-    double first_x, first_y, first_z;
-    double mol_mass = 0.0;
-    for (auto &atom : atom_list) {
-        if (first_atom) {
-            first_atom = false;
-            first_x = atom->x;
-            first_y = atom->y;
-            first_z = atom->z;
-            double weigh = forcefield.find_mass(atom);
-            mol_mass += weigh;
-            xmid = first_x * weigh;
-            ymid = first_y * weigh;
-            zmid = first_z * weigh;
-
-        } else {
-            double xr = atom->x - first_x;
-            double yr = atom->y - first_y;
-            double zr = atom->z - first_z;
-            frame->image(xr, yr, zr);
-            double weigh = forcefield.find_mass(atom);
-            mol_mass += weigh;
-            xmid += (first_x + xr) * weigh;
-            ymid += (first_y + yr) * weigh;
-            zmid += (first_z + zr) * weigh;
-        }
-    }
-
-    return make_tuple(xmid / mol_mass, ymid / mol_mass, zmid / mol_mass);
-}
-
-tuple<double, double, double> Molecule::calc_dipole(shared_ptr<Frame> &frame) {
-    auto mass_center = calc_weigh_center(frame);
-
-    double dipole_x = 0.0;
-    double dipole_y = 0.0;
-    double dipole_z = 0.0;
-
-    for (auto &atom : atom_list) {
-        double xr = atom->x - get<0>(mass_center);
-        double yr = atom->y - get<1>(mass_center);
-        double zr = atom->z - get<2>(mass_center);
-
-        frame->image(xr, yr, zr);
-
-        dipole_x += atom->charge * (xr + get<0>(mass_center));
-        dipole_y += atom->charge * (yr + get<1>(mass_center));
-        dipole_z += atom->charge * (zr + get<2>(mass_center));
-    }
-    return make_tuple(dipole_x, dipole_y, dipole_z);
-}
-
-void Molecule::calc_center(std::shared_ptr<Frame> &frame) {
-    double sum_x = 0.0;
-    double sum_y = 0.0;
-    double sum_z = 0.0;
-    bool first_atom = true;
-    double first_x, first_y, first_z;
-    for (auto &atom : atom_list) {
-        if (first_atom) {
-            first_atom = false;
-            sum_x = first_x = atom->x;
-            sum_y = first_y = atom->y;
-            sum_z = first_z = atom->z;
-        } else {
-            double xr = atom->x - first_x;
-            double yr = atom->y - first_y;
-            double zr = atom->z - first_z;
-            frame->image(xr, yr, zr);
-            sum_x += first_x + xr;
-            sum_y += first_y + yr;
-            sum_z += first_z + zr;
-        }
-    }
-    auto len = atom_list.size();
-    center_x = sum_x / len;
-    center_y = sum_y / len;
-    center_z = sum_z / len;
 }
 
 
@@ -3534,8 +2686,23 @@ enum class AminoAcidType {
 };
 
 
-std::map<string, AminoAcidType> str_to_aminotype;
-std::map<AminoAcidType, string> aminotype_to_str;
+boost::bimap<boost::bimaps::set_of<AminoAcidType>, boost::bimaps::set_of<std::string>> aminotype_str_bimap =
+        boost::assign::list_of<boost::bimap<boost::bimaps::set_of<AminoAcidType>, boost::bimaps::set_of<std::string>>::relation>
+                (AminoAcidType::H3N_Ala, "H3N_Ala")
+                (AminoAcidType::H3N_Gly, "H3N_Gly")
+                (AminoAcidType::H3N_Pro, "H3N_Pro")
+                (AminoAcidType::H3N_Trp, "H3N_Trp")
+                (AminoAcidType::H3N_Asp, "H3N_Asp")
+                (AminoAcidType::H3N_Glu, "H3N_Glu")
+                (AminoAcidType::H3N_Arg, "H3N_Arg")
+
+                (AminoAcidType::Ala,     "Ala")
+                (AminoAcidType::Gly,     "Gly")
+                (AminoAcidType::Pro,     "Pro")
+                (AminoAcidType::Trp,     "Trp")
+                (AminoAcidType::Asp,     "Asp")
+                (AminoAcidType::Glu,     "Glu")
+                (AminoAcidType::Arg,     "Arg");
 
 class AminoAcid {
 public:
@@ -3611,10 +2778,10 @@ class NMRRange : public BasicAnalysis {
 
     void loadTop() {
         string path = std::getenv("ANALYSIS_TOP_PATH");
-        for (auto t : aminotype_to_str) {
+        for (auto& [type, name] : aminotype_str_bimap) {
             AminoTop top;
-            top.readTop(path + "/" + t.second + ".top");
-            top.type = t.first;
+            top.readTop(path + "/" + name + ".top");
+            top.type = type;
             amino_top_list.push_back(top);
         }
 
@@ -3710,7 +2877,7 @@ void NMRRange::recognize_amino_acid(std::shared_ptr<Frame> &frame) {
 
                 if (match) {
                     amino_seq_no++;
-                    cout << aminotype_to_str[amino_top.type] << "   " << endl;
+                    cout << aminotype_str_bimap.left.find(amino_top.type)->second << "   " << endl;
 
                     auto new_amino = make_shared<AminoAcid>();
                     new_amino->type = amino_top.type;
@@ -3721,7 +2888,7 @@ void NMRRange::recognize_amino_acid(std::shared_ptr<Frame> &frame) {
                             new_amino->atom_no_map[item.second->atom->seq] = item.second->H_;
 
                             name_map[item.second->atom->seq] = to_string(item.second->atom->seq) + ":"
-                                                               + aminotype_to_str[amino_top.type]
+                                                               + aminotype_str_bimap.left.find(amino_top.type)->second
                                                                + ":" + to_string(amino_seq_no) + " " + item.second->H_;
                         }
                         cout << item.first << " " << item.second->H_ <<
@@ -5064,39 +4231,6 @@ auto getTasks() {
     }
 }
 
-void init() {
-
-    struct item {
-        AminoAcidType type;
-        string str;
-    };
-
-    struct item items[] = {
-            {AminoAcidType::H3N_Ala, "H3N_Ala"},
-            {AminoAcidType::H3N_Gly, "H3N_Gly"},
-            {AminoAcidType::H3N_Pro, "H3N_Pro"},
-            {AminoAcidType::H3N_Trp, "H3N_Trp"},
-            {AminoAcidType::H3N_Asp, "H3N_Asp"},
-            {AminoAcidType::H3N_Glu, "H3N_Glu"},
-            {AminoAcidType::H3N_Arg, "H3N_Arg"},
-
-            {AminoAcidType::Ala,     "Ala"},
-            {AminoAcidType::Gly,     "Gly"},
-            {AminoAcidType::Pro,     "Pro"},
-            {AminoAcidType::Trp,     "Trp"},
-            {AminoAcidType::Asp,     "Asp"},
-            {AminoAcidType::Glu,     "Glu"},
-            {AminoAcidType::Arg,     "Arg"}
-    };
-
-    for (item &it : items) {
-        str_to_aminotype[it.str] = it.type;
-        aminotype_to_str[it.type] = it.str;
-    }
-
-
-}
-
 int main(int argc, char *argv[]) {
 
     std::cout << "Build DateTime : " << __DATE__ << " " << __TIME__ << endl;
@@ -5130,7 +4264,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    init();
+
     std::string xyzfile = vm["file"].as<string>();
 
     {

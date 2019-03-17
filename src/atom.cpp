@@ -2,19 +2,13 @@
 // Created by xiamr on 3/17/19.
 //
 
-
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
-#include <boost/bind.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/phoenix.hpp>
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
-#include <boost/fusion/sequence/intrinsic/at_c.hpp>
-#include <boost/fusion/include/at_c.hpp>
-#include <boost/phoenix/function/adapt_function.hpp>
+#include "config.h"
 
 #include <fnmatch.h>
+
+#include <boost/variant.hpp>
+#include <boost/optional.hpp>
+#include <boost/fusion/include/at_c.hpp>
 
 #include "common.hpp"
 #include "atom.hpp"
@@ -141,6 +135,9 @@ void print::operator()(const std::shared_ptr<Atom::Operator> &op) const {
     }
 }
 
+void print::indent(int space_num) const {
+    std::cout << std::string(3 * space_num, ' ');
+}
 
 
 template<typename Iterator, typename Skipper>
