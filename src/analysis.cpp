@@ -4225,7 +4225,7 @@ auto getTasks() {
     while (true) {
         int num = menu1();
         if (num == 0) return task_list;
-        shared_ptr<BasicAnalysis> task = task_vec[num]();
+        shared_ptr<BasicAnalysis> task = task_vec[num-1]();
         task->readInfo();
         task_list->push_back(task);
     }
