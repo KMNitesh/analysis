@@ -10,7 +10,7 @@
 #include <cmath>
 #include <tbb/tbb.h>
 #include <readline/readline.h>
-#include <tbb/scalable_allocator.h>
+
 #include <alloca.h>
 #include <stdexcept>
 #include <algorithm>
@@ -20,10 +20,11 @@
 #include <string>
 #include <unistd.h>
 #include <functional>
-#include <fnmatch.h>
+
 
 
 using namespace std;
+
 
 
 #include <Eigen/Eigen>
@@ -52,10 +53,12 @@ namespace po = boost::program_options;
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 
-// Boost metaprograming library
+// Boost metaprogramming library
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/size.hpp>
+#include <boost/mpl/unique.hpp>
+#include <boost/mpl/string.hpp>
 
 namespace mpl = boost::mpl;
 
@@ -73,8 +76,14 @@ namespace mpl = boost::mpl;
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
 
+#include <boost/assert.hpp>
 
-const int ATOM_MAX = 10000;
+#include "common.hpp"
+#include "atom.hpp"
+#include "grammar.hpp"
+
+
+constexpr int ATOM_MAX = 10000;
 
 // global variables
 
@@ -84,143 +93,6 @@ bool enable_outfile = false;
 
 std::fstream outfile;
 
-
-void *operator new(size_t size) noexcept(false) {
-    if (size == 0) size = 1;
-    if (void *ptr = scalable_malloc(size))
-        return ptr;
-    throw std::bad_alloc();
-}
-
-void *operator new[](size_t size) noexcept(false) {
-    return operator new(size);
-}
-
-void *operator new(size_t size, const std::nothrow_t &) noexcept {
-    if (size == 0) size = 1;
-    if (void *ptr = scalable_malloc(size))
-        return ptr;
-    return nullptr;
-}
-
-void *operator new[](size_t size, const std::nothrow_t &) noexcept {
-    return operator new(size, std::nothrow);
-}
-
-void operator delete(void *ptr) throw() {
-    if (ptr != nullptr) scalable_free(ptr);
-}
-
-void operator delete[](void *ptr) throw() {
-    operator delete(ptr);
-}
-
-void operator delete(void *ptr, const std::nothrow_t &) throw() {
-    if (ptr != nullptr) scalable_free(ptr);
-}
-
-void operator delete[](void *ptr, const std::nothrow_t &) throw() {
-    operator delete(ptr, std::nothrow);
-}
-
-
-bool file_exist(const string &name) {
-    fstream in(name, ofstream::in);
-    return in.good();
-}
-
-
-std::vector<std::string> split(const std::string &str, const string &sep = " ") {
-    std::vector<std::string> ret_;
-    boost::split(ret_, str, boost::is_any_of(sep));
-    return ret_;
-}
-
-
-string input(const string &prompt = "") {
-    std::cout << prompt;
-    string inputline;
-    std::getline(std::cin, inputline);
-    if (isatty(STDIN_FILENO) == 0) {
-        std::cout << inputline << std::endl;
-    }
-    return inputline;
-}
-
-
-template<typename T>
-struct type_name_string {
-
-};
-
-template<>
-struct type_name_string<int> {
-    constexpr static auto value = "int";
-};
-
-template<>
-struct type_name_string<double> {
-    constexpr static auto value = "double";
-};
-
-
-template<typename T, typename = std::enable_if_t<std::is_same<T, int>::value || std::is_same<T, double>::value>>
-T choose(T min, T max, const string &prompt, bool hasdefault = false, T value = T()) {
-    while (true) {
-        string input_line = input(prompt);
-        boost::trim(input_line);
-        if (input_line.empty()) {
-            if (!hasdefault) continue;
-            return value;
-        }
-        try {
-            int option = boost::lexical_cast<T>(input_line);
-            if (option >= min and option <= max) return option;
-
-            cerr << "must be a " << type_name_string<T>::value << " range " << min << " and " << max
-                 << "! please retype!\n";
-        } catch (boost::bad_lexical_cast &e) {
-            cerr << "must be a " << type_name_string<T>::value << " ! please retype!" << e.what() << endl;
-        }
-    }
-}
-
-
-string ext_filename(const string &filename) {
-    auto field = split(filename, ".");
-
-    return boost::to_lower_copy(field[field.size() - 1]);
-}
-
-string choose_file(const string &prompt, bool exist, string ext = "", bool can_empty = false) {
-    while (true) {
-        string input_line = input(prompt);
-        boost::trim(input_line);
-        if (!input_line.empty()) {
-            if (ext.length()) {
-                if (ext_filename(input_line) != boost::to_lower_copy(ext)) {
-                    cerr << "wrong file extesion name : must be " << ext << endl;
-                    continue;
-                }
-            }
-            if (!exist) return input_line;
-            fstream in(input_line, ofstream::in);
-            if (in.good()) {
-                return input_line;
-                break;
-            } else {
-                cerr << "The file is bad [retype]" << endl;
-            }
-        }
-        if (can_empty) return "";
-    }
-}
-
-
-template<typename T>
-T sign(T &x, T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
-
-
 using boost::variant;
 
 class Molecule;
@@ -229,568 +101,7 @@ namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 
-class Atom {
-public:
-    size_t seq;
-    std::string symbol;
 
-    double x, y, z;  // position
-
-    double vx = 0.0, vy = 0.0, vz = 0.0; // velocity
-
-    int typ; // atom type
-    std::string type_name;
-
-    double charge;
-
-    std::list<size_t> con_list; // atom num that connect to
-
-    std::weak_ptr<Molecule> molecule;
-
-    boost::optional<std::string> residue_name;
-    boost::optional<uint> residue_num;
-
-    boost::optional<std::string> atom_symbol;
-
-    bool mark = false; // used in NMR analysis
-
-    bool adj(const std::shared_ptr<Atom> &atom) {
-        for (auto i : con_list) {
-            if (atom->seq == i) return true;
-        }
-        return false;
-    }
-
-
-    enum class Op {
-        NOT, AND, OR
-    };
-
-
-    struct Operator;
-    struct atom_name_nums;
-    struct atom_types;
-    struct residue_name_nums;
-    struct atom_element_names;
-
-    using Node =  variant<shared_ptr<Operator>, shared_ptr<residue_name_nums>,
-            shared_ptr<atom_name_nums>, shared_ptr<atom_types>, shared_ptr<atom_element_names>>;
-
-    struct Operator {
-        explicit Operator(Op op, Node node1 = Node(), Node node2 = Node()) : op(op), node1(node1), node2(node2) {}
-
-        Op op;
-        Node node1;
-        Node node2;
-    };
-
-    typedef std::vector<variant<fusion::vector<uint, boost::optional<uint>>, std::string>> select_ranges;
-
-    struct residue_name_nums {
-        select_ranges val;
-
-        explicit residue_name_nums(const select_ranges &val) : val(val) {}
-
-    };
-
-    struct atom_name_nums {
-        select_ranges val;
-
-        explicit atom_name_nums(const select_ranges &val) : val(val) {}
-
-        explicit atom_name_nums(const std::string &name) {
-            val.emplace_back(name);
-        }
-    };
-
-
-    struct atom_types {
-        select_ranges val;
-
-        explicit atom_types(const select_ranges &val) : val(val) {}
-
-        explicit atom_types(const std::string &type) {
-            val.push_back(type);
-        }
-
-        explicit atom_types(int typenum) {
-            fusion::vector<uint, boost::optional<uint>> t;
-            fusion::at_c<0>(t) = typenum;
-            val.emplace_back(t);
-        }
-    };
-
-    struct atom_element_names {
-        std::vector<std::string> val;
-
-        explicit atom_element_names(const std::vector<std::string> &val) : val(val) {}
-    };
-
-
-    typedef struct {
-        Node ast;
-        std::string input_string;
-    } AtomIndenter;
-
-    static bool is_match(const std::shared_ptr<Atom> &atom, const AtomIndenter &id);
-
-    static void
-    select2group(Atom::AtomIndenter &ids1, Atom::AtomIndenter &ids2,
-                 const string &prompt1 = "Enter mask for atom1 : ",
-                 const string &prompt2 = "Enter mask for atom2 : ");
-
-    static void select1group(AtomIndenter &ids, const string &prompt = "Enter mask for atom : ");
-
-};
-
-template<typename Iterator>
-struct Grammar : qi::grammar<Iterator, Atom::Node()> {
-    Grammar();
-
-
-    qi::rule<Iterator, variant<fusion::vector<uint, boost::optional<uint>>, std::string>()> select_item_rule;
-    qi::rule<Iterator, Atom::Node()> residue_select_rule;
-    qi::rule<Iterator, Atom::Node()> nametype_select_rule;
-    qi::rule<Iterator, Atom::Node()> select_rule;
-    qi::rule<Iterator, Atom::Node()> factor, factor2;
-    qi::rule<Iterator, Atom::Node()> term;
-    qi::rule<Iterator, Atom::Node()> expr;
-
-    qi::rule<Iterator, std::string()> string_with_wildcard;
-
-
-};
-
-
-BOOST_PHOENIX_ADAPT_FUNCTION(std::string, replace_all_copy, boost::replace_all_copy, 3)
-
-template<typename T>
-struct make_shared_f {
-    template<typename... A>
-    struct result {
-        typedef std::shared_ptr<T> type;
-    };
-
-    template<typename... A>
-    typename result<A...>::type operator()(A &&... a) const {
-        return std::make_shared<T>(std::forward<A>(a)...);
-    }
-};
-
-
-template<typename T, typename... _Args>
-inline auto make_shared_(_Args &&... __args) {
-    return boost::phoenix::function<make_shared_f<T>>()(std::forward<_Args>(__args)...);
-}
-
-template<typename Iterator>
-Grammar<Iterator>::Grammar() : Grammar::base_type(expr) {
-    using qi::uint_;
-    using qi::eps;
-    using qi::as_string;
-    using qi::lexeme;
-    using qi::alpha;
-    using qi::alnum;
-    using qi::ascii::char_;
-    using qi::_val;
-    using qi::_1;
-    using qi::_2;
-    using qi::_3;
-    using qi::_4;
-    using phoenix::new_;
-    using phoenix::val;
-    using phoenix::bind;
-    using phoenix::ref;
-    using qi::on_error;
-    using qi::fail;
-
-
-    string_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]]
-    [_val = replace_all_copy(_1, "=", "*")];
-
-    select_item_rule = uint_ >> ("-" >> uint_ | eps) | string_with_wildcard;
-
-    residue_select_rule = ":" >> (select_item_rule % ",")[_val = make_shared_<Atom::residue_name_nums>(_1)];
-
-    nametype_select_rule = "@" >>
-                               ((select_item_rule % ",")[_val = make_shared_<Atom::atom_name_nums>(_1)]
-                                | "%" >> (select_item_rule % ",")[_val = make_shared_<Atom::atom_types>(_1)]
-                                |
-                                "/" >> (string_with_wildcard % ",")[_val = make_shared_<Atom::atom_element_names>(_1)]);
-
-    select_rule = (residue_select_rule | nametype_select_rule)[_val = _1];
-
-    factor2 = "(" >> expr[_val = _1] >> ")" | select_rule[_val = _1];
-
-    factor = "!" >> factor2[_val = make_shared_<Atom::Operator>(Atom::Op::NOT, _1)] | factor2[_val = _1];
-
-    term = factor[_val = _1] >> *("&" >> factor[_val = make_shared_<Atom::Operator>(Atom::Op::AND, _val, _1)]);
-
-    expr = term[_val = _1] >> *("|" >> term[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
-
-    string_with_wildcard.name("string_with_wildcard");
-    select_item_rule.name("select_item_rule");
-    residue_select_rule.name("residue_select_rule");
-    nametype_select_rule.name("nametype_select_rule");
-    select_rule.name("select_rule");
-    factor2.name("factor2");
-    factor.name("factor");
-    term.name("term");
-    expr.name("expr");
-
-    on_error<fail>(
-            expr,
-            std::cout
-                    << val("Error! Expecting")
-                    << _4
-                    << val(" here: \"")
-                    << phoenix::construct<std::string>(_3, _2)
-                    << val("\"")
-                    << std::endl
-    );
-
-}
-
-struct print : boost::static_visitor<> {
-    int space_num;
-
-    explicit print(int space_num = 0) : space_num(space_num) {}
-
-    void indent(int space_num) const {
-        std::cout << string(3 * space_num, ' ');
-    }
-
-    void operator()(const shared_ptr<Atom::residue_name_nums> &residues) const;
-
-    void operator()(const shared_ptr<Atom::atom_name_nums> &names) const;
-
-    void operator()(const shared_ptr<Atom::atom_types> &types) const;
-
-    void operator()(const shared_ptr<Atom::atom_element_names> &ele) const;
-
-    void operator()(const shared_ptr<Atom::Operator> &op) const;
-};
-
-void print::operator()(const shared_ptr<Atom::residue_name_nums> &residues) const {
-    indent(space_num);
-    bool first = true;
-    struct print_res : boost::static_visitor<> {
-        void operator()(fusion::vector<uint, boost::optional<uint>> &i) {
-            std::cout << fusion::at_c<0>(i);
-            auto op = fusion::at_c<1>(i);
-            if (op) std::cout << "-" << op.get();
-        }
-
-        void operator()(std::string &i) {
-            std::cout << i;
-        }
-    } p;
-    for (auto &i : residues->val) {
-        if (first) {
-            std::cout << "residues : ";
-            first = false;
-        } else {
-            std::cout << ",";
-        }
-        boost::apply_visitor(p, i);
-    }
-    std::cout << std::endl;
-}
-
-void print::operator()(const shared_ptr<Atom::atom_name_nums> &names) const {
-    struct print_res : boost::static_visitor<> {
-        void operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-            std::cout << fusion::at_c<0>(i);
-            auto op = fusion::at_c<1>(i);
-            if (op) std::cout << "-" << op.get();
-        }
-
-        void operator()(const std::string &i) {
-            std::cout << i;
-        }
-    } p;
-    indent(space_num);
-    bool first = true;
-    for (auto &i : names->val) {
-        if (first) {
-            std::cout << "names : ";
-            first = false;
-        } else {
-            std::cout << ",";
-        }
-        boost::apply_visitor(p, i);
-    }
-    std::cout << std::endl;
-}
-
-void print::operator()(const shared_ptr<Atom::atom_types> &types) const {
-    indent(space_num);
-    struct print_types : boost::static_visitor<> {
-        void operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-            std::cout << fusion::at_c<0>(i);
-            auto op = fusion::at_c<1>(i);
-            if (op) std::cout << "-" << op.get();
-        }
-
-        void operator()(const std::string &i) {
-            std::cout << i;
-        }
-    } p;
-    bool first = true;
-    for (auto &i : types->val) {
-        if (first) {
-            std::cout << "types : ";
-            first = false;
-        } else {
-            std::cout << ",";
-        }
-        boost::apply_visitor(p, i);
-    }
-    std::cout << std::endl;
-}
-
-void print::operator()(const shared_ptr<Atom::atom_element_names> &ele) const {
-    indent(space_num);
-    bool first = true;
-    for (auto &i : ele->val) {
-        if (first) {
-            std::cout << "elements : ";
-            first = false;
-        } else {
-            std::cout << ",";
-        }
-        std::cout << i;
-    }
-    std::cout << std::endl;
-}
-
-void print::operator()(const shared_ptr<Atom::Operator> &op) const {
-    switch (op->op) {
-        case Atom::Op::NOT:
-            indent(space_num);
-            std::cout << "!" << std::endl;
-            boost::apply_visitor(print(space_num + 1), op->node1);
-            break;
-        case Atom::Op::AND:
-            indent(space_num);
-            std::cout << "&" << std::endl;
-            boost::apply_visitor(print(space_num + 1), op->node1);
-            boost::apply_visitor(print(space_num + 1), op->node2);
-            break;
-        case Atom::Op::OR:
-            indent(space_num);
-            std::cout << "|" << std::endl;
-            boost::apply_visitor(print(space_num + 1), op->node1);
-            boost::apply_visitor(print(space_num + 1), op->node2);
-            break;
-    }
-}
-
-ostream &operator<<(ostream &out, const Atom::AtomIndenter &ids) {
-    out << ids.input_string;
-    return out;
-}
-
-
-template<typename Iterator>
-Atom::AtomIndenter input_atom_selection(const Grammar<Iterator> &grammar, const std::string &promot) {
-    for (;;) {
-        Atom::AtomIndenter mask;
-        mask.input_string = input(promot);
-        boost::trim(mask.input_string);
-        auto it = mask.input_string.begin();
-
-        bool status = qi::parse(it, mask.input_string.end(), grammar, mask.ast);
-
-        if (status) {
-            std::cout << "Parsed Abstract Syntax Tree :" << std::endl;
-            boost::apply_visitor(print(), mask.ast);
-        }
-
-        if (!(status and (it == mask.input_string.end()))) {
-            std::cout << "error-pos : " << std::endl;
-            std::cout << mask.input_string << std::endl;
-            for (auto iter = mask.input_string.begin(); iter != it; ++iter) std::cout << " ";
-            std::cout << "^" << std::endl;
-
-            continue;
-        }
-        return mask;
-
-    }
-}
-
-
-void
-Atom::select2group(Atom::AtomIndenter &ids1, Atom::AtomIndenter &ids2,
-                   const string &prompt1, const string &prompt2) {
-    namespace qi = boost::spirit::qi;
-    namespace ascii = boost::spirit::ascii;
-    using ascii::char_;
-
-    Grammar<std::string::iterator> grammar;
-
-    ids1 = input_atom_selection(grammar, prompt1);
-    ids2 = input_atom_selection(grammar, prompt2);
-
-}
-
-void Atom::select1group(AtomIndenter &ids, const string &prompt) {
-    namespace qi = boost::spirit::qi;
-    namespace ascii = boost::spirit::ascii;
-    using ascii::char_;
-
-    Grammar<std::string::iterator> grammar;
-
-    ids = input_atom_selection(grammar, prompt);
-}
-
-
-bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AtomIndenter &id) {
-    struct Equal : boost::static_visitor<bool> {
-
-        explicit Equal(const shared_ptr<Atom> &atom) : atom(atom) {}
-
-
-        bool operator()(const shared_ptr<residue_name_nums> &residues) const {
-            if (!atom->residue_name or !atom->residue_num) {
-                std::cerr << "residue selection syntax is invaild in current context" << std::endl;
-                exit(1);
-            }
-            struct Equal_residue : boost::static_visitor<bool> {
-                explicit Equal_residue(const shared_ptr<Atom> &atom) : atom(atom) {}
-
-                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-                    auto op = fusion::at_c<1>(i);
-                    if (op) {
-                        if (op.get() >= fusion::at_c<0>(i))
-                            return atom->residue_num >= fusion::at_c<0>(i) and atom->residue_num <= op.get();
-                        else
-                            return atom->residue_num >= op.get() and atom->residue_num <= fusion::at_c<0>(i);
-                    } else {
-                        return atom->residue_num == fusion::at_c<0>(i);
-                    }
-                }
-
-                bool operator()(const std::string &pattern) {
-                    if (fnmatch(pattern.c_str(), atom->residue_name.get().c_str(), FNM_CASEFOLD) == 0) return true;
-                    std::string num_str = boost::lexical_cast<std::string>(atom->residue_num.get());
-                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
-                }
-
-            private:
-                const shared_ptr<Atom> &atom;
-            } equal(atom);
-
-            for (auto &i : residues->val) {
-                if (boost::apply_visitor(equal, i)) return true;
-            }
-            return false;
-        }
-
-        bool operator()(const shared_ptr<atom_name_nums> &names) const {
-            struct Equal_atom : boost::static_visitor<bool> {
-                explicit Equal_atom(const shared_ptr<Atom> &atom) : atom(atom) {}
-
-                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-                    auto op = fusion::at_c<1>(i);
-                    if (op) {
-                        if (op.get() >= fusion::at_c<0>(i))
-                            return atom->seq >= fusion::at_c<0>(i) and atom->seq <= op.get();
-                        else
-                            return atom->seq >= op.get() and atom->seq <= fusion::at_c<0>(i);
-                    } else {
-                        return atom->seq == fusion::at_c<0>(i);
-                    }
-                }
-
-                bool operator()(const std::string &pattern) {
-                    if (fnmatch(pattern.c_str(), atom->symbol.c_str(), FNM_CASEFOLD) == 0) return true;
-                    std::string num_str = boost::lexical_cast<std::string>(atom->seq);
-                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
-                }
-
-            private:
-                const shared_ptr<Atom> &atom;
-            } equal(atom);
-
-            for (auto &i : names->val) {
-                if (boost::apply_visitor(equal, i)) return true;
-            }
-            return false;
-        }
-
-        bool operator()(const shared_ptr<atom_types> types) const {
-            struct Equal_types : boost::static_visitor<bool> {
-                explicit Equal_types(const shared_ptr<Atom> &atom) : atom(atom) {}
-
-                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-                    auto op = fusion::at_c<1>(i);
-                    if (op) {
-                        if (op.get() >= fusion::at_c<0>(i))
-                            return atom->typ >= fusion::at_c<0>(i) and atom->typ <= op.get();
-                        else
-                            return atom->typ >= op.get() and atom->typ <= fusion::at_c<0>(i);
-                    } else {
-                        return atom->typ == fusion::at_c<0>(i);
-                    }
-                }
-
-                bool operator()(const std::string &pattern) {
-                    return fnmatch(pattern.c_str(), atom->type_name.c_str(), FNM_CASEFOLD) == 0;
-                    std::string num_str = boost::lexical_cast<std::string>(atom->typ);
-                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
-                }
-
-            private:
-                const shared_ptr<Atom> &atom;
-            } equal(atom);
-
-            for (auto &i : types->val) {
-                if (boost::apply_visitor(equal, i)) return true;
-            }
-            return false;
-        }
-
-        bool operator()(const shared_ptr<atom_element_names> &ele) const {
-            if (!atom->atom_symbol) {
-                std::cerr << "atom element symbol selection syntax is invaild in current context" << std::endl;
-                exit(1);
-            }
-            for (auto &pattern : ele->val) {
-                if (fnmatch(pattern.c_str(), atom->atom_symbol.get().c_str(), FNM_CASEFOLD) == 0) return true;
-            }
-            return false;
-
-        }
-
-        bool operator()(const shared_ptr<Operator> &op) const {
-            switch (op->op) {
-                case Op::NOT:
-                    return not boost::apply_visitor(Equal(atom), op->node1);
-                    break;
-                case Op::AND: {
-                    Equal equal(atom);
-                    return boost::apply_visitor(equal, op->node1) and boost::apply_visitor(equal, op->node2);
-                }
-                    break;
-                case Op::OR: {
-                    Equal equal(atom);
-                    return boost::apply_visitor(equal, op->node1) or boost::apply_visitor(equal, op->node2);
-                }
-                    break;
-                default:
-                    std::abort();
-            }
-        }
-
-    private:
-        const shared_ptr<Atom> &atom;
-    };
-
-
-    return boost::apply_visitor(Equal(atom), id.ast);
-}
 
 
 class Frame;
@@ -961,7 +272,7 @@ class TrajectoryReader {
                 position_file.read((char *) &atom_ptr->seq, 4);
                 position_file.read((char *) &atom_ptr->typ, 4);
                 position_file.read((char *) &str, length - 8);
-                atom_ptr->symbol = std::string(str, static_cast<unsigned long>(length - 8));
+                atom_ptr->atom_name = std::string(str, static_cast<unsigned long>(length - 8));
                 int num;
                 position_file.read((char *) &num, 4);
                 int n;
@@ -1065,7 +376,7 @@ class TrajectoryReader {
                     frame->enable_bound = false;
                     gmx::fread_htrn(fio, &trnheader, NULL, coord, NULL, NULL);
                 }
-                if (frame->atom_list.size() != trnheader.natoms) {
+                if (static_cast<int>(frame->atom_list.size()) != trnheader.natoms) {
                     cerr << "ERROR! the atom number do not match" << endl;
                     exit(1);
                 }
@@ -1097,7 +408,7 @@ class TrajectoryReader {
         if (!ret) return 0;
 
         if (bOK) {
-            if (natoms != frame->atom_list.size()) {
+            if (natoms != static_cast<int>(frame->atom_list.size())) {
                 cerr << "ERROR! the atom number do not match" << endl;
                 exit(1);
             }
@@ -1165,7 +476,7 @@ class TrajectoryReader {
                         if (first_time) {
                             atom = std::make_shared<Atom>();
                             atom->seq = boost::lexical_cast<int>(fields[0]);
-                            atom->symbol = fields[1];
+                            atom->atom_name = fields[1];
                             atom->type_name = fields[5];
                             atom->residue_name = fields[7];
                             atom->residue_num = boost::lexical_cast<uint>(fields[6]);
@@ -1275,7 +586,7 @@ class TrajectoryReader {
 
                 auto atom = std::make_shared<Atom>();
                 atom->seq = std::stoi(field[0]);
-                atom->symbol = field[1];
+                atom->atom_name = field[1];
                 atom->x = std::stod(field[2]);
                 atom->y = std::stod(field[3]);
                 atom->z = std::stod(field[4]);
@@ -1495,7 +806,7 @@ void Forcefield::read_tinker_prm(const string &filename) {
             if (field[0] != "atom") continue;
             int type = stoi(field[1]);
             double mass = stod(field[field.size() - 2]);
-            items.emplace_back(Atom::AtomIndenter{make_shared<Atom::atom_types>(type)}, mass);
+            items.emplace_back(Atom::AtomIndenter(make_shared<Atom::atom_types>(type)), mass);
         } catch (std::exception &e) {
             f.close();
             return;
@@ -1522,12 +833,12 @@ void Forcefield::read_mass_map(const string &filename) {
             double mass = boost::lexical_cast<double>(field[2]);
 
             if (type == "name") {
-                items.emplace_back(Atom::AtomIndenter{make_shared<Atom::atom_name_nums>(field[1])}, mass);
+                items.emplace_back(Atom::AtomIndenter(make_shared<Atom::atom_name_nums>(field[1])), mass);
             } else if (type == "type") {
-                items.emplace_back(Atom::AtomIndenter{make_shared<Atom::atom_types>(field[1])}, mass);
+                items.emplace_back(Atom::AtomIndenter(make_shared<Atom::atom_types>(field[1])), mass);
             } else if (type == "typenumber") {
                 items.emplace_back(
-                        Atom::AtomIndenter{make_shared<Atom::atom_types>(boost::lexical_cast<int>(field[1]))}, mass);
+                        Atom::AtomIndenter(make_shared<Atom::atom_types>(boost::lexical_cast<int>(field[1]))), mass);
             } else {
                 std::cerr << "unrecognized keyword : " << type << std::endl;
                 exit(8);
@@ -1663,7 +974,7 @@ public:
             }
 
             f << fmt::sprintf("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n", mol_index, to_string(mol_index),
-                              atom->symbol, atom->seq, atom->x / 10.0, atom->y / 10.0, atom->z / 10.0);
+                              atom->atom_name, atom->seq, atom->x / 10.0, atom->y / 10.0, atom->z / 10.0);
         }
         if (frame->enable_bound) {
             if (frame->alpha == 90.00 and frame->beta == 90.00 and frame->gamma == 90.00) {
@@ -2631,6 +1942,7 @@ double RMSDCal::rmsvalue(shared_ptr<Frame> &frame) {
 
     int nfit, n;
     nfit = n = static_cast<int>(this->group.size());
+    BOOST_ASSERT_MSG(n < ATOM_MAX, "need to increase ATOM_MAX");
 
     if (first_frame) {
         first_frame = false;
@@ -2727,7 +2039,7 @@ void RMSDCal::center(int n1, double x1[], double y1[], double z1[],
 
 }
 
-void RMSDCal::quatfit(int n1, double x1[], double y1[], double z1[],
+void RMSDCal::quatfit(int /* n1 */, double x1[], double y1[], double z1[],
                       int n2, double x2[], double y2[], double z2[], int nfit) {
     int i;
     //    int i1, i2;
@@ -3023,6 +2335,7 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
     steps++;
     int nfit, n;
     nfit = n = static_cast<int>(this->group.size());
+    BOOST_ASSERT_MSG(group.size() < ATOM_MAX, "need to increase ATOM_MAX");
 
     if (!first_frame) {
         first_frame = false;
@@ -3145,11 +2458,6 @@ void RMSFCal::readInfo() {
 
 double RMSFCal::rmsvalue(int index) {
 
-    int nfit, n;
-    nfit = n = static_cast<int>(this->group.size());
-
-    double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
-
     double dx2_y2_z2 = 0.0;
     double dx, dy, dz;
     for (int frame = 1; frame <= steps; frame++) {
@@ -3157,7 +2465,6 @@ double RMSFCal::rmsvalue(int index) {
         dy = y[frame][index] - y_avg[index];
         dz = z[frame][index] - z_avg[index];
         dx2_y2_z2 += dx * dx + dy * dy + dz * dz;
-
     }
 
     return sqrt(dx2_y2_z2 / steps);
@@ -3620,8 +2927,8 @@ void ResidenceTime::calculate() {
         double time_star;
         std::list<std::pair<unsigned int, unsigned int>> *atom_star_map;
 
-        Body(size_t &steps, int &atom_num, int *time_array,
-             double *Rt_array, int **mark, double time_star,
+        Body(size_t &steps, int &atom_num, int * /* time_array */,
+             double * /* Rt_array */, int **mark, double time_star,
              std::list<std::pair<unsigned int, unsigned int>> *atom_star_map) :
                 steps(steps), atom_num(atom_num), mark(mark),
                 time_star(time_star), atom_star_map(atom_star_map) {
@@ -4010,7 +3317,9 @@ void Cluster::process(std::shared_ptr<Frame> &frame) {
     int index = 0;
     bool first_atom = true;
     double first_x, first_y, first_z;
+    BOOST_ASSERT_MSG(group.size() < ATOM_MAX, "need to increase ATOM_MAX");
     for (auto &atom : group) {
+
         if (first_atom) {
             first_atom = false;
             first_x = xx[index] = atom->x;
@@ -4039,7 +3348,6 @@ double Cluster::rmsvalue(int index1, int index2) {
 
     double x1[ATOM_MAX], y1[ATOM_MAX], z1[ATOM_MAX];
     double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
-
 
     auto &f1x = x[index1];
     auto &f1y = y[index1];
@@ -4417,7 +3725,7 @@ void NMRRange::recognize_amino_acid(std::shared_ptr<Frame> &frame) {
                                                                + ":" + to_string(amino_seq_no) + " " + item.second->H_;
                         }
                         cout << item.first << " " << item.second->H_ <<
-                             "," << item.second->atom->seq << " " << item.second->atom->symbol << endl;
+                             "," << item.second->atom->seq << " " << item.second->atom->atom_name << endl;
                         //if (item.second->symbol == Symbol::X)
                         item.second->atom->mark = false;
                     }
@@ -5708,9 +5016,6 @@ struct add_item {
 auto getTasks() {
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
 
-    std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
-    std::vector<string> item_menu;
-
     using components = mpl::vector<
             GmxTrj,
             Distance,
@@ -5734,6 +5039,11 @@ auto getTasks() {
             ShellDensity
     >;
 
+    BOOST_MPL_ASSERT(( mpl::equal< mpl::unique< components, is_same<mpl::_1,mpl::_2> >::type, components > ));
+
+    std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
+    std::vector<string> item_menu;
+
     mpl::for_each<components, boost::type<mpl::_>>(add_item<
             std::vector<std::function<shared_ptr<BasicAnalysis>()>>,
             std::vector<string>
@@ -5747,11 +5057,10 @@ auto getTasks() {
     };
     while (true) {
         int num = menu1();
-        if (num >= mpl::size<components>::value) return task_list;
+        if (num == 0) return task_list;
         shared_ptr<BasicAnalysis> task = task_vec[num]();
         task->readInfo();
         task_list->push_back(task);
-
     }
 }
 

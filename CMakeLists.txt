@@ -44,7 +44,7 @@ message("gromacs 5.1.4 source root : " ${GROMACS_SRC_ROOT})
 include_directories(${GROMACS_SRC_ROOT}/src)
 include_directories(lib)
 
-file(GLOB LIBTINKER_SRC  lib/*.f lib/*.f90 lib/*.cpp)
+
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
@@ -61,7 +61,7 @@ set(DEFAULT_INCLUDE_DIRS "/usr/include;/usr/local/include")
 set(INCLUES_PATH "${CPATH_DIRS} ${C_INCLUDE_DIRS} ${CPLUS_INCLUDE_DIRS} ${DEFAULT_INCLUDE_DIRS}")
 
 # netcdf
-find_path(NETCDF_INCLUDES netcdf.h PATHS ${INCLUES_PATH})
+find_path(NETCDF_INCLUDES netcdf.h HITS ${INCLUES_PATH})
 if(NOT NETCDF_INCLUDES)
     message(FATAL_ERROR "netcdf.h not found")
 endif()
@@ -75,33 +75,33 @@ link_libraries(${NETCDF_LIBS})
 
 
 # fmt
-find_path(FMT_INCLUDES "fmt/printf.h" PATHS ${INCLUES_PATH})
+find_path(FMT_INCLUDES "fmt/printf.h" HITS ${INCLUES_PATH})
 if(NOT FMT_INCLUDES)
     message(FATAL_ERROR "fmt header not found")
 endif()
 include_directories(${FMT_INCLUDES})
 
-find_library(FMT_LIBS fmt PATHS ${LIBRARY_DIRS})
+find_library(FMT_LIBS fmt HITS ${LIBRARY_DIRS})
 if(NOT FMT_LIBS)
     message(FATAL_ERROR "fmt library not found")
 endif()
 link_libraries(${FMT_LIBS})
 
 # fftw3
-find_path(FFTW3_INCLUDES fftw3.h PATHS ${INCLUES_PATH})
+find_path(FFTW3_INCLUDES fftw3.h HITS ${INCLUES_PATH})
 if(NOT FFTW3_INCLUDES)
     message(FATAL_ERROR "fftw3.h not found")
 endif()
 include_directories(${FFTW3_INCLUDES})
 
-find_library(FFTW3_threads_LIBS fftw3_threads PATHS ${LIBRARY_DIRS})
+find_library(FFTW3_threads_LIBS fftw3_threads HITS ${LIBRARY_DIRS})
 if(NOT FFTW3_threads_LIBS)
     message(FATAL_ERROR "fftw3_threads library not found")
 endif()
 link_libraries(fftw3 ${FFTW3_threads_LIBS})
 
 # readline
-find_path(READLINE_INCLUDES "readline/readline.h" PATHS ${INCLUES_PATH})
+find_path(READLINE_INCLUDES "readline/readline.h" HITS ${INCLUES_PATH})
 if(NOT READLINE_INCLUDES)
     message(FATAL_ERROR "readline header not found")
 endif()
@@ -115,7 +115,7 @@ link_libraries(${READLINE_LIBS})
 
 
 # intel tbb
-find_path(TBB_INCLUDES "tbb/tbb.h" PATHS ${INCLUES_PATH})
+find_path(TBB_INCLUDES "tbb/tbb.h" HITS ${INCLUES_PATH})
 if(NOT TBB_INCLUDES)
     message(FATAL_ERROR "tbb header not found")
 endif()
@@ -146,20 +146,7 @@ if(NOT GROMACS_LIBS)
     message(FATAL_ERROR "gromacs library not found")
 endif()
 
-add_library(libtinker_shared SHARED ${LIBTINKER_SRC} )
-set_target_properties(libtinker_shared PROPERTIES OUTPUT_NAME "tinker_shared")
-target_link_libraries(libtinker_shared ${GROMACS_LIBS})
+enable_testing()
 
-link_libraries(libtinker_shared)
-add_executable(dynamic dynamic.f)
-add_executable(analyze analyze.f)
-add_executable(archive archive.f)
-add_executable(radial radial.f)
-add_executable(diffuse diffuse.f)
-add_executable(anneal anneal.f)
-add_executable(bar bar.f)
-add_executable(xyzpdb xyzpdb.f)
-add_executable(pdbxyz pdbxyz.f)
-add_executable(minimize minimize.f)
-add_executable(analysis analysis.cpp)
-
+add_subdirectory(lib)
+add_subdirectory(src)
