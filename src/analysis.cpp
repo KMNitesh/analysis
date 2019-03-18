@@ -1013,16 +1013,28 @@ void RadicalDistribtuionFunction::print() {
 
 class RMSDCal : public BasicAnalysis {
 
-    std::set<int> group; // contain the NO. of fitting atom
     int steps = 0; // current frame number
     std::map<int, double> rmsd_map;
     bool first_frame = true;
-
 
     double x1[ATOM_MAX], y1[ATOM_MAX], z1[ATOM_MAX];
     double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
 
     double rmsvalue(shared_ptr<Frame> &frame);
+
+    Atom::AtomIndenter ids;
+
+    std::unordered_set<shared_ptr<Atom>> group;
+
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+        if (first_frame) {
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, ids)) group.insert(atom);
+                          });
+        }
+    }
 
 public:
     RMSDCal() {
@@ -1054,6 +1066,7 @@ public:
 };
 
 void RMSDCal::process(std::shared_ptr<Frame> &frame) {
+    find_matched_atoms(frame);
     steps++;
     rmsd_map[steps] = rmsvalue(frame);
 }
@@ -1061,9 +1074,7 @@ void RMSDCal::process(std::shared_ptr<Frame> &frame) {
 void RMSDCal::print() {
     outfile << "***************************" << endl;
     outfile << "****** RMSD Calculator ****" << endl;
-    outfile << "GROUP:";
-    for (auto &i : this->group) outfile << i << "   ";
-    outfile << endl;
+    outfile << "GROUP:" << ids << endl;
     outfile << "***************************" << endl;
     for (int cyc = 1; cyc <= steps; cyc++) {
         outfile << cyc << "     " << rmsd_map[cyc] << endl;
@@ -1072,21 +1083,7 @@ void RMSDCal::print() {
 }
 
 void RMSDCal::readInfo() {
-    auto input_line = input("Please enter group:");
-    auto field = split(input_line);
-    for (auto it = field.cbegin(); it != field.cend(); ++it) {
-        auto i = std::stoi(*it);
-        if (i > 0) {
-            group.insert(i);
-        } else if (i < 0) {
-            ++it;
-            auto j = std::stoi(*it);
-            for (int k = std::abs(i); k <= j; k++) group.insert(k);
-        } else {
-            cerr << "error of atom num select" << endl;
-            exit(1);
-        }
-    }
+    Atom::select1group(ids,"Please enter atom group:");
 }
 
 
@@ -1101,8 +1098,7 @@ double RMSDCal::rmsvalue(shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto i : this->group) {
-            auto &atom = frame->atom_map[i];
+        for (auto& atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x1[index] = atom->x;
@@ -1124,8 +1120,7 @@ double RMSDCal::rmsvalue(shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto i : this->group) {
-            auto &atom = frame->atom_map[i];
+        for (auto& atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x2[index] = atom->x;
@@ -1420,8 +1415,19 @@ void RMSDCal::jacobi(int n, double a[4][4], double d[], double v[4][4]) {
 class RMSFCal : public BasicAnalysis {
 
 
-    std::set<int> group; // contain the NO. of fitting atom
+    Atom::AtomIndenter ids;
 
+    std::unordered_set<shared_ptr<Atom>> group;
+
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+        if (first_frame) {
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, ids)) group.insert(atom);
+                          });
+        }
+    }
     int steps = 0; // current frame number
     bool first_frame = true;
 
@@ -1494,8 +1500,7 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto i : this->group) {
-            auto &atom = frame->atom_map[i];
+        for (auto& atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x1[index] = atom->x;
@@ -1531,8 +1536,7 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto i : this->group) {
-            auto &atom = frame->atom_map[i];
+        for (auto& atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x2[index] = atom->x;
@@ -1578,34 +1582,18 @@ void RMSFCal::print() {
 
     outfile << "***************************" << endl;
     outfile << "****** RMSF Calculator ****" << endl;
-    outfile << "SET:";
-    for (auto i : this->group) outfile << i << "   ";
-    outfile << endl;
+    outfile << "SET:" << ids << endl;
     outfile << "***************************" << endl;
     int index = 0;
-    for (auto at : group) {
-        outfile << at << "     " << rmsvalue(index) << endl;
+    for (auto& at : group) {
+        outfile << at->seq << "     " << rmsvalue(index) << endl;
         index++;
     }
     outfile << "***************************" << endl;
 }
 
 void RMSFCal::readInfo() {
-    auto input_line = input("Please enter group:");
-    auto field = split(input_line);
-    for (auto it = field.cbegin(); it != field.cend(); ++it) {
-        auto i = std::stoi(*it);
-        if (i > 0) {
-            group.insert(i);
-        } else if (i < 0) {
-            ++it;
-            auto j = std::stoi(*it);
-            for (int k = std::abs(i); k <= j; k++) group.insert(k);
-        } else {
-            cerr << "error of atom num select" << endl;
-            exit(1);
-        }
-    }
+    Atom::select1group(ids,"Please enter group:");
 }
 
 double RMSFCal::rmsvalue(int index) {
@@ -4173,7 +4161,7 @@ struct add_item {
     template<typename T>
     void operator()(boost::type<T>) {
         v1.emplace_back(bind(make_shared<T>));
-        v2.emplace_back((boost::format("(%d) %s\n") % v1.size() % T::title()).str());
+        v2.emplace_back((boost::format("(%d) %s") % v1.size() % T::title()).str());
     }
 
     T1 &v1;
@@ -4219,13 +4207,19 @@ auto getTasks() {
     auto menu1 = [&item_menu]() {
         std::cout << "Please select the desired operation" << std::endl;
         std::cout << "(0) Start\n";
-        for_each(item_menu.cbegin(), item_menu.cend(), std::cout << phoenix::placeholders::_1);
+        for_each(item_menu.cbegin(), item_menu.cend(), std::cout << phoenix::placeholders::_1 << '\n');
         return choose<int>(0, mpl::size<components>::value, "select :");
     };
     while (true) {
         int num = menu1();
         if (num == 0) return task_list;
         shared_ptr<BasicAnalysis> task = task_vec[num-1]();
+
+        string line(item_menu[num-1].size()+6, '-');
+
+        std::cout << line << "\n";
+        std::cout << "<- " << item_menu[num-1] << " ->\n";
+        std::cout << line << "\n";
         task->readInfo();
         task_list->push_back(task);
     }
