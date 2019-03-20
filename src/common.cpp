@@ -7,6 +7,7 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include "common.hpp"
+#include "frame.hpp"
 #include "forcefield.hpp"
 
 
@@ -71,5 +72,12 @@ std::string choose_file(const std::string &prompt, bool exist, std::string ext, 
     }
 }
 
-
+double
+atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame) {
+    auto xr = atom1->x - atom2->x;
+    auto yr = atom1->y - atom2->y;
+    auto zr = atom1->z - atom2->z;
+    frame->image(xr, yr, zr);
+    return std::sqrt(xr * xr + yr * yr + zr * zr);
+}
 

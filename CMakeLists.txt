@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(Tinker)
 enable_language(Fortran C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wall -Wextra")

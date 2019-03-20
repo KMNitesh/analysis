@@ -13,7 +13,11 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
+class Atom;
+class Frame;
 class Forcefield;
+
+
 
 // global variables
 
@@ -44,7 +48,7 @@ struct type_name_string<double> {
 };
 
 
-template<typename T, typename = std::enable_if_t<std::is_same_v<T, int> or std::is_same_v<T, double>>>
+template<typename T, typename = std::enable_if_t<std::is_same<T, int>::value or std::is_same<T, double>::value>>
 T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T value = T()) {
     while (true) {
         std::string input_line = input(prompt);
@@ -72,5 +76,7 @@ std::string choose_file(const std::string &prompt, bool exist, std::string ext =
 template<typename T>
 T sign(T &x, T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
 
+double
+atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame);
 
 #endif //TINKER_COMMON_HPP

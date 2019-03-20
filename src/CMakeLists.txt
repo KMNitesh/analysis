@@ -11,9 +11,21 @@ add_executable(bar bar.f)
 add_executable(xyzpdb xyzpdb.f)
 add_executable(pdbxyz pdbxyz.f)
 add_executable(minimize minimize.f)
-add_executable(analysis analysis.cpp memory.cpp atom.cpp common.cpp
-        molecule.cpp frame.cpp trajectoryreader.cpp forcefield.cpp)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
+endif()
 
 
-add_executable(test_grammar test_grammar.cpp atom.cpp common.cpp)
+add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp 
+                   trajectoryreader.cpp forcefield.cpp gro_writer.cpp
+                   xtc_writer.cpp trr_writer.cpp netcdf_writer.cpp)
+
+add_executable(analysis analysis.cpp)
+target_link_libraries(analysis base)
+
+add_executable(test_grammar test_grammar.cpp)
+target_link_libraries(test_grammar base)
+
 add_test(NAME "TestGrammar" COMMAND test_grammar)
