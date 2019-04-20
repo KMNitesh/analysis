@@ -26,6 +26,9 @@
 #define BOOST_RESULT_OF_USE_DECLTYPE
 #define BOOST_SPIRIT_USE_PHOENIX_V3
 
+#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+#define BOOST_MPL_LIMIT_VECTOR_SIZE 30
+
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -34,12 +37,16 @@ namespace po = boost::program_options;
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 
+
+
 // Boost metaprogramming library
+
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/unique.hpp>
 #include <boost/mpl/string.hpp>
+
 
 namespace mpl = boost::mpl;
 
@@ -303,7 +310,7 @@ void GmxTrj::readInfo() {
 
 
                             if (num <= 0) {
-                                cerr << "the atom number must be positve" << endl;
+                                cerr << "the atom number must be positive" << endl;
                                 continue;
                             }
                             break;
@@ -320,7 +327,7 @@ void GmxTrj::readInfo() {
                                 continue;
                             }
                             if (num <= 0) {
-                                cerr << "the atom number must be positve" << endl;
+                                cerr << "the atom number must be positive" << endl;
                                 continue;
                             }
                             break;
@@ -901,7 +908,7 @@ void RMSDCal::print() {
 }
 
 void RMSDCal::readInfo() {
-    Atom::select1group(ids,"Please enter atom group:");
+    Atom::select1group(ids, "Please enter atom group:");
 }
 
 
@@ -916,7 +923,7 @@ double RMSDCal::rmsvalue(shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto& atom : this->group) {
+        for (auto &atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x1[index] = atom->x;
@@ -938,7 +945,7 @@ double RMSDCal::rmsvalue(shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto& atom : this->group) {
+        for (auto &atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x2[index] = atom->x;
@@ -1246,6 +1253,7 @@ class RMSFCal : public BasicAnalysis {
                           });
         }
     }
+
     int steps = 0; // current frame number
     bool first_frame = true;
 
@@ -1318,7 +1326,7 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto& atom : this->group) {
+        for (auto &atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x1[index] = atom->x;
@@ -1354,7 +1362,7 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
         int index = 0;
         bool first_atom = true;
         double first_x, first_y, first_z;
-        for (auto& atom : this->group) {
+        for (auto &atom : this->group) {
             if (first_atom) {
                 first_atom = false;
                 first_x = x2[index] = atom->x;
@@ -1403,7 +1411,7 @@ void RMSFCal::print() {
     outfile << "SET:" << ids << endl;
     outfile << "***************************" << endl;
     int index = 0;
-    for (auto& at : group) {
+    for (auto &at : group) {
         outfile << at->seq << "     " << rmsvalue(index) << endl;
         index++;
     }
@@ -1411,7 +1419,7 @@ void RMSFCal::print() {
 }
 
 void RMSFCal::readInfo() {
-    Atom::select1group(ids,"Please enter group:");
+    Atom::select1group(ids, "Please enter group:");
 }
 
 double RMSFCal::rmsvalue(int index) {
@@ -2502,13 +2510,13 @@ boost::bimap<boost::bimaps::set_of<AminoAcidType>, boost::bimaps::set_of<std::st
                 (AminoAcidType::H3N_Glu, "H3N_Glu")
                 (AminoAcidType::H3N_Arg, "H3N_Arg")
 
-                (AminoAcidType::Ala,     "Ala")
-                (AminoAcidType::Gly,     "Gly")
-                (AminoAcidType::Pro,     "Pro")
-                (AminoAcidType::Trp,     "Trp")
-                (AminoAcidType::Asp,     "Asp")
-                (AminoAcidType::Glu,     "Glu")
-                (AminoAcidType::Arg,     "Arg");
+                (AminoAcidType::Ala, "Ala")
+                (AminoAcidType::Gly, "Gly")
+                (AminoAcidType::Pro, "Pro")
+                (AminoAcidType::Trp, "Trp")
+                (AminoAcidType::Asp, "Asp")
+                (AminoAcidType::Glu, "Glu")
+                (AminoAcidType::Arg, "Arg");
 
 class AminoAcid {
 public:
@@ -2584,7 +2592,7 @@ class NMRRange : public BasicAnalysis {
 
     void loadTop() {
         string path = std::getenv("ANALYSIS_TOP_PATH");
-        for (auto& t : aminotype_str_bimap) {
+        for (auto &t : aminotype_str_bimap) {
             AminoTop top;
             top.readTop(path + "/" + t.right + ".top");
             top.type = t.left;
@@ -3095,10 +3103,10 @@ public:
 
         result_type operator()(argument_type const &s) const noexcept {
             result_type
-            const h1 ( std::hash<int>()
+            const h1(std::hash<int>()
             (s.index));
             result_type
-            const h2 ( std::hash<std::list<std::tuple<double, double, double>> *>()
+            const h2(std::hash<std::list<std::tuple<double, double, double>> *>()
             (s.list_ptr));
             return h1 ^ (h2 << 1); // or use boost::hash_combine (see Discussion)
         }
@@ -3877,7 +3885,7 @@ void DipoleAngle2Gibbs::readInfo() {
 
 class ShellDensity : public BasicAnalysis {
 public:
-    ShellDensity() {enable_outfile = true;}
+    ShellDensity() { enable_outfile = true; }
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -3963,6 +3971,135 @@ void ShellDensity::readInfo() {
     }
 }
 
+class SearchInteractionResidue : public BasicAnalysis {
+public:
+    SearchInteractionResidue() { enable_outfile = true; }
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print() override;
+
+    void readInfo() override;
+
+    static const string title() { return "Search Interaction Residue between two groups"; }
+
+private:
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
+
+    std::unordered_set<shared_ptr<Atom>> group1;
+    std::unordered_set<shared_ptr<Atom>> group2;
+    bool first_round = true;
+
+    void find_matched_atoms(shared_ptr<Frame> &frame) {
+
+        if (first_round) {
+            first_round = false;
+
+            std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
+                          [this](shared_ptr<Atom> &atom) {
+                              if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                              if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                          });
+        }
+    }
+
+    double cutoff;
+
+    std::list<std::unordered_set<std::string>> interaction_residues;
+    int total_frames = 0;
+
+    enum class OutputStyle { BOOL = 0 , NUMBER = 1};
+    OutputStyle style;
+
+};
+
+void SearchInteractionResidue::process(std::shared_ptr<Frame> &frame) {
+    find_matched_atoms(frame);
+    std::unordered_set<std::string> residue_set; // resname:no
+
+    for (auto &atomA : group1) {
+        for (auto &atomB : group2) {
+            if (atom_distance(atomA, atomB, frame) <= cutoff) {
+                residue_set.insert(
+                        atomB->residue_name.get() + "-" + boost::lexical_cast<std::string>(atomB->residue_num.get()));
+            }
+        }
+    }
+    interaction_residues.push_back(residue_set);
+    total_frames++;
+}
+
+
+void SearchInteractionResidue::print() {
+    outfile << "************************************************\n";
+    outfile << "*****" << SearchInteractionResidue::title() << " ****\n";
+
+    outfile << "First Group  " << ids1 << " Second Group  " << ids2 << '\n';
+    outfile << "cutoff :" << cutoff << " Ang\n";
+
+    outfile << "************************************************\n";
+
+
+    using ResItem = struct {
+        std::string name;
+        int count;
+    };
+
+    std::unordered_map<std::string, ResItem *> map;
+    for (auto &set : interaction_residues) {
+        for (auto &item : set) {
+            auto it = map.find(item);
+            if (it == map.end()) {
+                map[item] = new ResItem{item, 1};
+            } else {
+                it->second->count++;
+            }
+        }
+    }
+
+    std::vector<ResItem *> itemVec;
+    for (auto &item : map) {
+        itemVec.push_back(item.second);
+    }
+
+    std::sort(itemVec.begin(), itemVec.end(), [](ResItem *i1, ResItem *i2) { return i1->count > i2->count; });
+
+    std::size_t nframe = 1;
+    outfile << boost::format("%10s") % "name";
+    for (auto &item : itemVec) {
+        outfile << boost::format("%10s") % item->name;
+    }
+    outfile << boost::format("\n%10s") % "Freq"; ;
+    for (auto &item : itemVec) {
+        outfile << boost::format("%9.1f%%") % (item->count * 100.0 / total_frames);
+    }
+    outfile << '\n';
+    for (auto &set : interaction_residues) {
+        outfile << boost::format("%10d") % nframe;
+        int index = 1;
+        for (auto &item : itemVec) {
+            outfile << boost::format("%10d") %  (style == OutputStyle::NUMBER ?
+            (set.count(item->name) ? index : 0) : set.count(item->name));
+            index++;
+        }
+        outfile << '\n';
+        nframe++;
+    }
+
+    outfile << "************************************************" << endl;
+
+
+}
+
+void SearchInteractionResidue::readInfo() {
+    std::cout << "The output residues is in the second group\n";
+    Atom::select2group(ids1, ids2);
+    cutoff = choose(0.0, GMX_DOUBLE_MAX, "cutoff [Ang]:", false);
+    std::cout << "(0) bool style\n(1) number style\n";
+    style = static_cast<OutputStyle>(choose(0,1,"which style ? [ 0 ] ", true, 0));
+}
+
 
 void processOneFrame(shared_ptr<Frame> &frame,
                      shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
@@ -4009,10 +4146,11 @@ auto getTasks() {
             DipoleAngle2Gibbs,
             DipoleAngleSingleDistanceNormal,
             DipoleAngleVolumeNormal,
-            ShellDensity
+            ShellDensity,
+            SearchInteractionResidue
     >;
 
-    BOOST_MPL_ASSERT(( mpl::equal< mpl::unique< components, is_same<mpl::_1,mpl::_2> >::type, components > ));
+    BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
 
     std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
     std::vector<string> item_menu;
@@ -4031,12 +4169,12 @@ auto getTasks() {
     while (true) {
         int num = menu1();
         if (num == 0) return task_list;
-        shared_ptr<BasicAnalysis> task = task_vec[num-1]();
+        shared_ptr<BasicAnalysis> task = task_vec[num - 1]();
 
-        string line(item_menu[num-1].size()+6, '-');
+        string line(item_menu[num - 1].size() + 6, '-');
 
         std::cout << line << "\n";
-        std::cout << "<- " << item_menu[num-1] << " ->\n";
+        std::cout << "<- " << item_menu[num - 1] << " ->\n";
         std::cout << line << "\n";
         task->readInfo();
         task_list->push_back(task);

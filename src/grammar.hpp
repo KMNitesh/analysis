@@ -85,7 +85,10 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
     using qi::on_error;
     using qi::fail;
 
-    auto semantic_convert = [](auto &attr, auto &context, bool &pass) {
+        str_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]][_val = replace_all_copy(_1, "=", "*")];
+
+    select_item_rule = (str_with_wildcard >> -("-" >> uint_))[(
+     [](auto &attr, auto &context, bool &pass) {
         try {
             uint num = boost::lexical_cast<uint>(fusion::at_c<0>(attr));
             fusion::at_c<0>(context.attributes) = fusion::vector<uint, boost::optional<uint>>(num,fusion::at_c<1>(attr));
@@ -96,11 +99,7 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
                 fusion::at_c<0>(context.attributes) = fusion::at_c<0>(attr);
             }
         }
-    };
-
-    str_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]][_val = replace_all_copy(_1, "=", "*")];
-
-    select_item_rule = (str_with_wildcard >> -("-" >> uint_))[semantic_convert];
+    })];
 
     residue_select_rule = ":" >> (select_item_rule % ",")[_val = make_shared_<Atom::residue_name_nums>(_1)];
 
@@ -108,9 +107,9 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
                                    | "/" >> (str_with_wildcard % ",")[_val = make_shared_<Atom::atom_element_names>(_1)]
                                    | (select_item_rule % ",")[_val = make_shared_<Atom::atom_name_nums>(_1)]);
 
-    select_rule = (residue_select_rule | nametype_select_rule)[_val = _1];
+    select_rule = residue_select_rule | nametype_select_rule;
 
-    factor2 = "(" >> expr[_val = _1] >> ")" | select_rule[_val = _1];
+    factor2 = "(" >> expr >> ")" | select_rule;
 
     factor = "!" >> factor2[_val = make_shared_<Atom::Operator>(Atom::Op::NOT, _1)] | factor2[_val = _1];
 
