@@ -8,8 +8,8 @@
 
 #include <boost/test/included/unit_test.hpp>
 
-#include "grammar.hpp"
-#include "atom.hpp"
+#include "../src/grammar.hpp"
+#include "../src/atom.hpp"
 
 struct grammar_fixture {
     grammar_fixture() : atom(std::make_shared<Atom>()) {

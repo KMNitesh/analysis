@@ -13,6 +13,14 @@
 #include "molecule.hpp"
 #include "frame.hpp"
 
+namespace gmx {
+
+#include "gromacs/fileio/tpxio.h"
+#include "gromacs/topology/mtop_util.c"
+
+}
+
+
 void TrajectoryReader::close() {
     if (isnetcdf) {
         netcdfClose(&NC);
@@ -232,10 +240,110 @@ int TrajectoryReader::readOneFrameXtc() {
         return 1;
     }
     std::cerr << "\nWARNING: Incomplete frame at time "
-        << std::scientific  << time  <<std::defaultfloat << "\n";
+              << std::scientific << time << std::defaultfloat << "\n";
     return 0;
 }
 
+
+std::shared_ptr<Frame> TrajectoryReader::readOneFrameTpr() {
+
+
+    if (!frame) {
+        frame = std::make_shared<Frame>();
+        if (enable_binaray_file) frame->enable_bound = true;
+    }
+
+
+    gmx::t_state state;
+    gmx::t_tpxheader tpx;
+    gmx::t_inputrec ir;
+    gmx::gmx_mtop_t mtop;
+    gmx::t_topology top;
+
+    gmx::read_tpxheader(topology_filename.c_str(), &tpx, TRUE, nullptr, nullptr);
+
+    gmx::read_tpx_state(topology_filename.c_str(),
+                        tpx.bIr ? &ir : nullptr,
+                        &state, nullptr,
+                        tpx.bTop ? &mtop : nullptr);
+
+    top = gmx::gmx_mtop_t_to_t_topology(&mtop);
+
+
+    auto &atoms = top.atoms;
+
+    for (int i = 0; i < atoms.nr; i++) {
+        auto atom = std::make_shared<Atom>();
+        atom->seq = i + 1;
+        atom->atom_name = (*(atoms.atomname[i]));
+        atom->type_name = (*(atoms.atomtype[i]));
+        atom->charge = atoms.atom[i].q;
+
+        atom->residue_name = *atoms.resinfo[atoms.atom[i].resind].name;
+        atom->residue_num = atoms.resinfo[atoms.atom[i].resind].nr;
+        frame->atom_list.push_back(atom);
+        frame->atom_map[atom->seq] = atom;
+    }
+
+
+    auto ilist = &top.idef.il[gmx::F_BONDS];
+    gmx::t_iatom *iatoms = ilist->iatoms;
+    for (int i = 0; i < ilist->nr; i += 3) {
+        auto type = *(iatoms++);
+        auto ftype = top.idef.functype[type];
+
+        int atom_num1 = *(iatoms++) + 1;
+        int atom_num2 = *(iatoms++) + 1;
+
+
+        auto atom1 = frame->atom_map[atom_num1];
+        auto atom2 = frame->atom_map[atom_num2];
+
+        atom1->con_list.push_back(atom_num2);
+        atom2->con_list.push_back(atom_num1);
+
+    }
+    ilist = &top.idef.il[gmx::F_SETTLE];
+    iatoms = ilist->iatoms;
+    for (int i = 0; i < ilist->nr;) {
+        auto type = *(iatoms++);
+        auto ftype = top.idef.functype[type];
+
+        auto nratoms = gmx::interaction_function[ftype].nratoms;
+
+        int atom_num1 = *(iatoms++) + 1;
+        auto atom1 = frame->atom_map[atom_num1];
+
+
+        for (int j = 1; j < nratoms; j++) {
+            int atom_num2 = *(iatoms++) + 1;
+            auto atom2 = frame->atom_map[atom_num2];
+
+            atom1->con_list.push_back(atom_num2);
+            atom2->con_list.push_back(atom_num1);
+        }
+
+        i += 1 + nratoms;
+    }
+
+
+    if (first_time) {
+        for (auto &atom : frame->atom_list) {
+            if (!atom->molecule.lock()) {
+                auto molecule = std::make_shared<Molecule>();
+                add_to_mol(atom, molecule, frame);
+                frame->molecule_list.push_back(molecule);
+            }
+        }
+    }
+
+    if (atoms.nres != boost::numeric_cast<int>(frame->molecule_list.size())) {
+        std::cout << "Residue numbers and Molecule numbers not match\n";
+//        exit(EXIT_FAILURE);
+    }
+
+    return frame;
+}
 
 std::shared_ptr<Frame> TrajectoryReader::readOneFrameMol2() {
     std::string line;
@@ -486,6 +594,8 @@ void TrajectoryReader::add_topology(const std::string &filename) {
         topology_type = TOPOLOGY_TYPE::ARC;
     } else if (ext_name == "mol2") {
         topology_type = TOPOLOGY_TYPE::MOL2;
+    } else if (ext_name == "tpr") {
+        topology_type = TOPOLOGY_TYPE::TPR;
     } else {
         std::cerr << " Error file type of topology file [ " << filename << "] " << std::endl;
         exit(1);
@@ -503,6 +613,9 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
                     break;
                 case TOPOLOGY_TYPE::MOL2:
                     frame = readOneFrameMol2();
+                    break;
+                case TOPOLOGY_TYPE::TPR:
+                    frame = readOneFrameTpr();
                     break;
             }
             position_file.close();

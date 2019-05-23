@@ -6,6 +6,8 @@
 #define TINKER_ATOM_HPP
 
 #include "config.h"
+#include "molecule.hpp"
+
 #include <string>
 #include <list>
 #include <memory>
@@ -140,6 +142,7 @@ public:
     static void select1group(AtomIndenter &ids, const std::string &prompt = "Enter mask for atom : ");
 
 };
+
 
 struct print : boost::static_visitor<> {
     int space_num;

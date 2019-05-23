@@ -283,7 +283,7 @@ bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AtomIndenter 
                 }
 
                 bool operator()(const std::string &pattern) {
-                    return fnmatch(pattern.c_str(), atom->type_name.c_str(), FNM_CASEFOLD) == 0;
+                    if (fnmatch(pattern.c_str(), atom->type_name.c_str(), FNM_CASEFOLD) == 0) return true;
                     std::string num_str = boost::lexical_cast<std::string>(atom->typ);
                     return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
                 }

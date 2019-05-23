@@ -30,7 +30,8 @@ extern bool enable_forcefield;
 
 bool file_exist(const std::string &name);
 
-std::vector<std::string> split(const std::string &str, const std::string &sep = " ");
+std::vector<std::string> split(const std::string &str, const std::string &sep);
+std::vector<std::string> split(const std::string &str);
 
 std::string input(const std::string &prompt = "");
 
@@ -79,4 +80,6 @@ T sign(T &x, T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
 double
 atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame);
 
+double
+atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame);
 #endif //TINKER_COMMON_HPP

@@ -39,4 +39,7 @@ public:
     std::shared_ptr<Atom> ow;
 };
 
+
+double min_distance(std::shared_ptr<Molecule> &mol1, std::shared_ptr<Molecule> &mol2, std::shared_ptr<Frame> &frame);
+
 #endif //TINKER_MOLECULE_HPP

@@ -85,7 +85,7 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
     using qi::on_error;
     using qi::fail;
 
-        str_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]][_val = replace_all_copy(_1, "=", "*")];
+    str_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]][_val = replace_all_copy(_1, "=", "*")];
 
     select_item_rule = (str_with_wildcard >> -("-" >> uint_))[(
      [](auto &attr, auto &context, bool &pass) {

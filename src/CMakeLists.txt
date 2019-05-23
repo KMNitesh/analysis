@@ -25,7 +25,4 @@ add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)
 
-add_executable(test_grammar test_grammar.cpp)
-target_link_libraries(test_grammar base)
 
-add_test(NAME "TestGrammar" COMMAND test_grammar)

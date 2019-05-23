@@ -44,7 +44,7 @@ class TrajectoryReader {
     std::string topology_filename;
 
     enum class TOPOLOGY_TYPE {
-        ARC, MOL2
+        ARC, MOL2, TPR
     } topology_type;
 
 
@@ -68,7 +68,7 @@ class TrajectoryReader {
 
     void readOneFrameVel();
 
-    std::shared_ptr<Frame> readOneFrameTraj();
+
 
     int readOneFrameNetCDF();
 
@@ -76,18 +76,26 @@ class TrajectoryReader {
 
     int readOneFrameXtc();
 
-    std::shared_ptr<Frame> readOneFrameMol2();
-
-    std::shared_ptr<Frame> readOneFrameArc();
-
 
     void open(const std::string &filename);
 
+
+protected:
+
+    std::shared_ptr<Frame> readOneFrameTraj();
+
+    std::shared_ptr<Frame> readOneFrameTpr();
+
+    std::shared_ptr<Frame> readOneFrameMol2();
+
+    std::shared_ptr<Frame> readOneFrameArc();
 
 public:
     void add_filename(const std::string &filename);
 
     void add_topology(const std::string &filename);
+
+
 
     std::shared_ptr<Frame> readOneFrame();
 

@@ -107,3 +107,14 @@ void Molecule::calc_center(std::shared_ptr<Frame> &frame) {
     center_z = sum_z / len;
 }
 
+double min_distance(std::shared_ptr<Molecule> &mol1, std::shared_ptr<Molecule> &mol2 ,std::shared_ptr<Frame> &frame) {
+    double mindistance2 = std::numeric_limits<double>::max();
+    for (auto &atom1 : mol1->atom_list) {
+        for (auto &atom2 : mol2->atom_list) {
+            mindistance2 = std::min(mindistance2,atom_distance2(atom1, atom2,frame));
+        }
+    }
+    return std::sqrt(mindistance2);
+}
+
+

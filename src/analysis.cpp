@@ -40,7 +40,6 @@ namespace po = boost::program_options;
 
 
 // Boost metaprogramming library
-
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/size.hpp>
@@ -72,7 +71,6 @@ namespace mpl = boost::mpl;
 #include <boost/assign.hpp>
 
 #include "common.hpp"
-#include "atom.hpp"
 #include "grammar.hpp"
 #include "molecule.hpp"
 #include "frame.hpp"
@@ -4009,7 +4007,9 @@ private:
     std::list<std::unordered_set<std::string>> interaction_residues;
     int total_frames = 0;
 
-    enum class OutputStyle { BOOL = 0 , NUMBER = 1};
+    enum class OutputStyle {
+        BOOL = 0, NUMBER = 1
+    };
     OutputStyle style;
 
 };
@@ -4070,7 +4070,7 @@ void SearchInteractionResidue::print() {
     for (auto &item : itemVec) {
         outfile << boost::format("%10s") % item->name;
     }
-    outfile << boost::format("\n%10s") % "Freq"; ;
+    outfile << boost::format("\n%10s") % "Freq";;
     for (auto &item : itemVec) {
         outfile << boost::format("%9.1f%%") % (item->count * 100.0 / total_frames);
     }
@@ -4079,8 +4079,8 @@ void SearchInteractionResidue::print() {
         outfile << boost::format("%10d") % nframe;
         int index = 1;
         for (auto &item : itemVec) {
-            outfile << boost::format("%10d") %  (style == OutputStyle::NUMBER ?
-            (set.count(item->name) ? index : 0) : set.count(item->name));
+            outfile << boost::format("%10d") % (style == OutputStyle::NUMBER ?
+                                                (set.count(item->name) ? index : 0) : set.count(item->name));
             index++;
         }
         outfile << '\n';
@@ -4097,9 +4097,95 @@ void SearchInteractionResidue::readInfo() {
     Atom::select2group(ids1, ids2);
     cutoff = choose(0.0, GMX_DOUBLE_MAX, "cutoff [Ang]:", false);
     std::cout << "(0) bool style\n(1) number style\n";
-    style = static_cast<OutputStyle>(choose(0,1,"which style ? [ 0 ] ", true, 0));
+    style = static_cast<OutputStyle>(choose(0, 1, "which style ? [ 0 ] ", true, 0));
 }
 
+
+class FindMinBetweenTwoGroups : public BasicAnalysis {
+public:
+    FindMinBetweenTwoGroups() { enable_outfile = true; }
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print() override;
+
+    void readInfo() override;
+
+    static const string title() { return "Find Min distance between two groups"; }
+
+private:
+    Atom::AtomIndenter ids;
+
+    int total_frames = 0;
+    bool first_round = true;
+
+    std::vector<std::shared_ptr<Molecule>> mol_list;
+
+    std::list<std::vector<double>> results;
+};
+
+
+void FindMinBetweenTwoGroups::process(std::shared_ptr<Frame> &frame) {
+    if (first_round) {
+        first_round = false;
+        for (auto &mol : frame->molecule_list) {
+            for (auto &atom : mol->atom_list) {
+                if (Atom::is_match(atom, this->ids)) {
+                    mol_list.push_back(mol);
+                    break;
+                }
+            }
+        }
+    }
+
+    std::size_t length = mol_list.size();
+
+    std::vector<double> line_rest;
+    for (std::size_t i = 0; i < length - 1; i++) {
+        for (std::size_t j = i + 1; j < length; j++) {
+            auto &mol1 = mol_list[i];
+            auto &mol2 = mol_list[j];
+            line_rest.push_back(min_distance(mol1, mol2, frame));
+        }
+    }
+    results.push_back(line_rest);
+}
+
+void FindMinBetweenTwoGroups::print() {
+    outfile << "************************************************\n";
+    outfile << "*****" << FindMinBetweenTwoGroups::title() << " ****\n";
+    outfile << "Group  " << ids << '\n';
+    outfile << "************************************************\n";
+
+
+    outfile << boost::format("%6s") % "Frame";
+    std::size_t length = mol_list.size();
+    for (std::size_t i = 0; i < length - 1; i++) {
+        for (std::size_t j = i + 1; j < length; j++) {
+            outfile << boost::format("  %4d-%4d  ") % i % j;
+        }
+    }
+
+    outfile << '\n';
+
+    std::size_t nframe = 0;
+
+    for (auto &v : results) {
+        nframe++;
+
+        outfile << boost::format("%6d") % nframe;
+        for (auto value: v) outfile << boost::format("  %9.2f  ") % value;
+        outfile << '\n';
+    }
+
+
+    outfile << "************************************************\n";
+}
+
+
+void FindMinBetweenTwoGroups::readInfo() {
+    Atom::select1group(ids, "Input Residue Name Mask: ");
+}
 
 void processOneFrame(shared_ptr<Frame> &frame,
                      shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
@@ -4147,7 +4233,8 @@ auto getTasks() {
             DipoleAngleSingleDistanceNormal,
             DipoleAngleVolumeNormal,
             ShellDensity,
-            SearchInteractionResidue
+            SearchInteractionResidue,
+            FindMinBetweenTwoGroups
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
