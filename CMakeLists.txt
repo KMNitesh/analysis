@@ -136,7 +136,7 @@ link_libraries(${TBBMALLOC_LIBS})
 # Boost
 set(BOOST_INCLUDEDIR ${INCLUES_PATH})
 set(BOOST_LIBRARYDIR ${LIBRARY_DIRS})
-find_package(Boost 1.67 REQUIRED COMPONENTS regex program_options)
+find_package(Boost 1.67 REQUIRED COMPONENTS regex program_options filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 

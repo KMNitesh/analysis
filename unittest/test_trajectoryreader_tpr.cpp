@@ -18,16 +18,10 @@ BOOST_AUTO_TEST_SUITE(test_trajectoryreader_tpr)
 
 BOOST_AUTO_TEST_CASE(test_md_10ns_tpr) {
 
-    class TestTrajectoryReader : public TrajectoryReader {
-
-    public:
-        std::shared_ptr<Frame> TestreadOneFrameTpr(){
-            return readOneFrameTpr();
-        }
-    } reader;
+    TrajectoryReader reader;
     reader.add_topology("md-10ns.tpr");
 
-    auto frame = reader.TestreadOneFrameTpr();
+    auto frame = reader.readTopology();
 
     BOOST_CHECK(frame->atom_list.size() == 7590);
     BOOST_CHECK(frame->molecule_list.size() == 2030 );

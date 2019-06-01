@@ -41,12 +41,12 @@ class TrajectoryReader {
     bool isxtc = false;
 
     bool enable_binaray_file = false;
+
     std::string topology_filename;
 
     enum class TOPOLOGY_TYPE {
         ARC, MOL2, TPR
     } topology_type;
-
 
     struct AmberNetcdf NC;
     std::shared_ptr<Frame> frame;
@@ -67,7 +67,6 @@ class TrajectoryReader {
     void close();
 
     void readOneFrameVel();
-
 
 
     int readOneFrameNetCDF();
@@ -91,14 +90,19 @@ protected:
     std::shared_ptr<Frame> readOneFrameArc();
 
 public:
+
+
+
     void add_filename(const std::string &filename);
 
     void add_topology(const std::string &filename);
 
+    std::string getTopologyFilename() { return topology_filename; }
 
 
     std::shared_ptr<Frame> readOneFrame();
 
+    std::shared_ptr<Frame> readTopology();
 };
 
 

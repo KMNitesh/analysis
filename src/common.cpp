@@ -11,6 +11,7 @@
 #include "common.hpp"
 #include "frame.hpp"
 #include "forcefield.hpp"
+#include <boost/filesystem.hpp>
 
 
 bool enable_read_velocity = false;
@@ -21,8 +22,7 @@ Forcefield forcefield;
 bool enable_forcefield = false;
 
 bool file_exist(const std::string &name) {
-    std::fstream in(name, std::ofstream::in);
-    return in.good();
+    return boost::filesystem::exists(name);
 }
 
 

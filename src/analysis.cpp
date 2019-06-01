@@ -37,7 +37,7 @@ namespace po = boost::program_options;
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 
-
+#include <boost/filesystem.hpp>
 
 // Boost metaprogramming library
 #include <boost/mpl/vector.hpp>
@@ -3233,11 +3233,11 @@ void DiffuseCutoff::print() {
 
     const double dunits = 10.0;
 
-    for (size_t i = 0; i < msd.size(); i++) {
-        double counts = msd[i].first;
-        get<0>(msd[i].second) /= counts;
-        get<1>(msd[i].second) /= counts;
-        get<2>(msd[i].second) /= counts;
+    for (auto & i : msd) {
+        double counts = i.first;
+        get<0>(i.second) /= counts;
+        get<1>(i.second) /= counts;
+        get<2>(i.second) /= counts;
     }
 
     outfile << "*********************************************************" << endl;
@@ -4162,7 +4162,7 @@ void FindMinBetweenTwoGroups::print() {
     std::size_t length = mol_list.size();
     for (std::size_t i = 0; i < length - 1; i++) {
         for (std::size_t j = i + 1; j < length; j++) {
-            outfile << boost::format("  %4d-%4d  ") % i % j;
+            outfile << boost::format("  %4d-%-4d  ") % i % j;
         }
     }
 
@@ -4186,6 +4186,42 @@ void FindMinBetweenTwoGroups::print() {
 void FindMinBetweenTwoGroups::readInfo() {
     Atom::select1group(ids, "Input Residue Name Mask: ");
 }
+
+
+class PrintTopolgy : public BasicAnalysis {
+public:
+    PrintTopolgy() {}
+
+    void process(std::shared_ptr<Frame> &) override {};
+
+    void print() override {};
+
+    void readInfo() override;
+
+    static const string title() { return "Print Selected Atoms in Topolgoy File"; }
+};
+
+void PrintTopolgy::readInfo() {
+    string topol = choose_file("input topology file : ", true);
+    TrajectoryReader reader;
+    reader.add_topology(topol);
+    auto frame = reader.readTopology();
+    for (;;) {
+        Atom::AtomIndenter ids;
+        Atom::select1group(ids);
+        std::cout << boost::format("%5s:%-5s   %5s:%-5s  %6s\n") % "NO" % "NAME" % "RESID" % "RES" % "CHARGE";
+        for (auto &atom : frame->atom_list) {
+            if (Atom::is_match(atom, ids)) {
+                std::cout << boost::format("%5d:%-5s   %5s:%-5s  %6.3f\n")
+                             % atom->seq % atom->atom_name
+                             % (atom->residue_num ? boost::lexical_cast<std::string>(atom->residue_num.get()) : "-")
+                             % (atom->residue_name ? atom->residue_name.get() : "-")
+                             % atom->charge;
+            }
+        }
+    }
+}
+
 
 void processOneFrame(shared_ptr<Frame> &frame,
                      shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
@@ -4234,7 +4270,8 @@ auto getTasks() {
             DipoleAngleVolumeNormal,
             ShellDensity,
             SearchInteractionResidue,
-            FindMinBetweenTwoGroups
+            FindMinBetweenTwoGroups,
+            PrintTopolgy
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
@@ -4271,11 +4308,8 @@ auto getTasks() {
 int main(int argc, char *argv[]) {
 
     std::cout << "Build DateTime : " << __DATE__ << " " << __TIME__ << endl;
-    {
-        char buffer[1024];
-        getcwd(buffer, 1024);
-        std::cout << "current work dir : " << buffer << std::endl;
-    }
+
+    std::cout << "current work dir : " << boost::filesystem::current_path() << std::endl;
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -4293,29 +4327,29 @@ int main(int argc, char *argv[]) {
     po::notify(vm);
     if (vm.count("help")) {
         cout << desc;
-        return 0;
+        return EXIT_SUCCESS;
     }
+
+    std::string xyzfile;
+    if (vm.count("file")) {
+        xyzfile = vm["file"].as<string>();
+        if (!boost::filesystem::exists(xyzfile)) {
+            cerr << "The file " << xyzfile << " is bad !" << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    auto task_list = getTasks();
+
     if (!vm.count("file")) {
         cerr << "input trajectory file is not set !" << endl;
         cerr << desc;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-
-
-    std::string xyzfile = vm["file"].as<string>();
-
-    {
-        fstream in(xyzfile, ofstream::in);
-        if (!in.good()) {
-            cerr << "The file " << xyzfile << " is bad !" << endl;
-            exit(2);
-        }
-    }
-    auto task_list = getTasks();
     while (enable_forcefield) {
         if (vm.count("prm")) {
             auto ff = vm["prm"].as<string>();
-            if (file_exist(ff)) {
+            if (boost::filesystem::exists(ff)) {
                 forcefield.read(ff);
                 break;
             }
@@ -4401,7 +4435,7 @@ int main(int argc, char *argv[]) {
     if (outfile.is_open()) outfile.close();
     std::cout << "Mission Complete" << std::endl;
 
-    return 0;
+    return EXIT_SUCCESS;
 
 }
 

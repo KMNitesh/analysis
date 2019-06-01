@@ -605,21 +605,7 @@ void TrajectoryReader::add_topology(const std::string &filename) {
 
 std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
     if (first_time) {
-        if (enable_binaray_file) {
-            position_file.open(topology_filename, std::ios::in);
-            switch (topology_type) {
-                case TOPOLOGY_TYPE::ARC:
-                    frame = readOneFrameArc();
-                    break;
-                case TOPOLOGY_TYPE::MOL2:
-                    frame = readOneFrameMol2();
-                    break;
-                case TOPOLOGY_TYPE::TPR:
-                    frame = readOneFrameTpr();
-                    break;
-            }
-            position_file.close();
-        }
+        readTopology();
         std::string filename = arc_filename_list.front();
         open(filename);
         arc_filename_list.pop_front();
@@ -663,5 +649,24 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
 
     first_time = false;
 
+    return frame;
+}
+
+std::shared_ptr<Frame> TrajectoryReader::readTopology() {
+    if (enable_binaray_file) {
+        position_file.open(topology_filename, std::ios::in);
+        switch (topology_type) {
+            case TOPOLOGY_TYPE::ARC:
+                frame = readOneFrameArc();
+                break;
+            case TOPOLOGY_TYPE::MOL2:
+                frame = readOneFrameMol2();
+                break;
+            case TOPOLOGY_TYPE::TPR:
+                frame = readOneFrameTpr();
+                break;
+        }
+        position_file.close();
+    }
     return frame;
 }
