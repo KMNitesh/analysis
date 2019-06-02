@@ -18,6 +18,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 
+#include "common.hpp"
 #include "atom.hpp"
 
 namespace qi = boost::spirit::qi;
@@ -42,24 +43,6 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
 
 };
 
-template<typename T>
-struct make_shared_f {
-    template<typename... A>
-    struct result {
-        typedef std::shared_ptr<T> type;
-    };
-
-    template<typename... A>
-    typename result<A...>::type operator()(A &&... a) const {
-        return std::make_shared<T>(std::forward<A>(a)...);
-    }
-};
-
-
-template<typename T, typename... _Args>
-inline auto make_shared_(_Args &&... __args) {
-    return boost::phoenix::function<make_shared_f<T>>()(std::forward<_Args>(__args)...);
-}
 
 BOOST_PHOENIX_ADAPT_FUNCTION(std::string, replace_all_copy, boost::replace_all_copy, 3)
 

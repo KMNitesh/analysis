@@ -20,7 +20,7 @@ endif()
 
 add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp 
                    trajectoryreader.cpp forcefield.cpp gro_writer.cpp
-                   xtc_writer.cpp trr_writer.cpp netcdf_writer.cpp)
+                   xtc_writer.cpp trr_writer.cpp netcdf_writer.cpp center_selection_grammar.hpp)
 
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)

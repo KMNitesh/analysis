@@ -12,6 +12,7 @@
 #include <list>
 #include <memory>
 #include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/variant.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
@@ -35,6 +36,8 @@ public:
     std::string type_name;
 
     double charge;
+
+    boost::optional<double> mass;
 
     std::list<size_t> con_list; // atom num that connect to
 

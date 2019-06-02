@@ -12,6 +12,7 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/phoenix.hpp>
 
 class Atom;
 class Frame;
@@ -82,4 +83,25 @@ atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &a
 
 double
 atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame);
+
+template<typename T>
+struct make_shared_f {
+    template<typename... A>
+    struct result {
+        typedef std::shared_ptr<T> type;
+    };
+
+    template<typename... A>
+    typename result<A...>::type operator()(A &&... a) const {
+        return std::make_shared<T>(std::forward<A>(a)...);
+    }
+};
+
+
+template<typename T, typename... _Args>
+inline auto make_shared_(_Args &&... __args) {
+    return boost::phoenix::function<make_shared_f<T>>()(std::forward<_Args>(__args)...);
+}
+
+
 #endif //TINKER_COMMON_HPP

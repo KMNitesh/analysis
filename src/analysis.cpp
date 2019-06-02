@@ -80,6 +80,7 @@ namespace mpl = boost::mpl;
 #include "trr_writer.hpp"
 #include "xtc_writer.hpp"
 #include "netcdf_writer.hpp"
+#include "center_selection_grammar.hpp"
 
 
 using namespace std;
@@ -3233,7 +3234,7 @@ void DiffuseCutoff::print() {
 
     const double dunits = 10.0;
 
-    for (auto & i : msd) {
+    for (auto &i : msd) {
         double counts = i.first;
         get<0>(i.second) /= counts;
         get<1>(i.second) /= counts;
@@ -4188,37 +4189,108 @@ void FindMinBetweenTwoGroups::readInfo() {
 }
 
 
-class PrintTopolgy : public BasicAnalysis {
+class PrintTopolgy {
 public:
     PrintTopolgy() {}
 
-    void process(std::shared_ptr<Frame> &) override {};
-
-    void print() override {};
-
-    void readInfo() override;
+    void action(const std::string &topology_filename);
 
     static const string title() { return "Print Selected Atoms in Topolgoy File"; }
 };
 
-void PrintTopolgy::readInfo() {
-    string topol = choose_file("input topology file : ", true);
+void PrintTopolgy::action(const std::string &topology_filename) {
     TrajectoryReader reader;
-    reader.add_topology(topol);
+    reader.add_topology(topology_filename);
     auto frame = reader.readTopology();
+
+    int sequence = 1;
+    for (auto &mol : frame->molecule_list) {
+        mol->sequence = sequence++;
+    }
+
+    enum class Mode {
+        Mass,
+        Geom,
+        Noop,
+    } mode;
+
     for (;;) {
-        Atom::AtomIndenter ids;
-        Atom::select1group(ids);
-        std::cout << boost::format("%5s:%-5s   %5s:%-5s  %6s\n") % "NO" % "NAME" % "RESID" % "RES" % "CHARGE";
+        beg:
+        CenterRuleNode r;
+        selectCentergroup(r, "> ");
+        Atom::AtomIndenter id;
+
+        if (auto ret = boost::get<std::shared_ptr<MassCenterRuleNode>>(&r)) {
+            id.ast = (*ret)->SelectionMask;
+            mode = Mode::Mass;
+        } else if (auto ret = boost::get<std::shared_ptr<GeomCenterRuleNode>>(&r)) {
+            id.ast = (*ret)->SelectionMask;
+            mode = Mode::Geom;
+        } else if (auto ret = boost::get<std::shared_ptr<NoopRuleNode>>(&r)) {
+            id.ast = (*ret)->SelectionMask;
+            mode = Mode::Noop;
+        }
+
+        std::cout << boost::format("%-6s %-7s %4s %-7s %4s %-6s  %6s %8s  %8s%8s%8s\n")
+                     % "#Atom" % "Name" % "#Res" % "Name" % "#Mol" % "Type" % "Charge" % "Mass"
+                     % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
+        double weight = 0;
+        double sum_x = 0.0;
+        double sum_y = 0.0;
+        double sum_z = 0.0;
         for (auto &atom : frame->atom_list) {
-            if (Atom::is_match(atom, ids)) {
-                std::cout << boost::format("%5d:%-5s   %5s:%-5s  %6.3f\n")
+            if (Atom::is_match(atom, id)) {
+                std::cout << boost::format("%6d %-7s %4s %-7s %4s %-6s % 6.4f %8s %8.3f%8.3f%8.3f\n")
                              % atom->seq % atom->atom_name
                              % (atom->residue_num ? boost::lexical_cast<std::string>(atom->residue_num.get()) : "-")
                              % (atom->residue_name ? atom->residue_name.get() : "-")
-                             % atom->charge;
+                             % atom->molecule.lock()->sequence.get()
+                             % atom->type_name
+                             % atom->charge
+                             % (atom->mass ? (boost::format("%8.4f") % atom->mass.get()).str() : "-")
+                             % atom->x
+                             % atom->y
+                             % atom->z;
+                switch (mode) {
+                    case Mode::Mass:
+                        if (!atom->mass) {
+                            std::cerr << "atom mass not available !\n";
+                            goto beg;
+                        }
+                        sum_x += atom->x * atom->mass.get();
+                        sum_y += atom->y * atom->mass.get();
+                        sum_z += atom->z * atom->mass.get();
+                        weight += atom->mass.get();
+                        break;
+                    case Mode::Geom:
+                        sum_x += atom->x;
+                        sum_y += atom->y;
+                        sum_z += atom->z;
+                        weight++;
+                        break;
+                }
+            }
+        }  if (weight != 0.0) {
+            switch (mode) {
+                case Mode::Mass:
+
+                    std::cout << boost::format("Mass Center %8s%8s%8s\n") % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
+                    std::cout << boost::format("            %8.3f%8.3f%8.3f\n")
+                                 % (sum_x / weight)
+                                 % (sum_y / weight)
+                                 % (sum_z / weight);
+
+                    break;
+                case Mode::Geom:
+                    std::cout << boost::format("Geom Center %8s%8s%8s\n") % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
+                    std::cout << boost::format("            %8.3f%8.3f%8.3f\n")
+                                 % (sum_x / weight)
+                                 % (sum_y / weight)
+                                 % (sum_z / weight);
+                    break;
             }
         }
+
     }
 }
 
@@ -4270,8 +4342,7 @@ auto getTasks() {
             DipoleAngleVolumeNormal,
             ShellDensity,
             SearchInteractionResidue,
-            FindMinBetweenTwoGroups,
-            PrintTopolgy
+            FindMinBetweenTwoGroups
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
@@ -4285,7 +4356,7 @@ auto getTasks() {
     >(task_vec, item_menu));
 
     auto menu1 = [&item_menu]() {
-        std::cout << "Please select the desired operation" << std::endl;
+        std::cout << "Please select the desired operation (Trajectory Analysis)" << std::endl;
         std::cout << "(0) Start\n";
         for_each(item_menu.cbegin(), item_menu.cend(), std::cout << phoenix::placeholders::_1 << '\n');
         return choose<int>(0, mpl::size<components>::value, "select :");
@@ -4322,9 +4393,14 @@ int main(int argc, char *argv[]) {
     p.add("file", 1).add("output", 1);
     po::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-
-    po::notify(vm);
+    try {
+        po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+        po::notify(vm);
+    } catch (std::exception &e) {
+        std::cerr << e.what() << '\n';
+        std::cout << desc;
+        return EXIT_FAILURE;
+    }
     if (vm.count("help")) {
         cout << desc;
         return EXIT_SUCCESS;
@@ -4337,6 +4413,28 @@ int main(int argc, char *argv[]) {
             cerr << "The file " << xyzfile << " is bad !" << endl;
             exit(EXIT_FAILURE);
         }
+    }
+
+
+    auto mainMenu = []() {
+        std::cout << "Main Menu\n";
+        std::cout << "(0) Trajectory Analysis\n";
+        std::cout << "(1) Print Topology\n";
+        return choose<int>(0, 1, "select :");
+    };
+
+    if (mainMenu() == 1) {
+        PrintTopolgy printer;
+        if (vm.count("topology")) {
+            string topol = vm["topology"].as<string>();
+            if (file_exist(topol)) {
+                printer.action(topol);
+                return EXIT_SUCCESS;
+            }
+            cout << "topology file " << topol << " is bad ! please retype !" << endl;
+        }
+        printer.action(choose_file("input topology file : ", true));
+        return EXIT_SUCCESS;
     }
 
     auto task_list = getTasks();

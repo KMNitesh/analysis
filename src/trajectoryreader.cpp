@@ -272,12 +272,22 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameTpr() {
 
     auto &atoms = top.atoms;
 
+    if (!tpx.bX) {
+        std::cerr << "Tpr Topolgy do not have coordinates\n";
+        exit(EXIT_FAILURE);
+    }
+
     for (int i = 0; i < atoms.nr; i++) {
         auto atom = std::make_shared<Atom>();
         atom->seq = i + 1;
         atom->atom_name = (*(atoms.atomname[i]));
         atom->type_name = (*(atoms.atomtype[i]));
         atom->charge = atoms.atom[i].q;
+        atom->mass = atoms.atom[i].m;
+
+        atom->x = 10 * state.x[i][XX];
+        atom->y = 10 * state.x[i][YY];
+        atom->z = 10 * state.x[i][ZZ];
 
         atom->residue_name = *atoms.resinfo[atoms.atom[i].resind].name;
         atom->residue_num = atoms.resinfo[atoms.atom[i].resind].nr;

@@ -9,6 +9,7 @@
 #include <list>
 #include <memory>
 #include <tuple>
+#include <boost/optional.hpp>
 
 class Frame;
 class Atom;
@@ -17,6 +18,8 @@ class Molecule {
 public:
     double mass;  // molecular mass
     std::list<std::shared_ptr<Atom>> atom_list;
+
+    boost::optional<int> sequence;
 
     double center_x, center_y, center_z;
 
@@ -37,6 +40,8 @@ public:
     int seq();
 
     std::shared_ptr<Atom> ow;
+
+
 };
 
 
