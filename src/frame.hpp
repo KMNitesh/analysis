@@ -10,6 +10,7 @@
 #include <list>
 #include <unordered_map>
 #include <memory>
+#include <cassert>
 
 class Atom;
 class Molecule;
@@ -38,6 +39,11 @@ public:
     bool enable_bound = false;
 
     void image(double &xr, double &yr, double &zr);
+
+    double volume() const {
+        assert(enable_bound);
+        return a_axis * b_axis * c_axis;
+    }
 };
 
 #endif //TINKER_FRAME_HPP

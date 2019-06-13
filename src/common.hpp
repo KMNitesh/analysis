@@ -14,6 +14,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/phoenix.hpp>
 
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
+
 class Atom;
 class Frame;
 class Forcefield;
@@ -50,7 +54,7 @@ struct type_name_string<double> {
 };
 
 
-template<typename T, typename = std::enable_if_t<std::is_same<T, int>::value or std::is_same<T, double>::value>>
+template<typename T, typename = std::enable_if_t<std::is_same_v<T, int> or std::is_same_v<T, double>>>
 T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T value = T()) {
     while (true) {
         std::string input_line = input(prompt);
@@ -60,7 +64,7 @@ T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T val
             return value;
         }
         try {
-            int option = boost::lexical_cast<T>(input_line);
+            auto option = boost::lexical_cast<T>(input_line);
             if (option >= min and option <= max) return option;
 
             std::cerr << "must be a " << type_name_string<T>::value << " range " << min << " and " << max
@@ -103,5 +107,7 @@ inline auto make_shared_(_Args &&... __args) {
     return boost::phoenix::function<make_shared_f<T>>()(std::forward<_Args>(__args)...);
 }
 
+
+po::options_description make_program_options();
 
 #endif //TINKER_COMMON_HPP

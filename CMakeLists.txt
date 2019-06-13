@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(Tinker)
 enable_language(Fortran C CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
@@ -30,6 +30,9 @@ endif()
 
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# Set global property (all targets are impacted)
+set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 
 if (NOT GROMACS_SRC_ROOT)
     set(GROMACS_SRC_ROOT "/public/home/xiamr/prog/gromacs-5.1.4")

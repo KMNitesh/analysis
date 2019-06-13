@@ -3,6 +3,7 @@
 //
 
 #include "config.h"
+#include <tuple>
 #include <fstream>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -94,4 +95,16 @@ atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &
     auto zr = atom1->z - atom2->z;
     frame->image(xr, yr, zr);
     return xr * xr + yr * yr + zr * zr;
+}
+
+po::options_description make_program_options(){
+    po::options_description desc("Allowed options");
+    desc.add_options()
+            ("help,h", "show this help message")
+            ("topology,p", po::value<std::string>(), "topology file")
+            ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing(), "trajectory file")
+            ("output,o", po::value<std::string>(), "output file")
+            ("prm", po::value<std::string>(), "force field file");
+
+    return desc;
 }
