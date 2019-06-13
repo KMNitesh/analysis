@@ -111,7 +111,7 @@ public:
 };
 
 
-class GmxTrj : public BasicAnalysis {
+class Trajconv : public BasicAnalysis {
     enum class PBCType {
         None,
         OneAtom,
@@ -143,10 +143,41 @@ public:
         return "Gromacs XTC & TRR & GRO & NetCDF Output";
     }
 
+    void fastConvertTo(std::string target) {
+        boost::trim(target);
+        if (target.empty()) {
+            std::cerr << "ERROR !! empty target trajectory file \n";
+            exit(EXIT_FAILURE);
+        }
+        pbc_type = PBCType::None;
+        auto ext = ext_filename(target);
+        if (ext == "xtc") {
+            enable_xtc = true;
+            enable_trr = false;
+            enable_gro = false;
+            enable_mdcrd = false;
+            xtcfilename = target;
+        } else if (ext == "trr") {
+            enable_xtc = false;
+            enable_trr = true;
+            enable_gro = false;
+            enable_mdcrd = false;
+            trrfilename = target;
+        } else if (ext == "nc") {
+            enable_xtc = false;
+            enable_trr = false;
+            enable_gro = false;
+            enable_mdcrd = true;
+            mdcrdfilename = target;
+        } else {
+            std::cerr << "ERROR !!  wrong type of target trajectory file (" << target << ")\n";
+            exit(EXIT_FAILURE);
+        }
+    }
 
 };
 
-void GmxTrj::process(std::shared_ptr<Frame> &frame) {
+void Trajconv::process(std::shared_ptr<Frame> &frame) {
     if (pbc_type == PBCType::OneAtom) {
         auto center_x = frame->atom_map[this->num]->x;
         auto center_y = frame->atom_map[this->num]->y;
@@ -212,8 +243,10 @@ void GmxTrj::process(std::shared_ptr<Frame> &frame) {
     }
 
     if (step == 0) {
-        GROWriter w;
-        w.write(grofilename, frame);
+        if (enable_gro) {
+            GROWriter w;
+            w.write(grofilename, frame);
+        }
         if (enable_xtc) xtc.open(xtcfilename);
         if (enable_trr) trr.open(trrfilename);
         if (enable_mdcrd) mdcrd.open(mdcrdfilename, frame->atom_list.size());
@@ -224,127 +257,65 @@ void GmxTrj::process(std::shared_ptr<Frame> &frame) {
     step++;
 }
 
-void GmxTrj::print() {
+void Trajconv::print() {
     if (enable_xtc) xtc.close();
     if (enable_trr) trr.close();
     if (enable_mdcrd) mdcrd.close();
 }
 
-void GmxTrj::readInfo() {
-    string line = input("output gro file [Y]: ");
-    boost::trim(line);
-    if (!line.empty()) {
-        if (line[0] == 'N' or line[0] == 'n') {
+void Trajconv::readInfo() {
+    for (;;) {
+        grofilename = choose_file("output gro file : ", false, "gro", true);
+        if (grofilename.empty()) {
             enable_gro = false;
         }
-    }
-    if (enable_gro) {
-        grofilename = input("GRO filename : ");
-        boost::trim(grofilename);
-    }
-    line = input("output xtc file [Y]: ");
-    boost::trim(line);
-    if (!line.empty()) {
-        if (line[0] == 'N' or line[0] == 'n') {
+
+        xtcfilename = choose_file("output xtc file : ", false, "xtc", true);
+        if (xtcfilename.empty()) {
             enable_xtc = false;
         }
-    }
-    if (enable_xtc) {
-        xtcfilename = input("XTC filename : ");
-        boost::trim(xtcfilename);
-    }
 
-    line = input("output trr file [Y]: ");
-    boost::trim(line);
-    if (!line.empty()) {
-        if (line[0] == 'N' or line[0] == 'n') {
+        trrfilename = choose_file("output trr file : ", false, "trr", true);
+        if (trrfilename.empty()) {
             enable_trr = false;
         }
-    }
-    if (enable_trr) {
-        trrfilename = input("TRR filename : ");
-        boost::trim(trrfilename);
-    }
 
-    line = input("output amber nc file [Y]: ");
-    boost::trim(line);
-    if (!line.empty()) {
-        if (line[0] == 'N' or line[0] == 'n') {
+        mdcrdfilename = choose_file("output amber nc file : ", false, "nc", true);
+        if (mdcrdfilename.empty()) {
             enable_mdcrd = false;
         }
-    }
-    if (enable_mdcrd) {
-        mdcrdfilename = input("nc filename : ");
-        boost::trim(mdcrdfilename);
+
+        if (enable_gro || enable_xtc || enable_trr || enable_mdcrd) {
+            break;
+        }
+        std::cerr << "ERROR !! none of output selected !\n";
     }
     cout << "PBC transform option" << endl;
     cout << "(0) Do nothing" << endl;
     cout << "(1) Make atom i as center" << endl;
     cout << "(2) Make molecule i as center" << endl;
 
-    int option = 0;
     while (true) {
-        line = input("Choose:");
-        boost::trim(line);
-
-        if (!line.empty()) {
-
-            try {
-                option = std::stoi(line);
-                string line2;
-                switch (option) {
-                    case 0:
-                        pbc_type = PBCType::None;
-                        break;
-                    case 1:
-                        pbc_type = PBCType::OneAtom;
-                        while (true) {
-                            line2 = input("Plese enter the atom NO. : ");
-                            try {
-                                num = std::stoi(line2);
-                            } catch (std::invalid_argument &e) {
-                                cerr << "must be a number !" << e.what() << endl;
-                                continue;
-                            }
-
-
-                            if (num <= 0) {
-                                cerr << "the atom number must be positive" << endl;
-                                continue;
-                            }
-                            break;
-                        }
-                        break;
-                    case 2:
-                        pbc_type = PBCType::OneMol;
-                        while (true) {
-                            line2 = input("Plese enter one atom NO. that the molecule include:");
-                            try {
-                                num = std::stoi(line2);
-                            } catch (std::invalid_argument &e) {
-                                cerr << "must be a number !" << e.what() << endl;
-                                continue;
-                            }
-                            if (num <= 0) {
-                                cerr << "the atom number must be positive" << endl;
-                                continue;
-                            }
-                            break;
-                        }
-                        break;
-                    default:
-                        cerr << "option not found !" << endl;
-                        continue;
-                }
+        int option = choose(0, 2, "Choose : ");
+        switch (option) {
+            case 0:
+                pbc_type = PBCType::None;
                 break;
-
-            } catch (std::invalid_argument &e) {
-                cerr << "must be a number !" << e.what() << endl;
-            }
+            case 1:
+                pbc_type = PBCType::OneAtom;
+                num = choose(1, std::numeric_limits<int>::max(), "Plese enter the atom NO. : ");
+                break;
+            case 2:
+                pbc_type = PBCType::OneMol;
+                num = choose(1, std::numeric_limits<int>::max(),
+                             "Plese enter one atom NO. that the molecule include: ");
+                break;
+            default:
+                cerr << "option not found !" << endl;
+                continue;
         }
+        break;
     }
-
-
 }
 
 
@@ -4333,13 +4304,13 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         double sum_z = 0.0;
         for (auto &atom : frame->atom_list) {
             if (Atom::is_match(atom, id)) {
-                std::cout << boost::format("%6d %-7s %4s %-7s %4s %-6s % 6.4f %8s %8.3f%8.3f%8.3f\n")
+                std::cout << boost::format("%6d %-7s %4s %-7s %4s %-6s % 8f %8s %8.3f%8.3f%8.3f\n")
                              % atom->seq % atom->atom_name
                              % (atom->residue_num ? boost::lexical_cast<std::string>(atom->residue_num.get()) : "-")
                              % (atom->residue_name ? atom->residue_name.get() : "-")
                              % atom->molecule.lock()->sequence.get()
                              % atom->type_name
-                             % atom->charge
+                             % (atom->charge ? (boost::format("%8.4f") % atom->charge.get()).str() : "-")
                              % (atom->mass ? (boost::format("%8.4f") % atom->mass.get()).str() : "-")
                              % atom->x
                              % atom->y
@@ -4361,6 +4332,8 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                         sum_z += atom->z;
                         weight++;
                         break;
+                    case Mode::Noop:
+                        break;
                 }
             }
         }
@@ -4381,6 +4354,8 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                                  % (sum_x / weight)
                                  % (sum_y / weight)
                                  % (sum_z / weight);
+                    break;
+                case Mode::Noop:
                     break;
             }
         }
@@ -4422,7 +4397,7 @@ auto getTasks() {
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
 
     using components = mpl::vector<
-            GmxTrj,
+            Trajconv,
             Distance,
             CoordinateNumPerFrame,
             RadicalDistribtuionFunction,
@@ -4511,6 +4486,64 @@ int main(int argc, char *argv[]) {
     }
 
 
+    if (vm.count("target")) {
+        if (!vm.count("file")) {
+            std::cerr << "ERROR !! trajctory file not set !\n";
+            exit(EXIT_FAILURE);
+        }
+
+        auto reader = make_shared<TrajectoryReader>();
+        auto ext = ext_filename(xyzfiles[0]);
+        if (ext == "nc" or ext == "xtc" or ext == "trr") {
+            if (!vm.count("topology")) {
+                std::cerr << "ERROR !! topology file not set !\n";
+                exit(EXIT_FAILURE);
+            }
+            string topol = vm["topology"].as<string>();
+            if (!boost::filesystem::exists(topol)) {
+                std::cerr << "ERROR !! topology file not exist !\n";
+                exit(EXIT_FAILURE);
+            }
+            reader->add_topology(topol);
+        } else {
+            if (vm.count("topology")) {
+                std::cerr << "WRANING !!  do not use topolgy file !\bn";
+            }
+        }
+
+        for (auto &traj : xyzfiles) {
+            string ext = ext_filename(traj);
+            if (ext == "traj" && xyzfiles.size() != 1) {
+                std::cerr << "traj file can not use multiple files\n";
+                exit(EXIT_FAILURE);
+            }
+            reader->add_filename(traj);
+        }
+
+        shared_ptr<Frame> frame;
+        int current_frame_num = 0;
+        int Clear = 0;
+
+        Trajconv writer;
+        writer.fastConvertTo(vm["target"].as<std::string>());
+        while ((frame = reader->readOneFrame())) {
+            current_frame_num++;
+            if (current_frame_num % 10 == 0) {
+                if (Clear) {
+                    std::cout << "\r";
+                }
+                cout << "Processing Coordinate Frame  " << current_frame_num << "   " << std::flush;
+                Clear = 1;
+            }
+            writer.process(frame);
+        }
+        writer.print();
+        std::cout << "\nMission Complete" << std::endl;
+
+        exit(EXIT_SUCCESS);
+    }
+
+
     auto mainMenu = []() {
         std::cout << "Main Menu\n";
         std::cout << "(0) Trajectory Analysis\n";
@@ -4566,7 +4599,15 @@ int main(int argc, char *argv[]) {
     int current_frame_num = 0;
 
     auto reader = make_shared<TrajectoryReader>();
-    bool b_added_topology = false;
+    bool b_added_topology = true;
+    auto ext = ext_filename(xyzfiles[0]);
+    if (ext == "nc" or ext == "xtc" or ext == "trr") {
+        b_added_topology = false;
+    } else {
+        if (vm.count("topology")) {
+            std::cerr << "WRANING !!  do not use topolgy file !\bn";
+        }
+    }
     for (auto &xyzfile : xyzfiles) {
         reader->add_filename(xyzfile);
         string ext = ext_filename(xyzfile);

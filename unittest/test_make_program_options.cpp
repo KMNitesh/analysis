@@ -9,12 +9,31 @@
 
 using namespace testing;
 
+
+TEST(make_program_options,TargetTrajectory) {
+    const char *argv[] = {
+            "analysis",
+            "-x",
+            "x.xtc"
+    };
+
+    int argc = std::extent_v<decltype(argv)>;
+
+    auto desc = make_program_options();
+    po::variables_map vm;
+
+    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+
+    ASSERT_THAT(vm.count("target"), Eq(1));
+}
+
 TEST(make_program_options, InvaildOption) {
     const char *argv[] = {
             "analysis",
             "-a"
     };
-        int argc = std::extent_v<decltype(argv)>;
+
+    int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
     po::variables_map vm;

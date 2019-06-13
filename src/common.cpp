@@ -55,8 +55,12 @@ std::string input(const std::string &prompt) {
 
 std::string ext_filename(const std::string &filename) {
     auto field = split(filename, ".");
+    assert(field.size() > 1);
 
-    return boost::to_lower_copy(field[field.size() - 1]);
+    auto ext = boost::to_lower_copy(field[field.size() - 1]);
+
+    assert(!ext.empty());
+    return ext;
 }
 
 std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty) {
@@ -104,7 +108,8 @@ po::options_description make_program_options(){
             ("topology,p", po::value<std::string>(), "topology file")
             ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing(), "trajectory file")
             ("output,o", po::value<std::string>(), "output file")
-            ("prm", po::value<std::string>(), "force field file");
+            ("prm", po::value<std::string>(), "force field file")
+            ("target,x", po::value<std::string>(), "target trajectory file");
 
     return desc;
 }

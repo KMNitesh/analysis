@@ -474,7 +474,9 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameArc() {
     if (frame->enable_bound) {
         std::getline(position_file, line);
         field = split(line);
-        if (field.empty()) throw std::exception();
+        if (field.empty()){
+            throw std::exception();
+        }
         frame->a_axis = std::stod(field[0]);
         frame->b_axis = std::stod(field[1]);
         frame->c_axis = std::stod(field[2]);
@@ -543,13 +545,14 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameArc() {
         frame->b_axis_half = frame->b_axis / 2;
         frame->c_axis_half = frame->c_axis / 2;
     }
-
+    first_time = false;
     return frame;
 }
 
 void TrajectoryReader::open(const std::string &filename) {
     auto field = split(filename, ".");
     auto ext = ext_filename(filename);
+
     if (enable_binaray_file) {
         if (ext == "nc") {
             if (netcdfLoad(&NC, filename.c_str())) {

@@ -35,7 +35,7 @@ public:
     int typ; // atom type
     std::string type_name;
 
-    double charge;
+    boost::optional<double> charge;
 
     boost::optional<double> mass;
 

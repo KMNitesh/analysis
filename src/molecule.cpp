@@ -71,10 +71,12 @@ std::tuple<double, double, double> Molecule::calc_dipole(std::shared_ptr<Frame> 
         double zr = atom->z - std::get<2>(mass_center);
 
         frame->image(xr, yr, zr);
+        
+        assert(atom->charge);
 
-        dipole_x += atom->charge * (xr + std::get<0>(mass_center));
-        dipole_y += atom->charge * (yr + std::get<1>(mass_center));
-        dipole_z += atom->charge * (zr + std::get<2>(mass_center));
+        dipole_x += atom->charge.get() * (xr + std::get<0>(mass_center));
+        dipole_y += atom->charge.get() * (yr + std::get<1>(mass_center));
+        dipole_z += atom->charge.get() * (zr + std::get<2>(mass_center));
     }
     return std::make_tuple(dipole_x, dipole_y, dipole_z);
 }

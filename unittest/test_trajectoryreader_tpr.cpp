@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(test_md_10ns_tpr) {
     BOOST_CHECK(frame->molecule_list.size() == 2030 );
 
     auto atom1 = frame->atom_list.front();
-    BOOST_TEST(atom1->charge == -8.10476e-01, boost::test_tools::tolerance(0.01));
+    BOOST_TEST(atom1->charge.get() == -8.10476e-01, boost::test_tools::tolerance(0.01));
 
     BOOST_TEST(atom1->atom_name == "O1");
     BOOST_TEST(atom1->type_name == "o");

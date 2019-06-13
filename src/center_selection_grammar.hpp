@@ -5,6 +5,8 @@
 #ifndef TINKER_CENTER_SELECTION_GRAMMAR_HPP
 #define TINKER_CENTER_SELECTION_GRAMMAR_HPP
 
+#include <tuple>
+
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/phoenix.hpp>
@@ -106,7 +108,7 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(exp
 
 
 template<typename Iterator, typename Skipper>
-CenterRuleNode input_atom_selection(const CenterGrammar<Iterator, Skipper> &grammar, const std::string &promot) {
+std::tuple<CenterRuleNode,std::string> input_atom_selection(const CenterGrammar<Iterator, Skipper> &grammar, const std::string &promot) {
 
     for (;;) {
         CenterRuleNode mask;
@@ -124,19 +126,21 @@ CenterRuleNode input_atom_selection(const CenterGrammar<Iterator, Skipper> &gram
 
             continue;
         }
-        return mask;
+        return std::make_tuple(mask,input_string);
     }
 }
 
 
-inline void selectCentergroup(CenterRuleNode &ids, const std::string &prompt) {
+inline std::string selectCentergroup(CenterRuleNode &ids, const std::string &prompt) {
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
     using ascii::char_;
 
     CenterGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    ids = input_atom_selection(grammar, prompt);
+    std::string input;
+    std::tie(ids, input) = input_atom_selection(grammar, prompt);
+    return input;
 }
 
 
