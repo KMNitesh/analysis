@@ -22,6 +22,8 @@ bool enable_outfile = false;
 Forcefield forcefield;
 bool enable_forcefield = false;
 
+std::fstream outfile;
+
 bool file_exist(const std::string &name) {
     return boost::filesystem::exists(name);
 }

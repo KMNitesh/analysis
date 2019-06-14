@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "gmxtrr.h"
+#include "../src/common.hpp"
 using namespace std;
 
 

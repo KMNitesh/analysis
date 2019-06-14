@@ -10,6 +10,7 @@
 #include <vector>
 #include <type_traits>
 #include <iostream>
+#include <fstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/phoenix.hpp>
@@ -26,7 +27,9 @@ class Frame;
 
 class Forcefield;
 
+constexpr int ATOM_MAX = 10000;
 
+constexpr double radian = 57.29577951308232088;
 
 // global variables
 
@@ -36,6 +39,7 @@ extern bool enable_outfile;
 
 extern Forcefield forcefield;
 extern bool enable_forcefield;
+extern std::fstream outfile;
 
 bool file_exist(const std::string &name);
 

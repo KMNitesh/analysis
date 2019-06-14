@@ -20,7 +20,14 @@ endif()
 
 add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp 
                    trajectoryreader.cpp forcefield.cpp gro_writer.cpp
-                   xtc_writer.cpp trr_writer.cpp netcdf_writer.cpp center_selection_grammar.hpp)
+        xtc_writer.cpp trr_writer.cpp netcdf_writer.cpp
+        Trajconv.cpp Distance.cpp CoordinateNumPerFrame.cpp FirstCoordExchangeSearch.cpp
+        RadicalDistribtuionFunction.cpp RMSDCal.cpp RMSFCal.cpp HBond.cpp taskMenu.cpp
+        ResidenceTime.cpp GreenKubo.cpp Cluster.cpp AminoTop.cpp NMRRange.cpp
+        RotAcfCutoff.cpp DiffuseCutoff.cpp Diffuse.cpp DipoleAngle.cpp
+        DipoleAngleSingleDistanceNormal.cpp DipoleAngleVolumeNormal.cpp
+        DipoleAngle2Gibbs.cpp ShellDensity.cpp SearchInteractionResidue.cpp
+        FindMinBetweenTwoGroups.cpp DemixIndexOfTwoGroup.cpp PrintTopolgy.cpp mainUtils.cpp mainUtils.hpp)
 
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)

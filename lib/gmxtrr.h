@@ -8,7 +8,7 @@
 namespace gmx{
 #include "gromacs/fileio/trnio.h"
 }
-const double radian = 57.29577951308232088;
+
 
 void translate( gmx::real xbox, gmx::real ybox, gmx::real zbox,
                 gmx::real alpha, gmx::real beta, gmx::real gamma, gmx::rvec *box);

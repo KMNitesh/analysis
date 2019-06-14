@@ -11,7 +11,7 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/phoenix.hpp>
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
+
 #include <boost/fusion/include/at_c.hpp>
 
 #include <boost/spirit/repository/include/qi_kwd.hpp>
@@ -24,31 +24,11 @@
 #include "common.hpp"
 #include "grammar.hpp"
 
+#include "center_selection_grammar_ast.hpp"
+
 namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
-
-struct MassCenterRuleNode {
-    Atom::Node SelectionMask;
-
-    MassCenterRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
-};
-
-struct GeomCenterRuleNode {
-    Atom::Node SelectionMask;
-
-    GeomCenterRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
-};
-
-struct NoopRuleNode {
-    Atom::Node SelectionMask;
-
-    NoopRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
-};
-
-using CenterRuleNode = boost::variant<std::shared_ptr<MassCenterRuleNode>,
-        std::shared_ptr<GeomCenterRuleNode>,
-        std::shared_ptr<NoopRuleNode>>;
 
 
 template<typename Iterator, typename Skipper>
