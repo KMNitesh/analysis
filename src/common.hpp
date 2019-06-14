@@ -18,8 +18,12 @@
 
 namespace po = boost::program_options;
 
+#include <boost/format.hpp>
+
 class Atom;
+
 class Frame;
+
 class Forcefield;
 
 
@@ -36,6 +40,7 @@ extern bool enable_forcefield;
 bool file_exist(const std::string &name);
 
 std::vector<std::string> split(const std::string &str, const std::string &sep);
+
 std::vector<std::string> split(const std::string &str);
 
 std::string input(const std::string &prompt = "");
@@ -68,7 +73,7 @@ T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T val
             if (option >= min and option <= max) return option;
 
             std::cerr << "must be a " << type_name_string<T>::value << " range " << min << " and " << max
-                 << "! please retype!\n";
+                      << "! please retype!\n";
         } catch (boost::bad_lexical_cast &e) {
             std::cerr << "must be a " << type_name_string<T>::value << " ! please retype!" << e.what() << std::endl;
         }
@@ -109,5 +114,114 @@ inline auto make_shared_(_Args &&... __args) {
 
 
 po::options_description make_program_options();
+
+
+class range_object {
+private:
+    int _end;
+    int _step;
+    int _curr;
+
+public:
+
+    range_object(int start, int end, int step = 1) : _end(end), _step(step), _curr(start) {};
+
+    const range_object &begin() const { return *this; }
+
+    const range_object &end() const { return *this; }
+
+    bool operator!=(const range_object &) const {
+        return _step > 0 ? _curr < _end : _curr > _end;
+    }
+
+    void operator++() {
+        _curr += _step;
+    }
+
+    int operator*() const {
+        return _curr;
+    }
+};
+
+
+inline range_object range(int start, int end, int step = 1) {
+    if (step == 0) {
+        throw std::runtime_error("zero increment step size!!");
+    }
+    if ((start > end && step > 0) || (start < end && step < 0)) {
+        throw std::runtime_error("wrong direction increment step size!!");
+    }
+    return range_object(start, end, step);
+}
+
+inline range_object range(int end) {
+    if (end < 0) {
+        throw std::runtime_error("wrong end value !!");
+    }
+    return range_object(0, end, 1);
+}
+
+
+template<typename Iterable>
+class enumerate_object {
+private:
+    Iterable _iter;
+    int _size;
+    int _step;
+    decltype(std::begin(_iter)) _begin;
+    const decltype(std::end(_iter)) _end;
+
+public:
+    enumerate_object(Iterable iter, int start = 0, int step = 1) :
+            _iter(iter),
+            _size(start),
+            _step(step),
+            _begin(std::begin(iter)),
+            _end(std::end(iter)) {}
+
+    const enumerate_object &begin() const { return *this; }
+
+    const enumerate_object &end() const { return *this; }
+
+    bool operator!=(const enumerate_object &) const {
+        return _begin != _end;
+    }
+
+    void operator++() {
+        ++_begin;
+        _size += _step;
+    }
+
+    auto operator*() const
+    -> std::pair<std::size_t, decltype(*_begin)> {
+        return {_size, *_begin};
+    }
+
+    enumerate_object &start(const int &start) {
+        _size = start;
+        return *this;
+    }
+
+    enumerate_object &step(const int &step) {
+        if (step == 0) {
+            throw std::runtime_error("Zero Increment Not Allowed");
+        }
+        _step = step;
+        return *this;
+    }
+};
+
+
+template<typename Iterable>
+auto enumerate(Iterable &&iter)
+-> enumerate_object<Iterable> {
+    return {std::forward<Iterable>(iter)};
+}
+
+template<typename T, typename... Args>
+auto format(T &&s, Args &&... args) {
+    return (boost::format(std::forward<T>(s)) %  ... % (std::forward<Args>(args)));
+}
+
 
 #endif //TINKER_COMMON_HPP

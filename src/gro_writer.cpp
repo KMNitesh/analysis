@@ -6,8 +6,7 @@
 #include <memory>
 #include <fstream>
 #include <map>
-#include <fmt/format.h>
-#include <fmt/printf.h>
+#include <boost/format.hpp>
 
 namespace gmx {
 
@@ -42,19 +41,19 @@ void GROWriter::write(const std::string &filename, std::shared_ptr <Frame> &fram
             mol_index++;
         }
 
-        f << fmt::sprintf("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n", mol_index, std::to_string(mol_index),
-                          atom->atom_name, atom->seq, atom->x / 10.0, atom->y / 10.0, atom->z / 10.0);
+        f << boost::format("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n")  % mol_index % std::to_string(mol_index) %
+                          atom->atom_name % atom->seq % (atom->x / 10.0) % (atom->y / 10.0 ) % (atom->z / 10.0);
     }
     if (frame->enable_bound) {
         if (frame->alpha == 90.00 and frame->beta == 90.00 and frame->gamma == 90.00) {
-            f << fmt::sprintf("%f   %f   %f \n", frame->a_axis / 10.0, frame->b_axis / 10.0, frame->c_axis / 10.0);
+            f << boost::format("%f   %f   %f \n") % (frame->a_axis / 10.0) % (frame->b_axis / 10.0) % (frame->c_axis / 10.0);
         } else {
             gmx::rvec box[3];
             translate(frame->a_axis / 10.0, frame->b_axis / 10.0, frame->c_axis / 10.0,
                       frame->alpha, frame->beta, frame->gamma, box);
-            f << fmt::sprintf("%f   %f   %f   %f   %f   %f    %f   %f   %f\n",
-                              box[0][0], box[1][1], box[2][2], box[0][1], box[0][2], box[1][2], box[2][0],
-                              box[2][1]);
+            f << boost::format("%f   %f   %f   %f   %f   %f    %f   %f   %f\n") %
+                              box[0][0] % box[1][1] % box[2][2]% box[0][1]% box[0][2]% box[1][2]% box[2][0]%
+                              box[2][1];
         }
     }
     f.close();

@@ -17,7 +17,8 @@ int Molecule::seq() {
 void Molecule::calc_mass() {
     double mol_mass = 0.0;
     for (auto &atom : atom_list) {
-        mol_mass += forcefield.find_mass(atom);
+        assert(atom->mass);
+        mol_mass += atom->mass.get();
     }
     mass = mol_mass;
 }
@@ -36,7 +37,8 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
             first_x = atom->x;
             first_y = atom->y;
             first_z = atom->z;
-            double weigh = forcefield.find_mass(atom);
+            assert(atom->mass);
+            double weigh = atom->mass.get();
             mol_mass += weigh;
             xmid = first_x * weigh;
             ymid = first_y * weigh;
@@ -47,7 +49,8 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
             double yr = atom->y - first_y;
             double zr = atom->z - first_z;
             frame->image(xr, yr, zr);
-            double weigh = forcefield.find_mass(atom);
+            assert(atom->mass);
+            double weigh = atom->mass.get();
             mol_mass += weigh;
             xmid += (first_x + xr) * weigh;
             ymid += (first_y + yr) * weigh;
@@ -71,7 +74,7 @@ std::tuple<double, double, double> Molecule::calc_dipole(std::shared_ptr<Frame> 
         double zr = atom->z - std::get<2>(mass_center);
 
         frame->image(xr, yr, zr);
-        
+
         assert(atom->charge);
 
         dipole_x += atom->charge.get() * (xr + std::get<0>(mass_center));
@@ -81,7 +84,7 @@ std::tuple<double, double, double> Molecule::calc_dipole(std::shared_ptr<Frame> 
     return std::make_tuple(dipole_x, dipole_y, dipole_z);
 }
 
-void Molecule::calc_center(std::shared_ptr<Frame> &frame) {
+void Molecule::calc_geom_center(std::shared_ptr<Frame> &frame) {
     double sum_x = 0.0;
     double sum_y = 0.0;
     double sum_z = 0.0;
@@ -109,11 +112,11 @@ void Molecule::calc_center(std::shared_ptr<Frame> &frame) {
     center_z = sum_z / len;
 }
 
-double min_distance(std::shared_ptr<Molecule> &mol1, std::shared_ptr<Molecule> &mol2 ,std::shared_ptr<Frame> &frame) {
+double min_distance(std::shared_ptr<Molecule> &mol1, std::shared_ptr<Molecule> &mol2, std::shared_ptr<Frame> &frame) {
     double mindistance2 = std::numeric_limits<double>::max();
     for (auto &atom1 : mol1->atom_list) {
         for (auto &atom2 : mol2->atom_list) {
-            mindistance2 = std::min(mindistance2,atom_distance2(atom1, atom2,frame));
+            mindistance2 = std::min(mindistance2, atom_distance2(atom1, atom2, frame));
         }
     }
     return std::sqrt(mindistance2);

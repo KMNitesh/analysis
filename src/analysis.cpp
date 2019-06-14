@@ -15,8 +15,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cstdlib>
-#include <fmt/format.h>
-#include <fmt/printf.h>
 #include <string>
 #include <unistd.h>
 #include <functional>
@@ -192,7 +190,7 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
         }
     } else if (pbc_type == PBCType::OneMol) {
         auto center_mol = frame->atom_map[this->num]->molecule.lock();
-        center_mol->calc_center(frame);
+        center_mol->calc_geom_center(frame);
         auto center_x = center_mol->center_x;
         auto center_y = center_mol->center_y;
         auto center_z = center_mol->center_z;
@@ -206,7 +204,7 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
     }
     if (pbc_type != PBCType::None) {
         for (auto &mol : frame->molecule_list) {
-            mol->calc_center(frame);
+            mol->calc_geom_center(frame);
             double x_move = 0.0;
             double y_move = 0.0;
             double z_move = 0.0;
@@ -356,7 +354,8 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
     double weigh1, weigh2;
     weigh1 = weigh2 = 0.0;
     for (auto &atom1 : group1) {
-        double mass = forcefield.find_mass(atom1);
+        assert(atom1->mass);
+        double mass = atom1->mass.get();
         x1 += atom1->x * mass;
         y1 += atom1->y * mass;
         z1 += atom1->z * mass;
@@ -367,7 +366,8 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
     z1 /= weigh1;
 
     for (auto &atom2 : group2) {
-        double mass = forcefield.find_mass(atom2);
+        assert(atom2->mass);
+        double mass = atom2->mass.get();
         x2 += atom2->x * mass;
         y2 += atom2->y * mass;
         z2 += atom2->z * mass;
@@ -395,10 +395,8 @@ void Distance::print() {
     outfile << "group 2 :" << ids2 << std::endl;
     outfile << "****************************************" << endl;
 
-    int cyc = 1;
-    for (auto &dist : group_dist_list) {
-        outfile << cyc << "    " << dist << std::endl;
-        cyc++;
+    for (auto [frame, dist] : enumerate(group_dist_list).start(1)) {
+        outfile << frame << "    " << dist << '\n';
     }
 }
 
@@ -462,18 +460,16 @@ void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
 }
 
 void CoordinateNumPerFrame::print() {
-    outfile << "***************************" << endl;
-    outfile << "******* CN per Frame ******" << endl;
-    outfile << "type 1 :" << ids1 << endl;
-    outfile << "type 2 :" << ids2 << endl;
-    outfile << "cutoff :" << dist_cutoff << endl;
-    outfile << "***************************" << endl;
-    int cyc = 1;
-    for (auto &cn : cn_list) {
-        outfile << cyc << "   " << cn << endl;
-        cyc++;
+    outfile << "***************************" << '\n';
+    outfile << "******* CN per Frame ******" << '\n';
+    outfile << "type 1 :" << ids1 << '\n';
+    outfile << "type 2 :" << ids2 << '\n';
+    outfile << "cutoff :" << dist_cutoff << '\n';
+    outfile << "***************************" << '\n';
+    for (auto [frame, coordination_number] : enumerate(cn_list).start(1)) {
+        outfile << frame << "   " << coordination_number << '\n';
     }
-    outfile << "***************************" << endl;
+    outfile << "***************************" << '\n';
 }
 
 void CoordinateNumPerFrame::readInfo() {
@@ -580,21 +576,21 @@ void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
 }
 
 void FirstCoordExchangeSearch::print() {
-    outfile << "***************************" << endl;
-    outfile << "***** Exchange Search *****" << endl;
-    outfile << "type 1 :" << ids1 << endl;
-    outfile << "type 2 :" << ids2 << endl;
+    outfile << "***************************" << '\n';
+    outfile << "***** Exchange Search *****" << '\n';
+    outfile << "type 1 :" << ids1 << '\n';
+    outfile << "type 2 :" << ids2 << '\n';
 
-    outfile << "cutoff :" << dist_cutoff << endl;
-    outfile << "tol dist :" << tol_dist << endl;
-    outfile << "time_cutoff :" << time_cutoff << endl;
-    outfile << "***************************" << endl;
+    outfile << "cutoff :" << dist_cutoff << '\n';
+    outfile << "tol dist :" << tol_dist << '\n';
+    outfile << "time_cutoff :" << time_cutoff << '\n';
+    outfile << "***************************" << '\n';
     for (int seq : init_seq_in_shell) {
         outfile << "  " << seq;
     }
-    outfile << "\n***************************" << endl;
+    outfile << "\n***************************" << '\n';
 
-    outfile << "** seq **  direction ***** exchange frame *****" << endl;
+    outfile << "** seq **  direction ***** exchange frame *****" << '\n';
     for (auto it = exchange_list.begin(); it != exchange_list.end(); it++) {
         outfile << boost::format("%10d%6s%15d   !   ")
                    % it->seq
@@ -608,9 +604,9 @@ void FirstCoordExchangeSearch::print() {
         for (int seq : init_seq_in_shell) {
             outfile << "  " << seq;
         }
-        outfile << std::endl;
+        outfile <<'\n';
     }
-    outfile << "***************************" << endl;
+    outfile << "***************************\n";
 
 
 }
@@ -773,8 +769,8 @@ void RadicalDistribtuionFunction::print() {
     outfile << "Bin    Counts    Distance    Raw g(r)  Smooth g(r)   Integral" << endl;
 
     for (int i = 1; i <= nbin; i++) {
-        outfile << fmt::sprintf("%d        %d      %.4f      %.4f     %.4f      %.4f\n",
-                                i, hist[i], (i - 0.5) * width, gr[i], gs[i], integral[i]);
+        outfile << boost::format("%d        %d      %.4f      %.4f     %.4f      %.4f\n") %
+                                i % hist[i] % ((i - 0.5) * width) % gr[i] % gs[i] % integral[i];
     }
 
     outfile << "************************************************" << endl;
@@ -855,7 +851,7 @@ void RMSDCal::print() {
     outfile << "****** RMSD Calculator ****" << endl;
     outfile << "GROUP:" << ids << endl;
     outfile << "***************************" << endl;
-    for (int cyc = 1; cyc <= steps; cyc++) {
+    for (auto cyc : range(1, steps+1)) {
         outfile << cyc << "     " << rmsd_map[cyc] << endl;
     }
     outfile << "***************************" << endl;
@@ -1364,10 +1360,8 @@ void RMSFCal::print() {
     outfile << "****** RMSF Calculator ****" << endl;
     outfile << "SET:" << ids << endl;
     outfile << "***************************" << endl;
-    int index = 0;
-    for (auto &at : group) {
+    for (auto [index,at] : enumerate(group)) {
         outfile << at->seq << "     " << rmsvalue(index) << endl;
-        index++;
     }
     outfile << "***************************" << endl;
 }
@@ -1502,7 +1496,7 @@ void HBond::print() {
     outfile << "distance cutoff : " << this->donor_acceptor_dist_cutoff << endl;
     outfile << "angle cutoff : " << this->angle_cutoff << endl;
     outfile << "***************************" << endl;
-    for (int cyc = 1; cyc <= steps; cyc++) {
+    for (auto cyc : range(1,steps+1)) {
         outfile << cyc << "   " << hbonds[cyc] << endl;
     }
     outfile << "***************************" << endl;
@@ -1890,7 +1884,7 @@ void ResidenceTime::calculate() {
                                     if (maxcount < b - a) maxcount = b - a;
                                 } else if (a < i and b < j) continue;
                                 else {
-                                    cerr << fmt::sprintf(" i = %d, j = %d, a = %d, d = %d\n", i, j, a, b);
+                                    cerr << boost::format(" i = %d, j = %d, a = %d, d = %d\n") % i % j % a % b;
                                     cerr << "error " << __FILE__ << " : " << __LINE__ << endl;
                                     exit(1);
                                 }
@@ -1942,10 +1936,8 @@ void ResidenceTime::print() {
     setSteps(steps, static_cast<int>(mark_map.size()));
     for (const auto &it : mark_map) {
         auto atom_no = it.first;
-        int cyc = 0;
-        for (auto value : it.second) {
+        for (auto [cyc,value] : enumerate(it.second)) {
             mark[atom_no][cyc] = int(value);
-            cyc++;
         }
     }
     calculate();
@@ -3182,8 +3174,8 @@ void DiffuseCutoff::print() {
         double zvalue = get<2>(msd[i].second);
         double rvalue = xvalue + yvalue + zvalue;
         double dvalue = dunits * rvalue / delta / 6.0;
-        outfile << fmt::sprintf("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f",
-                                delta, xvalue, yvalue, zvalue, rvalue, dvalue) << endl;
+        outfile << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
+                                delta % xvalue % yvalue % zvalue % rvalue % dvalue;
     }
     outfile << "*********************************************************" << endl;
 }
@@ -3453,8 +3445,8 @@ void Diffuse::print() {
         double zvalue = zmsd[i];
         double rvalue = xmsd[i] + ymsd[i] + zmsd[i];
         double dvalue = dunits * rvalue / delta / 6.0;
-        outfile << fmt::sprintf("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f",
-                                delta, xvalue, yvalue, zvalue, rvalue, dvalue) << endl;
+        outfile << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
+                                delta % xvalue % yvalue % zvalue % rvalue % dvalue;
 
     }
     outfile << "*********************************************************" << endl;
@@ -3869,8 +3861,8 @@ void ShellDensity::print() {
 
     for (int i = 1; i <= distance_bins; i++) {
         double dv = (4.0 / 3.0) * M_PI * (pow(i * distance_width, 3) - pow((i - 1) * distance_width, 3));
-        outfile << fmt::sprintf("%d      %.4f      %g \n",
-                                i, (i - 0.5) * distance_width, hist[i] / (nframe * dv));
+        outfile << boost::format("%d      %.4f      %g \n") %
+                                i % ((i - 0.5) * distance_width) % ( hist[i] / (nframe * dv));
     }
 
     outfile << "************************************************" << endl;
@@ -4235,10 +4227,9 @@ void DemixIndexOfTwoGroup::print() {
     outfile << "@ s0 legend \"Demix Index\"\n";
 //    outfile << "@ s1 legend \"Demix:Ideal\"\n";
     outfile << "# Frame      Demix Index \n";
-    int cyc = 1;
-    for (auto[d, d_ideal] : demix_index_list) {
-        outfile << cyc << "        " << d / d_ideal << '\n';
-        cyc++;
+
+    for (auto[frame, d] : enumerate(demix_index_list).start(1)) {
+        outfile << frame << "        " << get<0>(d) / get<1>(d) << '\n';
     }
 
 

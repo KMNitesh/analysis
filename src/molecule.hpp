@@ -25,7 +25,7 @@ public:
 
     bool bExculde = false;
 
-    void calc_center(std::shared_ptr<Frame> &frame);
+    void calc_geom_center(std::shared_ptr<Frame> &frame);
 
     void calc_mass();
 
