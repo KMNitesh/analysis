@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 #include <string>
 #include <map>
 #include <vector>
@@ -108,5 +109,10 @@ protected:
 
     void setCutoff(double cutoff) { this->cutoff = cutoff; };
 };
+
+std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std::vector<Cluster::conf_clust> &clusts);
+
+std::unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
+        const std::vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list);
 
 #endif //TINKER_CLUSTER_HPP

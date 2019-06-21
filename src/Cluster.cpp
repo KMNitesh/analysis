@@ -1,7 +1,9 @@
 //
 // Created by xiamr on 6/14/19.
 //
+#include <type_traits>
 #include <tbb/tbb.h>
+#include <boost/algorithm/string.hpp>
 
 #include "Cluster.hpp"
 #include "frame.hpp"
@@ -141,6 +143,35 @@ void Cluster::print() {
     }
     outfile << "***************************" << endl;
 
+    unordered_map<int, vector<int>> mm = do_find_frames_in_same_clust(c);
+    outfile << "# Clust No.   Count   Frames";
+    for (auto i_clust : range(1, cid + 1)) {
+
+        auto &s = mm[i_clust];
+        for (auto[index, frame] : enumerate(s)) {
+
+            if (index % 10 == 0) {
+                if (index == 0) {
+                    outfile << format("\n%-10d      %-10d ", i_clust, s.size());
+                } else {
+                    outfile << '\n' << std::string(27, ' ');
+                }
+            }
+            outfile << ' ' << frame + 1 << ' ';
+        }
+    }
+    outfile << "\n***************************" << endl;
+
+    unordered_map<int, std::pair<int, double>> mm2 = do_find_medium_in_clust(c, rmsd_list);
+
+    outfile << "# Clust No.    Medium_Frame    AvgRMSD\n";
+    for (int i_clust : range(1, cid + 1)) {
+        outfile << i_clust << "              " << mm2[i_clust].first + 1 << "              " << mm2[i_clust].second
+                << '\n';
+    }
+    outfile << "***************************" << endl;
+
+
 }
 
 /*
@@ -235,4 +266,77 @@ void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) {
                   [this](shared_ptr<Atom> &atom) {
                       if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
                   });
+}
+
+/*
+ *
+ *
+ * frame start from 0
+ * clust start from 1
+ */
+
+
+unordered_map<int, vector<int>> do_find_frames_in_same_clust(const vector<Cluster::conf_clust> &clusts) {
+    unordered_map<int, vector<int>> ret;
+    for (const auto &ct : clusts) {
+        ret[ct.clust].push_back(ct.conf);
+    }
+    return ret;
+}
+
+
+unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
+        const vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list) {
+    unordered_map<int, std::pair<int, double>> ret;
+    struct item {
+        item(int i, double rmsd_sum = 0.0) : i(i), rmsd_sum(rmsd_sum) {}
+
+        int i;
+        double rmsd_sum;
+    };
+
+    struct KeyHasher {
+        std::size_t operator()(const item &t) const {
+            std::size_t seed;
+            boost::hash_combine(seed, t.i);
+            return seed;
+        }
+    };
+
+    struct ItemEqual {
+        bool operator()(const struct item &t1, const struct item &t2) const {
+            return t1.i == t2.i;
+        }
+    };
+
+    unordered_map<int, unordered_set<struct item, KeyHasher, ItemEqual>> s;
+
+    for (const auto &i : clusts) {
+        s[i.clust].insert(i.conf);
+    }
+
+    for (auto &i : rmsd_list) {
+        for (auto it = s.begin(); it != s.end(); ++it) {
+            auto &j = it->second;
+            if (j.count(i.i) and j.count(i.j)) {
+
+                const_cast<std::remove_reference_t<decltype(j)>::value_type *>(j.find(
+                        i.i).operator->())->rmsd_sum += i.rms;
+                const_cast<std::remove_reference_t<decltype(j)>::value_type *>(j.find(
+                        i.j).operator->())->rmsd_sum += i.rms;
+            }
+        }
+    }
+
+    for (auto &j : s) {
+        struct item min{0, std::numeric_limits<double>::max()};
+        for (auto &k : j.second) {
+            if (k.rmsd_sum < min.rmsd_sum) {
+                min = k;
+            }
+        }
+        ret[j.first] = {min.i, j.second.size() == 1 ? NAN : min.rmsd_sum / (j.second.size() - 1)};
+    }
+
+    return ret;
 }
