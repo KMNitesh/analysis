@@ -24,10 +24,6 @@ bool enable_forcefield = false;
 
 std::fstream outfile;
 
-bool file_exist(const std::string &name) {
-    return boost::filesystem::exists(name);
-}
-
 
 std::vector<std::string> split(const std::string &str, const std::string &sep) {
     std::vector<std::string> ret_;
@@ -35,7 +31,7 @@ std::vector<std::string> split(const std::string &str, const std::string &sep) {
     return ret_;
 }
 
-std::vector<std::string> split(const std::string &str){
+std::vector<std::string> split(const std::string &str) {
     std::vector<std::string> ret_;
     boost::regex e("\\s+");
     std::string s = str;
@@ -65,6 +61,32 @@ std::string ext_filename(const std::string &filename) {
     return ext;
 }
 
+FileType getFileType(const std::string &filename) {
+//    if (!boost::filesystem::is_regular_file(filename)){
+//        throw std::runtime_error("ERROR !! not regular file !");
+//    }
+    auto extension = boost::filesystem::extension(filename);
+    boost::to_lower(extension);
+    /*
+     *      XTC,TRR,NC,ARC,TPR,MOL2,PRM, UnKnown
+     */
+    const std::unordered_map<std::string, FileType> mapping = {
+            {".xtc",   FileType::XTC},
+            {".trr",   FileType::TRR},
+            {".nc",    FileType::NC},
+            {".mdcrd", FileType::NC},
+            {".xyz",   FileType::ARC},
+            {".arc",   FileType::ARC},
+            {".tpr",   FileType::TPR},
+            {".mol2",  FileType::MOL2},
+            {".prm",   FileType::PRM}
+    };
+
+    auto it = mapping.find(extension);
+    return it != mapping.end() ? it->second : FileType::UnKnown;
+
+}
+
 std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty) {
     while (true) {
         std::string input_line = input(prompt);
@@ -91,7 +113,7 @@ std::string choose_file(const std::string &prompt, bool exist, std::string ext, 
 
 double
 atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame) {
-    return std::sqrt(atom_distance2(atom1,atom2,frame));
+    return std::sqrt(atom_distance2(atom1, atom2, frame));
 }
 
 double
@@ -103,7 +125,7 @@ atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &
     return xr * xr + yr * yr + zr * zr;
 }
 
-po::options_description make_program_options(){
+po::options_description make_program_options() {
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help,h", "show this help message")
@@ -114,4 +136,19 @@ po::options_description make_program_options(){
             ("target,x", po::value<std::string>(), "target trajectory file");
 
     return desc;
+}
+
+std::string print_cmdline(int argc, const char *const argv[]) {
+    std::string cmdline;
+
+    const char *const *p = argv;
+
+    while (argc-- > 0) {
+        if (p != argv) {
+            cmdline += " ";
+        }
+        cmdline += *p;
+        p++;
+    }
+    return cmdline;
 }

@@ -19,7 +19,8 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
 void printTopolgy(const boost::program_options::variables_map &vm);
 
 void processTrajectory(const boost::program_options::options_description &desc,
-                       const boost::program_options::variables_map &vm, const std::vector<std::string> &xyzfiles);
+                       const boost::program_options::variables_map &vm, const std::vector<std::string> &xyzfiles,
+                       int argc, char *argv[]);
 
 
 #endif //TINKER_MAINUTILS_HPP

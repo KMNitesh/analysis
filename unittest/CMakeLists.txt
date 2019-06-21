@@ -33,3 +33,15 @@ gtest_discover_tests(test_enumerate_object)
 add_executable(test_format test_format.cpp)
 target_link_libraries(test_format  ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(test_format)
+
+add_executable(test_getFileType test_getFileType.cpp)
+target_link_libraries(test_getFileType base ${GTEST_BOTH_LIBRARIES})
+gtest_discover_tests(test_getFileType)
+
+add_executable(test_print_cmdline test_print_cmdline.cpp)
+target_link_libraries(test_print_cmdline base ${GTEST_BOTH_LIBRARIES})
+gtest_discover_tests(test_print_cmdline)
+
+add_executable(test_analysis_cluster_method test_analysis_cluster_method.cpp)
+target_link_libraries(test_analysis_cluster_method base ${GTEST_BOTH_LIBRARIES})
+gtest_discover_tests(test_analysis_cluster_method)

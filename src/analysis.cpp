@@ -14,6 +14,11 @@ namespace po = boost::program_options;
 
 using namespace std;
 
+/*
+ *  This is the main menu the user select when the program starts
+ *  evergy function of option may has its own submenu, by using different handling models
+ */
+
 int mainMenu() {
     std::cout << "Main Menu\n";
     std::cout << "(0) Trajectory Analysis\n";
@@ -43,6 +48,9 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
     }
 
+    /*
+     * examine all input files are already exist
+     */
     std::vector<std::string> xyzfiles;
     if (vm.count("file")) {
         xyzfiles = vm["file"].as<std::vector<string>>();
@@ -54,17 +62,29 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /*
+     *  when --target or -x option given,  fast trajectory convert mode is active
+     *  Convert trajctory format for convenience
+     */
     if (vm.count("target")) {
         fastTrajectoryConvert(vm, xyzfiles);
         exit(EXIT_SUCCESS);
     }
 
+
+    /*
+     *  examine the tpr file of gromcas and show the content
+     */
     if (mainMenu() == 1) {
         printTopolgy(vm);
         return EXIT_SUCCESS;
     }
 
-    processTrajectory(desc, vm, xyzfiles);
+
+    /*
+     *  At last, handle normal trajctories
+     */
+    processTrajectory(desc, vm, xyzfiles, argc, argv);
 
     return EXIT_SUCCESS;
 

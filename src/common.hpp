@@ -41,7 +41,18 @@ extern Forcefield forcefield;
 extern bool enable_forcefield;
 extern std::fstream outfile;
 
-bool file_exist(const std::string &name);
+enum class FileType {
+    XTC,
+    TRR,
+    NC,
+    ARC,
+    TPR,
+    MOL2,
+    PRM,
+    UnKnown
+};
+
+FileType getFileType(const std::string &filename);
 
 std::vector<std::string> split(const std::string &str, const std::string &sep);
 
@@ -148,6 +159,9 @@ public:
 };
 
 
+/*
+ *  Python-like range function in C++
+ */
 inline range_object range(int start, int end, int step = 1) {
     if (step == 0) {
         throw std::runtime_error("zero increment step size!!");
@@ -215,6 +229,9 @@ public:
     }
 };
 
+/*
+ *  Python-like enumerate function in C++
+ */
 
 template<typename Iterable>
 auto enumerate(Iterable &&iter)
@@ -227,5 +244,6 @@ auto format(T &&s, Args &&... args) {
     return (boost::format(std::forward<T>(s)) %  ... % (std::forward<Args>(args)));
 }
 
+std::string print_cmdline(int argc, const char *const argv[]);
 
 #endif //TINKER_COMMON_HPP

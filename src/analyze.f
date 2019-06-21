@@ -170,7 +170,7 @@ c
 c     setup to write out all of the individual energy terms
 c
       if (dodetail) then
-         doenergy = .true.
+             doenergy = .true.
          debug = .true.
          verbose = .true.
       else

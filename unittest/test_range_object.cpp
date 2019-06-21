@@ -15,23 +15,7 @@ TEST(range, WithThreeParameters) {
     for (auto i : range(-1, 6, 2)) {
         l.push_back(i);
     }
-    ASSERT_TRUE(l.size() == 4);
-    
-    int i;
-    i = l.front();
-    ASSERT_TRUE(i == -1);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 1);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 3);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 5);
-    l.pop_front();
-
-    ASSERT_TRUE(l.empty());
+    ASSERT_THAT(l, ElementsAre(-1, 1, 3, 5));
 }
 
 TEST(range, WithTwoParameters) {
@@ -39,19 +23,7 @@ TEST(range, WithTwoParameters) {
     for (auto i : range(1, 4)) {
         l.push_back(i);
     }
-    ASSERT_TRUE(l.size() == 3);
-    
-    int i;
-    i = l.front();
-    ASSERT_TRUE(i == 1);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 2);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 3);
-    l.pop_front();
-    ASSERT_TRUE(l.empty());
+    ASSERT_THAT(l, ElementsAre(1, 2, 3));
 }
 
 
@@ -60,23 +32,7 @@ TEST(range, WithSingleParameter) {
     for (auto i : range(4)) {
         l.push_back(i);
     }
-    ASSERT_TRUE(l.size() == 4);
-
-    int i;
-    i = l.front();
-    ASSERT_TRUE(i == 0);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 1);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 2);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 3);
-    l.pop_front();
-
-    ASSERT_TRUE(l.empty());
+    ASSERT_THAT(l, ElementsAre(0, 1, 2, 3));
 }
 
 
@@ -85,20 +41,7 @@ TEST(range, WithNegativeIncrement) {
     for (auto i : range(4, -1, -2)) {
         l.push_back(i);
     }
-    ASSERT_TRUE(l.size() == 3);
-
-    int i;
-    i = l.front();
-    ASSERT_TRUE(i == 4);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 2);
-    l.pop_front();
-    i = l.front();
-    ASSERT_TRUE(i == 0);
-    l.pop_front();
-
-    ASSERT_TRUE(l.empty());
+    ASSERT_THAT(l, ElementsAre(4, 2, 0));
 }
 
 TEST(range, WithNoneResult) {

@@ -17,24 +17,7 @@ TEST(enumerate, DefaultPostive) {
     for (auto value : enumerate(iter)) {
         l.push_back(value);
     }
-    ASSERT_THAT(l.size(), Eq(4u));
-    auto[index, value] = l.front();
-    ASSERT_TRUE(index == 0 && value == 1);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == 1 && value == 3);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == 2 && value == 4);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == 3 && value == 5);
-    l.pop_front();
-
-    ASSERT_TRUE(l.empty());
+    ASSERT_THAT(l, ElementsAre(Pair(0, 1), Pair(1, 3), Pair(2, 4), Pair(3, 5)));
 }
 
 TEST(enumerate, NegativeIncrement) {
@@ -43,24 +26,7 @@ TEST(enumerate, NegativeIncrement) {
     for (auto value : enumerate(iter).step(-2)) {
         l.push_back(value);
     }
-    ASSERT_THAT(l.size(), Eq(4u));
-    auto[index, value] = l.front();
-    ASSERT_TRUE(index == 0 && value == 1);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == -2 && value == 3);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == -4 && value == 4);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == -6 && value == 5);
-    l.pop_front();
-
-    ASSERT_TRUE(l.empty());
+    ASSERT_THAT(l, ElementsAre(Pair(0, 1), Pair(-2, 3), Pair(-4, 4), Pair(-6, 5)));
 }
 
 TEST(enumerate, NegativeIncrementWithNoZeroStart) {
@@ -69,24 +35,7 @@ TEST(enumerate, NegativeIncrementWithNoZeroStart) {
     for (auto value : enumerate(iter).start(3).step(-2)) {
         l.push_back(value);
     }
-    ASSERT_THAT(l.size(), Eq(4u));
-    auto[index, value] = l.front();
-    ASSERT_TRUE(index == 3 && value == 1);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == 1 && value == 3);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == -1 && value == 4);
-    l.pop_front();
-
-    std::tie(index, value) = l.front();
-    ASSERT_TRUE(index == -3 && value == 5);
-    l.pop_front();
-
-    ASSERT_TRUE(l.empty());
+    ASSERT_THAT(l, ElementsAre(Pair(3, 1), Pair(1, 3), Pair(-1, 4), Pair(-3, 5)));
 }
 
 TEST(enumerate, ZeroIncrement) {

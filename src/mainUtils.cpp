@@ -11,6 +11,7 @@
 #include <vector>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/cxx11/one_of.hpp>
 
 #include "PrintTopolgy.hpp"
 #include "taskMenu.hpp"
@@ -49,8 +50,9 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
     }
 
     auto reader = make_shared<TrajectoryReader>();
-    auto ext = ext_filename(xyzfiles[0]);
-    if (ext == "nc" or ext == "xtc" or ext == "trr") {
+    if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
+            {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
+
         if (!vm.count("topology")) {
             cerr << "ERROR !! topology file not set !\n";
             exit(EXIT_FAILURE);
@@ -101,7 +103,7 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
     PrintTopolgy printer;
     if (vm.count("topology")) {
         string topol = vm["topology"].as<string>();
-        if (file_exist(topol)) {
+        if (boost::filesystem::exists(topol)) {
             printer.action(topol);
             exit(EXIT_SUCCESS);
         }
@@ -111,8 +113,8 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
 }
 
 void processTrajectory(const boost::program_options::options_description &desc,
-                       const boost::program_options::variables_map &vm,
-                       const std::vector<std::string> &xyzfiles) {
+                       const boost::program_options::variables_map &vm, const std::vector<std::string> &xyzfiles,
+                       int argc, char *argv[]) {
     if (!vm.count("file")) {
         std::cerr << "input trajectory file is not set !" << std::endl;
         std::cerr << desc;
@@ -166,7 +168,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         if (!b_added_topology) {
             if (vm.count("topology")) {
                 std::__cxx11::string topol = vm["topology"].as<std::__cxx11::string>();
-                if (file_exist(topol)) {
+                if (boost::filesystem::exists(topol)) {
                     reader->add_topology(topol);
                     b_added_topology = true;
                     continue;
@@ -223,8 +225,14 @@ void processTrajectory(const boost::program_options::options_description &desc,
     std::cout << std::endl;
 
 
-    for (auto &task : *task_list)
+    if (outfile.is_open()) {
+        outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
+        outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
+    }
+
+    for (auto &task : *task_list) {
         task->print();
+    }
     if (outfile.is_open()) outfile.close();
     std::cout << "Mission Complete" << std::endl;
 }

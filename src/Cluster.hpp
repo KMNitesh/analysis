@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <string>
 #include <map>
+#include <vector>
+#include <list>
 #include <utility>
 
 #include "common.hpp"
@@ -72,6 +74,39 @@ private:
 
     double rmsvalue(int index1, int index2);
 
+public:
+
+    class rmsd_matrix {
+    public:
+        rmsd_matrix(int i, int j, double rms) : i(i), j(j), rms(rms) {}
+
+        int i;
+        int j;
+        double rms;
+    };
+
+    class conf_clust {
+    public:
+        conf_clust(int conf, int clust) : conf(conf), clust(clust) {};
+        int conf;
+        int clust;
+    };
+
+protected:
+
+    std::vector<Cluster::conf_clust> do_cluster(const std::list<rmsd_matrix> &rmsd_list, int conf_size) const;
+
+    int do_sort_and_renumber_parallel(std::vector<conf_clust> &conf_clust_vector) const;
+
+    void do_sort_clust_parallel(std::vector<conf_clust> &conf_clust_vector) const;
+
+    void do_sort_conf_parallel(std::vector<conf_clust> &conf_clust_vector) const;
+
+    int do_renumber_clust(std::vector<conf_clust> &conf_clust_vector) const;
+
+    std::vector<Cluster::conf_clust> initialize_conf_clust_vector(int conf_size) const;
+
+    void setCutoff(double cutoff) { this->cutoff = cutoff; };
 };
 
 #endif //TINKER_CLUSTER_HPP
