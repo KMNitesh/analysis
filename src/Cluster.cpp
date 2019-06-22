@@ -76,9 +76,7 @@ double Cluster::rmsvalue(int index1, int index2) {
     return rms;
 }
 
-
-void Cluster::print() {
-
+list<Cluster::rmsd_matrix> Cluster::do_calculate_rmsd_list_parallel() {
     class CalCore {
     public:
         list<rmsd_matrix> local_rms_list;
@@ -115,7 +113,12 @@ void Cluster::print() {
     tbb::parallel_reduce(tbb::blocked_range<int>(0, steps - 1), core, tbb::auto_partitioner());
 
 
-    auto &rmsd_list = core.local_rms_list;
+    return core.local_rms_list;
+}
+
+void Cluster::print() {
+
+    auto rmsd_list = do_calculate_rmsd_list_parallel();
 
     int n = 0;
     for (auto &v : rmsd_list) {
