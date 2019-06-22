@@ -164,9 +164,10 @@ void Cluster::print() {
 
     unordered_map<int, std::pair<int, double>> mm2 = do_find_medium_in_clust(c, rmsd_list);
 
-    outfile << "# Clust No.    Medium_Frame    AvgRMSD\n";
+    outfile << "# Clust No.  Fame Count  Medium_Frame    AvgRMSD\n";
     for (int i_clust : range(1, cid + 1)) {
-        outfile << i_clust << "              " << mm2[i_clust].first + 1 << "              " << mm2[i_clust].second
+        outfile << i_clust << "              " << mm[i_clust].size() << "       "
+                << mm2[i_clust].first + 1 << "              " << mm2[i_clust].second
                 << '\n';
     }
     outfile << "***************************" << endl;
