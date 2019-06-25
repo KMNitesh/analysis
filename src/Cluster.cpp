@@ -3,7 +3,9 @@
 //
 #include <type_traits>
 #include <tbb/tbb.h>
-#include <boost/algorithm/string.hpp>
+#include <boost/container_hash/hash.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
 
 #include "Cluster.hpp"
 #include "frame.hpp"
@@ -147,11 +149,12 @@ void Cluster::print() {
     outfile << "***************************" << endl;
 
     unordered_map<int, vector<int>> mm = do_find_frames_in_same_clust(c);
-    outfile << "# Clust No.   Count   Frames";
+    outfile << "# Clust No.   Count      Frames";
     for (auto i_clust : range(1, cid + 1)) {
 
         auto &s = mm[i_clust];
-        for (auto[index, frame] : enumerate(s)) {
+        int index = 0;
+        for (const auto &frame : combine_seq(s | boost::adaptors::transformed([](auto i) { return i + 1; }))) {
 
             if (index % 10 == 0) {
                 if (index == 0) {
@@ -160,18 +163,18 @@ void Cluster::print() {
                     outfile << '\n' << std::string(27, ' ');
                 }
             }
-            outfile << ' ' << frame + 1 << ' ';
+            outfile << ' ' << frame << ' ';
+            index++;
         }
     }
     outfile << "\n***************************" << endl;
 
     unordered_map<int, std::pair<int, double>> mm2 = do_find_medium_in_clust(c, rmsd_list);
 
-    outfile << "# Clust No.  Fame Count  Medium_Frame    AvgRMSD\n";
+    outfile << "#     Clust No.      Fame Count    Medium_Frame         AvgRMSD\n";
     for (int i_clust : range(1, cid + 1)) {
-        outfile << i_clust << "              " << mm[i_clust].size() << "       "
-                << mm2[i_clust].first + 1 << "              " << mm2[i_clust].second
-                << '\n';
+        outfile << format("%15d %15d %15d %15g\n",
+                          i_clust, mm[i_clust].size(), mm2[i_clust].first + 1, mm2[i_clust].second);
     }
     outfile << "***************************" << endl;
 
@@ -333,12 +336,8 @@ unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
     }
 
     for (auto &j : s) {
-        struct item min{0, std::numeric_limits<double>::max()};
-        for (auto &k : j.second) {
-            if (k.rmsd_sum < min.rmsd_sum) {
-                min = k;
-            }
-        }
+        auto min = *boost::range::min_element(j.second,
+                                              [](auto &lhs, auto &rhs) { return lhs.rmsd_sum < rhs.rmsd_sum; });
         ret[j.first] = {min.i, j.second.size() == 1 ? NAN : min.rmsd_sum / (j.second.size() - 1)};
     }
 

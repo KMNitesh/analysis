@@ -14,7 +14,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/phoenix.hpp>
-
+#include <boost/optional.hpp>
+#include <stack>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -245,5 +246,171 @@ auto format(T &&s, Args &&... args) {
 }
 
 std::string print_cmdline(int argc, const char *const argv[]);
+
+
+template<typename Iterable>
+class PushIterable_object {
+public:
+    using value_type = typename Iterable::value_type;
+private:
+    Iterable _iter;
+
+    decltype(std::begin(_iter)) _begin;
+    const decltype(std::end(_iter)) _end;
+
+    std::stack<value_type> queue;
+
+public:
+
+    PushIterable_object(Iterable iter) :
+            _iter(iter),
+            _begin(std::begin(iter)),
+            _end(std::end(iter)) {}
+
+
+    const PushIterable_object &begin() const { return *this; }
+
+    const PushIterable_object &end() const { return *this; }
+
+
+    bool operator!=(const PushIterable_object &) const {
+        return _begin != _end || !queue.empty();
+    }
+
+    bool operator==(const PushIterable_object &) const {
+        return _begin == _end && queue.empty();
+    }
+
+    void operator++() {
+        if (!queue.empty()) {
+            queue.pop();
+        } else {
+            ++_begin;
+        }
+
+    }
+
+    auto operator*() const {
+        if (!queue.empty()) {
+            return queue.top();
+        } else {
+            assert(_begin != _end);
+            return *_begin;
+        }
+    }
+
+    void push_back(value_type value) {
+        queue.push(value);
+    }
+
+    bool empty() const {
+        return _begin == _end && queue.empty();
+    }
+
+    auto next() {
+        if (!queue.empty()) {
+            auto value = queue.top();
+            queue.pop();
+            return value;
+        } else {
+            assert(_begin != _end);
+            auto value = *_begin;
+            _begin++;
+            return value;
+        }
+    }
+};
+
+template<typename Iterable, typename = std::enable_if_t<
+        std::is_integral_v<typename Iterable::value_type> && !std::is_same_v<typename Iterable::value_type, bool> >>
+class CombineSeq {
+public:
+    using value_type = typename Iterable::value_type;
+private:
+    PushIterable_object<Iterable> _iter;
+
+    boost::optional<std::string> _curr;
+
+public:
+    CombineSeq(Iterable iter) :
+            _iter(iter) {}
+
+    CombineSeq &begin() { return *this; }
+
+    CombineSeq &end() { return *this; }
+
+    CombineSeq(const CombineSeq &other) :
+            _iter(other._iter), _curr(other._curr) {}
+
+
+    bool operator!=(const CombineSeq &) const {
+        return !_iter.empty() || _curr.has_value();
+    }
+
+    void operator++() {
+        _curr = {};
+        if (_iter.empty()) {
+            return;
+        }
+        auto first = _iter.next();
+        _curr = boost::lexical_cast<std::string>(first);
+        if (_iter.empty()) {
+            return;
+        }
+
+        auto second = _iter.next();
+        if (_iter.empty() || second != first + 1) {
+            _iter.push_back(second);
+            return;
+        }
+
+        auto third = _iter.next();
+        if (third != second + 1) {
+            _iter.push_back(third);
+            _iter.push_back(second);
+            return;
+        }
+        second = third;
+        for (; !_iter.empty();) {
+            auto value = _iter.next();
+            if (value != second + 1) {
+                _iter.push_back(value);
+                break;
+            }
+            second = value;
+        }
+        _curr = _curr.value() + '-' + boost::lexical_cast<std::string>(second);
+    }
+
+    auto operator*() {
+        if (!_curr.has_value()) {
+            this->operator++();
+        }
+        return _curr.value();
+    }
+};
+
+template<typename Iterable>
+auto PushIterable(Iterable &&iter) -> PushIterable_object<Iterable> {
+    return {std::forward<Iterable>(iter)};
+}
+
+
+template<typename T>
+auto PushIterable(std::initializer_list<T> &&iter) -> PushIterable_object<std::initializer_list<T>> {
+    return {std::forward<std::initializer_list<T>>(iter)};
+}
+
+
+template<typename Iterable>
+auto combine_seq(Iterable &&iter) -> CombineSeq<std::remove_reference_t<Iterable>> {
+    return {std::forward<Iterable>(iter)};
+}
+
+
+template<typename T>
+auto combine_seq(std::initializer_list<T> &&iter) -> CombineSeq<std::initializer_list<T>> {
+    return {std::forward<std::initializer_list<T>>(iter)};
+}
 
 #endif //TINKER_COMMON_HPP

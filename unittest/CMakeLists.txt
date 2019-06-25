@@ -13,7 +13,6 @@ add_test(NAME "TestGrammar" COMMAND test_grammar)
 add_test(NAME "TestCenterRuleGrammer" COMMAND test_center_selection_grammar)
 add_test(NAME "TestTrajectoryReaderTPR" COMMAND test_trajectoryreader_tpr WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 include(GoogleTest)
@@ -45,3 +44,7 @@ gtest_discover_tests(test_print_cmdline)
 add_executable(test_analysis_cluster_method test_analysis_cluster_method.cpp)
 target_link_libraries(test_analysis_cluster_method base ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(test_analysis_cluster_method)
+
+add_executable(test_combine_seq test_combine_seq.cpp)
+target_link_libraries(test_combine_seq base ${GTEST_BOTH_LIBRARIES})
+gtest_discover_tests(test_combine_seq)

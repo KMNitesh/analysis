@@ -61,3 +61,8 @@ TEST(range, WrongDirectionNegative) {
 TEST(range, WrongDirectionPositive) {
     ASSERT_THROW(range(12, 5, 2), std::runtime_error);
 }
+
+
+TEST(range, WithNegativeEnd) {
+    ASSERT_THROW(range(-1), std::runtime_error);
+}

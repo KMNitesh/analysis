@@ -82,7 +82,7 @@ TEST(ClusterTest, do_clust) {
             list<Cluster::rmsd_matrix>{{2, 3, 0.9},
                                        {0, 1, 0.8},
                                        {1, 3, 1.1},
-                                       {0, 2, 1.2},
+                                       {2, 0, 1.2},
                                        {1, 2, 1.2},
                                        {0, 3, 1.3}}, 4),
                 ContainerEq(vector<Cluster::conf_clust>{{0, 0},
