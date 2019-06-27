@@ -7,6 +7,7 @@
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 
+#include "ThrowAssert.hpp"
 #include "Cluster.hpp"
 #include "frame.hpp"
 
@@ -277,7 +278,7 @@ void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 void Cluster::setSetting(const Atom::AtomIndenter &atomIndenter, double cutoff) {
     this->ids = atomIndenter;
-    assert(cutoff > 0);
+    throw_assert(cutoff > 0, "cutoff must postive (cutoff = " << cutoff << ")");
     this->cutoff = cutoff;
 }
 

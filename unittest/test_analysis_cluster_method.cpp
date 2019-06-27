@@ -3,6 +3,7 @@
 //
 
 #include "../src/Cluster.hpp"
+#include "../src/ThrowAssert.hpp"
 #include <gmock/gmock.h>
 #include <unordered_map>
 #include <utility>
@@ -188,16 +189,16 @@ TEST(ClusterTest, do_sort_and_renumber_parallel) {
 
 }
 
-//TEST(ClusterTest,setSetting) {
-//    class ClusterTest : public Cluster {
-//    public:
-//        void test_setSetting(double cutoff)  {
-//            setSetting({},cutoff);
-//        }
-//    } cluster;
-//
-//    cluster.test_setSetting(0);
-//}
+TEST(ClusterTest, setSetting) {
+    class ClusterTest : public Cluster {
+    public:
+        void test_setSetting(double cutoff) {
+            setSetting({}, cutoff);
+        }
+    } cluster;
+
+    ASSERT_THROW(cluster.test_setSetting(0), AssertionFailureException);
+}
 
 TEST(ClusterTest, do_renumber_clust) {
     class ClusterTest : public Cluster {
