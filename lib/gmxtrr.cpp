@@ -7,8 +7,6 @@
 #include "../src/common.hpp"
 using namespace std;
 
-
-
 extern "C" {
 
 void trr_close_(gmx::t_fileio **handle){

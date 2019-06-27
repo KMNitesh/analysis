@@ -1,7 +1,7 @@
 //
 // Created by xiamr on 6/14/19.
 //
-
+#include <boost/range/adaptors.hpp>
 #include "Distance.hpp"
 #include "frame.hpp"
 
@@ -54,8 +54,8 @@ void Distance::print() {
     outfile << "group 2 :" << ids2 << std::endl;
     outfile << "****************************************\n";
 
-    for (auto[frame, dist] : enumerate(group_dist_list).start(1)) {
-        outfile << frame << "    " << dist << '\n';
+    for (const auto &element : group_dist_list | boost::adaptors::indexed(1)) {
+        outfile << element.index() << "    " << element.value() << '\n';
     }
 }
 

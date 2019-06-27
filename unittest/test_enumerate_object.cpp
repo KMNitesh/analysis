@@ -14,10 +14,10 @@ using namespace testing;
 TEST(enumerate, DefaultPostive) {
     std::list<std::pair<int, int>> l;
     auto iter = {1, 3, 4, 5};
-    for (auto value : enumerate(iter)) {
+    for (auto value : enumerate(iter).start(1)) {
         l.push_back(value);
     }
-    ASSERT_THAT(l, ElementsAre(Pair(0, 1), Pair(1, 3), Pair(2, 4), Pair(3, 5)));
+    ASSERT_THAT(l, ElementsAre(Pair(1, 1), Pair(2, 3), Pair(3, 4), Pair(4, 5)));
 }
 
 TEST(enumerate, NegativeIncrement) {

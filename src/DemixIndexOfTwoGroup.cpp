@@ -2,6 +2,7 @@
 // Created by xiamr on 6/14/19.
 //
 
+#include <boost/range/adaptors.hpp>
 #include "DemixIndexOfTwoGroup.hpp"
 
 #include "frame.hpp"
@@ -85,24 +86,24 @@ void DemixIndexOfTwoGroup::print() {
 //    const double Unit = 1 / (pow(AngstromToCentimeter, 3) * AvogadroConstant);
 
     outfile << "#####################################\n";
-    outfile << "#    Demix Index (normalization)\n";
+    outfile << "#    Demix Rate (normalization)\n";
     outfile << "#    Group1  " << ids1 << '\n';
     outfile << "#    Group2  " << ids2 << '\n';
     outfile << "#    Grid    X = " << grid_x << "  Y = " << grid_y << "  Z = " << grid_z << '\n';
     outfile << "#####################################\n";
 
-    outfile << "@   title \"Demix Index\"\n";
+    outfile << "@   title \"Demix Rate\"\n";
     outfile << "@    xaxis  label \"Frame Number\"\n";
-    outfile << "@    yaxis  label \"Demix Index\"\n";
+    outfile << "@    yaxis  label \"Demix Rate\"\n";
     outfile << "@TYPE xy\n";
     outfile << "@ legend on\n";
     outfile << "@ legend length 1\n";
-    outfile << "@ s0 legend \"Demix Index\"\n";
+    outfile << "@ s0 legend \"Demix Rate\"\n";
 //    outfile << "@ s1 legend \"Demix:Ideal\"\n";
-    outfile << "# Frame      Demix Index \n";
+    outfile << "# Frame      Demix Rate \n";
 
-    for (auto[frame, d] : enumerate(demix_index_list).start(1)) {
-        outfile << frame << "        " << get<0>(d) / get<1>(d) << '\n';
+    for (const auto &element: demix_index_list | boost::adaptors::indexed(1)) {
+        outfile << element.index() << "        " << get<0>(element.value()) / get<1>(element.value()) << '\n';
     }
 
 

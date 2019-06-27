@@ -3,7 +3,7 @@
 //
 
 #include <tbb/tbb.h>
-
+#include <boost/range/adaptors.hpp>
 #include "ResidenceTime.hpp"
 #include "frame.hpp"
 
@@ -159,8 +159,8 @@ void ResidenceTime::print() {
     setSteps(steps, static_cast<int>(mark_map.size()));
     for (const auto &it : mark_map) {
         auto atom_no = it.first;
-        for (auto[cyc, value] : enumerate(it.second)) {
-            mark[atom_no][cyc] = int(value);
+        for (const auto &ele : it.second | boost::adaptors::indexed(0)) {
+            mark[atom_no][ele.index()] = int(ele.value());
         }
     }
     calculate();

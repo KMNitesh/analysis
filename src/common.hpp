@@ -182,48 +182,71 @@ inline range_object range(int end) {
 
 
 template<typename Iterable>
-class enumerate_object {
-private:
-    Iterable _iter;
-    int _size;
+class enumerate_object;
+
+template<typename Iterable>
+class enumerate_iterator {
+    decltype(std::begin(Iterable())) it;
+    int _start;
     int _step;
-    decltype(std::begin(_iter)) _begin;
-    const decltype(std::end(_iter)) _end;
-
 public:
-    enumerate_object(Iterable iter, int start = 0, int step = 1) :
-            _iter(iter),
-            _size(start),
-            _step(step),
-            _begin(std::begin(iter)),
-            _end(std::end(iter)) {}
-
-    const enumerate_object &begin() const { return *this; }
-
-    const enumerate_object &end() const { return *this; }
-
-    bool operator!=(const enumerate_object &) const {
-        return _begin != _end;
-    }
+    enumerate_iterator(decltype(std::begin(Iterable())) it, int start, int step) : it(it), _start(start), _step(step) {}
 
     void operator++() {
-        ++_begin;
-        _size += _step;
+        _start += _step;
+        ++it;
     }
 
-    auto operator*() const
-    -> std::pair<std::size_t, decltype(*_begin)> {
-        return {_size, *_begin};
+
+    bool operator!=(const enumerate_iterator<Iterable> &other) {
+        return this->it != other.it;
     }
 
-    enumerate_object &start(const int &start) {
-        _size = start;
+    auto operator*() const {
+        return std::make_pair(_start, *it);
+    }
+
+};
+
+template<typename Iterable>
+class enumerate_object {
+    friend class enumerate_iterator<Iterable>;
+
+    Iterable &_iter;
+    int _start;
+    int _step;
+
+public:
+    explicit enumerate_object(Iterable &iter, int start = 0, int step = 1) :
+            _iter(iter),
+            _start(start),
+            _step(step) {
+//    std::cout << "Constructor1\n";
+    }
+
+    explicit enumerate_object(Iterable &&iter, int start = 0, int step = 1) :
+            _iter(iter),
+            _start(start),
+            _step(step) {
+//    std::cout << "Constructor2\n";
+    }
+
+    virtual ~enumerate_object() {
+//    std::cout << "Destructor\n";
+    }
+
+    auto begin() { return enumerate_iterator<Iterable>(std::begin(_iter), _start, _step); }
+
+    auto end() { return enumerate_iterator<Iterable>(std::end(_iter), _start, _step); }
+
+    enumerate_object &start(int start) {
+        _start = start;
         return *this;
     }
 
-    enumerate_object &step(const int &step) {
+    enumerate_object &step(int step) {
         if (step == 0) {
-            throw std::runtime_error("Zero Increment Not Allowed");
+            throw std::runtime_error("ERROR !! step cannot zero!");
         }
         _step = step;
         return *this;
@@ -231,13 +254,18 @@ public:
 };
 
 /*
- *  Python-like enumerate function in C++
+ *    Python-like enumerate function in C++
+ *
  */
 
 template<typename Iterable>
-auto enumerate(Iterable &&iter)
--> enumerate_object<Iterable> {
-    return {std::forward<Iterable>(iter)};
+auto enumerate(Iterable &&iter) {
+    return enumerate_object<std::remove_reference_t<Iterable>>(std::forward<Iterable>(iter));
+}
+
+template<typename T>
+auto enumerate(std::initializer_list<T> &&iter) {
+    return enumerate_object<std::initializer_list<T>>(std::forward<std::initializer_list<T>>(iter));
 }
 
 template<typename T, typename... Args>
@@ -248,12 +276,13 @@ auto format(T &&s, Args &&... args) {
 std::string print_cmdline(int argc, const char *const argv[]);
 
 
+
 template<typename Iterable>
 class PushIterable_object {
 public:
     using value_type = typename Iterable::value_type;
 private:
-    Iterable _iter;
+    Iterable &_iter;
 
     decltype(std::begin(_iter)) _begin;
     const decltype(std::end(_iter)) _end;
@@ -261,12 +290,10 @@ private:
     std::stack<value_type> queue;
 
 public:
-
-    PushIterable_object(Iterable iter) :
+    explicit PushIterable_object(Iterable &iter) :
             _iter(iter),
             _begin(std::begin(iter)),
             _end(std::end(iter)) {}
-
 
     const PushIterable_object &begin() const { return *this; }
 
@@ -332,7 +359,7 @@ private:
     boost::optional<std::string> _curr;
 
 public:
-    CombineSeq(Iterable iter) :
+    explicit CombineSeq(Iterable &iter) :
             _iter(iter) {}
 
     CombineSeq &begin() { return *this; }
@@ -391,26 +418,26 @@ public:
 };
 
 template<typename Iterable>
-auto PushIterable(Iterable &&iter) -> PushIterable_object<Iterable> {
-    return {std::forward<Iterable>(iter)};
+auto PushIterable(Iterable &&iter) {
+    return PushIterable_object(iter);
 }
 
 
 template<typename T>
-auto PushIterable(std::initializer_list<T> &&iter) -> PushIterable_object<std::initializer_list<T>> {
-    return {std::forward<std::initializer_list<T>>(iter)};
+auto PushIterable(std::initializer_list<T> &&iter) {
+    return PushIterable_object(iter);
 }
 
 
 template<typename Iterable>
-auto combine_seq(Iterable &&iter) -> CombineSeq<std::remove_reference_t<Iterable>> {
-    return {std::forward<Iterable>(iter)};
+auto combine_seq(Iterable &&iter) {
+    return CombineSeq(iter);
 }
 
 
 template<typename T>
-auto combine_seq(std::initializer_list<T> &&iter) -> CombineSeq<std::initializer_list<T>> {
-    return {std::forward<std::initializer_list<T>>(iter)};
+auto combine_seq(std::initializer_list<T> &&iter) {
+    return CombineSeq(iter);
 }
 
 #endif //TINKER_COMMON_HPP

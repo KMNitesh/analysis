@@ -107,9 +107,9 @@ protected:
 
     std::vector<Cluster::conf_clust> initialize_conf_clust_vector(int conf_size) const;
 
-    void setCutoff(double cutoff) { this->cutoff = cutoff; };
-
     std::list<Cluster::rmsd_matrix> do_calculate_rmsd_list_parallel();
+
+    void setSetting(const Atom::AtomIndenter &atomIndenter, double cutoff);
 };
 
 std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std::vector<Cluster::conf_clust> &clusts);

@@ -167,7 +167,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
         if (!b_added_topology) {
             if (vm.count("topology")) {
-                std::__cxx11::string topol = vm["topology"].as<std::__cxx11::string>();
+                std::string topol = vm["topology"].as<std::string>();
                 if (boost::filesystem::exists(topol)) {
                     reader->add_topology(topol);
                     b_added_topology = true;

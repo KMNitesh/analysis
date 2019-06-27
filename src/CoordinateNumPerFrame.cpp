@@ -2,8 +2,10 @@
 // Created by xiamr on 6/14/19.
 //
 
+#include <boost/range/adaptors.hpp>
 #include "CoordinateNumPerFrame.hpp"
 #include "frame.hpp"
+
 
 void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
 
@@ -26,8 +28,8 @@ void CoordinateNumPerFrame::print() {
     outfile << "type 2 :" << ids2 << '\n';
     outfile << "cutoff :" << dist_cutoff << '\n';
     outfile << "***************************" << '\n';
-    for (auto[frame, coordination_number] : enumerate(cn_list).start(1)) {
-        outfile << frame << "   " << coordination_number << '\n';
+    for (const auto &element: cn_list | boost::adaptors::indexed(1)) {
+        outfile << element.index() << "   " << element.value() << '\n';
     }
     outfile << "***************************" << '\n';
 }

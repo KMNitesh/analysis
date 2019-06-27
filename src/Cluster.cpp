@@ -105,7 +105,7 @@ list<Cluster::rmsd_matrix> Cluster::do_calculate_rmsd_list_parallel() {
             for (int index1 = range.begin(); index1 != range.end(); ++index1) {
                 for (int index2 = index1 + 1; index2 < steps; ++index2) {
                     rms = parent->rmsvalue(index1, index2);
-                    if (rms < cutoff) local_rms_list.emplace_back(index1, index2, rms);
+                    local_rms_list.emplace_back(index1, index2, rms);
                 }
             }
             local_rms_list.sort([](const rmsd_matrix &m1, const rmsd_matrix &m2) { return (m1.rms < m2.rms); });
@@ -263,9 +263,9 @@ vector<Cluster::conf_clust> Cluster::initialize_conf_clust_vector(int conf_size)
 }
 
 void Cluster::readInfo() {
-
-    Atom::select1group(ids, "Please enter group > ");
-    this->cutoff = choose(0.0, static_cast<double>(numeric_limits<int>::max()), "Cutoff > ");
+    Atom::AtomIndenter atomIndenter;
+    Atom::select1group(atomIndenter, "Please enter group > ");
+    setSetting(atomIndenter, choose(0.0, static_cast<double>(numeric_limits<int>::max()), "Cutoff > "));
 }
 
 void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) {
@@ -273,6 +273,12 @@ void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) {
                   [this](shared_ptr<Atom> &atom) {
                       if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
                   });
+}
+
+void Cluster::setSetting(const Atom::AtomIndenter &atomIndenter, double cutoff) {
+    this->ids = atomIndenter;
+    assert(cutoff > 0);
+    this->cutoff = cutoff;
 }
 
 /*
@@ -295,50 +301,45 @@ unordered_map<int, vector<int>> do_find_frames_in_same_clust(const vector<Cluste
 unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
         const vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list) {
     unordered_map<int, std::pair<int, double>> ret;
-    struct item {
-        item(int i, double rmsd_sum = 0.0) : i(i), rmsd_sum(rmsd_sum) {}
+    double rmsd_sum[clusts.size()] = {0.0};
+    unordered_map<int, unordered_set<int>> s;
 
-        int i;
-        double rmsd_sum;
-    };
-
-    struct KeyHasher {
-        std::size_t operator()(const item &t) const {
-            std::size_t seed;
-            boost::hash_combine(seed, t.i);
-            return seed;
-        }
-    };
-
-    struct ItemEqual {
-        bool operator()(const struct item &t1, const struct item &t2) const {
-            return t1.i == t2.i;
-        }
-    };
-
-    unordered_map<int, unordered_set<struct item, KeyHasher, ItemEqual>> s;
+    int clust_map[clusts.size()];
 
     for (const auto &i : clusts) {
         s[i.clust].insert(i.conf);
+        assert(i.conf >= 0 && i.conf < clusts.size());
+        clust_map[i.conf] = i.clust;
     }
-
     for (auto &i : rmsd_list) {
-        for (auto it = s.begin(); it != s.end(); ++it) {
-            auto &j = it->second;
-            if (j.count(i.i) and j.count(i.j)) {
-
-                const_cast<std::remove_reference_t<decltype(j)>::value_type *>(j.find(
-                        i.i).operator->())->rmsd_sum += i.rms;
-                const_cast<std::remove_reference_t<decltype(j)>::value_type *>(j.find(
-                        i.j).operator->())->rmsd_sum += i.rms;
-            }
+        assert(i.i >= 0 && i.i < clusts.size());
+        assert(i.j >= 0 && i.j < clusts.size());
+        if (clust_map[i.i] == clust_map[i.j]) {
+            rmsd_sum[i.i] += i.rms;
+            rmsd_sum[i.j] += i.rms;
         }
     }
 
+#ifndef NDEBUG
+    // DEBUG
+    if (outfile.is_open()) {
+        outfile << "DEBUG INFORMATION BEGIN\n";
+        for (const auto &p : rmsd_list) {
+            outfile << format("i = %d,  j = %d, rmsd = %g\n", p.i, p.j, p.rms);
+        }
+        for (const auto rmsd : rmsd_sum) {
+            outfile << "rmsd_sum = " << rmsd << '\n';
+        }
+        outfile << "DEBUG INFORMATION END\n";
+    }
+    //
+#endif
     for (auto &j : s) {
         auto min = *boost::range::min_element(j.second,
-                                              [](auto &lhs, auto &rhs) { return lhs.rmsd_sum < rhs.rmsd_sum; });
-        ret[j.first] = {min.i, j.second.size() == 1 ? NAN : min.rmsd_sum / (j.second.size() - 1)};
+                                              [&rmsd_sum](auto &lhs, auto &rhs) {
+                                                  return rmsd_sum[lhs] < rmsd_sum[rhs];
+                                              });
+        ret[j.first] = {min, j.second.size() == 1 ? NAN : (rmsd_sum[min] / (j.second.size() - 1))};
     }
 
     return ret;

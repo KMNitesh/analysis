@@ -1,7 +1,7 @@
 //
 // Created by xiamr on 6/14/19.
 //
-
+#include <boost/range/adaptors.hpp>
 #include "RMSFCal.hpp"
 #include "frame.hpp"
 
@@ -100,8 +100,8 @@ void RMSFCal::print() {
     outfile << "****** RMSF Calculator ****\n";
     outfile << "SET:" << ids << '\n';
     outfile << "***************************\n";
-    for (auto[index, at] : enumerate(group)) {
-        outfile << at->seq << "     " << rmsvalue(index) << '\n';
+    for (const auto &element : group | boost::adaptors::indexed(1)) {
+        outfile << element.value()->seq << "     " << rmsvalue(element.index()) << '\n';
     }
     outfile << "***************************\n";
 }

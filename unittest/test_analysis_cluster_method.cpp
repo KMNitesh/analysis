@@ -6,6 +6,7 @@
 #include <gmock/gmock.h>
 #include <unordered_map>
 #include <utility>
+#include <tbb/tbb.h>
 
 using namespace testing;
 using namespace std;
@@ -28,12 +29,16 @@ TEST(ClusterTest, initialize_conf_clust_vector) {
     } cluster;
 
     ASSERT_EQ(cluster.test_initialize_conf_clust_vector(-1).size(), 0);
+
     ASSERT_EQ(cluster.test_initialize_conf_clust_vector(0).size(), 0);
 
-    ASSERT_THAT(cluster.test_initialize_conf_clust_vector(1), ContainerEq(vector<Cluster::conf_clust>{{0, 0}}));
-    ASSERT_THAT(cluster.test_initialize_conf_clust_vector(3), ContainerEq(vector<Cluster::conf_clust>{{0, 0},
-                                                                                                      {1, 1},
-                                                                                                      {2, 2}}));
+    ASSERT_THAT(cluster.test_initialize_conf_clust_vector(1),
+                ContainerEq(vector<Cluster::conf_clust>{{0, 0}}));
+
+    ASSERT_THAT(cluster.test_initialize_conf_clust_vector(3),
+                ContainerEq(vector<Cluster::conf_clust>{{0, 0},
+                                                        {1, 1},
+                                                        {2, 2}}));
 }
 
 TEST(ClusterTest, do_clust) {
@@ -44,7 +49,7 @@ TEST(ClusterTest, do_clust) {
             return Cluster::do_cluster(rmsd_list, conf_size);
         }
 
-        explicit ClusterTest(double cutoff) : Cluster() { setCutoff(cutoff); }
+        explicit ClusterTest(double cutoff) : Cluster() { setSetting({}, cutoff); }
     } cluster(1.0);
 
     ASSERT_THAT(cluster.test_do_cluster(list<Cluster::rmsd_matrix>{{0, 1, 1.1}}, 2),
@@ -111,17 +116,18 @@ TEST(ClusterTest, do_find_frames_in_same_clust) {
 
 
 TEST(ClusterTest, do_find_medium_in_clust) {
-    ASSERT_THAT(do_find_medium_in_clust(vector<Cluster::conf_clust>{{0, 1},
-                                                                    {1, 1},
-                                                                    {2, 1},
-                                                                    {3, 1}},
+    ASSERT_THAT(do_find_medium_in_clust(
+            vector<Cluster::conf_clust>{{0, 1},
+                                        {1, 1},
+                                        {2, 1},
+                                        {3, 1}},
 
-                                        list<Cluster::rmsd_matrix>{{2, 3, 0.9},
-                                                                   {0, 1, 0.8},
-                                                                   {1, 3, 0.7},
-                                                                   {0, 2, 0.6},
-                                                                   {1, 2, 0.7},
-                                                                   {0, 3, 0.1}}),
+            list<Cluster::rmsd_matrix>{{2, 3, 0.9},
+                                       {0, 1, 0.8},
+                                       {1, 3, 0.7},
+                                       {0, 2, 0.6},
+                                       {1, 2, 0.7},
+                                       {0, 3, 0.1}}),
                 ContainerEq(unordered_map<int, pair<int, double>>{{1, {0, 0.5}}}));
 
 
@@ -134,22 +140,101 @@ TEST(ClusterTest, do_find_medium_in_clust) {
      *
      */
 
-    auto ret = do_find_medium_in_clust(vector<Cluster::conf_clust>{
-                                               {0, 1},
-                                               {1, 1},
-                                               {2, 1},
-                                               {3, 2}},
+    auto ret = do_find_medium_in_clust(
+            vector<Cluster::conf_clust>{
+                    {0, 1},
+                    {1, 1},
+                    {2, 1},
+                    {3, 2}},
 
-                                       list<Cluster::rmsd_matrix>{{0, 2, 0.7},
-                                                                  {0, 1, 0.8},
-                                                                  {1, 3, 1.1},
-                                                                  {1, 2, 1.1},
-                                                                  {2, 3, 2.0}});
+            list<Cluster::rmsd_matrix>{{0, 2, 0.7},
+                                       {0, 1, 0.8},
+                                       {1, 3, 1.1},
+                                       {1, 2, 1.1},
+                                       {2, 3, 2.0}});
     ASSERT_THAT(ret.count(1), Eq(1));
     ASSERT_THAT(ret.count(2), Eq(1));
     ASSERT_THAT(ret[1].first, Eq(0));
     ASSERT_THAT(ret[1].second, NanSensitiveDoubleEq(0.75));
     ASSERT_THAT(ret[2].first, Eq(3));
     ASSERT_THAT(ret[2].second, NanSensitiveDoubleEq(NAN));
+
+}
+
+TEST(ClusterTest, do_sort_and_renumber_parallel) {
+    class ClusterTest : public Cluster {
+    public:
+        int test_do_sort_and_renumber_parallel(std::vector<conf_clust> &conf_clust_vector) const {
+            return do_sort_and_renumber_parallel(conf_clust_vector);
+        }
+    } cluster;
+    vector<Cluster::conf_clust> conf_clusts = {{0, 0},
+                                               {1, 0},
+                                               {2, 1},
+                                               {3, 1},
+                                               {4, 1},
+                                               {5, 1},
+                                               {6, 8},
+                                               {7, 8},
+                                               {8, 8}};
+
+    tbb::task_scheduler_init tbb_init;
+
+    ASSERT_THAT(cluster.test_do_sort_and_renumber_parallel(conf_clusts), Eq(3));
+    using cc = Cluster::conf_clust;
+    ASSERT_THAT(conf_clusts,
+                ElementsAre(cc(0, 1), cc(1, 1), cc(2, 2), cc(3, 2), cc(4, 2),
+                            cc(5, 2), cc(6, 3), cc(7, 3), cc(8, 3)));
+
+}
+
+//TEST(ClusterTest,setSetting) {
+//    class ClusterTest : public Cluster {
+//    public:
+//        void test_setSetting(double cutoff)  {
+//            setSetting({},cutoff);
+//        }
+//    } cluster;
+//
+//    cluster.test_setSetting(0);
+//}
+
+TEST(ClusterTest, do_renumber_clust) {
+    class ClusterTest : public Cluster {
+    public:
+        int test_do_renumber_clust(std::vector<conf_clust> &conf_clust_vector) const {
+            return do_renumber_clust(conf_clust_vector);
+        }
+    } cluster;
+    vector<Cluster::conf_clust> conf_clusts = {{0, 0},
+                                               {1, 0},
+                                               {2, 1},
+                                               {3, 1},
+                                               {4, 1},
+                                               {5, 1},
+                                               {6, 8},
+                                               {7, 8},
+                                               {8, 8}};
+
+    ASSERT_THAT(cluster.test_do_renumber_clust(conf_clusts), Eq(3));
+    using cc = Cluster::conf_clust;
+    ASSERT_THAT(conf_clusts,
+                ElementsAre(cc(0, 1), cc(1, 1), cc(2, 2), cc(3, 2), cc(4, 2),
+                            cc(5, 2), cc(6, 3), cc(7, 3), cc(8, 3)));
+
+    conf_clusts = {{0, 0},
+                   {1, 0},
+                   {2, 9},
+                   {3, -1},
+                   {4, -1},
+                   {5, 1},
+                   {6, 8},
+                   {7, 8},
+                   {8, 8}};
+    ASSERT_THAT(cluster.test_do_renumber_clust(conf_clusts), Eq(5));
+
+    ASSERT_THAT(conf_clusts,
+                ElementsAre(cc(0, 1), cc(1, 1), cc(2, 2), cc(3, 3), cc(4, 3),
+                            cc(5, 4), cc(6, 5), cc(7, 5), cc(8, 5)));
 
 }
