@@ -50,6 +50,7 @@ public:
 
     void fastConvertTo(std::string target);
 
+    void doPBC(std::shared_ptr<Frame> &frame) const;
 };
 
 #endif //TINKER_TRAJCONV_HPP

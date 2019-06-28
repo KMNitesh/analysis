@@ -63,7 +63,7 @@ TEST(XTCWriter, WriteFrameToFile) {
     atom2->x = 0.90;
     atom2->y = 3.19;
     atom2->z = 4.1;
-    atom1->seq = 2;
+    atom2->seq = 2;
 
     frame->atom_list = {atom1, atom2};
     frame->atom_map = {{atom1->seq, atom1},

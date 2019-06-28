@@ -60,3 +60,11 @@ gtest_discover_tests(test_xtcwriter)
 add_executable(test_netcdfwriter test_netcdfwriter.cpp)
 target_link_libraries(test_netcdfwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_netcdfwriter)
+
+add_executable(test_growriter test_growriter.cpp)
+target_link_libraries(test_growriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_growriter)
+
+add_executable(test_TrajectoryWriterFactoryImpl test_TrajectoryWriterFactoryImpl.cpp)
+target_link_libraries(test_TrajectoryWriterFactoryImpl base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_TrajectoryWriterFactoryImpl)

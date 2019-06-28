@@ -79,7 +79,8 @@ FileType getFileType(const std::string &filename) {
             {".arc",   FileType::ARC},
             {".tpr",   FileType::TPR},
             {".mol2",  FileType::MOL2},
-            {".prm",   FileType::PRM}
+            {".prm",   FileType::PRM},
+            {".gro",   FileType::GRO}
     };
 
     auto it = mapping.find(extension);

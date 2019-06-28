@@ -50,6 +50,7 @@ enum class FileType {
     TPR,
     MOL2,
     PRM,
+    GRO,
     UnKnown
 };
 
@@ -274,7 +275,6 @@ auto format(T &&s, Args &&... args) {
 }
 
 std::string print_cmdline(int argc, const char *const argv[]);
-
 
 
 template<typename Iterable>

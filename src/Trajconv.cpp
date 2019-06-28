@@ -11,10 +11,30 @@
 
 
 void Trajconv::process(std::shared_ptr<Frame> &frame) {
+    doPBC(frame);
+
+    if (step == 0) {
+        if (enable_gro) {
+            GROWriter w;
+            w.open(grofilename);
+            w.write(frame);
+            w.close();
+        }
+        if (enable_xtc) xtc.open(xtcfilename);
+        if (enable_trr) trr.open(trrfilename);
+        if (enable_mdcrd) mdcrd.open(mdcrdfilename);
+    }
+    if (enable_xtc) xtc.write(frame);
+    if (enable_trr) trr.write(frame);
+    if (enable_mdcrd) mdcrd.write(frame);
+    step++;
+}
+
+void Trajconv::doPBC(std::shared_ptr<Frame> &frame) const {
     if (pbc_type == PBCType::OneAtom) {
-        auto center_x = frame->atom_map[this->num]->x;
-        auto center_y = frame->atom_map[this->num]->y;
-        auto center_z = frame->atom_map[this->num]->z;
+        auto center_x = frame->atom_map[num]->x;
+        auto center_y = frame->atom_map[num]->y;
+        auto center_z = frame->atom_map[num]->z;
 
         for (auto &mol : frame->molecule_list) {
             for (auto &atom : mol->atom_list) {
@@ -24,7 +44,7 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
             }
         }
     } else if (pbc_type == PBCType::OneMol) {
-        auto center_mol = frame->atom_map[this->num]->molecule.lock();
+        auto center_mol = frame->atom_map[num]->molecule.lock();
         center_mol->calc_geom_center(frame);
         auto center_x = center_mol->center_x;
         auto center_y = center_mol->center_y;
@@ -74,22 +94,6 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
             }
         }
     }
-
-    if (step == 0) {
-        if (enable_gro) {
-            GROWriter w;
-            w.open(grofilename);
-            w.write(frame);
-            w.close();
-        }
-        if (enable_xtc) xtc.open(xtcfilename);
-        if (enable_trr) trr.open(trrfilename);
-        if (enable_mdcrd) mdcrd.open(mdcrdfilename);
-    }
-    if (enable_xtc) xtc.write(frame);
-    if (enable_trr) trr.write(frame);
-    if (enable_mdcrd) mdcrd.write(frame);
-    step++;
 }
 
 void Trajconv::print() {

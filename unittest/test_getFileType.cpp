@@ -39,6 +39,11 @@ TEST(getFileType, PRMFile) {
     ASSERT_EQ(getFileType("abx.prm"), FileType::PRM);
 }
 
+TEST(getFileType, GROGile) {
+    ASSERT_EQ(getFileType("abx.gro"), FileType::GRO);
+}
+
+
 TEST(getFileType, NoExtension) {
     ASSERT_EQ(getFileType("abx"), FileType::UnKnown);
 }
