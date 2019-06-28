@@ -48,3 +48,11 @@ gtest_discover_tests(test_analysis_cluster_method)
 add_executable(test_combine_seq test_combine_seq.cpp)
 target_link_libraries(test_combine_seq base ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests(test_combine_seq)
+
+add_executable(test_trrwriter test_trrwriter.cpp)
+target_link_libraries(test_trrwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_trrwriter)
+
+add_executable(test_xtcwriter test_xtcwriter.cpp)
+target_link_libraries(test_xtcwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_xtcwriter)

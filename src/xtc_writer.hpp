@@ -7,28 +7,32 @@
 
 #include <string>
 #include <memory>
-namespace gmx {
 
-#include "gromacs/fileio/xtcio.h"
-#include "gromacs/fileio/trnio.h"
-#include "gromacs/utility/smalloc.h"
-
-}
+#include "TrajectoryFormatWriter.hpp"
+#include "GromacsInterface.hpp"
+#include "GromacsImpl.hpp"
 
 class Frame;
 
-class XTCWriter {
+class XTCWriter : public TrajectoryFormatWriter {
     gmx::t_fileio *xd = nullptr;
-    gmx::rvec *x = nullptr;
     int step;
     gmx::real prec, time;
 public:
-    void open(const std::string &filename);
+    void open(const std::string &filename) override;
 
-    void write(std::shared_ptr<Frame> &frame);
+    void write(const std::shared_ptr<Frame> &frame) override;
 
-    void close();
+    void close() override;
 
+protected:
+    /*
+ *  Interface for Mock
+ */
+    virtual GromacsInterface *getGromacsImpl() {
+        static GromacsImpl impl;
+        return &impl;
+    }
 };
 
 

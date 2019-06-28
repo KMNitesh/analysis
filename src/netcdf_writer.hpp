@@ -15,21 +15,26 @@ namespace gmx {
 
 }
 
+#include "boost/optional.hpp"
 #include "AmberNetcdf.h"
+
+#include "TrajectoryFormatWriter.hpp"
 
 class Frame;
 
 
-class NetCDFWriter {
+class NetCDFWriter : public TrajectoryFormatWriter {
     struct AmberNetcdf NC;
+    bool _is_open = false;
     double *x = nullptr;
     int step = 0;
+    std::string filename;
 public:
-    void open(const std::string &filename, int natom);
+    void open(const std::string &filename) override;
 
-    void close();
+    void close() override;
 
-    void write(const std::shared_ptr<Frame> &frame);
+    void write(const std::shared_ptr<Frame> &frame) override;
 };
 
 

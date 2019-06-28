@@ -9,17 +9,23 @@
 #include "gmxtrr.h"
 
 
-void NetCDFWriter::open(const std::string &filename, int natom) {
-    if (netcdfCreate(&NC, filename.c_str(), natom, 1)) {
-        std::cerr << "Error open " << filename << std::endl;
-    }
+void NetCDFWriter::open(const std::string &filename) {
+    this->filename = filename;
 }
 
 void NetCDFWriter::close() {
     netcdfClose(&NC);
+    _is_open = false;
 }
 
 void NetCDFWriter::write(const std::shared_ptr<Frame> &frame) {
+    if (!_is_open) {
+        if (netcdfCreate(&NC, filename.c_str(), frame->atom_list.size(), 1)) {
+            throw std::runtime_error("Error open " + filename);
+        }
+        _is_open = true;
+    }
+
     if (step == 0) {
         x = new double[NC.ncatom3];
 

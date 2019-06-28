@@ -7,19 +7,22 @@
 #include "atom.hpp"
 #include "gmxtrr.h"
 
+#include "ThrowAssert.hpp"
+
 void XTCWriter::open(const std::string &filename) {
     // First Time
-    xd = gmx::open_xtc(filename.c_str(), "w");
+    throw_assert(xd == nullptr, "Gromacs Xtc File handle not close");
+    xd = getGromacsImpl()->open_xtc(filename.c_str(), "w");
+    throw_assert(xd != nullptr, "Gromacs Xtc File handle open error");
     step = 0;
     time = 0.0;
     prec = 1000.0;
 
 }
 
-void XTCWriter::write(std::shared_ptr<Frame> &frame) {
-    if (!x) {
-        x = new gmx::rvec[frame->atom_list.size()];
-    }
+void XTCWriter::write(const std::shared_ptr<Frame> &frame) {
+    throw_assert(xd != nullptr, "Gromacs Xtc File handle invalid");
+    gmx::rvec x[frame->atom_list.size()];
     int i = 0;
     for (auto &atom : frame->atom_list) {
         x[i][0] = atom->x / 10.0;
@@ -31,13 +34,14 @@ void XTCWriter::write(std::shared_ptr<Frame> &frame) {
     gmx::rvec box[3];
     translate(frame->a_axis / 10.0, frame->b_axis / 10.0, frame->c_axis / 10.0,
               frame->alpha, frame->beta, frame->gamma, box);
-    gmx::write_xtc(xd, i, step, time, box, x, prec);
+    getGromacsImpl()->write_xtc(xd, i, step, time, box, x, prec);
 
     step++;
     time++;
 }
 
 void XTCWriter::close() {
-    gmx::close_xtc(xd);
-    delete[] x;
+    throw_assert(xd != nullptr, "Gromacs Xtc File handle invalid");
+    getGromacsImpl()->close_xtc(xd);
+    xd = nullptr;
 }

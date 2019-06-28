@@ -5,6 +5,8 @@
 
 #include "gmxtrr.h"
 #include "../src/common.hpp"
+#include "../src/ThrowAssert.hpp"
+
 using namespace std;
 
 extern "C" {
@@ -113,6 +115,9 @@ void append_frame_x_(const char *fn,int *leng, int *step, double *time,
 
 void translate( gmx::real xbox, gmx::real ybox, gmx::real zbox,
                 gmx::real alpha, gmx::real beta, gmx::real gamma, gmx::rvec *box){
+
+    throw_assert(xbox > 0 and ybox > 0 and zbox > 0 and alpha > 0 and beta > 0 and gamma > 0, "PBC BOX INVAILD");
+
     bool triclinic = false;
     bool orthogonal = false;
     bool octahedron = false;

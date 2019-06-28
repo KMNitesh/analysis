@@ -30,6 +30,8 @@
 #include <sstream>
 #include <iostream>
 
+#define THROWASSERT_LOGGER(report)
+
 /// Exception type for assertion failures
 class AssertionFailureException : public std::exception {
 private:

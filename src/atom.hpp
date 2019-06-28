@@ -25,7 +25,7 @@ class Molecule;
 
 class Atom {
 public:
-    size_t seq;
+    std::size_t seq;
     std::string atom_name;
 
     double x, y, z;  // position
@@ -39,7 +39,7 @@ public:
 
     boost::optional<double> mass;
 
-    std::list<size_t> con_list; // atom num that connect to
+    std::list<std::size_t> con_list; // atom num that connect to
 
     std::weak_ptr<Molecule> molecule;
 

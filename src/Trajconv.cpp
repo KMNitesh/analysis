@@ -78,11 +78,13 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
     if (step == 0) {
         if (enable_gro) {
             GROWriter w;
-            w.write(grofilename, frame);
+            w.open(grofilename);
+            w.write(frame);
+            w.close();
         }
         if (enable_xtc) xtc.open(xtcfilename);
         if (enable_trr) trr.open(trrfilename);
-        if (enable_mdcrd) mdcrd.open(mdcrdfilename, frame->atom_list.size());
+        if (enable_mdcrd) mdcrd.open(mdcrdfilename);
     }
     if (enable_xtc) xtc.write(frame);
     if (enable_trr) trr.write(frame);
