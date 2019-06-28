@@ -14,22 +14,21 @@ void NetCDFWriter::open(const std::string &filename) {
 }
 
 void NetCDFWriter::close() {
-    netcdfClose(&NC);
-    _is_open = false;
+    if (_is_open) {
+        getNetcdfImpl()->netcdfClose(&NC);
+        _is_open = false;
+    }
 }
 
 void NetCDFWriter::write(const std::shared_ptr<Frame> &frame) {
     if (!_is_open) {
-        if (netcdfCreate(&NC, filename.c_str(), frame->atom_list.size(), 1)) {
+        if (getNetcdfImpl()->netcdfCreate(&NC, filename.c_str(), frame->atom_list.size(), 1)) {
             throw std::runtime_error("Error open " + filename);
         }
         _is_open = true;
     }
 
-    if (step == 0) {
-        x = new double[NC.ncatom3];
-
-    }
+    double x[NC.ncatom3];
     double box[6];
     box[0] = frame->a_axis;
     box[1] = frame->b_axis;
@@ -46,7 +45,7 @@ void NetCDFWriter::write(const std::shared_ptr<Frame> &frame) {
         *p = atom->z;
         p++;
     }
-    if (netcdfWriteNextFrame(&NC, x, box)) {
+    if (getNetcdfImpl()->netcdfWriteNextFrame(&NC, x, box)) {
         std::cerr << "Error write  mdcrd frame " << std::endl;
     }
     step++;

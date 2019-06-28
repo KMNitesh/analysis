@@ -19,6 +19,8 @@ namespace gmx {
 #include "AmberNetcdf.h"
 
 #include "TrajectoryFormatWriter.hpp"
+#include "NetcdfInterface.hpp"
+#include "NetcdfImpl.hpp"
 
 class Frame;
 
@@ -26,7 +28,6 @@ class Frame;
 class NetCDFWriter : public TrajectoryFormatWriter {
     struct AmberNetcdf NC;
     bool _is_open = false;
-    double *x = nullptr;
     int step = 0;
     std::string filename;
 public:
@@ -35,6 +36,12 @@ public:
     void close() override;
 
     void write(const std::shared_ptr<Frame> &frame) override;
+
+protected:
+    virtual NetcdfInterface *getNetcdfImpl() {
+        static NetcdfImpl impl;
+        return &impl;
+    }
 };
 
 

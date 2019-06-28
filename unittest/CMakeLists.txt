@@ -56,3 +56,7 @@ gtest_discover_tests(test_trrwriter)
 add_executable(test_xtcwriter test_xtcwriter.cpp)
 target_link_libraries(test_xtcwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_xtcwriter)
+
+add_executable(test_netcdfwriter test_netcdfwriter.cpp)
+target_link_libraries(test_netcdfwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_netcdfwriter)
