@@ -119,7 +119,7 @@ list<Cluster::rmsd_matrix> Cluster::do_calculate_rmsd_list_parallel() {
     return core.local_rms_list;
 }
 
-void Cluster::print() {
+void Cluster::print(std::ostream &os) {
 
     auto rmsd_list = do_calculate_rmsd_list_parallel();
 
@@ -138,19 +138,19 @@ void Cluster::print() {
     int cid = do_sort_and_renumber_parallel(c);
 
 
-    outfile << "***************************" << endl;
-    outfile << "*Cluster Analysis(Linkage)*" << endl;
-    outfile << "SET:" << ids << endl;
-    outfile << "cutoff : " << this->cutoff << endl;
-    outfile << "Total cluster number : " << cid << '\n';
-    outfile << "***************************" << endl;
+    os << "***************************" << endl;
+    os << "*Cluster Analysis(Linkage)*" << endl;
+    os << "SET:" << ids << endl;
+    os << "cutoff : " << this->cutoff << endl;
+    os << "Total cluster number : " << cid << '\n';
+    os << "***************************" << endl;
     for (unsigned int k = 0; k < c.size(); k++) {
-        outfile << k + 1 << "   " << c[k].clust << endl;
+        os << k + 1 << "   " << c[k].clust << endl;
     }
-    outfile << "***************************" << endl;
+    os << "***************************" << endl;
 
     unordered_map<int, vector<int>> mm = do_find_frames_in_same_clust(c);
-    outfile << "# Clust No.   Count      Frames";
+    os << "# Clust No.   Count      Frames";
     for (auto i_clust : range(1, cid + 1)) {
 
         auto &s = mm[i_clust];
@@ -159,25 +159,25 @@ void Cluster::print() {
 
             if (index % 10 == 0) {
                 if (index == 0) {
-                    outfile << format("\n%-10d      %-10d ", i_clust, s.size());
+                    os << format("\n%-10d      %-10d ", i_clust, s.size());
                 } else {
-                    outfile << '\n' << std::string(27, ' ');
+                    os << '\n' << std::string(27, ' ');
                 }
             }
-            outfile << ' ' << frame << ' ';
+            os << ' ' << frame << ' ';
             index++;
         }
     }
-    outfile << "\n***************************" << endl;
+    os << "\n***************************" << endl;
 
     unordered_map<int, std::pair<int, double>> mm2 = do_find_medium_in_clust(c, rmsd_list);
 
-    outfile << "#     Clust No.      Fame Count    Medium_Frame         AvgRMSD\n";
+    os << "#     Clust No.      Fame Count    Medium_Frame         AvgRMSD\n";
     for (int i_clust : range(1, cid + 1)) {
-        outfile << format("%15d %15d %15d %15g\n",
-                          i_clust, mm[i_clust].size(), mm2[i_clust].first + 1, mm2[i_clust].second);
+        os << format("%15d %15d %15d %15g\n",
+                     i_clust, mm[i_clust].size(), mm2[i_clust].first + 1, mm2[i_clust].second);
     }
-    outfile << "***************************" << endl;
+    os << "***************************" << endl;
 
 
 }
@@ -323,16 +323,16 @@ unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
 
 #ifndef NDEBUG
     // DEBUG
-    if (outfile.is_open()) {
-        outfile << "DEBUG INFORMATION BEGIN\n";
-        for (const auto &p : rmsd_list) {
-            outfile << format("i = %d,  j = %d, rmsd = %g\n", p.i, p.j, p.rms);
-        }
-        for (const auto rmsd : rmsd_sum) {
-            outfile << "rmsd_sum = " << rmsd << '\n';
-        }
-        outfile << "DEBUG INFORMATION END\n";
-    }
+//    if (outfile.is_open()) {
+//        outfile << "DEBUG INFORMATION BEGIN\n";
+//        for (const auto &p : rmsd_list) {
+//            outfile << format("i = %d,  j = %d, rmsd = %g\n", p.i, p.j, p.rms);
+//        }
+//        for (const auto rmsd : rmsd_sum) {
+//            outfile << "rmsd_sum = " << rmsd << '\n';
+//        }
+//        outfile << "DEBUG INFORMATION END\n";
+//    }
     //
 #endif
     for (auto &j : s) {

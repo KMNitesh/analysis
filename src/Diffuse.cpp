@@ -67,7 +67,7 @@ void Diffuse::process(std::shared_ptr<Frame> &frame) {
 
 }
 
-void Diffuse::print() {
+void Diffuse::print(std::ostream &os) {
 
     vector<int> ntime(total_frame_number, 0);
     vector<double> xmsd(total_frame_number, 0.0);
@@ -186,11 +186,11 @@ void Diffuse::print() {
         zmsd[i] /= counts;
     }
 
-    outfile << "*********************************************************" << endl;
-    outfile << "Group :" << ids << endl;
-    outfile << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
-    outfile << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD        Diff Const" << endl;
-    outfile << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)     (x 10^-5 cm**2/sec)" << endl;
+    os << "*********************************************************" << endl;
+    os << "Group :" << ids << endl;
+    os << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
+    os << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD        Diff Const" << endl;
+    os << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)     (x 10^-5 cm**2/sec)" << endl;
 
     for (int i = 0; i < total_frame_number - 1; i++) {
         double delta = time_increment_ps * (i + 1);
@@ -199,11 +199,11 @@ void Diffuse::print() {
         double zvalue = zmsd[i];
         double rvalue = xmsd[i] + ymsd[i] + zmsd[i];
         double dvalue = dunits * rvalue / delta / 6.0;
-        outfile << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
-                   delta % xvalue % yvalue % zvalue % rvalue % dvalue;
+        os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
+              delta % xvalue % yvalue % zvalue % rvalue % dvalue;
 
     }
-    outfile << "*********************************************************" << endl;
+    os << "*********************************************************" << endl;
 
 }
 

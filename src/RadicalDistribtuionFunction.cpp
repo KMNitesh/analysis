@@ -58,7 +58,7 @@ void RadicalDistribtuionFunction::readInfo() {
 
 }
 
-void RadicalDistribtuionFunction::print() {
+void RadicalDistribtuionFunction::print(std::ostream &os) {
     if (numj != 0 and numk != 0) {
         double factor = (4.0 / 3.0) * M_PI * nframe;
         int pairs = numj * numk;
@@ -98,20 +98,20 @@ void RadicalDistribtuionFunction::print() {
         }
     }
 
-    outfile << "************************************************\n";
-    outfile << "***** Pairwise Radial Distribution Function ****\n";
+    os << "************************************************\n";
+    os << "***** Pairwise Radial Distribution Function ****\n";
 
-    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << '\n';
+    os << "First Type : " << ids1 << " Second Type : " << ids2 << '\n';
 
-    outfile << "************************************************\n";
-    outfile << "Bin    Counts    Distance    Raw g(r)  Smooth g(r)   Integral\n";
+    os << "************************************************\n";
+    os << "Bin    Counts    Distance    Raw g(r)  Smooth g(r)   Integral\n";
 
     for (int i = 1; i <= nbin; i++) {
-        outfile << boost::format("%d        %d      %.4f      %.4f     %.4f      %.4f\n") %
-                   i % hist[i] % ((i - 0.5) * width) % gr[i] % gs[i] % integral[i];
+        os << boost::format("%d        %d      %.4f      %.4f     %.4f      %.4f\n") %
+              i % hist[i] % ((i - 0.5) * width) % gr[i] % gs[i] % integral[i];
     }
 
-    outfile << "************************************************\n";
+    os << "************************************************\n";
 }
 
 void RadicalDistribtuionFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {

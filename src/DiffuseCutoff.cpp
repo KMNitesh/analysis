@@ -96,7 +96,7 @@ void DiffuseCutoff::process(std::shared_ptr<Frame> &frame) {
     }
 }
 
-void DiffuseCutoff::print() {
+void DiffuseCutoff::print(std::ostream &os) {
     std::vector<std::pair<int, tuple<double, double, double>>> msd;
     for (auto list_ptr : this->rcm) {
         size_t i = 0;
@@ -128,12 +128,12 @@ void DiffuseCutoff::print() {
         get<2>(i.second) /= counts;
     }
 
-    outfile << "*********************************************************" << endl;
-    outfile << "cutoff : " << std::sqrt(cutoff2) << std::endl;
-    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
-    outfile << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
-    outfile << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD       Diff Const" << endl;
-    outfile << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)    (x 10^-5 cm**2/sec)" << endl;
+    os << "*********************************************************" << endl;
+    os << "cutoff : " << std::sqrt(cutoff2) << std::endl;
+    os << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
+    os << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
+    os << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD       Diff Const" << endl;
+    os << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)    (x 10^-5 cm**2/sec)" << endl;
 
     for (size_t i = 0; i < msd.size(); i++) {
         double delta = time_increment_ps * (i + 1);
@@ -142,10 +142,10 @@ void DiffuseCutoff::print() {
         double zvalue = get<2>(msd[i].second);
         double rvalue = xvalue + yvalue + zvalue;
         double dvalue = dunits * rvalue / delta / 6.0;
-        outfile << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
-                   delta % xvalue % yvalue % zvalue % rvalue % dvalue;
+        os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
+              delta % xvalue % yvalue % zvalue % rvalue % dvalue;
     }
-    outfile << "*********************************************************" << endl;
+    os << "*********************************************************" << endl;
 }
 
 void DiffuseCutoff::readInfo() {

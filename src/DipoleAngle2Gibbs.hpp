@@ -9,7 +9,7 @@
 
 class DipoleAngle2Gibbs : public DipoleAngle {
 public:
-    void print() override;
+    void print(std::ostream &os) override;
 
     void readInfo() override;
 
@@ -23,6 +23,7 @@ protected:
     double temperature;  // unit: K
     const double avogadro_constant = 6.022140857e23;
 
+    void printData(std::ostream &os) const;
 };
 
 #endif //TINKER_DIPOLEANGLE2GIBBS_HPP

@@ -8,6 +8,7 @@
 #include "atom.hpp"
 #include "frame.hpp"
 #include "forcefield.hpp"
+#include "ThrowAssert.hpp"
 
 int Molecule::seq() {
     if (atom_list.empty()) return 0;
@@ -62,26 +63,23 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
 }
 
 std::tuple<double, double, double> Molecule::calc_dipole(std::shared_ptr<Frame> &frame) {
-    auto mass_center = calc_weigh_center(frame);
 
     double dipole_x = 0.0;
     double dipole_y = 0.0;
     double dipole_z = 0.0;
 
     for (auto &atom : atom_list) {
-        double xr = atom->x - std::get<0>(mass_center);
-        double yr = atom->y - std::get<1>(mass_center);
-        double zr = atom->z - std::get<2>(mass_center);
+        double xr = atom->x;
+        double yr = atom->y;
+        double zr = atom->z;
 
         frame->image(xr, yr, zr);
 
-        assert(atom->charge);
-
-        dipole_x += atom->charge.get() * (xr + std::get<0>(mass_center));
-        dipole_y += atom->charge.get() * (yr + std::get<1>(mass_center));
-        dipole_z += atom->charge.get() * (zr + std::get<2>(mass_center));
+        dipole_x += atom->charge.value() * xr;
+        dipole_y += atom->charge.value() * yr;
+        dipole_z += atom->charge.value() * zr;
     }
-    return std::make_tuple(dipole_x, dipole_y, dipole_z);
+    return {dipole_x, dipole_y, dipole_z};
 }
 
 void Molecule::calc_geom_center(std::shared_ptr<Frame> &frame) {

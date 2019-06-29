@@ -88,7 +88,7 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
 
 }
 
-void RMSFCal::print() {
+void RMSFCal::print(std::ostream &os) {
 
     for (unsigned int index = 0; index < this->group.size(); index++) {
         x_avg[index] /= this->steps;
@@ -96,14 +96,14 @@ void RMSFCal::print() {
         z_avg[index] /= this->steps;
     }
 
-    outfile << "***************************\n";
-    outfile << "****** RMSF Calculator ****\n";
-    outfile << "SET:" << ids << '\n';
-    outfile << "***************************\n";
+    os << "***************************\n";
+    os << "****** RMSF Calculator ****\n";
+    os << "SET:" << ids << '\n';
+    os << "***************************\n";
     for (const auto &element : group | boost::adaptors::indexed(1)) {
-        outfile << element.value()->seq << "     " << rmsvalue(element.index()) << '\n';
+        os << element.value()->seq << "     " << rmsvalue(element.index()) << '\n';
     }
-    outfile << "***************************\n";
+    os << "***************************\n";
 }
 
 void RMSFCal::readInfo() {

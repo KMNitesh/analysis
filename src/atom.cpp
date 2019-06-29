@@ -19,7 +19,6 @@ namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 
 
-
 void print::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const {
     indent(space_num);
     bool first = true;
@@ -141,7 +140,7 @@ void print::indent(int space_num) const {
 
 
 template<typename Iterator, typename Skipper>
-Atom::AtomIndenter input_atom_selection(const Grammar<Iterator,Skipper> &grammar, const std::string &promot) {
+Atom::AtomIndenter input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &promot) {
 
     for (;;) {
         Atom::AtomIndenter mask;
@@ -192,148 +191,142 @@ void Atom::select1group(AtomIndenter &ids, const std::string &prompt) {
 }
 
 
+bool is_match_impl(const std::shared_ptr<Atom> &atom, const Atom::Node &ast) {
+    return boost::apply_visitor(AtomEqual(atom), ast);
+}
+
 bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AtomIndenter &id) {
-    struct Equal : boost::static_visitor<bool> {
+    return is_match_impl(atom, id.ast);
+}
 
-        explicit Equal(const std::shared_ptr<Atom> &atom) : atom(atom) {}
+bool AtomEqual::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const {
+    if (!atom->residue_name or !atom->residue_num) {
+        throw std::runtime_error("residue selection syntax is invaild in current context");
+    }
+    struct Equal_residue : boost::static_visitor<bool> {
+        explicit Equal_residue(const std::shared_ptr<Atom> &atom) : atom(atom) {}
 
-
-        bool operator()(const std::shared_ptr<residue_name_nums> &residues) const {
-            if (!atom->residue_name or !atom->residue_num) {
-                std::cerr << "residue selection syntax is invaild in current context" << std::endl;
-                exit(1);
+        bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+            auto op = fusion::at_c<1>(i);
+            if (op) {
+                if (op.get() >= fusion::at_c<0>(i))
+                    return atom->residue_num >= fusion::at_c<0>(i) and atom->residue_num <= op.get();
+                else
+                    return atom->residue_num >= op.get() and atom->residue_num <= fusion::at_c<0>(i);
+            } else {
+                return atom->residue_num == fusion::at_c<0>(i);
             }
-            struct Equal_residue : boost::static_visitor<bool> {
-                explicit Equal_residue(const std::shared_ptr<Atom> &atom) : atom(atom) {}
-
-                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-                    auto op = fusion::at_c<1>(i);
-                    if (op) {
-                        if (op.get() >= fusion::at_c<0>(i))
-                            return atom->residue_num >= fusion::at_c<0>(i) and atom->residue_num <= op.get();
-                        else
-                            return atom->residue_num >= op.get() and atom->residue_num <= fusion::at_c<0>(i);
-                    } else {
-                        return atom->residue_num == fusion::at_c<0>(i);
-                    }
-                }
-
-                bool operator()(const std::string &pattern) {
-                    if (fnmatch(pattern.c_str(), atom->residue_name.get().c_str(), FNM_CASEFOLD) == 0) return true;
-                    std::string num_str = boost::lexical_cast<std::string>(atom->residue_num.get());
-                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
-                }
-
-            private:
-                const std::shared_ptr<Atom> &atom;
-            } equal(atom);
-
-            for (auto &i : residues->val) {
-                if (boost::apply_visitor(equal, i)) return true;
-            }
-            return false;
         }
 
-        bool operator()(const std::shared_ptr<atom_name_nums> &names) const {
-            struct Equal_atom : boost::static_visitor<bool> {
-                explicit Equal_atom(const std::shared_ptr<Atom> &atom) : atom(atom) {}
-
-                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-                    auto op = fusion::at_c<1>(i);
-                    if (op) {
-                        if (op.get() >= fusion::at_c<0>(i))
-                            return atom->seq >= fusion::at_c<0>(i) and atom->seq <= op.get();
-                        else
-                            return atom->seq >= op.get() and atom->seq <= fusion::at_c<0>(i);
-                    } else {
-                        return atom->seq == fusion::at_c<0>(i);
-                    }
-                }
-
-                bool operator()(const std::string &pattern) {
-                    if (fnmatch(pattern.c_str(), atom->atom_name.c_str(), FNM_CASEFOLD) == 0) return true;
-                    std::string num_str = boost::lexical_cast<std::string>(atom->seq);
-                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
-                }
-
-            private:
-                const std::shared_ptr<Atom> &atom;
-            } equal(atom);
-
-            for (auto &i : names->val) {
-                if (boost::apply_visitor(equal, i)) return true;
-            }
-            return false;
-        }
-
-        bool operator()(const std::shared_ptr<atom_types> types) const {
-            struct Equal_types : boost::static_visitor<bool> {
-                explicit Equal_types(const std::shared_ptr<Atom> &atom) : atom(atom) {}
-
-                bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
-                    auto op = fusion::at_c<1>(i);
-                    if (op) {
-                        if (op.get() >= fusion::at_c<0>(i))
-                            return atom->typ >= static_cast<int>(fusion::at_c<0>(i)) and atom->typ <= static_cast<int>(op.get());
-                        else
-                            return atom->typ >= static_cast<int>(op.get()) and atom->typ <= static_cast<int>(fusion::at_c<0>(i));
-                    } else {
-                        return atom->typ == static_cast<int>(fusion::at_c<0>(i));
-                    }
-                }
-
-                bool operator()(const std::string &pattern) {
-                    if (fnmatch(pattern.c_str(), atom->type_name.c_str(), FNM_CASEFOLD) == 0) return true;
-                    std::string num_str = boost::lexical_cast<std::string>(atom->typ);
-                    return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
-                }
-
-            private:
-                const std::shared_ptr<Atom> &atom;
-            } equal(atom);
-
-            for (auto &i : types->val) {
-                if (boost::apply_visitor(equal, i)) return true;
-            }
-            return false;
-        }
-
-        bool operator()(const std::shared_ptr<atom_element_names> &ele) const {
-            if (!atom->atom_symbol) {
-                std::cerr << "atom element symbol selection syntax is invaild in current context" << std::endl;
-                exit(1);
-            }
-            for (auto &pattern : ele->val) {
-                if (fnmatch(pattern.c_str(), atom->atom_symbol.get().c_str(), FNM_CASEFOLD) == 0) return true;
-            }
-            return false;
-
-        }
-
-        bool operator()(const std::shared_ptr<Operator> &op) const {
-            switch (op->op) {
-                case Op::NOT:
-                    return not boost::apply_visitor(Equal(atom), op->node1);
-                    break;
-                case Op::AND: {
-                    Equal equal(atom);
-                    return boost::apply_visitor(equal, op->node1) and boost::apply_visitor(equal, op->node2);
-                }
-                    break;
-                case Op::OR: {
-                    Equal equal(atom);
-                    return boost::apply_visitor(equal, op->node1) or boost::apply_visitor(equal, op->node2);
-                }
-                    break;
-                default:
-                    std::abort();
-            }
+        bool operator()(const std::string &pattern) {
+            if (fnmatch(pattern.c_str(), atom->residue_name.get().c_str(), FNM_CASEFOLD) == 0) return true;
+            std::string num_str = boost::lexical_cast<std::string>(atom->residue_num.get());
+            return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
         }
 
     private:
         const std::shared_ptr<Atom> &atom;
-    };
+    } equal(atom);
 
+    for (auto &i : residues->val) {
+        if (boost::apply_visitor(equal, i)) return true;
+    }
+    return false;
+}
 
-    return boost::apply_visitor(Equal(atom), id.ast);
+bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const {
+    struct Equal_atom : boost::static_visitor<bool> {
+        explicit Equal_atom(const std::shared_ptr<Atom> &atom) : atom(atom) {}
+
+        bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+            auto op = fusion::at_c<1>(i);
+            if (op) {
+                if (op.get() >= fusion::at_c<0>(i))
+                    return atom->seq >= fusion::at_c<0>(i) and atom->seq <= op.get();
+                else
+                    return atom->seq >= op.get() and atom->seq <= fusion::at_c<0>(i);
+            } else {
+                return atom->seq == fusion::at_c<0>(i);
+            }
+        }
+
+        bool operator()(const std::string &pattern) {
+            if (fnmatch(pattern.c_str(), atom->atom_name.c_str(), FNM_CASEFOLD) == 0) return true;
+            std::string num_str = boost::lexical_cast<std::string>(atom->seq);
+            return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
+        }
+
+    private:
+        const std::shared_ptr<Atom> &atom;
+    } equal(atom);
+
+    for (auto &i : names->val) {
+        if (boost::apply_visitor(equal, i)) return true;
+    }
+    return false;
+}
+
+bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_types> types) const {
+    struct Equal_types : boost::static_visitor<bool> {
+        explicit Equal_types(const std::shared_ptr<Atom> &atom) : atom(atom) {}
+
+        bool operator()(const fusion::vector<uint, boost::optional<uint>> &i) {
+            auto op = fusion::at_c<1>(i);
+            if (op) {
+                if (op.get() >= fusion::at_c<0>(i))
+                    return atom->typ >= static_cast<int>(fusion::at_c<0>(i)) and
+                           atom->typ <= static_cast<int>(op.get());
+                else
+                    return atom->typ >= static_cast<int>(op.get()) and
+                           atom->typ <= static_cast<int>(fusion::at_c<0>(i));
+            } else {
+                return atom->typ == static_cast<int>(fusion::at_c<0>(i));
+            }
+        }
+
+        bool operator()(const std::string &pattern) {
+            if (fnmatch(pattern.c_str(), atom->type_name.c_str(), FNM_CASEFOLD) == 0) return true;
+            std::string num_str = boost::lexical_cast<std::string>(atom->typ);
+            return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
+        }
+
+    private:
+        const std::shared_ptr<Atom> &atom;
+    } equal(atom);
+
+    for (auto &i : types->val) {
+        if (boost::apply_visitor(equal, i)) return true;
+    }
+    return false;
+}
+
+bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_element_names> &ele) const {
+    if (!atom->atom_symbol) {
+        throw std::runtime_error("atom element symbol selection syntax is invaild in current context");
+    }
+    for (auto &pattern : ele->val) {
+        if (fnmatch(pattern.c_str(), atom->atom_symbol.get().c_str(), FNM_CASEFOLD) == 0) return true;
+    }
+    return false;
+
+}
+
+bool AtomEqual::operator()(const std::shared_ptr<Atom::Operator> &op) const {
+    switch (op->op) {
+        case Atom::Op::NOT:
+            return not boost::apply_visitor(AtomEqual(atom), op->node1);
+            break;
+        case Atom::Op::AND: {
+            AtomEqual equal(atom);
+            return boost::apply_visitor(equal, op->node1) and boost::apply_visitor(equal, op->node2);
+        }
+            break;
+        case Atom::Op::OR: {
+            AtomEqual equal(atom);
+            return boost::apply_visitor(equal, op->node1) or boost::apply_visitor(equal, op->node2);
+        }
+            break;
+        default:
+            throw std::runtime_error("invlid Operator");
+    }
 }

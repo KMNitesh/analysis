@@ -78,32 +78,32 @@ void DemixIndexOfTwoGroup::readInfo() {
     grid_z = choose<int>(0, 1000, "Grid in Z dememsion  :  ");
 }
 
-void DemixIndexOfTwoGroup::print() {
+void DemixIndexOfTwoGroup::print(std::ostream &os) {
 
 //    constexpr double AvogadroConstant =  6.02214076E23;
 //    constexpr double AngstromToCentimeter = 1E-8;
 //
 //    const double Unit = 1 / (pow(AngstromToCentimeter, 3) * AvogadroConstant);
 
-    outfile << "#####################################\n";
-    outfile << "#    Demix Rate (normalization)\n";
-    outfile << "#    Group1  " << ids1 << '\n';
-    outfile << "#    Group2  " << ids2 << '\n';
-    outfile << "#    Grid    X = " << grid_x << "  Y = " << grid_y << "  Z = " << grid_z << '\n';
-    outfile << "#####################################\n";
+    os << "#####################################\n";
+    os << "#    Demix Rate (normalization)\n";
+    os << "#    Group1  " << ids1 << '\n';
+    os << "#    Group2  " << ids2 << '\n';
+    os << "#    Grid    X = " << grid_x << "  Y = " << grid_y << "  Z = " << grid_z << '\n';
+    os << "#####################################\n";
 
-    outfile << "@   title \"Demix Rate\"\n";
-    outfile << "@    xaxis  label \"Frame Number\"\n";
-    outfile << "@    yaxis  label \"Demix Rate\"\n";
-    outfile << "@TYPE xy\n";
-    outfile << "@ legend on\n";
-    outfile << "@ legend length 1\n";
-    outfile << "@ s0 legend \"Demix Rate\"\n";
+    os << "@   title \"Demix Rate\"\n";
+    os << "@    xaxis  label \"Frame Number\"\n";
+    os << "@    yaxis  label \"Demix Rate\"\n";
+    os << "@TYPE xy\n";
+    os << "@ legend on\n";
+    os << "@ legend length 1\n";
+    os << "@ s0 legend \"Demix Rate\"\n";
 //    outfile << "@ s1 legend \"Demix:Ideal\"\n";
-    outfile << "# Frame      Demix Rate \n";
+    os << "# Frame      Demix Rate \n";
 
     for (const auto &element: demix_index_list | boost::adaptors::indexed(1)) {
-        outfile << element.index() << "        " << get<0>(element.value()) / get<1>(element.value()) << '\n';
+        os << element.index() << "        " << get<0>(element.value()) / get<1>(element.value()) << '\n';
     }
 
 

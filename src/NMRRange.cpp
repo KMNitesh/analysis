@@ -36,7 +36,7 @@ void NMRRange::process(std::shared_ptr<Frame> &frame) {
 }
 
 
-void NMRRange::print() {
+void NMRRange::print(std::ostream &os) {
 
     for (auto &item : dist_range_map) {
 
@@ -49,8 +49,8 @@ void NMRRange::print() {
         double avg = sum / count;
         double e = -1.0 / 6;
         double value = pow(avg, e);
-        outfile << name_map[item.first.first] << " <->\t"
-                << name_map[item.first.second] << "\t" << value << endl;
+        os << name_map[item.first.first] << " <->\t"
+           << name_map[item.first.second] << "\t" << value << endl;
     }
 }
 

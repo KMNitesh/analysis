@@ -38,10 +38,6 @@ public:
      *         else return 0
      */
     int seq();
-
-    std::shared_ptr<Atom> ow;
-
-
 };
 
 

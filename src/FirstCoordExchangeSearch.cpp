@@ -45,38 +45,38 @@ void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
     }
 }
 
-void FirstCoordExchangeSearch::print() {
-    outfile << "***************************" << '\n';
-    outfile << "***** Exchange Search *****" << '\n';
-    outfile << "type 1 :" << ids1 << '\n';
-    outfile << "type 2 :" << ids2 << '\n';
+void FirstCoordExchangeSearch::print(std::ostream &os) {
+    os << "***************************" << '\n';
+    os << "***** Exchange Search *****" << '\n';
+    os << "type 1 :" << ids1 << '\n';
+    os << "type 2 :" << ids2 << '\n';
 
-    outfile << "cutoff :" << dist_cutoff << '\n';
-    outfile << "tol dist :" << tol_dist << '\n';
-    outfile << "time_cutoff :" << time_cutoff << '\n';
-    outfile << "***************************" << '\n';
+    os << "cutoff :" << dist_cutoff << '\n';
+    os << "tol dist :" << tol_dist << '\n';
+    os << "time_cutoff :" << time_cutoff << '\n';
+    os << "***************************" << '\n';
     for (int seq : init_seq_in_shell) {
-        outfile << "  " << seq;
+        os << "  " << seq;
     }
-    outfile << "\n***************************" << '\n';
+    os << "\n***************************" << '\n';
 
-    outfile << "** seq **  direction ***** exchange frame *****" << '\n';
+    os << "** seq **  direction ***** exchange frame *****" << '\n';
     for (auto it = exchange_list.begin(); it != exchange_list.end(); it++) {
-        outfile << boost::format("%10d%6s%15d   !   ")
-                   % it->seq
-                   % (it->direction == Direction::IN ? "IN" : "OUT")
-                   % it->exchange_frame;
+        os << boost::format("%10d%6s%15d   !   ")
+              % it->seq
+              % (it->direction == Direction::IN ? "IN" : "OUT")
+              % it->exchange_frame;
         if (it->direction == Direction::IN) {
             init_seq_in_shell.insert(it->seq);
         } else {
             init_seq_in_shell.erase(it->seq);
         }
         for (int seq : init_seq_in_shell) {
-            outfile << "  " << seq;
+            os << "  " << seq;
         }
-        outfile << '\n';
+        os << '\n';
     }
-    outfile << "***************************\n";
+    os << "***************************\n";
 
 
 }

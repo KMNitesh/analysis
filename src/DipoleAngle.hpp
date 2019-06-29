@@ -5,13 +5,13 @@
 #ifndef TINKER_DIPOLEANGLE_HPP
 #define TINKER_DIPOLEANGLE_HPP
 
+
 #include <memory>
 #include <unordered_set>
 #include <string>
 #include <map>
 #include <list>
 #include <utility>
-
 
 #include "common.hpp"
 #include "BasicAnalysis.hpp"
@@ -30,7 +30,7 @@ public:
 
     void process(std::shared_ptr<Frame> &frame) override;
 
-    void print() override;
+    void print(std::ostream &os) override;
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 

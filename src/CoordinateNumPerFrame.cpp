@@ -21,17 +21,17 @@ void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
 
 }
 
-void CoordinateNumPerFrame::print() {
-    outfile << "***************************" << '\n';
-    outfile << "******* CN per Frame ******" << '\n';
-    outfile << "type 1 :" << ids1 << '\n';
-    outfile << "type 2 :" << ids2 << '\n';
-    outfile << "cutoff :" << dist_cutoff << '\n';
-    outfile << "***************************" << '\n';
+void CoordinateNumPerFrame::print(std::ostream &os) {
+    os << "***************************" << '\n';
+    os << "******* CN per Frame ******" << '\n';
+    os << "type 1 :" << ids1 << '\n';
+    os << "type 2 :" << ids2 << '\n';
+    os << "cutoff :" << dist_cutoff << '\n';
+    os << "***************************" << '\n';
     for (const auto &element: cn_list | boost::adaptors::indexed(1)) {
-        outfile << element.index() << "   " << element.value() << '\n';
+        os << element.index() << "   " << element.value() << '\n';
     }
-    outfile << "***************************" << '\n';
+    os << "***************************" << '\n';
 }
 
 void CoordinateNumPerFrame::readInfo() {

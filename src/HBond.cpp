@@ -23,41 +23,41 @@ Symbol which(const std::shared_ptr<Atom> &atom) {
     else return Symbol::Unknown;
 }
 
-void HBond::print() {
-    outfile << "***************************" << endl;
-    outfile << "****** Hydrogen Bond ******" << endl;
-    outfile << "TYPE:";
+void HBond::print(std::ostream &os) {
+    os << "***************************" << endl;
+    os << "****** Hydrogen Bond ******" << endl;
+    os << "TYPE:";
     switch (mode) {
         case Selector::Both:
-            outfile << "Both" << endl;
-            outfile << "SET1:" << ids1 << endl;
+            os << "Both" << endl;
+            os << "SET1:" << ids1 << endl;
             break;
         case Selector::Donor:
-            outfile << "Donor" << endl;
-            outfile << "SET1:" << ids1 << endl;
-            outfile << "SET2:" << ids2 << endl;
+            os << "Donor" << endl;
+            os << "SET1:" << ids1 << endl;
+            os << "SET2:" << ids2 << endl;
             break;
         case Selector::Acceptor:
-            outfile << "Acceptor" << endl;
-            outfile << "SET1:" << ids1 << endl;
-            outfile << "SET2:" << ids2 << endl;
+            os << "Acceptor" << endl;
+            os << "SET1:" << ids1 << endl;
+            os << "SET2:" << ids2 << endl;
             break;
     }
     switch (hbond_type) {
         case HBondType::VMDVerion:
-            outfile << "HBond criteria : VMD version" << endl;
+            os << "HBond criteria : VMD version" << endl;
             break;
         case HBondType::GMXVersion:
-            outfile << "HBond criteria : GMX version" << endl;
+            os << "HBond criteria : GMX version" << endl;
             break;
     }
-    outfile << "distance cutoff : " << this->donor_acceptor_dist_cutoff << endl;
-    outfile << "angle cutoff : " << this->angle_cutoff << endl;
-    outfile << "***************************" << endl;
+    os << "distance cutoff : " << this->donor_acceptor_dist_cutoff << endl;
+    os << "angle cutoff : " << this->angle_cutoff << endl;
+    os << "***************************" << endl;
     for (auto cyc : range(1, steps + 1)) {
-        outfile << cyc << "   " << hbonds[cyc] << endl;
+        os << cyc << "   " << hbonds[cyc] << endl;
     }
-    outfile << "***************************" << endl;
+    os << "***************************" << endl;
 }
 
 void HBond::process(std::shared_ptr<Frame> &frame) {

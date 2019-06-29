@@ -22,8 +22,6 @@ bool enable_outfile = false;
 Forcefield forcefield;
 bool enable_forcefield = false;
 
-std::fstream outfile;
-
 
 std::vector<std::string> split(const std::string &str, const std::string &sep) {
     std::vector<std::string> ret_;

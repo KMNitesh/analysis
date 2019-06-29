@@ -121,7 +121,7 @@ tuple<double, double, double> RotAcfCutoff::calVector(shared_ptr<Molecule> &mol,
     return std::make_tuple(xv3, yv3, zv3);
 }
 
-void RotAcfCutoff::print() {
+void RotAcfCutoff::print(std::ostream &os) {
     std::vector<std::pair<int, double>> acf;
     acf.emplace_back(0, 0.0);
     for (auto list_ptr : this->rots) {
@@ -172,19 +172,19 @@ void RotAcfCutoff::print() {
         integrate[i] = integrate[i - 1] + 0.5 * (acf[i - 1].second + acf[i].second) * time_increment_ps;
     }
 
-    outfile << "*********************************************************" << endl;
-    outfile << "cutoff : " << std::sqrt(cutoff2) << std::endl;
-    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
-    outfile << " rotational autocorrelation function" << endl;
+    os << "*********************************************************" << endl;
+    os << "cutoff : " << std::sqrt(cutoff2) << std::endl;
+    os << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
+    os << " rotational autocorrelation function" << endl;
 
-    outfile << "    Time Gap      ACF       intergrate" << endl;
-    outfile << "      (ps)                    (ps)" << endl;
+    os << "    Time Gap      ACF       intergrate" << endl;
+    os << "      (ps)                    (ps)" << endl;
 
     for (std::size_t t = 0; t < acf.size(); t++) {
-        outfile << boost::format("%12.2f%18.14f%15.5f") % (t * time_increment_ps) % acf[t].second % integrate[t]
-                << endl;
+        os << boost::format("%12.2f%18.14f%15.5f") % (t * time_increment_ps) % acf[t].second % integrate[t]
+           << endl;
     }
-    outfile << "*********************************************************" << endl;
+    os << "*********************************************************" << endl;
 
 }
 

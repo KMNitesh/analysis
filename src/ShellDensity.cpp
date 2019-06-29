@@ -21,22 +21,22 @@ void ShellDensity::process(std::shared_ptr<Frame> &frame) {
     }
 }
 
-void ShellDensity::print() {
-    outfile << "************************************************" << endl;
-    outfile << "***** Shell Density Function ****" << endl;
+void ShellDensity::print(std::ostream &os) {
+    os << "************************************************" << endl;
+    os << "***** Shell Density Function ****" << endl;
 
-    outfile << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
+    os << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
 
-    outfile << "************************************************" << endl;
-    outfile << "Bin    Distance    Densitry (count / Ang3 / frame)" << endl;
+    os << "************************************************" << endl;
+    os << "Bin    Distance    Densitry (count / Ang3 / frame)" << endl;
 
     for (int i = 1; i <= distance_bins; i++) {
         double dv = (4.0 / 3.0) * M_PI * (pow(i * distance_width, 3) - pow((i - 1) * distance_width, 3));
-        outfile << boost::format("%d      %.4f      %g \n") %
-                   i % ((i - 0.5) * distance_width) % (hist[i] / (nframe * dv));
+        os << boost::format("%d      %.4f      %g \n") %
+              i % ((i - 0.5) * distance_width) % (hist[i] / (nframe * dv));
     }
 
-    outfile << "************************************************" << endl;
+    os << "************************************************" << endl;
 }
 
 

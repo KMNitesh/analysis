@@ -11,15 +11,15 @@ void RMSDCal::process(std::shared_ptr<Frame> &frame) {
     rmsd_map[steps] = rmsvalue(frame);
 }
 
-void RMSDCal::print() {
-    outfile << "***************************\n";
-    outfile << "****** RMSD Calculator ****\n";
-    outfile << "GROUP:" << ids << '\n';
-    outfile << "***************************\n";
+void RMSDCal::print(std::ostream &os) {
+    os << "***************************\n";
+    os << "****** RMSD Calculator ****\n";
+    os << "GROUP:" << ids << '\n';
+    os << "***************************\n";
     for (auto cyc : range(1, steps + 1)) {
-        outfile << cyc << "     " << rmsd_map[cyc] << '\n';
+        os << cyc << "     " << rmsd_map[cyc] << '\n';
     }
-    outfile << "***************************\n";
+    os << "***************************\n";
 }
 
 void RMSDCal::readInfo() {

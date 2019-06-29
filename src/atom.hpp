@@ -165,6 +165,24 @@ struct print : boost::static_visitor<> {
     void operator()(const std::shared_ptr<Atom::Operator> &op) const;
 };
 
+struct AtomEqual : boost::static_visitor<bool> {
+
+    explicit AtomEqual(const std::shared_ptr<Atom> &atom) : atom(atom) {}
+
+    bool operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const;
+
+    bool operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const;
+
+    bool operator()(const std::shared_ptr<Atom::atom_types> types) const;
+
+    bool operator()(const std::shared_ptr<Atom::atom_element_names> &ele) const;
+
+    bool operator()(const std::shared_ptr<Atom::Operator> &op) const;
+
+private:
+    const std::shared_ptr<Atom> &atom;
+};
+
 inline std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids) {
     out << ids.input_string;
     return out;

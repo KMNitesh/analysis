@@ -25,7 +25,11 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
 }
 
 
-void Trajconv::print() {
+void Trajconv::print(std::ostream &) {
+    CleanUp();
+}
+
+void Trajconv::CleanUp() {
     for (auto &[name, w]: writers) {
         w->close();
     }

@@ -80,7 +80,6 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
 
     shared_ptr<Frame> frame;
     int current_frame_num = 0;
-    int Clear = 0;
 
     Trajconv writer;
     try {
@@ -90,18 +89,18 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
         exit(EXIT_FAILURE);
     }
 
+    cout << "Fast Trajectory Convert...\n";
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
-        if (current_frame_num % 10 == 0) {
-            if (Clear) {
-                cout << "\r";
-            }
+        if (current_frame_num == 1) {
             cout << "Processing Coordinate Frame  " << current_frame_num << "   " << flush;
-            Clear = 1;
+            writer.processFirstFrame(frame);
+        } else if (current_frame_num % 10 == 0) {
+            cout << "\rProcessing Coordinate Frame  " << current_frame_num << "   " << flush;
         }
         writer.process(frame);
     }
-    writer.print();
+    writer.CleanUp();
     cout << "\nMission Complete" << endl;
 }
 
@@ -203,7 +202,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
     }
 
-
+    std::fstream outfile;
     if (enable_outfile) {
         outfile.open(vm.count("output") ? vm["output"].as<std::string>() : choose_file("Output file: ", false),
                      std::ios_base::out);
@@ -223,6 +222,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {
+                if (enable_forcefield) {
+                    forcefield.assign_forcefield(frame);
+                }
                 processFirstFrame(frame, task_list);
             }
             processOneFrame(frame, task_list);
@@ -237,7 +239,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
     }
 
     for (auto &task : *task_list) {
-        task->print();
+        task->print(outfile);
     }
     if (outfile.is_open()) outfile.close();
     std::cout << "Mission Complete" << std::endl;

@@ -25,14 +25,14 @@ void SearchInteractionResidue::process(std::shared_ptr<Frame> &frame) {
 }
 
 
-void SearchInteractionResidue::print() {
-    outfile << "************************************************\n";
-    outfile << "*****" << SearchInteractionResidue::title() << " ****\n";
+void SearchInteractionResidue::print(std::ostream &os) {
+    os << "************************************************\n";
+    os << "*****" << SearchInteractionResidue::title() << " ****\n";
 
-    outfile << "First Group  " << ids1 << " Second Group  " << ids2 << '\n';
-    outfile << "cutoff :" << cutoff << " Ang\n";
+    os << "First Group  " << ids1 << " Second Group  " << ids2 << '\n';
+    os << "cutoff :" << cutoff << " Ang\n";
 
-    outfile << "************************************************\n";
+    os << "************************************************\n";
 
 
     using ResItem = struct {
@@ -60,28 +60,28 @@ void SearchInteractionResidue::print() {
     std::sort(itemVec.begin(), itemVec.end(), [](ResItem *i1, ResItem *i2) { return i1->count > i2->count; });
 
     std::size_t nframe = 1;
-    outfile << boost::format("%10s") % "name";
+    os << boost::format("%10s") % "name";
     for (auto &item : itemVec) {
-        outfile << boost::format("%10s") % item->name;
+        os << boost::format("%10s") % item->name;
     }
-    outfile << boost::format("\n%10s") % "Freq";;
+    os << boost::format("\n%10s") % "Freq";;
     for (auto &item : itemVec) {
-        outfile << boost::format("%9.1f%%") % (item->count * 100.0 / total_frames);
+        os << boost::format("%9.1f%%") % (item->count * 100.0 / total_frames);
     }
-    outfile << '\n';
+    os << '\n';
     for (auto &set : interaction_residues) {
-        outfile << boost::format("%10d") % nframe;
+        os << boost::format("%10d") % nframe;
         int index = 1;
         for (auto &item : itemVec) {
-            outfile << boost::format("%10d") % (style == OutputStyle::NUMBER ?
-                                                (set.count(item->name) ? index : 0) : set.count(item->name));
+            os << boost::format("%10d") % (style == OutputStyle::NUMBER ?
+                                           (set.count(item->name) ? index : 0) : set.count(item->name));
             index++;
         }
-        outfile << '\n';
+        os << '\n';
         nframe++;
     }
 
-    outfile << "************************************************" << endl;
+    os << "************************************************" << endl;
 
 
 }

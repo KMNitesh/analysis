@@ -47,15 +47,15 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
 }
 
 
-void Distance::print() {
-    outfile << "****************************************\n";
-    outfile << "Distance between \n";
-    outfile << "group 1 :" << ids1 << std::endl;
-    outfile << "group 2 :" << ids2 << std::endl;
-    outfile << "****************************************\n";
+void Distance::print(std::ostream &os) {
+    os << "****************************************\n";
+    os << "Distance between \n";
+    os << "group 1 :" << ids1 << std::endl;
+    os << "group 2 :" << ids2 << std::endl;
+    os << "****************************************\n";
 
     for (const auto &element : group_dist_list | boost::adaptors::indexed(1)) {
-        outfile << element.index() << "    " << element.value() << '\n';
+        os << element.index() << "    " << element.value() << '\n';
     }
 }
 

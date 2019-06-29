@@ -33,7 +33,7 @@ public:
 
     void process(std::shared_ptr<Frame> &frame) override;
 
-    void print() override;
+    void print(std::ostream &os) override;
 
     void readInfo() override;
 

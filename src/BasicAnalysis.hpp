@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <string>
+#include <ostream>
 
 class Frame;
 
@@ -18,7 +19,7 @@ public:
 
     virtual void process(std::shared_ptr<Frame> &frame) = 0;
 
-    virtual void print() = 0;
+    virtual void print(std::ostream &os) = 0;
 
     virtual void readInfo() = 0;
 

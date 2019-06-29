@@ -9,7 +9,7 @@
 
 class DipoleAngleVolumeNormal : public DipoleAngle {
 public:
-    void print() override;
+    void print(std::ostream &os) override;
 
     static const std::string title() {
         return "Dipole Angle of volume normal";

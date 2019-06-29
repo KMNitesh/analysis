@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void GreenKubo::print() {
+void GreenKubo::print(std::ostream &os) {
 
     if (steps < 2) {
         cerr << "Too few frame number :" << steps << endl;
@@ -96,16 +96,16 @@ void GreenKubo::print() {
         body.cyy[i] /= no;
         body.czz[i] /= no;
     }
-    outfile << "Green-Kubo self-diffuse " << endl;
-    outfile << "selected group : " << ids << endl;
-    outfile << "Time (ps)             DA(10^-9 m2/s)" << endl;
+    os << "Green-Kubo self-diffuse " << endl;
+    os << "selected group : " << ids << endl;
+    os << "Time (ps)             DA(10^-9 m2/s)" << endl;
     double pre_c = body.cxx[0] + body.cyy[0] + body.czz[0];
     double integral = 0.0;
     for (unsigned int i = 1; i < steps; i++) {
         double c = body.cxx[i] + body.cyy[i] + body.czz[i];
         integral += 5 * (pre_c + c) * timestep / 3;
         pre_c = c;
-        outfile << i * timestep << "    " << integral << endl;
+        os << i * timestep << "    " << integral << endl;
     }
     delete[] vecx;
     delete[] vecy;

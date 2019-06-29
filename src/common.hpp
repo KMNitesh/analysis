@@ -31,6 +31,7 @@ class Forcefield;
 constexpr int ATOM_MAX = 10000;
 
 constexpr double radian = 57.29577951308232088;
+constexpr double pi = 3.1415926;
 
 // global variables
 
@@ -40,7 +41,7 @@ extern bool enable_outfile;
 
 extern Forcefield forcefield;
 extern bool enable_forcefield;
-extern std::fstream outfile;
+
 
 enum class FileType {
     XTC,

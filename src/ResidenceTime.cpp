@@ -151,7 +151,7 @@ void ResidenceTime::process(std::shared_ptr<Frame> &frame) {
     }
 }
 
-void ResidenceTime::print() {
+void ResidenceTime::print(std::ostream &os) {
     if (steps < 2) {
         cerr << "Too few frame number :" << steps << endl;
         exit(1);
@@ -165,13 +165,13 @@ void ResidenceTime::print() {
     }
     calculate();
 
-    outfile << "# typ1: " << ids1 << ",  typ2: " << ids2 << "  dist_cutoff = " << dis_cutoff << " t* = "
-            << time_star
-            << std::endl;
+    os << "# typ1: " << ids1 << ",  typ2: " << ids2 << "  dist_cutoff = " << dis_cutoff << " t* = "
+       << time_star
+       << std::endl;
 
-    outfile << "# Frame        R " << std::endl;
+    os << "# Frame        R " << std::endl;
     for (unsigned int i = 0; i < steps - 1; i++)
-        outfile << i + 1 << "    " << Rt_array[i] << std::endl;
+        os << i + 1 << "    " << Rt_array[i] << std::endl;
 }
 
 void ResidenceTime::readInfo() {
