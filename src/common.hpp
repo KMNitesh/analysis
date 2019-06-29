@@ -60,7 +60,7 @@ std::vector<std::string> split(const std::string &str, const std::string &sep);
 
 std::vector<std::string> split(const std::string &str);
 
-std::string input(const std::string &prompt = "");
+std::string input(const std::string &prompt = "", std::istream &in = std::cin, std::ostream &out = std::cout);
 
 template<typename T>
 struct type_name_string;
@@ -77,9 +77,10 @@ struct type_name_string<double> {
 
 
 template<typename T, typename = std::enable_if_t<std::is_same_v<T, int> or std::is_same_v<T, double>>>
-T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T value = T()) {
+T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T value = T(),
+         std::istream &in = std::cin, std::ostream &out = std::cout) {
     while (true) {
-        std::string input_line = input(prompt);
+        std::string input_line = input(prompt, in, out);
         boost::trim(input_line);
         if (input_line.empty()) {
             if (!hasdefault) continue;
@@ -89,17 +90,18 @@ T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T val
             auto option = boost::lexical_cast<T>(input_line);
             if (option >= min and option <= max) return option;
 
-            std::cerr << "must be a " << type_name_string<T>::value << " range " << min << " and " << max
-                      << "! please retype!\n";
+            out << "must be a " << type_name_string<T>::value << " range " << min << " and " << max
+                << "! please retype!\n";
         } catch (boost::bad_lexical_cast &e) {
-            std::cerr << "must be a " << type_name_string<T>::value << " ! please retype!" << e.what() << std::endl;
+            out << "must be a " << type_name_string<T>::value << " ! please retype!" << e.what() << std::endl;
         }
     }
 }
 
 std::string ext_filename(const std::string &filename);
 
-std::string choose_file(const std::string &prompt, bool exist, std::string ext = "", bool can_empty = false);
+std::string choose_file(const std::string &prompt, bool exist, std::string ext = "", bool can_empty = false,
+                        std::istream &in = std::cin, std::ostream &out = std::cout);
 
 template<typename T>
 T sign(T &x, T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }

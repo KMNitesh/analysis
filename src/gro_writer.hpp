@@ -20,9 +20,9 @@ class Frame;
 
 class GROWriter : public TrajectoryFormatWriter {
 
-    std::shared_ptr<FileInterface> f;
+    std::shared_ptr<FileInterface> os;
 public:
-    explicit GROWriter(std::shared_ptr<FileInterface> f = std::make_shared<FileImpl>()) : f(std::move(f)) {}
+    explicit GROWriter(std::shared_ptr<FileInterface> f = std::make_shared<FileImpl>()) : os(std::move(f)) {}
 
     void open(const std::string &filename) override;
 

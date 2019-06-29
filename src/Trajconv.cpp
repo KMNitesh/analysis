@@ -8,127 +8,56 @@
 #include "molecule.hpp"
 #include "frame.hpp"
 #include "atom.hpp"
+#include "PBCUtils.hpp"
+
+Trajconv::Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory) :
+        factory(std::move(factory)),
+        pbc_utils(std::make_shared<PBCUtils>()) {}
 
 
 void Trajconv::process(std::shared_ptr<Frame> &frame) {
-    doPBC(frame);
+    pbc_utils->doPBC(pbc_type, num, frame);
 
-    if (step == 0) {
-        if (enable_gro) {
-            GROWriter w;
-            w.open(grofilename);
-            w.write(frame);
-            w.close();
-        }
-        if (enable_xtc) xtc.open(xtcfilename);
-        if (enable_trr) trr.open(trrfilename);
-        if (enable_mdcrd) mdcrd.open(mdcrdfilename);
+    for (auto &[name, w] : writers) {
+        w->write(frame);
     }
-    if (enable_xtc) xtc.write(frame);
-    if (enable_trr) trr.write(frame);
-    if (enable_mdcrd) mdcrd.write(frame);
     step++;
 }
 
-void Trajconv::doPBC(std::shared_ptr<Frame> &frame) const {
-    if (pbc_type == PBCType::OneAtom) {
-        auto center_x = frame->atom_map[num]->x;
-        auto center_y = frame->atom_map[num]->y;
-        auto center_z = frame->atom_map[num]->z;
-
-        for (auto &mol : frame->molecule_list) {
-            for (auto &atom : mol->atom_list) {
-                atom->x -= center_x;
-                atom->y -= center_y;
-                atom->z -= center_z;
-            }
-        }
-    } else if (pbc_type == PBCType::OneMol) {
-        auto center_mol = frame->atom_map[num]->molecule.lock();
-        center_mol->calc_geom_center(frame);
-        auto center_x = center_mol->center_x;
-        auto center_y = center_mol->center_y;
-        auto center_z = center_mol->center_z;
-        for (auto &mol : frame->molecule_list) {
-            for (auto &atom : mol->atom_list) {
-                atom->x -= center_x;
-                atom->y -= center_y;
-                atom->z -= center_z;
-            }
-        }
-    }
-    if (pbc_type != PBCType::None) {
-        for (auto &mol : frame->molecule_list) {
-            mol->calc_geom_center(frame);
-            double x_move = 0.0;
-            double y_move = 0.0;
-            double z_move = 0.0;
-            while (mol->center_x > frame->a_axis_half) {
-                mol->center_x -= frame->a_axis;
-                x_move -= frame->a_axis;
-            }
-            while (mol->center_x < -frame->a_axis_half) {
-                mol->center_x += frame->a_axis;
-                x_move += frame->a_axis;
-            }
-            while (mol->center_y > frame->b_axis_half) {
-                mol->center_y -= frame->b_axis;
-                y_move -= frame->b_axis;
-            }
-            while (mol->center_y < -frame->b_axis_half) {
-                mol->center_y += frame->b_axis;
-                y_move += frame->b_axis;
-            }
-            while (mol->center_z > frame->c_axis_half) {
-                mol->center_z -= frame->c_axis;
-                z_move -= frame->c_axis;
-            }
-            while (mol->center_z < -frame->c_axis_half) {
-                mol->center_z += frame->c_axis;
-                z_move += frame->c_axis;
-            }
-            for (auto &atom : mol->atom_list) {
-                atom->x += x_move + frame->a_axis_half;
-                atom->y += y_move + frame->b_axis_half;
-                atom->z += z_move + frame->c_axis_half;
-            }
-        }
-    }
-}
 
 void Trajconv::print() {
-    if (enable_xtc) xtc.close();
-    if (enable_trr) trr.close();
-    if (enable_mdcrd) mdcrd.close();
+    for (auto &[name, w]: writers) {
+        w->close();
+    }
 }
 
 void Trajconv::readInfo() {
+    inputOutputFiles();
+    selectPBCMode();
+}
+
+void Trajconv::inputOutputFiles(std::istream &in, std::ostream &out) {
     for (;;) {
-        grofilename = choose_file("output gro file : ", false, "gro", true);
-        if (grofilename.empty()) {
-            enable_gro = false;
+        auto filename = choose_file("output file [empty for next]: ", false, "", true, in, out);
+        if (filename.empty()) {
+            if (!writers.empty()) {
+                break;
+            }
         }
-
-        xtcfilename = choose_file("output xtc file : ", false, "xtc", true);
-        if (xtcfilename.empty()) {
-            enable_xtc = false;
+        try {
+            writers.emplace_back(filename, factory->make_instance(getFileType(filename)));
+        } catch (std::exception &) {
+            out << "ERROR !!  wrong type of target trajectory file (" << filename << ")\n";
         }
-
-        trrfilename = choose_file("output trr file : ", false, "trr", true);
-        if (trrfilename.empty()) {
-            enable_trr = false;
-        }
-
-        mdcrdfilename = choose_file("output amber nc file : ", false, "nc", true);
-        if (mdcrdfilename.empty()) {
-            enable_mdcrd = false;
-        }
-
-        if (enable_gro || enable_xtc || enable_trr || enable_mdcrd) {
-            break;
-        }
-        std::cerr << "ERROR !! none of output selected !\n";
     }
+}
+
+void Trajconv::initPBC(PBCType pbc_mode, int num) {
+    pbc_type = pbc_mode;
+    this->num = num;
+}
+
+void Trajconv::selectPBCMode() {
     std::cout << "PBC transform option\n";
     std::cout << "(0) Do nothing\n";
     std::cout << "(1) Make atom i as center\n";
@@ -157,36 +86,25 @@ void Trajconv::readInfo() {
     }
 }
 
-void Trajconv::fastConvertTo(std::string target) {
+void Trajconv::fastConvertTo(std::string target) noexcept(false) {
     boost::trim(target);
     if (target.empty()) {
-        std::cerr << "ERROR !! empty target trajectory file \n";
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("ERROR !! empty target trajectory file");
     }
     pbc_type = PBCType::None;
-    auto ext = ext_filename(target);
-    if (ext == "xtc") {
-        enable_xtc = true;
-        enable_trr = false;
-        enable_gro = false;
-        enable_mdcrd = false;
-        xtcfilename = target;
-    } else if (ext == "trr") {
-        enable_xtc = false;
-        enable_trr = true;
-        enable_gro = false;
-        enable_mdcrd = false;
-        trrfilename = target;
-    } else if (ext == "nc") {
-        enable_xtc = false;
-        enable_trr = false;
-        enable_gro = false;
-        enable_mdcrd = true;
-        mdcrdfilename = target;
-    } else {
-        std::cerr << "ERROR !!  wrong type of target trajectory file (" << target << ")\n";
-        exit(EXIT_FAILURE);
+
+    try {
+        writers.emplace_back(target, factory->make_instance(getFileType(target)));
+    } catch (std::exception &) {
+        throw std::runtime_error("ERROR !!  wrong type of target trajectory file (" + target + ")");
     }
 }
+
+void Trajconv::processFirstFrame(std::shared_ptr<Frame> &) {
+    for (auto &[name, w] : writers) {
+        w->open(name);
+    }
+}
+
 
 

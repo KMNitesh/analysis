@@ -9,35 +9,18 @@
 #include <string>
 
 #include "BasicAnalysis.hpp"
-#include "gro_writer.hpp"
-#include "trr_writer.hpp"
-#include "xtc_writer.hpp"
-#include "netcdf_writer.hpp"
+#include "TrajectoryWriterFactoryImpl.hpp"
+#include "TrajectoryFormatWriter.hpp"
+
+class PBCUtils;
 
 class Frame;
 
 class Trajconv : public BasicAnalysis {
-    enum class PBCType {
-        None,
-        OneAtom,
-        OneMol
-    } pbc_type;
-    int step = 0;
-    std::string grofilename;
-    std::string xtcfilename;
-    std::string trrfilename;
-    std::string mdcrdfilename;
-    XTCWriter xtc;
-    TRRWriter trr;
-    NetCDFWriter mdcrd;
-
-    int num;
-
-    bool enable_xtc = true;
-    bool enable_trr = true;
-    bool enable_gro = true;
-    bool enable_mdcrd = true;
 public:
+
+    void processFirstFrame(std::shared_ptr<Frame> &) override;
+
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print() override;
@@ -48,9 +31,40 @@ public:
         return "Gromacs XTC & TRR & GRO & NetCDF Output";
     }
 
-    void fastConvertTo(std::string target);
+    explicit Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory
+    = std::make_shared<TrajectoryWriterFactoryImpl>());
 
-    void doPBC(std::shared_ptr<Frame> &frame) const;
+    void fastConvertTo(std::string target) noexcept(false);
+
+    enum class PBCType {
+        None,
+        OneAtom,
+        OneMol
+    };
+
+    const auto &getWriters() const {
+        return writers;
+    }
+
+private:
+
+    PBCType pbc_type;
+
+    int step = 0;
+    int num;
+
+    std::shared_ptr<TrajectoryWriterFactoryInterface> factory;
+    std::vector<std::pair<std::string, std::shared_ptr<TrajectoryFormatWriter>>> writers;
+
+    std::shared_ptr<PBCUtils> pbc_utils;
+protected:
+    void selectPBCMode();
+
+    void inputOutputFiles(std::istream &in = std::cin, std::ostream &out = std::cout);
+
+    void initPBC(PBCType pbc_mode, int num);
+
+
 };
 
 #endif //TINKER_TRAJCONV_HPP

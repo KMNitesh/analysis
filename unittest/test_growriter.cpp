@@ -21,15 +21,9 @@ public:
 };
 
 
-class GROWriterTest : public GROWriter {
-
-public:
-    explicit GROWriterTest(std::shared_ptr<FileMock> &mock) : GROWriter(mock) {};
-};
-
 TEST(GROWriter, OpenCloseFileAndWriteFrame) {
     auto mock = std::make_shared<FileMock>();
-    GROWriterTest writer(mock);
+    GROWriter writer(mock);
 
     auto frame = make_shared<Frame>();
     frame->title = "Unit Test Case";
@@ -73,7 +67,7 @@ TEST(GROWriter, OpenCloseFileAndWriteFrame) {
     except << "2\n";
     except << format("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n", 1, "1", "N", 1, -0.990, 0.889, 0.21);
     except << format("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n", 1, "1", "O2", 2, 0.090, 0.319, 0.41);
-    except << format("%f   %f   %f \n", 1.0, 1.0, 1.0);
+    except << format("%os   %os   %os \n", 1.0, 1.0, 1.0);
     ASSERT_THAT(mock->str(), StrEq(except.str()));
     writer.close();
 }

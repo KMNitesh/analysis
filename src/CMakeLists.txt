@@ -28,7 +28,7 @@ add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp
         DipoleAngleSingleDistanceNormal.cpp DipoleAngleVolumeNormal.cpp
         DipoleAngle2Gibbs.cpp ShellDensity.cpp SearchInteractionResidue.cpp
         FindMinBetweenTwoGroups.cpp DemixIndexOfTwoGroup.cpp PrintTopolgy.cpp mainUtils.cpp
-        TrajectoryWriterFactoryImpl.cpp)
+        TrajectoryWriterFactoryImpl.cpp PBCUtils.cpp)
 
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)

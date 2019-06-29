@@ -83,7 +83,13 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
     int Clear = 0;
 
     Trajconv writer;
-    writer.fastConvertTo(vm["target"].as<string>());
+    try {
+        writer.fastConvertTo(vm["target"].as<string>());
+    } catch (std::runtime_error &e) {
+        std::cerr << e.what() << '\n';
+        exit(EXIT_FAILURE);
+    }
+
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
         if (current_frame_num % 10 == 0) {

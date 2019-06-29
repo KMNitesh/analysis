@@ -40,12 +40,12 @@ std::vector<std::string> split(const std::string &str) {
 }
 
 
-std::string input(const std::string &prompt) {
-    std::cout << prompt;
+std::string input(const std::string &prompt, std::istream &in, std::ostream &out) {
+    out << prompt;
     std::string inputline;
-    std::getline(std::cin, inputline);
+    std::getline(in, inputline);
     if (isatty(STDIN_FILENO) == 0) {
-        std::cout << inputline << std::endl;
+        out << inputline << std::endl;
     }
     return inputline;
 }
@@ -88,14 +88,15 @@ FileType getFileType(const std::string &filename) {
 
 }
 
-std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty) {
+std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty,
+                        std::istream &in, std::ostream &out) {
     while (true) {
-        std::string input_line = input(prompt);
+        std::string input_line = input(prompt, in, out);
         boost::trim(input_line);
         if (!input_line.empty()) {
             if (ext.length()) {
                 if (ext_filename(input_line) != boost::to_lower_copy(ext)) {
-                    std::cerr << "wrong file extesion name : must be " << ext << std::endl;
+                    out << "wrong file extesion name : must be " << ext << std::endl;
                     continue;
                 }
             }
@@ -105,7 +106,7 @@ std::string choose_file(const std::string &prompt, bool exist, std::string ext, 
                 return input_line;
                 break;
             } else {
-                std::cerr << "The file is bad [retype]" << std::endl;
+                out << "The file is bad [retype]" << std::endl;
             }
         }
         if (can_empty) return "";
