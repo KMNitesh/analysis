@@ -51,13 +51,13 @@ void GROWriter::write(const std::shared_ptr<Frame> &frame) {
     }
     if (frame->enable_bound) {
         if (frame->alpha == 90.00 and frame->beta == 90.00 and frame->gamma == 90.00) {
-            *os << boost::format("%os   %os   %os \n") % (frame->a_axis / 10.0) % (frame->b_axis / 10.0) %
+            *os << boost::format("%f   %f   %f \n") % (frame->a_axis / 10.0) % (frame->b_axis / 10.0) %
                    (frame->c_axis / 10.0);
         } else {
             gmx::rvec box[3];
             translate(frame->a_axis / 10.0, frame->b_axis / 10.0, frame->c_axis / 10.0,
                       frame->alpha, frame->beta, frame->gamma, box);
-            *os << boost::format("%os   %os   %os   %os   %os   %os    %os   %os   %os\n") %
+            *os << boost::format("%f   %f   %f   %f   %f   %f    %f   %f   %f\n") %
                    box[0][0] % box[1][1] % box[2][2] % box[0][1] % box[0][2] % box[1][2] % box[2][0] %
                    box[2][1];
         }
