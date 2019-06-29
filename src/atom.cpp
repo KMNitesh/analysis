@@ -146,6 +146,7 @@ Atom::AtomIndenter input_atom_selection(const Grammar<Iterator, Skipper> &gramma
         Atom::AtomIndenter mask;
         mask.input_string = input(promot);
         boost::trim(mask.input_string);
+        if (mask.input_string.empty()) continue;
         auto it = mask.input_string.begin();
 
         bool status = qi::phrase_parse(it, mask.input_string.end(), grammar, qi::ascii::space, mask.ast);

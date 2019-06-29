@@ -43,8 +43,12 @@ public:
 
     void assign_forcefield(std::shared_ptr<Frame> &frame);
 
+    bool isVaild() { return isvaild; }
+
 private:
     std::unordered_map<int, AtomItem> mapping;
+
+    bool isvaild = false;
 };
 
 

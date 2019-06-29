@@ -8,6 +8,7 @@
 #include "trajectoryreader.hpp"
 #include "frame.hpp"
 #include "atom.hpp"
+#include "forcefield.hpp"
 
 namespace qi = boost::spirit::qi;
 
@@ -15,6 +16,9 @@ void PrintTopolgy::action(const std::string &topology_filename) {
     TrajectoryReader reader;
     reader.add_topology(topology_filename);
     auto frame = reader.readTopology();
+    if (forcefield.isVaild()) {
+        forcefield.assign_forcefield(frame);
+    }
 
     int sequence = 1;
     for (auto &mol : frame->molecule_list) {
@@ -31,17 +35,26 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         beg:
         CenterRuleNode r;
         selectCentergroup(r, "> ");
-        Atom::AtomIndenter id;
+        Atom::Node ast;
 
         if (auto ret = boost::get<std::shared_ptr<MassCenterRuleNode>>(&r)) {
-            id.ast = (*ret)->SelectionMask;
+            ast = (*ret)->SelectionMask;
             mode = Mode::Mass;
         } else if (auto ret = boost::get<std::shared_ptr<GeomCenterRuleNode>>(&r)) {
-            id.ast = (*ret)->SelectionMask;
+            ast = (*ret)->SelectionMask;
             mode = Mode::Geom;
         } else if (auto ret = boost::get<std::shared_ptr<NoopRuleNode>>(&r)) {
-            id.ast = (*ret)->SelectionMask;
+            ast = (*ret)->SelectionMask;
             mode = Mode::Noop;
+        } else if (boost::get<std::shared_ptr<QuitRuleNode>>(&r)) {
+            break;
+        } else if (boost::get<std::shared_ptr<HelpRuleNode>>(&r)) {
+            std::cout << "Help : \n"
+                      << " 1. com  of ambermask\n"
+                      << " 2. geom of ambermask\n"
+                      << " 3. help\n"
+                      << " 4. quit\n";
+            continue;
         }
 
         std::cout << boost::format("%-6s %-7s %4s %-7s %4s %-6s  %6s %8s  %8s%8s%8s\n")
@@ -52,7 +65,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         double sum_y = 0.0;
         double sum_z = 0.0;
         for (auto &atom : frame->atom_list) {
-            if (Atom::is_match(atom, id)) {
+            if (is_match_impl(atom, ast)) {
                 std::cout << boost::format("%6d %-7s %4s %-7s %4s %-6s % 8f %8s %8.3f%8.3f%8.3f\n")
                              % atom->seq % atom->atom_name
                              % (atom->residue_num ? boost::lexical_cast<std::string>(atom->residue_num.get()) : "-")

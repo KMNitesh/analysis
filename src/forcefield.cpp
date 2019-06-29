@@ -19,6 +19,7 @@ void Forcefield::read(const std::string &filename) {
         std::cerr << "Unrecognized file extension" << std::endl;
         exit(6);
     }
+    isvaild = true;
 }
 
 void Forcefield::read_tinker_prm(const std::string &filename) {
@@ -29,23 +30,29 @@ void Forcefield::read_tinker_prm(const std::string &filename) {
     while (true) {
         try {
             std::getline(f, line);
-            auto field = split(line);
-            if (field.empty()) continue;
-            if (field[0] == "atom") {
-                int type = stoi(field[1]);
-                int class_num = stoi(field[2]);
-                auto name = field[3];
-                double mass = stod(field[field.size() - 2]);
-                mapping.emplace(type, AtomItem(type, class_num, name, mass));
-            } else if (field[0] == "multipole") {
-                int type = stoi(field[1]);
-                double charge = stoi(field[field.size() - 1]);
-                auto it = mapping.find(type);
-                throw_assert(it != mapping.end(), "Tinker prm is illegal!");
-                it->second.charge = charge;
-            }
         } catch (std::exception &e) {
             return;
+        }
+        auto field = split(line);
+        if (field.empty()) continue;
+        if (field[0] == "atom") {
+            int type = stoi(field[1]);
+            int class_num = stoi(field[2]);
+            auto name = field[3];
+            double mass = stod(field[field.size() - 2]);
+            mapping.emplace(type, AtomItem(type, class_num, name, mass));
+        } else if (field[0] == "multipole") {
+            int type = stoi(field[1]);
+            double charge = stod(field[field.size() - 1]);
+            auto it = mapping.find(type);
+            throw_assert(it != mapping.end(), "Tinker prm is illegal!");
+            it->second.charge = charge;
+        } else if (field[0] == "charge") {
+            int type = stoi(field[1]);
+            double charge = stod(field[2]);
+            auto it = mapping.find(type);
+            throw_assert(it != mapping.end(), "Tinker prm is illegal!");
+            it->second.charge = charge;
         }
     }
 }
@@ -56,7 +63,7 @@ double Forcefield::find_mass(const std::shared_ptr<Atom> &atom) {
     if (it != mapping.end()) {
         return it->second.mass;
     }
-
+    throw std::runtime_error("atom mass not found");
 }
 
 void Forcefield::assign_forcefield(std::shared_ptr<Frame> &frame) {

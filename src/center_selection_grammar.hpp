@@ -62,16 +62,21 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(exp
     using qi::on_error;
     using qi::fail;
     using qi::lit;
+    using qi::eol;
     using boost::spirit::repository::qi::distinct;
 
 
     mask = (("{" >> maskParser >> "}") | maskParser)[_val = _1];
 
-    expr = (distinct(char_("a-zA-Z_0-9"))["com"] >> distinct(char_("a-zA-Z_0-9"))["of"]
-                                                 >> mask[_val = make_shared_<MassCenterRuleNode>(_1)])
-           | (distinct(char_("a-zA-Z_0-9"))["geom"] >> distinct(char_("a-zA-Z_0-9"))["of"]
-                                                    >> mask[_val = make_shared_<GeomCenterRuleNode>(_1)])
-           | mask[_val = make_shared_<NoopRuleNode>(_1)];
+    expr = (distinct(char_("a-zA-Z_0-9"))["com"]
+            >> distinct(char_("a-zA-Z_0-9"))["of"]
+            >> mask[_val = make_shared_<MassCenterRuleNode>(_1)])
+           | (distinct(char_("a-zA-Z_0-9"))["geom"]
+            >> distinct(char_("a-zA-Z_0-9"))["of"]
+            >> mask[_val = make_shared_<GeomCenterRuleNode>(_1)])
+           | mask[_val = make_shared_<NoopRuleNode>(_1)]
+           | lit("quit")[_val = make_shared_<QuitRuleNode>()]
+           | lit("help")[_val = make_shared_<HelpRuleNode>()];
 
     on_error<fail>(
             expr,
@@ -88,12 +93,14 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(exp
 
 
 template<typename Iterator, typename Skipper>
-std::tuple<CenterRuleNode,std::string> input_atom_selection(const CenterGrammar<Iterator, Skipper> &grammar, const std::string &promot) {
+std::tuple<CenterRuleNode, std::string>
+input_atom_selection(const CenterGrammar<Iterator, Skipper> &grammar, const std::string &promot) {
 
     for (;;) {
         CenterRuleNode mask;
         std::string input_string = input(promot);
         boost::trim(input_string);
+        if (input_string.empty()) continue;
         auto it = input_string.begin();
 
         bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask);
@@ -106,7 +113,7 @@ std::tuple<CenterRuleNode,std::string> input_atom_selection(const CenterGrammar<
 
             continue;
         }
-        return std::make_tuple(mask,input_string);
+        return std::make_tuple(mask, input_string);
     }
 }
 

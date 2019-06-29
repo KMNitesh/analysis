@@ -106,6 +106,14 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
 
 void printTopolgy(const boost::program_options::variables_map &vm) {
     PrintTopolgy printer;
+    if (vm.count("prm")) {
+        auto ff = vm["prm"].as<std::string>();
+        if (boost::filesystem::exists(ff)) {
+            forcefield.read(ff);
+        } else {
+            std::cout << "force field file " << ff << " is bad !" << std::endl;
+        }
+    }
     if (vm.count("topology")) {
         string topol = vm["topology"].as<string>();
         if (boost::filesystem::exists(topol)) {

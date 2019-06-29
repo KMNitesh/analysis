@@ -183,6 +183,8 @@ private:
     const std::shared_ptr<Atom> &atom;
 };
 
+bool is_match_impl(const std::shared_ptr<Atom> &atom, const Atom::Node &ast);
+
 inline std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids) {
     out << ids.input_string;
     return out;
