@@ -80,7 +80,7 @@ public:
         Node node2;
     };
 
-    typedef std::vector<boost::variant<boost::fusion::vector<uint, boost::optional<uint>>, std::string>> select_ranges;
+    typedef std::vector<boost::variant<boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>> select_ranges;
 
     struct residue_name_nums {
         select_ranges val;
@@ -110,7 +110,7 @@ public:
         }
 
         explicit atom_types(int typenum) {
-            boost::fusion::vector<uint, boost::optional<uint>> t;
+            boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>> t;
             boost::fusion::at_c<0>(t) = typenum;
             val.emplace_back(t);
         }

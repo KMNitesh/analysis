@@ -38,7 +38,7 @@ struct grammar_fixture {
         return ret;
     }
 
-    Grammar<std::string::iterator,qi::ascii::space_type> grammar;
+    Grammar<std::string::iterator, qi::ascii::space_type> grammar;
     Atom::AtomIndenter mask;
     std::shared_ptr<Atom> atom;
 };
@@ -100,7 +100,6 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
 
         BOOST_CHECK_MESSAGE(result(), "residue name selection7");
     }
-
 
 
     BOOST_AUTO_TEST_CASE(test_residue_number1) {
@@ -167,6 +166,22 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
         BOOST_CHECK_MESSAGE(result(), "residue number range selection");
     }
 
+    BOOST_AUTO_TEST_CASE(test_residue_number_range2) {
+        mask.input_string = ":1-10#2";
+        atom->residue_name = "ASP";
+        atom->residue_num = 5;
+
+        BOOST_CHECK_MESSAGE(result(), "residue number range selection with step v2");
+    }
+
+    BOOST_AUTO_TEST_CASE(test_residue_number_range3) {
+        mask.input_string = ":1-10#3";
+        atom->residue_name = "ASP";
+        atom->residue_num = 5;
+
+        BOOST_CHECK_MESSAGE(!result(), "residue number range selection step v3");
+    }
+
 
     BOOST_AUTO_TEST_CASE(test_atom_name) {
         mask.input_string = "@CA";
@@ -182,7 +197,6 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
         BOOST_CHECK_MESSAGE(result(false), "atom name selection2");
     }
 
-
     BOOST_AUTO_TEST_CASE(test_atom_number) {
         mask.input_string = "@10";
         atom->seq = 10;
@@ -197,6 +211,12 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
         BOOST_CHECK_MESSAGE(result(), "atom number selection2");
     }
 
+    BOOST_AUTO_TEST_CASE(test_atom_number_seq_add_range) {
+        mask.input_string = "@1,2-5#2,9";
+        atom->seq = 5;
+
+        BOOST_CHECK_MESSAGE(result(false), "atom number selection2");
+    }
 
     BOOST_AUTO_TEST_CASE(test_atom_number_range) {
         mask.input_string = "@1-10";
@@ -205,6 +225,19 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
         BOOST_CHECK_MESSAGE(result(), "atom number range selection");
     }
 
+    BOOST_AUTO_TEST_CASE(test_atom_number_range_with_step) {
+        mask.input_string = "@1-10#2";
+        atom->seq = 5;
+
+        BOOST_CHECK_MESSAGE(result(), "atom number range selection with step");
+    }
+
+    BOOST_AUTO_TEST_CASE(test_atom_number_range_with_step2) {
+        mask.input_string = "@1-10#3";
+        atom->seq = 5;
+
+        BOOST_CHECK_MESSAGE(result(false), "atom number range selection with step2");
+    }
 
     BOOST_AUTO_TEST_CASE(test_atom_type_name) {
         mask.input_string = "@%CA";
@@ -225,6 +258,13 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
         atom->typ = 5;
 
         BOOST_CHECK_MESSAGE(result(), "atom type number range selection");
+    }
+
+    BOOST_AUTO_TEST_CASE(test_atom_type_number_range_with_step) {
+        mask.input_string = "@%1-10#4";
+        atom->typ = 5;
+
+        BOOST_CHECK_MESSAGE(result(), "atom type number range selection with step");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_symbol_name) {
@@ -281,8 +321,25 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
         BOOST_CHECK_MESSAGE(result(), "parentheses selection1");
     }
 
+    BOOST_AUTO_TEST_CASE(test_parentheses2) {
+        mask.input_string = ":1-10#1 & ( @C | @%CA )";
+        atom->residue_name = "ASP";
+        atom->residue_num = 9;
+        atom->atom_name = "CB";
+        atom->type_name = "CA";
 
+        BOOST_CHECK_MESSAGE(result(), "parentheses selection2");
+    }
 
+    BOOST_AUTO_TEST_CASE(zero_step) {
+        mask.input_string = ":1-10#0 & ( @C | @%CA )";
+        atom->residue_name = "ASP";
+        atom->residue_num = 9;
+        atom->atom_name = "CB";
+        atom->type_name = "CA";
+
+        BOOST_CHECK_MESSAGE(result(false), "zero step");
+    }
 
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -2,8 +2,8 @@
 // Created by xiamr on 6/30/19.
 //
 
-#ifndef TINKER_PLANEANGLE_HPP
-#define TINKER_PLANEANGLE_HPP
+#ifndef TINKER_ANGLEWAT_HPP
+#define TINKER_ANGLEWAT_HPP
 
 #include <unordered_map>
 #include <unordered_set>
@@ -15,10 +15,10 @@
 
 class Frame;
 
-class PlaneAngle : public BasicAnalysis {
+class AngleWat : public BasicAnalysis {
 public:
 
-    PlaneAngle() {
+    AngleWat() {
         enable_outfile = true;
     }
 
@@ -30,14 +30,14 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Plane Angle Distribution with cutoff"; }
+    static const std::string title() { return "Angle (Ow-Hw) Distribution with cutoff"; }
 
 protected:
-    Atom::AtomIndenter ids1, ids2, ids3, ids4;
+    Atom::AtomIndenter ids1, ids2, ids3;
 
-    std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3, group4;
+    std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
 
-    std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
+    std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
     double angle_width;
 
@@ -51,4 +51,4 @@ protected:
 };
 
 
-#endif //TINKER_PLANEANGLE_HPP
+#endif //TINKER_ANGLEWAT_HPP

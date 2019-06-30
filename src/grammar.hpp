@@ -31,7 +31,7 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
     Grammar();
 
 
-    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<uint>>, std::string>(), Skipper> select_item_rule;
+    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>(), Skipper> select_item_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> residue_select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> nametype_select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> select_rule;
@@ -50,6 +50,7 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::string, replace_all_copy, boost::replace_all_c
 template<typename Iterator, typename Skipper>
 Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
     using qi::uint_;
+    using qi::int_;
     using qi::eps;
     using qi::as_string;
     using qi::lexeme;
@@ -70,19 +71,39 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
 
     str_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]][_val = replace_all_copy(_1, "=", "*")];
 
-    select_item_rule = (str_with_wildcard >> -("-" >> uint_))[(
-     [](auto &attr, auto &context, bool &pass) {
-        try {
-            uint num = boost::lexical_cast<uint>(fusion::at_c<0>(attr));
-            fusion::at_c<0>(context.attributes) = fusion::vector<uint, boost::optional<uint>>(num,fusion::at_c<1>(attr));
-        } catch (boost::bad_lexical_cast &) {
-            if (fusion::at_c<1>(attr)) {
-                pass = false;
-            } else {
-                fusion::at_c<0>(context.attributes) = fusion::at_c<0>(attr);
-            }
-        }
-    })];
+    select_item_rule = (str_with_wildcard >> -("-" >> uint_ >> -("#" >> int_)))[(
+            [](auto &attr, auto &context, bool &pass) {
+                try {
+                    uint num = boost::lexical_cast<uint>(fusion::at_c<0>(attr));
+
+                    if (fusion::at_c<1>(attr)) {
+                        int step = 1;
+                        if (fusion::at_c<1>(fusion::at_c<1>(attr).get())) {
+                            step = fusion::at_c<1>(fusion::at_c<1>(attr).get()).get();
+                            if (step == 0) {
+                                pass = false;
+                                return;
+                            }
+                        }
+
+                        fusion::at_c<0>(
+                                context.attributes) = fusion::vector<uint, boost::optional<std::pair<uint, int>>>(
+                                num, std::make_pair(fusion::at_c<0>(fusion::at_c<1>(attr).get()), step));
+                    } else {
+                        fusion::at_c<0>(
+                                context.attributes) = fusion::vector<uint, boost::optional<std::pair<uint, int>>>(
+                                num, boost::optional<std::pair<uint, int>>());
+                    }
+
+                } catch (boost::bad_lexical_cast &) {
+                    if (fusion::at_c<1>(attr)) {
+                        pass = false;
+                        return;
+                    } else {
+                        fusion::at_c<0>(context.attributes) = fusion::at_c<0>(attr);
+                    }
+                }
+            })];
 
     residue_select_rule = ":" >> (select_item_rule % ",")[_val = make_shared_<Atom::residue_name_nums>(_1)];
 
