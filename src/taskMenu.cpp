@@ -58,6 +58,7 @@ namespace mpl = boost::mpl;
 #include "DipoleAngleWithDistanceRange.hpp"
 #include "DipoleAxisDistribution.hpp"
 #include "EquatorialAngle.hpp"
+#include "PlaneAngle.hpp"
 
 
 using namespace std;
@@ -106,7 +107,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             DemixIndexOfTwoGroup,
             DipoleAngleWithDistanceRange,
             DipoleAxisDistribution,
-            EquatorialAngle
+            EquatorialAngle,
+            PlaneAngle
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

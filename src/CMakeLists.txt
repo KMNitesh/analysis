@@ -29,7 +29,7 @@ add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp
         DipoleAngle2Gibbs.cpp ShellDensity.cpp SearchInteractionResidue.cpp
         FindMinBetweenTwoGroups.cpp DemixIndexOfTwoGroup.cpp PrintTopolgy.cpp mainUtils.cpp
         TrajectoryWriterFactoryImpl.cpp PBCUtils.cpp DipoleAngleWithDistanceRange.cpp
-        DipoleAxisDistribution.cpp EquatorialAngle.cpp)
+        DipoleAxisDistribution.cpp EquatorialAngle.cpp PlaneAngle.cpp)
 
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)
