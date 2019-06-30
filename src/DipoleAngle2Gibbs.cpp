@@ -17,7 +17,7 @@ void DipoleAngle2Gibbs::print(std::ostream &os) {
     os << "# angle_width > " << angle_width << '\n';
     os << "# Temperature(K) > " << temperature << '\n';
     os << string(50, '#') << '\n';
-    os << format("#%10s %10s %15s\n", "Distance", "Angle", "Energy");
+    os << format("#%15s %15s %15s\n", "Distance(Ang)", "Angle(degree)", "Energy(kcal/mol)");
 
     printData(os);
 
@@ -38,7 +38,7 @@ void DipoleAngle2Gibbs::printData(ostream &os) const {
         double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
             double pop = double(hist.at(make_pair(i_distance, i_angle))) / (max_value * dv);
-            os << boost::format("%10.3f %10.3f %15.6f\n")
+            os << boost::format("%15.3f %15.3f %15.6f\n")
                   % ((i_distance - 0.5) * distance_width)
                   % ((i_angle - 0.5) * angle_width)
                   % (pop == 0.0 ? 100.0 : factor * log(pop));

@@ -52,8 +52,9 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             std::cout << "Help : \n"
                       << " 1. com  of ambermask\n"
                       << " 2. geom of ambermask\n"
-                      << " 3. help\n"
-                      << " 4. quit\n";
+                      << " 3. ambermask\n"
+                      << " 4. help\n"
+                      << " 5. quit\n";
             continue;
         }
 

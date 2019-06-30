@@ -15,7 +15,7 @@ class Frame;
 
 class BasicAnalysis {
 public:
-    virtual void processFirstFrame(std::shared_ptr<Frame> &/*frame*/) {};
+    virtual void processFirstFrame(std::shared_ptr<Frame> &frame) {};
 
     virtual void process(std::shared_ptr<Frame> &frame) = 0;
 

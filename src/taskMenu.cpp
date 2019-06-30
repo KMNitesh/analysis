@@ -55,6 +55,7 @@ namespace mpl = boost::mpl;
 #include "SearchInteractionResidue.hpp"
 #include "FindMinBetweenTwoGroups.hpp"
 #include "DemixIndexOfTwoGroup.hpp"
+#include "DipoleAngleWithDistanceRange.hpp"
 
 
 using namespace std;
@@ -100,7 +101,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             ShellDensity,
             SearchInteractionResidue,
             FindMinBetweenTwoGroups,
-            DemixIndexOfTwoGroup
+            DemixIndexOfTwoGroup,
+            DipoleAngleWithDistanceRange
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

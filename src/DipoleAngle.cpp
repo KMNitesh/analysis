@@ -28,7 +28,7 @@ void DipoleAngle::process(std::shared_ptr<Frame> &frame) {
 
             auto[dipole_x, dipole_y, dipole_z] = mol->calc_dipole(frame);
 
-            double dipole_scalar = dipole_x * dipole_x + dipole_y * dipole_y + dipole_z * dipole_z;
+            double dipole_scalar = std::sqrt(dipole_x * dipole_x + dipole_y * dipole_y + dipole_z * dipole_z);
 
             double _cos = (xr * dipole_x + yr * dipole_y + zr * dipole_z) / (distance * dipole_scalar);
 

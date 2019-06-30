@@ -230,7 +230,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {
-                if (enable_forcefield) {
+                if (forcefield.isVaild()) {
                     forcefield.assign_forcefield(frame);
                 }
                 processFirstFrame(frame, task_list);
