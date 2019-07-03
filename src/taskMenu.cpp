@@ -60,6 +60,7 @@ namespace mpl = boost::mpl;
 #include "EquatorialAngle.hpp"
 #include "PlaneAngle.hpp"
 #include "AngleWat.hpp"
+#include "RotAcf.hpp"
 
 
 using namespace std;
@@ -110,7 +111,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             DipoleAxisDistribution,
             EquatorialAngle,
             PlaneAngle,
-            AngleWat
+            AngleWat,
+            RotAcf
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
