@@ -42,9 +42,9 @@ void DipoleAxisDistribution::print(std::ostream &os) {
     os << string(50, '#') << '\n';
     os << "# " << DipoleAxisDistribution::title() << '\n';
     os << "# Group > " << ids << '\n';
-    os << "# angle_width > " << angle_width << '\n';
+    os << "# angle_width(degree) > " << angle_width << '\n';
     os << string(50, '#') << '\n';
-    os << format("#%15s %15s\n", "Angle(degree)", "Probability(%)");
+    os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
 
     printData(os);
 

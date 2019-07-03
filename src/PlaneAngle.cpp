@@ -85,9 +85,11 @@ void PlaneAngle::print(std::ostream &os) {
     os << "# Group2 > " << ids2 << '\n';
     os << "# Group3 > " << ids3 << '\n';
     os << "# Group4 > " << ids4 << '\n';
-    os << "# angle_width > " << angle_width << '\n';
+    os << "# angle_width(degree) > " << angle_width << '\n';
+    os << "# Cutoff1(Ang) > " << cutoff1 << '\n';
+    os << "# Cutoff2(Ang) > " << cutoff2 << '\n';
     os << string(50, '#') << '\n';
-    os << format("#%15s %15s\n", "Angle(degree)", "Probability(%)");
+    os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
 
     printData(os);
 

@@ -56,11 +56,11 @@ void DipoleAngleWithDistanceRange::print(std::ostream &os) {
     os << "# " << DipoleAngleWithDistanceRange::title() << '\n';
     os << "# Group1 > " << ids1 << '\n';
     os << "# Group2 > " << ids2 << '\n';
-    os << "# angle_width > " << angle_width << '\n';
-    os << "# Cutoff1 > " << cutoff1 << '\n';
-    os << "# Cutoff2 > " << cutoff2 << '\n';
+    os << "# angle_width(degree) > " << angle_width << '\n';
+    os << "# Cutoff1(Ang) > " << cutoff1 << '\n';
+    os << "# Cutoff2(Ang) > " << cutoff2 << '\n';
     os << string(50, '#') << '\n';
-    os << format("#%15s %15s\n", "Angle(degree)", "Probability(%)");
+    os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
 
     printData(os);
 
