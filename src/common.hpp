@@ -32,6 +32,8 @@ constexpr int ATOM_MAX = 10000;
 
 constexpr double radian = 57.29577951308232088;
 constexpr double pi = 3.1415926;
+constexpr double avogadro_constant = 6.022140857e23;
+constexpr double kb = 1.380649e-23; // unit: J/K
 
 // global variables
 

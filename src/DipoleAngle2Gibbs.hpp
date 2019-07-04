@@ -19,9 +19,7 @@ public:
 
 protected:
 
-    const double kb = 1.380649e-23; // unit: J/K
     double temperature;  // unit: K
-    const double avogadro_constant = 6.022140857e23;
 
     void printData(std::ostream &os) const;
 };
