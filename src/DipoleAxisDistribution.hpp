@@ -30,7 +30,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Dipole Angle Distribution with Z-Axis"; }
+    static const std::string title() { return "Dipole Angle Distribution with Axis"; }
 
 protected:
 
@@ -47,6 +47,7 @@ protected:
 
     void printData(std::ostream &os) const;
 
+    double xr = 0.0, yr = 0.0, zr = 0.0;
 };
 
 

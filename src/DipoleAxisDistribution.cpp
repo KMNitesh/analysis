@@ -18,17 +18,13 @@ void DipoleAxisDistribution::process(std::shared_ptr<Frame> &frame) {
     for (auto &atom: group) {
         auto mol = atom->molecule.lock();
 
-        double xr = 0.0;
-        double yr = 0.0;
-        double zr = 1.0;
-
         auto[dipole_x, dipole_y, dipole_z] = mol->calc_dipole(frame);
 
-        double dipole_scalar = std::sqrt(dipole_x * dipole_x + dipole_y * dipole_y + dipole_z * dipole_z);
+        auto dipole_scalar = std::sqrt(dipole_x * dipole_x + dipole_y * dipole_y + dipole_z * dipole_z);
 
-        double _cos = (xr * dipole_x + yr * dipole_y + zr * dipole_z) / dipole_scalar;
+        auto _cos = (xr * dipole_x + yr * dipole_y + zr * dipole_z) / dipole_scalar;
 
-        double angle = acos(_cos) * radian;
+        auto angle = acos(_cos) * radian;
 
         int i_angle_bin = int(angle / angle_width) + 1;
 
@@ -43,6 +39,7 @@ void DipoleAxisDistribution::print(std::ostream &os) {
     os << "# " << DipoleAxisDistribution::title() << '\n';
     os << "# Group > " << ids << '\n';
     os << "# angle_width(degree) > " << angle_width << '\n';
+    os << "# " << (xr == 1.0 ? "X-Axis" : (yr == 1.0 ? "Y-Axis" : "Z-Axis")) << '\n';
     os << string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
 
@@ -55,6 +52,27 @@ void DipoleAxisDistribution::readInfo() {
     Atom::select1group(ids);
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
     angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
+
+    auto menu = [] {
+        cout << "Axis selection \n";
+        cout << "  1. X-Axis\n";
+        cout << "  2. Y-Axis\n";
+        cout << "  3. Z-Axis\n";
+
+        return choose(1, 3, " select > ");
+    };
+
+    switch (menu()) {
+        case 1:
+            xr = 1.0;
+            break;
+        case 2:
+            yr = 1.0;
+            break;
+        case 3:
+            zr = 1.0;
+            break;
+    }
 
     angle_bins = int(angle_max / angle_width);
 
