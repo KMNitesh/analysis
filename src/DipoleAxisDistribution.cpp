@@ -26,11 +26,7 @@ void DipoleAxisDistribution::process(std::shared_ptr<Frame> &frame) {
 
         auto angle = acos(_cos) * radian;
 
-        int i_angle_bin = int(angle / angle_width) + 1;
-
-        if (i_angle_bin <= angle_bins) {
-            hist[i_angle_bin] += 1;
-        }
+        hist.update(angle);
     }
 }
 
@@ -38,7 +34,7 @@ void DipoleAxisDistribution::print(std::ostream &os) {
     os << string(50, '#') << '\n';
     os << "# " << DipoleAxisDistribution::title() << '\n';
     os << "# Group > " << ids << '\n';
-    os << "# angle_width(degree) > " << angle_width << '\n';
+    os << "# angle_width(degree) > " << hist.getWidth() << '\n';
     os << "# " << (xr == 1.0 ? "X-Axis" : (yr == 1.0 ? "Y-Axis" : "Z-Axis")) << '\n';
     os << string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
@@ -51,7 +47,7 @@ void DipoleAxisDistribution::print(std::ostream &os) {
 void DipoleAxisDistribution::readInfo() {
     Atom::select1group(ids);
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
-    angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
+    auto angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
 
     auto menu = [] {
         cout << "Axis selection \n";
@@ -74,22 +70,11 @@ void DipoleAxisDistribution::readInfo() {
             break;
     }
 
-    angle_bins = int(angle_max / angle_width);
-
-    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-        hist[i_angle] = 0;
-    }
+    hist.initialize(angle_max, angle_width);
 }
 
 void DipoleAxisDistribution::printData(std::ostream &os) const {
-    double total = 0.0;
-
-    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-        total += hist.at(i_angle);
+    for (auto[grid, value] : hist.getDistribution()) {
+        os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
-
-    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-        os << format("%15.3f %15.3f\n", (i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width);
-    }
-
 }

@@ -445,4 +445,81 @@ auto combine_seq(std::initializer_list<T> &&iter) {
     return CombineSeq(iter);
 }
 
+
+template<typename T>
+T dot_multiplication(const std::tuple<T, T, T> &vector1, const std::tuple<T, T, T> &vector2) {
+    return std::get<0>(vector1) * std::get<0>(vector2) +
+           std::get<1>(vector1) * std::get<1>(vector2) +
+           std::get<2>(vector1) * std::get<2>(vector2);
+}
+
+
+template<typename T>
+std::tuple<T, T, T> cross_multiplication(const std::tuple<T, T, T> &vector1, const std::tuple<T, T, T> &vector2) {
+    auto[u1, u2, u3] = vector1;
+    auto[v1, v2, v3] = vector2;
+    return {u2 * v3 - u3 * v2, u1 * v3 - u3 * v1, u1 * v2 - u2 * v1};
+}
+
+template<typename T>
+T vector_norm2(const std::tuple<T, T, T> &vector1) {
+    auto[u1, u2, u3] = vector1;
+    return u1 * u1 + u2 * u2 + u3 * u3;
+}
+
+template<typename T>
+T vector_norm(const std::tuple<T, T, T> &vector1) {
+    return std::sqrt(vector_norm2(vector1));
+}
+
+template<typename T>
+std::tuple<T, T, T> operator-(const std::tuple<T, T, T> &vector1, const std::tuple<T, T, T> &vector2) {
+    return {std::get<0>(vector1) - std::get<0>(vector2),
+            std::get<1>(vector1) - std::get<1>(vector2),
+            std::get<2>(vector1) - std::get<2>(vector2)};
+}
+
+template<typename T>
+std::tuple<T, T, T> operator+(const std::tuple<T, T, T> &vector1, const std::tuple<T, T, T> &vector2) {
+    return {std::get<0>(vector1) + std::get<0>(vector2),
+            std::get<1>(vector1) + std::get<1>(vector2),
+            std::get<2>(vector1) + std::get<2>(vector2)};
+}
+
+template<typename T>
+std::tuple<T, T, T> operator/(const std::tuple<T, T, T> &vector1, T norm) {
+    return {std::get<0>(vector1) / norm,
+            std::get<1>(vector1) / norm,
+            std::get<2>(vector1) / norm};
+}
+
+template<typename T>
+std::tuple<T, T, T> &operator/=(std::tuple<T, T, T> &vector1, T norm) {
+    std::get<0>(vector1) /= norm;
+    std::get<1>(vector1) /= norm;
+    std::get<2>(vector1) /= norm;
+    return vector1;
+}
+
+template<typename T>
+std::tuple<T, T, T> operator*(T norm, const std::tuple<T, T, T> &vector1) {
+    return {std::get<0>(vector1) * norm,
+            std::get<1>(vector1) * norm,
+            std::get<2>(vector1) * norm};
+}
+
+template<typename T>
+std::tuple<T, T, T> operator*(const std::tuple<T, T, T> &vector1, T norm) {
+    return norm * vector1;
+}
+
+template<typename T>
+std::tuple<T, T, T> &operator*=(std::tuple<T, T, T> &vector1, T norm) {
+    std::get<0>(vector1) *= norm;
+    std::get<1>(vector1) *= norm;
+    std::get<2>(vector1) *= norm;
+    return vector1;
+}
+
+
 #endif //TINKER_COMMON_HPP

@@ -11,6 +11,7 @@
 #include <string>
 #include <list>
 #include <memory>
+#include <tuple>
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 #include <boost/variant.hpp>
@@ -18,7 +19,6 @@
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
-
 
 
 class Molecule;
@@ -29,6 +29,8 @@ public:
     std::string atom_name;
 
     double x, y, z;  // position
+
+    std::tuple<double, double, double> getCoordinate() const { return {x, y, z}; }
 
     double vx = 0.0, vy = 0.0, vz = 0.0; // velocity
 

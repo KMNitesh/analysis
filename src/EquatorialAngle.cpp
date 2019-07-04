@@ -46,11 +46,7 @@ void EquatorialAngle::process(std::shared_ptr<Frame> &frame) {
 
                         double angle = acos(_cos) * radian;
 
-                        int i_angle_bin = int(angle / angle_width) + 1;
-
-                        if (i_angle_bin <= angle_bins) {
-                            hist[i_angle_bin] += 1;
-                        }
+                        hist.update(angle);
                     }
                 }
             }
@@ -64,7 +60,7 @@ void EquatorialAngle::print(std::ostream &os) {
     os << "# Group1 > " << ids1 << '\n';
     os << "# Group2 > " << ids2 << '\n';
     os << "# Group3 > " << ids3 << '\n';
-    os << "# angle_width(degree) > " << angle_width << '\n';
+    os << "# angle_width(degree) > " << hist.getWidth() << '\n';
     os << "# Cutoff1(Ang) > " << cutoff1 << '\n';
     os << "# Cutoff2(Ang) > " << cutoff2 << '\n';
     os << string(50, '#') << '\n';
@@ -81,29 +77,19 @@ void EquatorialAngle::readInfo() {
     Atom::select1group(ids2, "Enter mask for atom2(in same mol with atom1) : ");
     Atom::select1group(ids3, "Enter mask for atom3 : ");
 
-    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
-    angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
+    auto angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
+    auto angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
 
     cutoff1 = choose(0.0, 100.0, "Cutoff1 [Angstrom]:", false);
     cutoff2 = choose(0.0, 100.0, "Cutoff2 [Angstrom]:", false);
 
     throw_assert(cutoff1 < cutoff2, "Cutoff1 must less than Cutoff2");
 
-    angle_bins = int(angle_max / angle_width);
-
-    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-        hist[i_angle] = 0;
-    }
+    hist.initialize(angle_max, angle_width);
 }
 
 void EquatorialAngle::printData(std::ostream &os) const {
-    double total = 0.0;
-
-    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-        total += hist.at(i_angle);
-    }
-
-    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-        os << format("%15.3f %15.3f\n", (i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width);
+    for (auto[grid, value] : hist.getDistribution()) {
+        os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
 }

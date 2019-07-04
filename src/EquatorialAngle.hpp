@@ -11,6 +11,7 @@
 #include "BasicAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
+#include "Histrogram.hpp"
 
 
 class Frame;
@@ -37,11 +38,7 @@ protected:
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
 
-    double angle_width;
-
-    int angle_bins;
-
-    std::unordered_map<int, std::size_t> hist;
+    Histrogram hist;
 
     double cutoff1, cutoff2;
 

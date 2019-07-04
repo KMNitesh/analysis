@@ -10,6 +10,7 @@
 #include <list>
 #include <unordered_map>
 #include <memory>
+#include <tuple>
 #include <cassert>
 
 class Atom;
@@ -39,6 +40,8 @@ public:
     bool enable_bound = false;
 
     void image(double &xr, double &yr, double &zr);
+
+    void image(std::tuple<double, double, double> &r);
 
     double volume() const {
         assert(enable_bound);

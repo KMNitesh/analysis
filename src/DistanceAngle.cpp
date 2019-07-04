@@ -34,37 +34,30 @@ void DistanceAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 void DistanceAngle::process(std::shared_ptr<Frame> &frame) {
     for (auto &[ref, atom2] : pairs) {
-        auto xr = atom2->x - ref->x;
-        auto yr = atom2->y - ref->y;
-        auto zr = atom2->z - ref->z;
 
-        frame->image(xr, yr, zr);
+        auto r = atom2->getCoordinate() - ref->getCoordinate();
+        frame->image(r);
 
-        auto distance = sqrt(xr * xr + yr * yr + zr * zr);
-
-        xr /= distance;
-        yr /= distance;
-        zr /= distance;
+        r /= vector_norm(r);
 
         for (auto &atom3 : group3) {
 
-            auto _xr = atom3->x - ref->x;
-            auto _yr = atom3->y - ref->y;
-            auto _zr = atom3->z - ref->z;
+            auto v = atom3->getCoordinate() - ref->getCoordinate();
+            frame->image(v);
 
-            frame->image(_xr, _yr, _zr);
+            auto dist = vector_norm(v);
 
-            auto _dist = sqrt(_xr * _xr + _yr * _yr + _zr * _zr);
+            v /= dist;
 
-            auto _cos = (xr * _xr + yr * _yr + zr * _zr) / _dist;
+            auto _cos = dot_multiplication(r, v);
 
             auto angle = std::abs(acos(_cos) * radian - 90.0);
 
-            int i_distance_bin = int(_dist / distance_width) + 1;
+            int i_distance_bin = int(dist / distance_width) + 1;
             int i_angle_bin = int(angle / angle_width) + 1;
 
             if (i_distance_bin <= distance_bins and i_angle_bin <= angle_bins) {
-                hist[make_pair(i_distance_bin, i_angle_bin)] += 1;
+                hist[{i_distance_bin, i_angle_bin}] += 1;
             }
         }
 
