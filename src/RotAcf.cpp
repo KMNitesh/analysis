@@ -48,7 +48,7 @@ void RotAcf::print(std::ostream &os) {
 
     // intergrate;
 
-    vector<double> integrate = intergrate(acf);
+    vector<double> integration = integrate(acf);
 
     os << "*********************************************************\n";
     os << "Group1 > " << ids1 << " Group2 > " << ids2 << " Group3 > " << ids3 << '\n';
@@ -58,13 +58,13 @@ void RotAcf::print(std::ostream &os) {
     os << "      (ps)                            (ps)\n";
 
     for (std::size_t t = 0; t < acf.size(); t++) {
-        os << boost::format("%12.2f%18.14f%15.5f\n") % (t * time_increment_ps) % acf[t] % integrate[t];
+        os << boost::format("%12.2f%18.14f%15.5f\n") % (t * time_increment_ps) % acf[t] % integration[t];
     }
     os << "*********************************************************\n";
 
 }
 
-vector<double> RotAcf::intergrate(const vector<double> &acf) const {
+vector<double> RotAcf::integrate(const vector<double> &acf) const {
     vector<double> integrate(acf.size());
     integrate[0] = 0.0;
 
@@ -78,11 +78,9 @@ vector<double> RotAcf::calculate() const {
 
     class ParallelBody {
     public:
+        const vector<vector<tuple<double, double, double>>> &rots;
         vector<double> acf;
         vector<int> ntime;
-
-        const vector<vector<tuple<double, double, double>>> &rots;
-
 
         explicit ParallelBody(const vector<vector<tuple<double, double, double>>> &rots)
                 : rots(rots), acf(rots[0].size(), 0.0), ntime(rots[0].size(), 0) {}

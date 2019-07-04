@@ -57,7 +57,7 @@ protected:
 
     std::vector<double> calculate() const;
 
-    std::vector<double> intergrate(const std::vector<double> &acf) const;
+    std::vector<double> integrate(const std::vector<double> &acf) const;
 };
 
 
