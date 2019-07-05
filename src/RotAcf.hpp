@@ -16,6 +16,7 @@
 #include "common.hpp"
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
+#include "VectorSelector.hpp"
 
 class Frame;
 
@@ -43,17 +44,9 @@ protected:
 
     double time_increment_ps = 0.1;
 
-    Atom::AtomIndenter ids1;
-    Atom::AtomIndenter ids2;
-    Atom::AtomIndenter ids3;
-
-    std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
-
     std::vector<std::vector<std::tuple<double, double, double>>> rots;
 
-    std::tuple<double, double, double> calVector(
-            std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
-            std::shared_ptr<Frame> &frame);
+    std::shared_ptr<VectorSelector> vectorSelector;
 
     std::vector<double> calculate() const;
 

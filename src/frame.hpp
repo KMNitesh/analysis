@@ -39,9 +39,9 @@ public:
 
     bool enable_bound = false;
 
-    void image(double &xr, double &yr, double &zr);
+    void image(double &xr, double &yr, double &zr) const;
 
-    void image(std::tuple<double, double, double> &r);
+    void image(std::tuple<double, double, double> &r) const;
 
     double volume() const {
         assert(enable_bound);

@@ -107,7 +107,7 @@ std::string choose_file(const std::string &prompt, bool exist, std::string ext =
                         std::istream &in = std::cin, std::ostream &out = std::cout);
 
 template<typename T>
-T sign(T &x, T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
+T sign(const T &x, const T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
 
 double
 atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame);
