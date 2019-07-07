@@ -19,7 +19,7 @@ void RotAcf::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 void RotAcf::process(std::shared_ptr<Frame> &frame) {
     auto it2 = rots.begin();
-    auto vectors = vectorSelector->calcaulteVectors(frame);
+    auto vectors = vectorSelector->calculateVectors(frame);
 
     for (auto it1 = vectors.begin(); it1 != vectors.end(); ++it1, ++it2) {
         it2->push_back(*it1);
@@ -27,8 +27,15 @@ void RotAcf::process(std::shared_ptr<Frame> &frame) {
 }
 
 void RotAcf::print(std::ostream &os) {
-
-    vector<double> acf = calculate();
+    vector<double> acf;
+    switch (LegendrePolynomial) {
+        case 1:
+            acf = calculate([](auto x) { return x; });
+            break;
+        case 2:
+            acf = calculate([](auto x) { return 0.5 * (3 * x * x - 1); });
+            break;
+    }
 
     vector<double> integration = integrate(acf);
 
@@ -36,7 +43,16 @@ void RotAcf::print(std::ostream &os) {
 
     os << " rotational autocorrelation function\n";
     vectorSelector->print(os);
-    os << "    Time Gap      ACF               intergrate\n";
+    os << "Legendre Polynomial : ";
+    switch (LegendrePolynomial) {
+        case 1:
+            os << "P1 = x\n";
+            break;
+        case 2:
+            os << "P2 = (1/2)(3x^2 -1)\n";
+            break;
+    }
+    os << "    Time Gap      ACF               integrate\n";
     os << "      (ps)                            (ps)\n";
 
     for (std::size_t t = 0; t < acf.size(); t++) {
@@ -56,68 +72,96 @@ vector<double> RotAcf::integrate(const vector<double> &acf) const {
     return integrate;
 }
 
-vector<double> RotAcf::calculate() const {
+template<typename Function>
+class ParallelBody {
+public:
+    const vector<vector<tuple<double, double, double>>> &rots;
+    double *acf = nullptr;
+    unsigned long long *ntime = nullptr;
 
-    class ParallelBody {
-    public:
-        const vector<vector<tuple<double, double, double>>> &rots;
-        vector<double> acf;
-        vector<int> ntime;
+    size_t array_length;
+    size_t max_time_grap_step;
+    Function f;
 
-        explicit ParallelBody(const vector<vector<tuple<double, double, double>>> &rots)
-                : rots(rots), acf(rots[0].size(), 0.0), ntime(rots[0].size(), 0) {}
 
-        ParallelBody(const ParallelBody &body, tbb::split)
-                : rots(body.rots), acf(body.rots[0].size(), 0.0), ntime(body.rots[0].size(), 0) {}
+    explicit ParallelBody(const vector<vector<tuple<double, double, double>>> &rots,
+                          size_t max_time_grap_step, size_t array_length, Function f)
+            : rots(rots), acf(new double[array_length]{}),
+              ntime(new unsigned long long[array_length]{}),
+              array_length(array_length),
+              max_time_grap_step(max_time_grap_step), f(f) {}
 
-        void join(const ParallelBody &body) {
-            for (size_t i = 1; i < acf.size(); i++) {
-                acf[i] += body.acf[i];
-                ntime[i] += body.ntime[i];
-            }
+    ParallelBody(const ParallelBody &rhs, tbb::split)
+            : rots(rhs.rots), acf(new double[rhs.array_length]{}),
+              ntime(new unsigned long long[rhs.array_length]{}),
+              array_length(rhs.array_length),
+              max_time_grap_step(rhs.max_time_grap_step), f(rhs.f) {}
+
+    void join(const ParallelBody &rhs) {
+        for (size_t i = 1; i < array_length; i++) {
+            acf[i] += rhs.acf[i];
+            ntime[i] += rhs.ntime[i];
         }
+    }
 
-        void operator()(const tbb::blocked_range<int> &range) {
-            for (int index = range.begin(); index != range.end(); index++) {
-                auto &_vector = rots[index];
-                auto total_size = _vector.size();
+    virtual ~ParallelBody() {
+        delete[] acf;
+        delete[] ntime;
+    }
 
-                for (size_t i = 0; i < total_size - 1; i++) {
-                    for (size_t j = i + 1; j < total_size; j++) {
-                        auto m = j - i;
+    void operator()(const tbb::blocked_range<int> &range) {
+        for (auto index = range.begin(); index != range.end(); index++) {
+            auto &_vector = rots[index];
+            auto total_size = _vector.size();
 
-                        assert(i < _vector.size());
-                        assert(j < _vector.size());
+            for (size_t i = 0; i < total_size - 1; i++) {
+                for (size_t j = i + 1; j < total_size; j++) {
+                    auto m = j - i;
 
-                        auto[xr1, yr1, zr1] = _vector[i];
-                        auto[xr2, yr2, zr2] = _vector[j];
+                    assert(i < _vector.size());
+                    assert(j < _vector.size());
 
-                        double cos = xr1 * xr2 + yr1 * yr2 + zr1 * zr2;
+                    if (m > max_time_grap_step) break;
 
-                        acf[m] += cos;
-                        ntime[m]++;
-                    }
+                    double cos = dot_multiplication(_vector[i], _vector[j]);
+
+                    acf[m] += f(cos);
+                    ntime[m]++;
                 }
             }
         }
-    } parallelBody(rots);
+    }
+};
+
+template<typename Function>
+vector<double> RotAcf::calculate(Function f) const {
+    size_t max_time_grap_step = std::ceil(max_time_grap / time_increment_ps);
+
+    ParallelBody parallelBody(rots, max_time_grap_step, min(rots[0].size(), max_time_grap_step + 1), f);
 
     tbb::parallel_reduce(tbb::blocked_range<int>(0, rots.size()), parallelBody, tbb::auto_partitioner());
 
-    for (size_t i = 1; i < parallelBody.acf.size(); i++) {
+    std::vector<double> acf(max_time_grap_step, 0);
+    for (size_t i = 1; i < max_time_grap_step; i++) {
         assert(parallelBody.ntime[i] > 0);
-        parallelBody.acf[i] /= parallelBody.ntime[i];
+        acf[i] = parallelBody.acf[i] / parallelBody.ntime[i];
     }
 
-    parallelBody.acf[0] = 1.0;
-    return parallelBody.acf;
+    acf[0] = 1.0;
+    return acf;
 }
 
 void RotAcf::readInfo() {
 
     vectorSelector = VectorSelectorFactory::getVectorSelector();
     vectorSelector->readInfo();
+    std::cout << "Legendre Polynomial\n";
+    std::cout << "1. P1 = x\n";
+    std::cout << "2. P2 = (1/2)(3x^2 -1)\n";
+    LegendrePolynomial = choose(1, 2, "select > ");
     this->time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
                                      "Enter the Time Increment in Picoseconds [0.1]:", true, 0.1);
+    this->max_time_grap = choose(0.0, std::numeric_limits<double>::max(),
+                                 "Enter the Max Time Grap in Picoseconds :");
 }
 

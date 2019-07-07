@@ -12,7 +12,7 @@
 using namespace std;
 
 std::vector<std::tuple<double, double, double>>
-NormalVectorSelector::calcaulteVectors(const std::shared_ptr<Frame> &frame) {
+NormalVectorSelector::calculateVectors(const std::shared_ptr<Frame> &frame) {
     std::vector<std::tuple<double, double, double>> vectors;
     for (auto &pair : pairs) {
         vectors.push_back(calVector(pair, frame));
@@ -22,7 +22,7 @@ NormalVectorSelector::calcaulteVectors(const std::shared_ptr<Frame> &frame) {
 }
 
 std::tuple<double, double, double> NormalVectorSelector::calVector(
-        std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
+        const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
         const std::shared_ptr<Frame> &frame) {
 
     auto &[atom_i, atom_j, atom_k] = atoms;
@@ -74,4 +74,20 @@ int NormalVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
 
     throw_assert(!pairs.empty(), "Can not empty");
     return pairs.size();
+}
+
+tuple<double, double, double>
+NormalVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) {
+    shared_ptr<Atom> atom1, atom2, atom3;
+    for (auto &atom : mol->atom_list) {
+        if (Atom::is_match(atom, ids1)) {
+            atom1 = atom;
+        } else if (Atom::is_match(atom, ids2)) {
+            atom2 = atom;
+        } else if (Atom::is_match(atom, ids3)) {
+            atom3 = atom;
+        }
+    }
+    throw_assert(atom1 && atom2 && atom3, "Atom selection semantic error");
+    return calVector({atom1, atom2, atom3}, frame);
 }

@@ -48,9 +48,13 @@ protected:
 
     std::shared_ptr<VectorSelector> vectorSelector;
 
-    std::vector<double> calculate() const;
+    template<typename Function>
+    std::vector<double> calculate(Function f) const;
 
     std::vector<double> integrate(const std::vector<double> &acf) const;
+
+    int LegendrePolynomial;
+    double max_time_grap;
 };
 
 

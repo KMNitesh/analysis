@@ -6,6 +6,7 @@
 
 #include "frame.hpp"
 #include "atom.hpp"
+#include "VectorSelectorFactory.hpp"
 
 using namespace std;
 
@@ -33,15 +34,6 @@ void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
         if (!atom->molecule.expired()) atom->molecule.lock()->calc_mass();
     }
 
-    for (auto &atom : group2) {
-        if (!atom->molecule.expired()) {
-            auto mol = atom->molecule.lock();
-
-            mol->calc_mass();
-            mol->bExculde = false;
-        }
-    }
-
     if (!ref) {
         std::cerr << "reference atom not found" << std::endl;
         exit(5);
@@ -49,34 +41,33 @@ void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
     double ref_x = ref->x;
     double ref_y = ref->y;
     double ref_z = ref->z;
-    for (auto &mol: frame->molecule_list) {
-        if (!mol->bExculde) {
-            auto coord = mol->calc_weigh_center(frame);
-            double x1 = get<0>(coord);
-            double y1 = get<1>(coord);
-            double z1 = get<2>(coord);
+    for (auto &atom2: group2) {
+        auto mol = atom2->molecule.lock();
+        auto coord = atom2->getCoordinate();
+        double x1 = get<0>(coord);
+        double y1 = get<1>(coord);
+        double z1 = get<2>(coord);
 
-            double xr = x1 - ref_x;
-            double yr = y1 - ref_y;
-            double zr = z1 - ref_z;
+        double xr = x1 - ref_x;
+        double yr = y1 - ref_y;
+        double zr = z1 - ref_z;
 
-            frame->image(xr, yr, zr);
+        frame->image(xr, yr, zr);
 
-            auto it = find_in(mol->seq());
-            if (xr * xr + yr * yr + zr * zr < cutoff2) {
-                // in the shell
-                if (it != inner_atoms.end()) {
-                    it->list_ptr->push_back(calVector(mol, frame));
-                } else {
-                    auto list_ptr = new std::list<std::tuple<double, double, double>>();
-                    list_ptr->push_back(calVector(mol, frame));
-                    inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
-                    rots.emplace_back(list_ptr);
-                }
+        auto it = find_in(mol->seq());
+        if (xr * xr + yr * yr + zr * zr < cutoff2) {
+            // in the shell
+            if (it != inner_atoms.end()) {
+                it->list_ptr->push_back(calVector(mol, frame));
             } else {
-                if (it != inner_atoms.end()) {
-                    inner_atoms.erase(it);
-                }
+                auto list_ptr = new std::list<std::tuple<double, double, double>>();
+                list_ptr->push_back(calVector(mol, frame));
+                inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
+                rots.emplace_back(list_ptr);
+            }
+        } else {
+            if (it != inner_atoms.end()) {
+                inner_atoms.erase(it);
             }
         }
     }
@@ -86,75 +77,37 @@ void RotAcfCutoff::readInfo() {
 
     Atom::select2group(ids1, ids2);
 
+    vectorSelector = VectorSelectorFactory::getVectorSelector();
+    vectorSelector->readInfo();
+
+    std::cout << "Legendre Polynomial\n";
+    std::cout << "1. P1 = x\n";
+    std::cout << "2. P2 = (1/2)(3x^2 -1)\n";
+    LegendrePolynomial = choose(1, 2, "select > ");
     double cutoff = choose(0.0, std::numeric_limits<double>::max(), "Please enter distance cutoff:");
     this->cutoff2 = cutoff * cutoff;
 
     this->time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
                                      "Enter the Time Increment in Picoseconds [0.1]:", true, 0.1);
+    this->max_time_grap = choose(0.0, std::numeric_limits<double>::max(),
+                                 "Enter the Max Time Grap in Picoseconds :");
 
 }
 
 tuple<double, double, double> RotAcfCutoff::calVector(shared_ptr<Molecule> &mol, shared_ptr<Frame> &frame) {
-    auto iter = mol->atom_list.begin();
-
-    auto atom_i = *iter;
-    iter++;
-    auto atom_j = *iter;
-    iter++;
-    auto atom_k = *iter;
-
-    auto u1 = atom_i->x - atom_j->x;
-    auto u2 = atom_i->y - atom_j->y;
-    auto u3 = atom_i->z - atom_j->z;
-
-    auto v1 = atom_k->x - atom_j->x;
-    auto v2 = atom_k->y - atom_j->y;
-    auto v3 = atom_k->z - atom_j->z;
-
-    frame->image(u1, u2, u3);
-    frame->image(v1, v2, v3);
-
-    auto xv3 = u2 * v3 - u3 * v2;
-    auto yv3 = u3 * v1 - u1 * v3;
-    auto zv3 = u1 * v2 - u2 * v1;
-
-    return std::make_tuple(xv3, yv3, zv3);
+    return vectorSelector->calculateVector(mol, frame);
 }
 
 void RotAcfCutoff::print(std::ostream &os) {
-    std::vector<std::pair<int, double>> acf;
+    std::vector<std::pair<unsigned long long, double>> acf;
     acf.emplace_back(0, 0.0);
-    for (auto list_ptr : this->rots) {
-        size_t i = 0;
-        for (auto it1 = list_ptr->begin(); it1 != --list_ptr->end(); it1++) {
-            i++;
-            auto j = i;
-            auto it2 = it1;
-            for (it2++; it2 != list_ptr->end(); it2++) {
-                j++;
-                auto m = j - i;
-                if (m >= acf.size()) acf.emplace_back(0, 0.0);
-
-                double xr1 = get<0>(*it1);
-                double yr1 = get<1>(*it1);
-                double zr1 = get<2>(*it1);
-
-                double xr2 = get<0>(*it2);
-                double yr2 = get<1>(*it2);
-                double zr2 = get<2>(*it2);
-
-
-                double r1_2 = xr1 * xr1 + yr1 * yr1 + zr1 * zr1;
-                double r2_2 = xr2 * xr2 + yr2 * yr2 + zr2 * zr2;
-
-                double dot = xr1 * xr2 + yr1 * yr2 + zr1 * zr2;
-
-                double cos = dot / std::sqrt(r1_2 * r2_2);
-
-                acf[m].second += cos;
-                acf[m].first++;
-            }
-        }
+    switch (LegendrePolynomial) {
+        case 1:
+            calculateAutocorrelaionFunction(acf, [](auto x) { return x; });
+            break;
+        case 2:
+            calculateAutocorrelaionFunction(acf, [](auto x) { return 0.5 * (3 * x * x - 1); });
+            break;
     }
 
     for (size_t i = 1; i < acf.size(); i++) {
@@ -173,11 +126,21 @@ void RotAcfCutoff::print(std::ostream &os) {
     }
 
     os << "*********************************************************" << endl;
+    vectorSelector->print(os);
     os << "cutoff : " << std::sqrt(cutoff2) << std::endl;
     os << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
-    os << " rotational autocorrelation function" << endl;
 
-    os << "    Time Gap      ACF       intergrate" << endl;
+    os << " rotational autocorrelation function" << endl;
+    os << "Legendre Polynomial : ";
+    switch (LegendrePolynomial) {
+        case 1:
+            os << "P1 = x\n";
+            break;
+        case 2:
+            os << "P2 = (1/2)(3x^2 -1)\n";
+            break;
+    }
+    os << "    Time Gap      ACF       integrate" << endl;
     os << "      (ps)                    (ps)" << endl;
 
     for (std::size_t t = 0; t < acf.size(); t++) {
@@ -186,6 +149,30 @@ void RotAcfCutoff::print(std::ostream &os) {
     }
     os << "*********************************************************" << endl;
 
+}
+
+template<typename Function>
+void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long long, double>> &acf, Function f) const {
+    size_t max_time_grap_step = ceil(max_time_grap / time_increment_ps);
+    for (auto list_ptr : rots) {
+        size_t i = 0;
+        for (auto it1 = list_ptr->begin(); it1 != --list_ptr->end(); it1++) {
+            i++;
+            auto j = i;
+            auto it2 = it1;
+            for (it2++; it2 != list_ptr->end(); it2++) {
+                j++;
+                auto m = j - i;
+                if (m > max_time_grap_step) break;
+                if (m >= acf.size()) acf.emplace_back(0, 0.0);
+
+                double cos = dot_multiplication(*it1, *it2);
+
+                acf[m].second += f(cos);
+                acf[m].first++;
+            }
+        }
+    }
 }
 
 void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {

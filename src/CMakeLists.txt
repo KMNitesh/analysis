@@ -18,7 +18,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 
-add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp 
+add_library(base atom.cpp common.cpp molecule.cpp frame.cpp
                    trajectoryreader.cpp forcefield.cpp gro_writer.cpp
         xtc_writer.cpp trr_writer.cpp netcdf_writer.cpp
         Trajconv.cpp Distance.cpp CoordinateNumPerFrame.cpp FirstCoordExchangeSearch.cpp
@@ -31,7 +31,7 @@ add_library(base memory.cpp atom.cpp common.cpp molecule.cpp frame.cpp
         TrajectoryWriterFactoryImpl.cpp PBCUtils.cpp DipoleAngleWithDistanceRange.cpp
         DipoleAxisDistribution.cpp EquatorialAngle.cpp PlaneAngle.cpp AngleWat.cpp
         RotAcf.cpp DistanceAngle.cpp Histrogram.cpp Histrogram2D.cpp NormalVectorSelector.cpp
-        TwoAtomVectorSelector.cpp VectorSelectorFactory.cpp)
+        TwoAtomVectorSelector.cpp VectorSelectorFactory.cpp DipoleVectorSelector.cpp DipoleVectorSelector.hpp)
 
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)

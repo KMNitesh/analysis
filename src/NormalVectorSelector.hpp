@@ -14,9 +14,12 @@ class NormalVectorSelector : public VectorSelector {
 public:
     int initialize(const std::shared_ptr<Frame> &frame) override;
 
-    std::vector<std::tuple<double, double, double>> calcaulteVectors(const std::shared_ptr<Frame> &frame) override;
+    std::vector<std::tuple<double, double, double>> calculateVectors(const std::shared_ptr<Frame> &frame) override;
 
     void readInfo() override;
+
+    std::tuple<double, double, double>
+    calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
 
@@ -31,7 +34,7 @@ protected:
 
 
     std::tuple<double, double, double> calVector(
-            std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
+            const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
             const std::shared_ptr<Frame> &frame);
 
 };

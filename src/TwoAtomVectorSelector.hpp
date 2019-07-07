@@ -14,7 +14,7 @@ class TwoAtomVectorSelector : public VectorSelector {
 public:
     int initialize(const std::shared_ptr<Frame> &frame) override;
 
-    std::vector<std::tuple<double, double, double>> calcaulteVectors(const std::shared_ptr<Frame> &frame) override;
+    std::vector<std::tuple<double, double, double>> calculateVectors(const std::shared_ptr<Frame> &frame) override;
 
     void readInfo() override;
 
@@ -25,12 +25,17 @@ public:
 protected:
     Atom::AtomIndenter ids1;
     Atom::AtomIndenter ids2;
+public:
+    std::tuple<double, double, double>
+    calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
+
+protected:
 
     std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
 
     std::tuple<double, double, double> calVector(
-            std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
+            const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
             const std::shared_ptr<Frame> &frame);
 };
 

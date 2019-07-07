@@ -17,6 +17,7 @@
 #include "common.hpp"
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
+#include "VectorSelector.hpp"
 
 class Frame;
 
@@ -83,7 +84,14 @@ private:
 
     std::tuple<double, double, double> calVector(std::shared_ptr<Molecule> &mol, std::shared_ptr<Frame> &frame);
 
+    std::shared_ptr<VectorSelector> vectorSelector;
 
+    template<typename Function>
+    void calculateAutocorrelaionFunction(std::vector<std::pair<unsigned long long, double>> &acf, Function f) const;
+
+    int LegendrePolynomial;
+
+    double max_time_grap;
 };
 
 #endif //TINKER_ROTACFCUTOFF_HPP

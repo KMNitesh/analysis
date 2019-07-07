@@ -12,12 +12,17 @@
 
 class Frame;
 
+class Molecule;
+
 class VectorSelector {
 public:
 
     virtual int initialize(const std::shared_ptr<Frame> &frame) = 0;
 
-    virtual std::vector<std::tuple<double, double, double>> calcaulteVectors(const std::shared_ptr<Frame> &frame) = 0;
+    virtual std::vector<std::tuple<double, double, double>> calculateVectors(const std::shared_ptr<Frame> &frame) = 0;
+
+    virtual std::tuple<double, double, double> calculateVector(const std::shared_ptr<Molecule> &mol,
+                                                               const std::shared_ptr<Frame> &frame) = 0;
 
     virtual void readInfo() = 0;
 

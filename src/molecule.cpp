@@ -62,7 +62,7 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
     return std::make_tuple(xmid / mol_mass, ymid / mol_mass, zmid / mol_mass);
 }
 
-std::tuple<double, double, double> Molecule::calc_dipole(std::shared_ptr<Frame> &frame) {
+std::tuple<double, double, double> Molecule::calc_dipole(const std::shared_ptr<Frame> &frame) {
 
     double dipole_x = 0.0;
     double dipole_y = 0.0;

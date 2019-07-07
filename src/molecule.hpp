@@ -31,7 +31,7 @@ public:
 
     std::tuple<double, double, double> calc_weigh_center(std::shared_ptr<Frame> &frame);
 
-    std::tuple<double, double, double> calc_dipole(std::shared_ptr<Frame> &frame);
+    std::tuple<double, double, double> calc_dipole(const std::shared_ptr<Frame> &frame);
 
     /**
      * @return return seq of first atom for temporary use

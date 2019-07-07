@@ -143,9 +143,9 @@ if (NOT TBB_LIBS)
 endif ()
 link_libraries(${TBB_LIBS})
 
-find_library(TBBMALLOC_LIBS tbbmalloc PATHS ${LIBRARY_DIRS})
+find_library(TBBMALLOC_LIBS tbbmalloc_proxy PATHS ${LIBRARY_DIRS})
 if (NOT TBBMALLOC_LIBS)
-    message(FATAL_ERROR "tbbmalloc library not found")
+    message(FATAL_ERROR "tbbmalloc_proxy library not found")
 endif ()
 link_libraries(${TBBMALLOC_LIBS})
 
