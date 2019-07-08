@@ -10,21 +10,20 @@ using namespace std;
 void DipoleAxisDistribution::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
                   [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
+                      if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
                   });
 }
 
 void DipoleAxisDistribution::process(std::shared_ptr<Frame> &frame) {
-    for (auto &atom: group) {
-        auto mol = atom->molecule.lock();
+    for (auto &mol: group) {
 
-        auto[dipole_x, dipole_y, dipole_z] = mol->calc_dipole(frame);
+        auto dipole = mol->calc_dipole(frame);
 
-        auto dipole_scalar = std::sqrt(dipole_x * dipole_x + dipole_y * dipole_y + dipole_z * dipole_z);
+        dipole /= vector_norm(dipole);
 
-        auto _cos = (xr * dipole_x + yr * dipole_y + zr * dipole_z) / dipole_scalar;
+        auto angle = acos(dot_multiplication(dipole, axis_vector)) * radian;
 
-        auto angle = acos(_cos) * radian;
+//        std::cout << "angle = " << angle << '\n';
 
         hist.update(angle);
     }
@@ -32,10 +31,15 @@ void DipoleAxisDistribution::process(std::shared_ptr<Frame> &frame) {
 
 void DipoleAxisDistribution::print(std::ostream &os) {
     os << string(50, '#') << '\n';
-    os << "# " << DipoleAxisDistribution::title() << '\n';
+    os << "# " << title() << '\n';
     os << "# Group > " << ids << '\n';
     os << "# angle_width(degree) > " << hist.getWidth() << '\n';
-    os << "# " << (xr == 1.0 ? "X-Axis" : (yr == 1.0 ? "Y-Axis" : "Z-Axis")) << '\n';
+    const unordered_map<int, string> mapping{
+            {1, "X-Axis"},
+            {2, "Y-Axis"},
+            {3, "Z-Axis"}
+    };
+    os << "# " << mapping.at(axis_num) << '\n';
     os << string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
 
@@ -58,18 +62,13 @@ void DipoleAxisDistribution::readInfo() {
         return choose(1, 3, " select > ");
     };
 
-    switch (menu()) {
-        case 1:
-            xr = 1.0;
-            break;
-        case 2:
-            yr = 1.0;
-            break;
-        case 3:
-            zr = 1.0;
-            break;
-    }
-
+    const unordered_map<int, tuple<double, double, double>> mapping{
+            {1, xaxis_vector},
+            {2, yaxis_vector},
+            {3, zaxis_vector}
+    };
+    axis_num = menu();
+    axis_vector = mapping.at(axis_num);
     hist.initialize(angle_max, angle_width);
 }
 

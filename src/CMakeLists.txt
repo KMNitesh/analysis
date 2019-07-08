@@ -31,7 +31,7 @@ add_library(base atom.cpp common.cpp molecule.cpp frame.cpp
         TrajectoryWriterFactoryImpl.cpp PBCUtils.cpp DipoleAngleWithDistanceRange.cpp
         DipoleAxisDistribution.cpp EquatorialAngle.cpp PlaneAngle.cpp AngleWat.cpp
         RotAcf.cpp DistanceAngle.cpp Histrogram.cpp Histrogram2D.cpp NormalVectorSelector.cpp
-        TwoAtomVectorSelector.cpp VectorSelectorFactory.cpp DipoleVectorSelector.cpp DipoleVectorSelector.hpp)
+        TwoAtomVectorSelector.cpp VectorSelectorFactory.cpp DipoleVectorSelector.cpp DipoleVectorSelector.hpp DipoleAngleAxis3D.cpp DipoleAngleAxis3D.hpp)
 
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)

@@ -137,6 +137,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
     auto task_list = getTasks();
 
     while (enable_forcefield) {
+        if (vm.count("topology") && getFileType(vm["topology"].as<std::string>()) != FileType::ARC) {
+            break;
+        }
         if (vm.count("prm")) {
             auto ff = vm["prm"].as<std::string>();
             if (boost::filesystem::exists(ff)) {

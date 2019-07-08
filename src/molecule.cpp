@@ -68,10 +68,12 @@ std::tuple<double, double, double> Molecule::calc_dipole(const std::shared_ptr<F
     double dipole_y = 0.0;
     double dipole_z = 0.0;
 
+    calc_geom_center(frame);
+
     for (auto &atom : atom_list) {
-        double xr = atom->x;
-        double yr = atom->y;
-        double zr = atom->z;
+        double xr = atom->x - center_x;
+        double yr = atom->y - center_y;
+        double zr = atom->z - center_z;
 
         frame->image(xr, yr, zr);
 
@@ -82,7 +84,7 @@ std::tuple<double, double, double> Molecule::calc_dipole(const std::shared_ptr<F
     return {dipole_x, dipole_y, dipole_z};
 }
 
-void Molecule::calc_geom_center(std::shared_ptr<Frame> &frame) {
+void Molecule::calc_geom_center(const std::shared_ptr<Frame> &frame) {
     double sum_x = 0.0;
     double sum_y = 0.0;
     double sum_z = 0.0;

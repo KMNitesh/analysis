@@ -19,13 +19,14 @@ public:
 
     std::vector<std::pair<double, double>> getDistribution() const;
 
+
     double getWidth() const { return dimension_width; }
 
     void initialize(const std::pair<double, double> &range, double width);
 
     void initialize(double range_max, double width);
 
-protected:
+//protected:
     std::pair<double, double> dimension_range;
     double dimension_width;
     int dimension_bins;

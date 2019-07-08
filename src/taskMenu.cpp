@@ -6,7 +6,7 @@
 #define BOOST_SPIRIT_USE_PHOENIX_V3
 
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
-#define BOOST_MPL_LIMIT_VECTOR_SIZE 30
+#define BOOST_MPL_LIMIT_VECTOR_SIZE 50
 
 
 //#include <boost/spirit/include/qi.hpp>
@@ -62,6 +62,7 @@ namespace mpl = boost::mpl;
 #include "AngleWat.hpp"
 #include "RotAcf.hpp"
 #include "DistanceAngle.hpp"
+#include "DipoleAngleAxis3D.hpp"
 
 
 using namespace std;
@@ -114,7 +115,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             PlaneAngle,
             AngleWat,
             RotAcf,
-            DistanceAngle
+            DistanceAngle,
+            DipoleAngleAxis3D
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

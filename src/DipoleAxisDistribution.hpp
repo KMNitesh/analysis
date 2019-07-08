@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <list>
 #include "BasicAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
@@ -37,13 +38,18 @@ protected:
 
     Atom::AtomIndenter ids;
 
-    std::unordered_set<std::shared_ptr<Atom>> group;
+    std::unordered_set<std::shared_ptr<Molecule>> group;
 
     Histrogram hist;
 
     void printData(std::ostream &os) const;
 
-    double xr = 0.0, yr = 0.0, zr = 0.0;
+    std::tuple<double, double, double> axis_vector;
+
+    const std::tuple<double, double, double> xaxis_vector{1, 0, 0}, yaxis_vector{0, 1, 0}, zaxis_vector{0, 0, 1};
+
+    int axis_num;
+
 };
 
 
