@@ -9,6 +9,7 @@
 #include "molecule.hpp"
 #include "ThrowAssert.hpp"
 #include "VectorSelectorFactory.hpp"
+#include "RotACFGrammar.hpp"
 
 
 using namespace std;

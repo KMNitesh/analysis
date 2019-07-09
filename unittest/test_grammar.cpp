@@ -21,16 +21,16 @@ struct grammar_fixture {
     }
 
     bool result(bool need_suceess = true) {
-        auto it = mask.input_string.begin();
-        bool status = qi::phrase_parse(it, mask.input_string.end(), grammar, qi::ascii::space, mask.ast);
-        bool ret = status && it == mask.input_string.end() && Atom::is_match(atom, mask);
+        auto it = input_string.begin();
+        bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask);
+        bool ret = status && it == input_string.end() && Atom::is_match(atom, mask);
         ret = need_suceess == ret;
         if (!ret) {
-            boost::apply_visitor(print(), mask.ast);
-            if (!(status and (it == mask.input_string.end()))) {
+            boost::apply_visitor(print(), mask);
+            if (!(status and (it == input_string.end()))) {
                 std::cout << "error-pos : " << std::endl;
-                std::cout << mask.input_string << std::endl;
-                for (auto iter = mask.input_string.begin(); iter != it; ++iter) std::cout << " ";
+                std::cout << input_string << std::endl;
+                for (auto iter = input_string.begin(); iter != it; ++iter) std::cout << " ";
                 std::cout << "^" << std::endl;
 
             }
@@ -41,12 +41,13 @@ struct grammar_fixture {
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
     Atom::AtomIndenter mask;
     std::shared_ptr<Atom> atom;
+    std::string input_string;
 };
 
 BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
 
     BOOST_AUTO_TEST_CASE(test_residue_name1) {
-        mask.input_string = ":ASP";
+        input_string = ":ASP";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -54,7 +55,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_name2) {
-        mask.input_string = ":A*P";
+        input_string = ":A*P";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -62,7 +63,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_name3) {
-        mask.input_string = ":A?P";
+        input_string = ":A?P";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -70,7 +71,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_name4) {
-        mask.input_string = ":A=P";
+        input_string = ":A=P";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -78,7 +79,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_name5) {
-        mask.input_string = ":*SP";
+        input_string = ":*SP";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -86,7 +87,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_name6) {
-        mask.input_string = ":?SP";
+        input_string = ":?SP";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -94,7 +95,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_name7) {
-        mask.input_string = ":=SP";
+        input_string = ":=SP";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -103,7 +104,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
 
 
     BOOST_AUTO_TEST_CASE(test_residue_number1) {
-        mask.input_string = ":1";
+        input_string = ":1";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
 
@@ -111,7 +112,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number2) {
-        mask.input_string = ":1*";
+        input_string = ":1*";
         atom->residue_name = "ASP";
         atom->residue_num = 10;
 
@@ -119,7 +120,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number3) {
-        mask.input_string = ":1?";
+        input_string = ":1?";
         atom->residue_name = "ASP";
         atom->residue_num = 10;
 
@@ -127,7 +128,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number4) {
-        mask.input_string = ":1=";
+        input_string = ":1=";
         atom->residue_name = "ASP";
         atom->residue_num = 10;
 
@@ -135,7 +136,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number5) {
-        mask.input_string = ":*0";
+        input_string = ":*0";
         atom->residue_name = "ASP";
         atom->residue_num = 10;
 
@@ -143,7 +144,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number6) {
-        mask.input_string = ":?0";
+        input_string = ":?0";
         atom->residue_name = "ASP";
         atom->residue_num = 10;
 
@@ -151,7 +152,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number7) {
-        mask.input_string = ":=0";
+        input_string = ":=0";
         atom->residue_name = "ASP";
         atom->residue_num = 10;
 
@@ -159,7 +160,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number_range) {
-        mask.input_string = ":1-10";
+        input_string = ":1-10";
         atom->residue_name = "ASP";
         atom->residue_num = 5;
 
@@ -167,7 +168,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number_range2) {
-        mask.input_string = ":1-10#2";
+        input_string = ":1-10#2";
         atom->residue_name = "ASP";
         atom->residue_num = 5;
 
@@ -175,7 +176,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_residue_number_range3) {
-        mask.input_string = ":1-10#3";
+        input_string = ":1-10#3";
         atom->residue_name = "ASP";
         atom->residue_num = 5;
 
@@ -184,91 +185,91 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
 
 
     BOOST_AUTO_TEST_CASE(test_atom_name) {
-        mask.input_string = "@CA";
+        input_string = "@CA";
         atom->atom_name = "CA";
 
         BOOST_CHECK_MESSAGE(result(), "atom name selection");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_name2) {
-        mask.input_string = "@C";
+        input_string = "@C";
         atom->atom_name = "CA";
 
         BOOST_CHECK_MESSAGE(result(false), "atom name selection2");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_number) {
-        mask.input_string = "@10";
+        input_string = "@10";
         atom->seq = 10;
 
         BOOST_CHECK_MESSAGE(result(), "atom number selection");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_number2) {
-        mask.input_string = "@1,2,5,9";
+        input_string = "@1,2,5,9";
         atom->seq = 5;
 
         BOOST_CHECK_MESSAGE(result(), "atom number selection2");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_number_seq_add_range) {
-        mask.input_string = "@1,2-5#2,9";
+        input_string = "@1,2-5#2,9";
         atom->seq = 5;
 
         BOOST_CHECK_MESSAGE(result(false), "atom number selection2");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_number_range) {
-        mask.input_string = "@1-10";
+        input_string = "@1-10";
         atom->seq = 5;
 
         BOOST_CHECK_MESSAGE(result(), "atom number range selection");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_number_range_with_step) {
-        mask.input_string = "@1-10#2";
+        input_string = "@1-10#2";
         atom->seq = 5;
 
         BOOST_CHECK_MESSAGE(result(), "atom number range selection with step");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_number_range_with_step2) {
-        mask.input_string = "@1-10#3";
+        input_string = "@1-10#3";
         atom->seq = 5;
 
         BOOST_CHECK_MESSAGE(result(false), "atom number range selection with step2");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_type_name) {
-        mask.input_string = "@%CA";
+        input_string = "@%CA";
         atom->type_name = "CA";
 
         BOOST_CHECK_MESSAGE(result(), "atom type name selection");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_type_number) {
-        mask.input_string = "@%10";
+        input_string = "@%10";
         atom->typ = 10;
 
         BOOST_CHECK_MESSAGE(result(), "atom type number selection");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_type_number_range) {
-        mask.input_string = "@%1-10";
+        input_string = "@%1-10";
         atom->typ = 5;
 
         BOOST_CHECK_MESSAGE(result(), "atom type number range selection");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_type_number_range_with_step) {
-        mask.input_string = "@%1-10#4";
+        input_string = "@%1-10#4";
         atom->typ = 5;
 
         BOOST_CHECK_MESSAGE(result(), "atom type number range selection with step");
     }
 
     BOOST_AUTO_TEST_CASE(test_atom_symbol_name) {
-        mask.input_string = "@/C";
+        input_string = "@/C";
         atom->atom_symbol = "C";
 
         BOOST_CHECK_MESSAGE(result(), "atom symbol name selection");
@@ -276,14 +277,14 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
 
 
     BOOST_AUTO_TEST_CASE(test_not) {
-        mask.input_string = "!@10";
+        input_string = "!@10";
         atom->seq = 6;
 
         BOOST_CHECK_MESSAGE(result(), "not selection");
     }
 
     BOOST_AUTO_TEST_CASE(test_and) {
-        mask.input_string = ":1 & @10";
+        input_string = ":1 & @10";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
         atom->seq = 10;
@@ -293,7 +294,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
 
 
     BOOST_AUTO_TEST_CASE(test_or) {
-        mask.input_string = ":1 | @10";
+        input_string = ":1 | @10";
         atom->residue_name = "ASP";
         atom->residue_num = 2;
         atom->seq = 10;
@@ -302,7 +303,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_and_plus_or) {
-        mask.input_string = ":1 & @C | @%CA";
+        input_string = ":1 & @C | @%CA";
         atom->residue_name = "ASP";
         atom->residue_num = 2;
         atom->atom_name = "CB";
@@ -312,7 +313,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_parentheses1) {
-        mask.input_string = ":1 & ( @C | @%CA )";
+        input_string = ":1 & ( @C | @%CA )";
         atom->residue_name = "ASP";
         atom->residue_num = 1;
         atom->atom_name = "CB";
@@ -322,7 +323,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(test_parentheses2) {
-        mask.input_string = ":1-10#1 & ( @C | @%CA )";
+        input_string = ":1-10#1 & ( @C | @%CA )";
         atom->residue_name = "ASP";
         atom->residue_num = 9;
         atom->atom_name = "CB";
@@ -332,7 +333,7 @@ BOOST_FIXTURE_TEST_SUITE(test_grammar, grammar_fixture)
     }
 
     BOOST_AUTO_TEST_CASE(zero_step) {
-        mask.input_string = ":1-10#0 & ( @C | @%CA )";
+        input_string = ":1-10#0 & ( @C | @%CA )";
         atom->residue_name = "ASP";
         atom->residue_num = 9;
         atom->atom_name = "CB";

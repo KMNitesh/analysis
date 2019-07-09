@@ -68,3 +68,8 @@ gtest_discover_tests(test_growriter)
 add_executable(test_TrajectoryWriterFactoryImpl test_TrajectoryWriterFactoryImpl.cpp)
 target_link_libraries(test_TrajectoryWriterFactoryImpl base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_TrajectoryWriterFactoryImpl)
+
+
+add_executable(test_generatorgrammar test_generatorgrammar.cpp)
+target_link_libraries(test_generatorgrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_generatorgrammar)

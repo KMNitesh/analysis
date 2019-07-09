@@ -13,10 +13,19 @@
 #include "common.hpp"
 #include "atom.hpp"
 #include "grammar.hpp"
+#include "GeneratorGrammar.hpp"
+#include "ThrowAssert.hpp"
 
 namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
+
+std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids) {
+    std::string generated;
+    throw_assert(format_node(ids, generated), "amberMask format error");
+    out << generated;
+    return out;
+}
 
 
 void print::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const {
@@ -161,22 +170,22 @@ Atom::AtomIndenter input_atom_selection(const Grammar<Iterator, Skipper> &gramma
 
     for (;;) {
         Atom::AtomIndenter mask;
-        mask.input_string = input(promot);
-        boost::trim(mask.input_string);
-        if (mask.input_string.empty()) continue;
-        auto it = mask.input_string.begin();
+        auto input_string = input(promot);
+        boost::trim(input_string);
+        if (input_string.empty()) continue;
+        auto it = input_string.begin();
 
-        bool status = qi::phrase_parse(it, mask.input_string.end(), grammar, qi::ascii::space, mask.ast);
+        bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask);
 
         if (status) {
             std::cout << "Parsed Abstract Syntax Tree :" << std::endl;
-            boost::apply_visitor(print(), mask.ast);
+            boost::apply_visitor(print(), mask);
         }
 
-        if (!(status and (it == mask.input_string.end()))) {
+        if (!(status and (it == input_string.end()))) {
             std::cout << "error-pos : " << std::endl;
-            std::cout << mask.input_string << std::endl;
-            for (auto iter = mask.input_string.begin(); iter != it; ++iter) std::cout << " ";
+            std::cout << input_string << std::endl;
+            for (auto iter = input_string.begin(); iter != it; ++iter) std::cout << " ";
             std::cout << "^" << std::endl;
 
             continue;
@@ -214,7 +223,7 @@ bool is_match_impl(const std::shared_ptr<Atom> &atom, const Atom::Node &ast) {
 }
 
 bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AtomIndenter &id) {
-    return is_match_impl(atom, id.ast);
+    return is_match_impl(atom, id);
 }
 
 bool AtomEqual::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const {
@@ -367,3 +376,4 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::Operator> &op) const {
     }
     return false;
 }
+

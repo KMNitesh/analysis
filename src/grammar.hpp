@@ -31,7 +31,9 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
     Grammar();
 
 
-    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>(), Skipper> select_item_rule;
+    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>,
+            std::string>(), Skipper> select_item_rule;
+    
     qi::rule<Iterator, Atom::Node(), Skipper> residue_select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> nametype_select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> select_rule;

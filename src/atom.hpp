@@ -124,18 +124,7 @@ public:
         explicit atom_element_names(const std::vector<std::string> &val) : val(val) {}
     };
 
-
-    struct _AtomIndenter {
-        Node ast;
-
-        _AtomIndenter() = default;
-
-        _AtomIndenter(const Node &ast) : ast(ast) {}
-
-        std::string input_string;
-    };
-
-    using AtomIndenter = _AtomIndenter;
+    using AtomIndenter = Atom::Node;
 
     static bool is_match(const std::shared_ptr<Atom> &atom, const AtomIndenter &id);
 
@@ -185,11 +174,7 @@ private:
     const std::shared_ptr<Atom> &atom;
 };
 
-bool is_match_impl(const std::shared_ptr<Atom> &atom, const Atom::Node &ast);
 
-inline std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids) {
-    out << ids.input_string;
-    return out;
-}
+std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids);
 
 #endif //TINKER_ATOM_HPP

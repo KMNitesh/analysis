@@ -66,7 +66,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         double sum_y = 0.0;
         double sum_z = 0.0;
         for (auto &atom : frame->atom_list) {
-            if (is_match_impl(atom, ast)) {
+            if (Atom::is_match(atom, ast)) {
                 std::cout << boost::format("%6d %-7s %4s %-7s %4s %-6s % 8f %8s %8.3f%8.3f%8.3f\n")
                              % atom->seq % atom->atom_name
                              % (atom->residue_num ? boost::lexical_cast<std::string>(atom->residue_num.get()) : "-")
