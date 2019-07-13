@@ -39,6 +39,7 @@ template<typename Iterator, typename Skipper>
 struct DipoleVectorGrammar : qi::grammar<Iterator, DipoleVectorSelectorNode(), Skipper> {
 
     qi::rule<Iterator, DipoleVectorSelectorNode(), Skipper> dipole_vector_selector_rule;
+    qi::rule<Iterator, Atom::Node(), Skipper> mask;
     Grammar<Iterator, Skipper> maskParser;
 
     DipoleVectorGrammar() : DipoleVectorGrammar::base_type(dipole_vector_selector_rule) {
@@ -46,10 +47,20 @@ struct DipoleVectorGrammar : qi::grammar<Iterator, DipoleVectorSelectorNode(), S
         using qi::_val;
         using qi::_1;
 
-        dipole_vector_selector_rule = (lit("dipoleVector") >> "(" >> maskParser >> ")")
+        mask %= "[" >> maskParser >> "]";
+
+        dipole_vector_selector_rule = (lit("dipoleVector") >> "(" >> mask >> ")")
         [_val = make_shared_<DipoleVectorSelectorNodeStruct>(_1)];
     }
 };
+
+
+inline bool operator==(const DipoleVectorSelectorNode &node1, const DipoleVectorSelectorNode &node2) {
+    if (node1 && node2) {
+        return node1->id == node2->id;
+    }
+    return false;
+}
 
 
 #endif //TINKER_DIPOLEVECTORSELECTORGRAMMAR_HPP

@@ -41,6 +41,7 @@ template<typename Iterator, typename Skipper>
 struct TwoAtomVectorGrammar : qi::grammar<Iterator, TwoAtomVectorSelectorNode(), Skipper> {
 
     qi::rule<Iterator, TwoAtomVectorSelectorNode(), Skipper> two_atom_vector_selector_rule;
+    qi::rule<Iterator, Atom::Node(), Skipper> mask;
     Grammar<Iterator, Skipper> maskParser;
 
     TwoAtomVectorGrammar() : TwoAtomVectorGrammar::base_type(two_atom_vector_selector_rule) {
@@ -49,9 +50,17 @@ struct TwoAtomVectorGrammar : qi::grammar<Iterator, TwoAtomVectorSelectorNode(),
         using qi::_1;
         using qi::_2;
 
-        two_atom_vector_selector_rule = (lit("twoAtomVector") >> "(" >> maskParser >> "," >> maskParser >> ")")
-        [_val = make_shared_<TwoAtomVectorSelectorNode>(_1, _2)];
+        mask %= "[" >> maskParser >> "]";
+        two_atom_vector_selector_rule = (lit("twoAtomVector") >> "(" >> mask >> "," >> mask >> ")")
+        [_val = make_shared_<TwoAtomVectorSelectorNodeStruct>(_1, _2)];
     }
 };
+
+inline bool operator==(const TwoAtomVectorSelectorNode &node1, const TwoAtomVectorSelectorNode &node2) {
+    if (node1 && node2) {
+        return node1->id1 == node2->id1 and node1->id2 == node2->id2;
+    }
+    return false;
+}
 
 #endif //TINKER_TWOATOMSELECTORGRAMMAR_HPP

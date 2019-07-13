@@ -25,7 +25,7 @@ void Molecule::calc_mass() {
 }
 
 
-std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<Frame> &frame) {
+std::tuple<double, double, double> Molecule::calc_weigh_center(const std::shared_ptr<Frame> &frame) {
     double xmid = 0.0;
     double ymid = 0.0;
     double zmid = 0.0;
@@ -62,18 +62,58 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(std::shared_ptr<F
     return std::make_tuple(xmid / mol_mass, ymid / mol_mass, zmid / mol_mass);
 }
 
+std::tuple<double, double, double> Molecule::calc_charge_center(const std::shared_ptr<Frame> &frame) {
+    double xmid = 0.0;
+    double ymid = 0.0;
+    double zmid = 0.0;
+    bool first_atom = true;
+    double first_x, first_y, first_z;
+    double mol_charge = 0.0;
+    for (auto &atom : atom_list) {
+        if (first_atom) {
+            first_atom = false;
+            first_x = atom->x;
+            first_y = atom->y;
+            first_z = atom->z;
+            assert(atom->charge);
+            double charge = atom->charge.value();
+            mol_charge += charge;
+            xmid = first_x * charge;
+            ymid = first_y * charge;
+            zmid = first_z * charge;
+
+        } else {
+            double xr = atom->x - first_x;
+            double yr = atom->y - first_y;
+            double zr = atom->z - first_z;
+            frame->image(xr, yr, zr);
+            assert(atom->charge);
+            double charge = atom->charge.value();
+            mol_charge += charge;
+            xmid += (first_x + xr) * charge;
+            ymid += (first_y + yr) * charge;
+            zmid += (first_z + zr) * charge;
+        }
+    }
+    if (abs(mol_charge) < 1E-3) {
+        return {0, 0, 0};
+    }
+
+    return {xmid / mol_charge, ymid / mol_charge, zmid / mol_charge};
+}
+
 std::tuple<double, double, double> Molecule::calc_dipole(const std::shared_ptr<Frame> &frame) {
 
     double dipole_x = 0.0;
     double dipole_y = 0.0;
     double dipole_z = 0.0;
 
-    calc_geom_center(frame);
+    auto[charge_center_x, charge_center_y, charge_center_z] = calc_charge_center(frame);
 
     for (auto &atom : atom_list) {
-        double xr = atom->x - center_x;
-        double yr = atom->y - center_y;
-        double zr = atom->z - center_z;
+        double xr = atom->x - charge_center_x;
+        double yr = atom->y - charge_center_y;
+        double zr = atom->z - charge_center_z;
 
         frame->image(xr, yr, zr);
 

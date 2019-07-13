@@ -167,3 +167,42 @@ TEST(make_program_options, MultiTrajectoryWithMultitoken) {
     ASSERT_THAT(vm.count("output"), Eq(1));
     ASSERT_THAT(vm["output"].as<std::string>(), Eq("out.xvg"));
 }
+
+TEST(make_program_options, MultiTrajectoryWithMultitokenWithScript) {
+    const char *argv[] = {
+            "analysis",
+            "-p",
+            "a.mol2",
+            "-f",
+            "b.xtc",
+            "c.nc",
+            "-o",
+            "out.xvg",
+            "--script",
+            "rotacf(vector = normalVector([:1], [@O], [@1500]), P=1, time_increment_ps = 0.1, max_time_grap_ps = 100)"
+    };
+
+    int argc = std::extent_v<decltype(argv)>;
+
+    auto desc = make_program_options();
+    po::variables_map vm;
+
+    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    ASSERT_THAT(vm.count("topology"), Eq(1));
+    ASSERT_THAT(vm["topology"].as<std::string>(), Eq("a.mol2"));
+
+    ASSERT_THAT(vm.count("file"), Eq(1));
+
+    auto trajs = vm["file"].as<std::vector<std::string>>();
+
+    ASSERT_THAT(trajs.size(), Eq(2));
+    ASSERT_THAT(trajs[0], Eq("b.xtc"));
+    ASSERT_THAT(trajs[1], Eq("c.nc"));
+
+    ASSERT_THAT(vm.count("output"), Eq(1));
+    ASSERT_THAT(vm["output"].as<std::string>(), Eq("out.xvg"));
+
+    ASSERT_THAT(vm.count("script"), Eq(1));
+    ASSERT_THAT(vm["script"].as<std::string>(),
+                Eq("rotacf(vector = normalVector([:1], [@O], [@1500]), P=1, time_increment_ps = 0.1, max_time_grap_ps = 100)"));
+}

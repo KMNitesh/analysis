@@ -25,6 +25,8 @@
 #include "frame.hpp"
 
 #include "Trajconv.hpp"
+#include "LanguageGrammar.hpp"
+#include "RotAcf.hpp"
 
 
 using namespace std;
@@ -123,6 +125,209 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
         cout << "topology file " << topol << " is bad ! please retype !" << endl;
     }
     printer.action(choose_file("input topology file : ", true));
+}
+
+void executeScript(const boost::program_options::options_description &desc,
+                   const boost::program_options::variables_map &vm, const std::vector<std::string> &xyzfiles,
+                   int argc, char *argv[]) {
+    if (!vm.count("file")) {
+        std::cerr << "input trajectory file is not set !" << std::endl;
+        std::cerr << desc;
+        exit(EXIT_FAILURE);
+    }
+
+
+    auto scriptContent = vm["script"].as<string>();
+
+    LanguageGrammar<std::string::iterator, qi::ascii::space_type> grammar;
+
+
+    Language ast;
+    auto it = scriptContent.begin();
+    bool status = qi::phrase_parse(it, scriptContent.end(), grammar, qi::ascii::space, ast);
+
+    if (!(status and it == scriptContent.end())) {
+        std::cerr << "Syntax Parse Error\n";
+        std::cerr << "error-pos : " << std::endl;
+        std::cout << scriptContent << std::endl;
+        for (auto iter = scriptContent.begin(); iter != it; ++iter) std::cerr << " ";
+        std::cerr << "^" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+
+    struct ExecutionEngine : boost::static_visitor<shared_ptr<BasicAnalysis>> {
+
+        shared_ptr<BasicAnalysis> operator()(RotAcfNode &ast) {
+            auto task = make_shared<RotAcf>();
+            try {
+                task->readAST(ast);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << '\n';
+                exit(EXIT_FAILURE);
+            }
+            return task;
+        }
+
+        shared_ptr<BasicAnalysis> operator()(GoNode &ast) {
+            if (ast->start <= 0) {
+                cerr << "start frame can not less than 1\n";
+                exit(EXIT_FAILURE);
+            } else {
+                this->start = ast->start;
+            }
+
+            if (ast->end <= 1) {
+                cerr << "end frame can not less than 2\n";
+                exit(EXIT_FAILURE);
+            } else if (ast->end <= this->start) {
+                cerr << "end frame can not less than start frame\n";
+                exit(EXIT_FAILURE);
+            } else {
+                end = ast->end;
+            }
+
+            if (ast->step <= 0) {
+                cerr << "frame step can not less than 1\n";
+                exit(EXIT_FAILURE);
+            } else {
+                this->step = ast->step;
+            }
+
+            this->nthreads = ast->nthreads;
+
+            return {};
+        }
+
+        int start = 1;
+        int end = 0;
+        int step = 1;
+        int nthreads = 0;
+
+    } engine;
+
+
+    auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
+
+
+    for (auto &stmt : ast) {
+        auto task = boost::apply_visitor(engine, *stmt);
+        if (task) {
+            task_list->push_back(task);
+        }
+    }
+
+    if (enable_forcefield) {
+        if (vm.count("topology") && getFileType(vm["topology"].as<std::string>()) != FileType::ARC) {
+
+        } else if (vm.count("prm")) {
+            auto ff = vm["prm"].as<std::string>();
+            if (boost::filesystem::exists(ff)) {
+                forcefield.read(ff);
+            } else {
+                std::cerr << "force field file " << ff << " is bad  !\n";
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            std::cerr << "force field file not given !\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    int start = engine.start;
+    int step_size = engine.step;
+    int total_frames = engine.end;
+
+    tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
+    if (engine.nthreads > sysconf(_SC_NPROCESSORS_ONLN)) {
+        cout << "WARNING !! nthreads larger than max core of system CPU, will use automatic mode";
+        engine.nthreads = 0;
+    }
+
+    if (enable_tbb) {
+        tbb_init.initialize(engine.nthreads == 0 ? tbb::task_scheduler_init::automatic : engine.nthreads);
+    }
+    int current_frame_num = 0;
+
+    auto reader = std::make_shared<TrajectoryReader>();
+    bool b_added_topology = true;
+    auto ext = ext_filename(xyzfiles[0]);
+    if (ext == "nc" or ext == "xtc" or ext == "trr") {
+        b_added_topology = false;
+    } else {
+        if (vm.count("topology")) {
+            std::cerr << "WRANING !!  do not use topolgy file !\bn";
+        }
+    }
+    for (auto &xyzfile : xyzfiles) {
+        reader->add_filename(xyzfile);
+        std::string ext = ext_filename(xyzfile);
+        if (ext == "traj" && xyzfiles.size() != 1) {
+            std::cout << "traj file can not use multiple files" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        if (!b_added_topology) {
+            if (vm.count("topology")) {
+                std::string topol = vm["topology"].as<std::string>();
+                if (boost::filesystem::exists(topol)) {
+                    reader->add_topology(topol);
+                    b_added_topology = true;
+                    continue;
+                }
+                std::cerr << "topology file " << topol << " is bad ! please retype !\n";
+                exit(EXIT_FAILURE);
+            }
+            std::cerr << "topology file  not given !\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    std::fstream outfile;
+    if (enable_outfile) {
+        if (!vm.count("output")) {
+            cerr << "Output file not given\n";
+            exit(EXIT_FAILURE);
+        }
+        outfile.open(vm["output"].as<std::string>(), std::ios_base::out);
+    }
+    std::shared_ptr<Frame> frame;
+    int Clear = 0;
+    while ((frame = reader->readOneFrame())) {
+        current_frame_num++;
+        if (total_frames != 0 and current_frame_num > total_frames)
+            break;
+        if (current_frame_num % 10 == 0) {
+            if (Clear) {
+                std::cout << "\r";
+            }
+            std::cout << "Processing Coordinate Frame  " << current_frame_num << "   " << std::flush;
+            Clear = 1;
+        }
+        if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
+            if (current_frame_num == start) {
+                if (forcefield.isVaild()) {
+                    forcefield.assign_forcefield(frame);
+                }
+                processFirstFrame(frame, task_list);
+            }
+            processOneFrame(frame, task_list);
+        }
+    }
+    std::cout << std::endl;
+
+
+    if (outfile.is_open()) {
+        outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
+        outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
+    }
+
+    for (auto &task : *task_list) {
+        task->print(outfile);
+    }
+    if (outfile.is_open()) outfile.close();
+    std::cout << "Mission Complete" << std::endl;
+
+
 }
 
 void processTrajectory(const boost::program_options::options_description &desc,

@@ -22,5 +22,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
                        const boost::program_options::variables_map &vm, const std::vector<std::string> &xyzfiles,
                        int argc, char *argv[]);
 
+void executeScript(const boost::program_options::options_description &desc,
+                   const boost::program_options::variables_map &vm, const std::vector<std::string> &xyzfiles,
+                   int argc, char *argv[]);
+
 
 #endif //TINKER_MAINUTILS_HPP

@@ -17,6 +17,7 @@
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
+#include "RotACFGrammar.hpp"
 
 class Frame;
 
@@ -37,6 +38,8 @@ public:
     void print(std::ostream &os) override;
 
     void readInfo() override;
+
+    void readAST(RotAcfNode &ast);
 
     static const std::string title() { return "Rotational autocorrelation function"; }
 

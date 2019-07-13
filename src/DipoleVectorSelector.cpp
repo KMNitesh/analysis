@@ -43,3 +43,7 @@ DipoleVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, cons
     r /= vector_norm(r);
     return r;
 }
+
+void DipoleVectorSelector::readAST(const DipoleVectorSelectorNode &ast) {
+    this->id = ast->id;
+}

@@ -303,7 +303,7 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_name_nums> &names) c
     return false;
 }
 
-bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_types> types) const {
+bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_types> &types) const {
     if (types) {
         struct Equal_types : boost::static_visitor<bool> {
             explicit Equal_types(const std::shared_ptr<Atom> &atom) : atom(atom) {}

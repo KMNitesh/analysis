@@ -82,7 +82,9 @@ public:
         Node node2;
     };
 
-    typedef std::vector<boost::variant<boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>> select_ranges;
+    using numItemType = boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>>;
+
+    using select_ranges =  std::vector<boost::variant<numItemType, std::string>>;
 
     struct residue_name_nums {
         select_ranges val;
@@ -164,7 +166,7 @@ struct AtomEqual : boost::static_visitor<bool> {
 
     bool operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const;
 
-    bool operator()(const std::shared_ptr<Atom::atom_types> types) const;
+    bool operator()(const std::shared_ptr<Atom::atom_types> &types) const;
 
     bool operator()(const std::shared_ptr<Atom::atom_element_names> &ele) const;
 
@@ -176,5 +178,51 @@ private:
 
 
 std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids);
+
+inline bool operator==(const std::shared_ptr<Atom::residue_name_nums> &residues1,
+                       const std::shared_ptr<Atom::residue_name_nums> &residues2) {
+    if (residues1 && residues2) {
+        return residues1->val == residues2->val;
+    }
+    return false;
+}
+
+inline bool operator==(const std::shared_ptr<Atom::atom_name_nums> &names1,
+                       const std::shared_ptr<Atom::atom_name_nums> &names2) {
+    if (names1 && names2) {
+        return names1->val == names2->val;
+    }
+    return false;
+}
+
+inline bool operator==(const std::shared_ptr<Atom::atom_types> &types1,
+                       const std::shared_ptr<Atom::atom_types> &types2) {
+    if (types1 && types2) {
+        return types1->val == types2->val;
+    }
+    return false;
+}
+
+inline bool operator==(const std::shared_ptr<Atom::atom_element_names> &ele1,
+                       const std::shared_ptr<Atom::atom_element_names> &ele2) {
+    if (ele1 && ele2) {
+        return ele1->val == ele2->val;
+    }
+    return false;
+}
+
+inline bool operator==(const std::shared_ptr<Atom::Operator> &op1,
+                       const std::shared_ptr<Atom::Operator> &op2) {
+    if (op1 && op2) {
+        if (op1->op == op2->op) {
+            if (op1->op == Atom::Op::NOT) {
+                return op1->node1 == op2->node1;
+            } else {
+                return op1->node1 == op2->node1 and op1->node2 == op2->node2;
+            }
+        }
+    }
+    return false;
+}
 
 #endif //TINKER_ATOM_HPP

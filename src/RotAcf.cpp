@@ -142,8 +142,8 @@ vector<double> RotAcf::calculate(Function f) const {
 
     tbb::parallel_reduce(tbb::blocked_range<int>(0, rots.size()), parallelBody, tbb::auto_partitioner());
 
-    std::vector<double> acf(max_time_grap_step, 0);
-    for (size_t i = 1; i < max_time_grap_step; i++) {
+    std::vector<double> acf(max_time_grap_step + 1, 0);
+    for (size_t i = 1; i <= max_time_grap_step; i++) {
         assert(parallelBody.ntime[i] > 0);
         acf[i] = parallelBody.acf[i] / parallelBody.ntime[i];
     }
@@ -164,5 +164,39 @@ void RotAcf::readInfo() {
                                      "Enter the Time Increment in Picoseconds [0.1]:", true, 0.1);
     this->max_time_grap = choose(0.0, std::numeric_limits<double>::max(),
                                  "Enter the Max Time Grap in Picoseconds :");
+}
+
+void RotAcf::readAST(RotAcfNode &ast) {
+    if (!ast->vectorSelctor) {
+        throw runtime_error("vector not vaild");
+    } else {
+        vectorSelector = VectorSelectorFactory::getVectorSelectorByAST(ast->vectorSelctor.value());
+    }
+    if (!ast->Legendre) {
+        throw runtime_error("legendre polynomial is empty");
+    }
+    if (!(ast->Legendre.value() == 1 or ast->Legendre.value() == 2)) {
+        throw runtime_error("legendre polynomial must be 1 or 2");
+    }
+
+    LegendrePolynomial = ast->Legendre.value();
+
+    if (ast->time_increment_ps) {
+        this->time_increment_ps = 0.1;
+    } else if (ast->time_increment_ps.value() <= 0) {
+        throw runtime_error("`time_increment_ps` must be postive");
+    } else {
+        this->time_increment_ps = ast->time_increment_ps.value();
+    }
+
+    if (!ast->max_time_grap_ps) {
+        throw runtime_error("`max_time_grap_ps is empty");
+    } else if (ast->max_time_grap_ps.value() <= 0) {
+        throw runtime_error("`max_time_grap_ps` must be postive");
+    } else if (ast->max_time_grap_ps.value() <= this->time_increment_ps) {
+        throw runtime_error("`max_time_grap_ps` must be larger than `time_increment_ps`");
+    } else {
+        this->max_time_grap = ast->max_time_grap_ps.value();
+    }
 }
 

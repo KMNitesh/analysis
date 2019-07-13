@@ -91,3 +91,9 @@ NormalVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, cons
     throw_assert(atom1 && atom2 && atom3, "Atom selection semantic error");
     return calVector({atom1, atom2, atom3}, frame);
 }
+
+void NormalVectorSelector::readAST(const NormalVectorSelectorNode &ast) {
+    ids1 = ast->id1;
+    ids2 = ast->id2;
+    ids3 = ast->id3;
+}

@@ -75,3 +75,8 @@ TwoAtomVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, con
     throw_assert(atom1 && atom2, "Atom selection semantic error");
     return calVector({atom1, atom2}, frame);
 }
+
+void TwoAtomVectorSelector::readAST(const TwoAtomVectorSelectorNode &ast) {
+    this->ids1 = ast->id1;
+    this->ids2 = ast->id2;
+}

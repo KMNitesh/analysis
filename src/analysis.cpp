@@ -73,6 +73,15 @@ int main(int argc, char *argv[]) {
 
 
     /*
+     * Enter script execution, for non-interactive mode
+     */
+    if (vm.count("script")) {
+        executeScript(desc, vm, xyzfiles, argc, argv);
+        return EXIT_SUCCESS;
+    }
+
+
+    /*
      *  examine the tpr file of gromcas and show the content
      */
     if (mainMenu() == 1) {

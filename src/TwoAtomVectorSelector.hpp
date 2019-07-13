@@ -8,6 +8,7 @@
 #include <list>
 #include "VectorSelector.hpp"
 #include "atom.hpp"
+#include "TwoAtomSelectorGrammar.hpp"
 
 
 class TwoAtomVectorSelector : public VectorSelector {
@@ -17,6 +18,8 @@ public:
     std::vector<std::tuple<double, double, double>> calculateVectors(const std::shared_ptr<Frame> &frame) override;
 
     void readInfo() override;
+
+    void readAST(const TwoAtomVectorSelectorNode &ast);
 
     void print(std::ostream &os) override;
 

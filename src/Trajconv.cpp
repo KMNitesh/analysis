@@ -75,12 +75,12 @@ void Trajconv::selectPBCMode() {
                 break;
             case 1:
                 pbc_type = PBCType::OneAtom;
-                num = choose(1, std::numeric_limits<int>::max(), "Plese enter the atom NO. : ");
+                num = choose(1, std::numeric_limits<int>::max(), "Please enter the atom NO. : ");
                 break;
             case 2:
                 pbc_type = PBCType::OneMol;
                 num = choose(1, std::numeric_limits<int>::max(),
-                             "Plese enter one atom NO. that the molecule include: ");
+                             "Please enter one atom NO. that the molecule include: ");
                 break;
             default:
                 std::cerr << "option not found !\n";

@@ -69,7 +69,34 @@ add_executable(test_TrajectoryWriterFactoryImpl test_TrajectoryWriterFactoryImpl
 target_link_libraries(test_TrajectoryWriterFactoryImpl base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_TrajectoryWriterFactoryImpl)
 
-
 add_executable(test_generatorgrammar test_generatorgrammar.cpp)
 target_link_libraries(test_generatorgrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_generatorgrammar)
+
+add_executable(test_TwoAtomVectorGrammar test_TwoAtomVectorGrammar.cpp)
+target_link_libraries(test_TwoAtomVectorGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_TwoAtomVectorGrammar)
+
+add_executable(test_DipoleVectorGrammar test_DipoleVectorGrammar.cpp)
+target_link_libraries(test_DipoleVectorGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_DipoleVectorGrammar)
+
+add_executable(test_NormalVectorGrammar test_NormalVectorGrammar.cpp)
+target_link_libraries(test_NormalVectorGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_NormalVectorGrammar)
+
+add_executable(test_VectorFactoryGrammar test_VectorFactoryGrammar.cpp)
+target_link_libraries(test_VectorFactoryGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_VectorFactoryGrammar)
+
+add_executable(test_RotAcfGrammar test_RotAcfGrammar.cpp)
+target_link_libraries(test_RotAcfGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_RotAcfGrammar)
+
+add_executable(test_GoGrammar test_GoGrammar.cpp)
+target_link_libraries(test_GoGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_GoGrammar)
+
+add_executable(test_LanguageGrammar test_LanguageGrammar.cpp)
+target_link_libraries(test_LanguageGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_LanguageGrammar)

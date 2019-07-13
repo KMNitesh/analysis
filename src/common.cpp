@@ -133,7 +133,8 @@ po::options_description make_program_options() {
             ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing(), "trajectory file")
             ("output,o", po::value<std::string>(), "output file")
             ("prm", po::value<std::string>(), "force field file")
-            ("target,x", po::value<std::string>(), "target trajectory file");
+            ("target,x", po::value<std::string>(), "target trajectory file")
+            ("script", po::value<std::string>(), "script command for non-interactive");
 
     return desc;
 }

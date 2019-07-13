@@ -56,8 +56,10 @@ fabric.properties
 cmake-build-*
 CMakeFiles
 test
-0README
 forcefield.prm
 CMakeCache*
 Makefile
 .idea
+.clang-format
+lib/tags
+md-10ns.tpr

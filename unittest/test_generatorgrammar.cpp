@@ -13,7 +13,7 @@ class GereratorGrammarTest : public Test {
 
 protected:
     std::string generated;
-    std::vector<boost::variant<boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>> selections;
+    Atom::select_ranges selections;
 };
 
 TEST_F(GereratorGrammarTest, AtomElementNames) {
@@ -27,11 +27,9 @@ TEST_F(GereratorGrammarTest, AtomElementNames) {
 
 TEST_F(GereratorGrammarTest, ResidueNames) {
 
-    selections.push_back(string{"TOL"});
-    selections.push_back(
-            fusion::vector<uint, boost::optional<std::pair<uint, int>>>(10, boost::optional<std::pair<uint, int>>{}));
 
-    Atom::Node node = make_shared<Atom::residue_name_nums>(selections);
+    Atom::Node node = make_shared<Atom::residue_name_nums>(
+            Atom::select_ranges{string{"TOL"}, Atom::numItemType(10, boost::optional<pair<uint, int>>{})});
 
     ASSERT_TRUE(format_node(node, generated));
 
@@ -40,10 +38,8 @@ TEST_F(GereratorGrammarTest, ResidueNames) {
 
 TEST_F(GereratorGrammarTest, ResidueNum) {
 
-    selections.push_back(
-            fusion::vector<uint, boost::optional<std::pair<uint, int>>>(10, boost::optional<std::pair<uint, int>>{}));
-
-    Atom::Node node = make_shared<Atom::residue_name_nums>(selections);
+    Atom::Node node = make_shared<Atom::residue_name_nums>(
+            Atom::select_ranges{{Atom::numItemType(10, boost::optional<pair<uint, int>>{})}});
 
     ASSERT_TRUE(format_node(node, generated));
 
@@ -52,11 +48,11 @@ TEST_F(GereratorGrammarTest, ResidueNum) {
 
 TEST_F(GereratorGrammarTest, AtomNameNums) {
 
-    selections.push_back(fusion::vector<uint, boost::optional<std::pair<uint, int>>>(10, make_pair<uint>(20, 2)));
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
-
-    Atom::Node node = make_shared<Atom::atom_name_nums>(selections);
+    Atom::Node node = make_shared<Atom::atom_name_nums>(Atom::select_ranges{
+            Atom::numItemType(10, make_pair<uint>(20, 2)),
+            string{"OW"},
+            string{"HW"}
+    });
 
     ASSERT_TRUE(format_node(node, generated));
 
@@ -65,11 +61,11 @@ TEST_F(GereratorGrammarTest, AtomNameNums) {
 
 TEST_F(GereratorGrammarTest, AtomType) {
 
-    selections.push_back(fusion::vector<uint, boost::optional<std::pair<uint, int>>>(10, make_pair<uint>(20, 2)));
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
-
-    Atom::Node node = make_shared<Atom::atom_types>(selections);
+    Atom::Node node = make_shared<Atom::atom_types>(Atom::select_ranges{
+            Atom::numItemType(10, make_pair<uint>(20, 2)),
+            string{"OW"},
+            string{"HW"}
+    });
 
     ASSERT_TRUE(format_node(node, generated));
 
@@ -78,11 +74,12 @@ TEST_F(GereratorGrammarTest, AtomType) {
 
 TEST_F(GereratorGrammarTest, AtomTypeWithStepOne) {
 
-    selections.push_back(fusion::vector<uint, boost::optional<std::pair<uint, int>>>(10, make_pair<uint>(20, 1)));
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    Atom::Node node = make_shared<Atom::atom_types>(Atom::select_ranges{
+            Atom::numItemType(10, make_pair<uint>(20, 1)),
+            string{"OW"},
+            string{"HW"}
+    });
 
-    Atom::Node node = make_shared<Atom::atom_types>(selections);
 
     ASSERT_TRUE(format_node(node, generated));
 
@@ -91,12 +88,9 @@ TEST_F(GereratorGrammarTest, AtomTypeWithStepOne) {
 
 TEST_F(GereratorGrammarTest, NotOperator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
-
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::NOT,
-            make_shared<Atom::atom_name_nums>(selections));
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{string{"OW"}, string{"HW"}}));
 
     ASSERT_TRUE(format_node(node, generated));
 
@@ -105,8 +99,7 @@ TEST_F(GereratorGrammarTest, NotOperator) {
 
 TEST_F(GereratorGrammarTest, ANDOperator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
@@ -120,8 +113,7 @@ TEST_F(GereratorGrammarTest, ANDOperator) {
 
 TEST_F(GereratorGrammarTest, NOT_AND_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::NOT, make_shared<Atom::Operator>(
@@ -136,8 +128,7 @@ TEST_F(GereratorGrammarTest, NOT_AND_Operator) {
 
 TEST_F(GereratorGrammarTest, OROperator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::OR, make_shared<Atom::residue_name_nums>(selections),
@@ -150,8 +141,7 @@ TEST_F(GereratorGrammarTest, OROperator) {
 
 TEST_F(GereratorGrammarTest, NOT_OR_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::NOT, make_shared<Atom::Operator>(
@@ -166,8 +156,7 @@ TEST_F(GereratorGrammarTest, NOT_OR_Operator) {
 
 TEST_F(GereratorGrammarTest, AND_OR_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
@@ -187,8 +176,7 @@ TEST_F(GereratorGrammarTest, AND_OR_Operator) {
 
 TEST_F(GereratorGrammarTest, OR_AND_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::OR,
@@ -208,8 +196,7 @@ TEST_F(GereratorGrammarTest, OR_AND_Operator) {
 
 TEST_F(GereratorGrammarTest, NOT_OR_AND_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node =
             make_shared<Atom::Operator>(
@@ -236,8 +223,7 @@ TEST_F(GereratorGrammarTest, NOT_OR_AND_Operator) {
 
 TEST_F(GereratorGrammarTest, OR_OR_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::OR,
@@ -256,8 +242,7 @@ TEST_F(GereratorGrammarTest, OR_OR_Operator) {
 
 TEST_F(GereratorGrammarTest, AND_AND_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
@@ -276,8 +261,7 @@ TEST_F(GereratorGrammarTest, AND_AND_Operator) {
 
 TEST_F(GereratorGrammarTest, NOT_NOT_Operator) {
 
-    selections.push_back(string{"OW"});
-    selections.push_back(string{"HW"});
+    selections = {string{"OW"}, string{"HW"}};
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::NOT,
