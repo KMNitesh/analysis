@@ -27,6 +27,7 @@
 #include "Trajconv.hpp"
 #include "LanguageGrammar.hpp"
 #include "RotAcf.hpp"
+#include "RotAcfCutoff.hpp"
 
 
 using namespace std;
@@ -160,6 +161,17 @@ void executeScript(const boost::program_options::options_description &desc,
 
         shared_ptr<BasicAnalysis> operator()(RotAcfNode &ast) {
             auto task = make_shared<RotAcf>();
+            try {
+                task->readAST(ast);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << '\n';
+                exit(EXIT_FAILURE);
+            }
+            return task;
+        }
+
+        shared_ptr<BasicAnalysis> operator()(RotAcfCutoffNode &ast) {
+            auto task = make_shared<RotAcfCutoff>();
             try {
                 task->readAST(ast);
             } catch (std::exception &e) {

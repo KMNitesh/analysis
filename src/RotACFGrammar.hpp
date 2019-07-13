@@ -75,7 +75,7 @@ struct RotAcfGrammar : qi::grammar<Iterator, RotAcfNode(), Skipper> {
                  lit("time_increment_ps") >> "=" >> double_[at_c<2>(_r1) = _1] |
                  lit("max_time_grap_ps") >> "=" >> double_[at_c<3>(_r1) = _1];
 
-        RotAcfRule = lit("rotacf")[_val = make_shared_<RotAcfNodeStruct>()] >> "(" >> (option(_val) % ",") >> ")";
+        RotAcfRule = "rotacf" >> lit("(")[_val = make_shared_<RotAcfNodeStruct>()] >> (option(_val) % ",") >> ")";
     }
 };
 

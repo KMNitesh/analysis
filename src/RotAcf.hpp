@@ -39,7 +39,7 @@ public:
 
     void readInfo() override;
 
-    void readAST(RotAcfNode &ast);
+    void readAST(const RotAcfNode &ast);
 
     static const std::string title() { return "Rotational autocorrelation function"; }
 

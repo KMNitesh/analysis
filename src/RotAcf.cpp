@@ -166,7 +166,7 @@ void RotAcf::readInfo() {
                                  "Enter the Max Time Grap in Picoseconds :");
 }
 
-void RotAcf::readAST(RotAcfNode &ast) {
+void RotAcf::readAST(const RotAcfNode &ast) {
     if (!ast->vectorSelctor) {
         throw runtime_error("vector not vaild");
     } else {

@@ -94,6 +94,53 @@ void RotAcfCutoff::readInfo() {
 
 }
 
+void RotAcfCutoff::readAST(const RotAcfCutoffNode &ast) {
+
+    this->ids1 = ast->M;
+    this->ids2 = ast->L;
+
+    if (!ast->vectorSelctor) {
+        throw runtime_error("vector not vaild");
+    } else {
+        vectorSelector = VectorSelectorFactory::getVectorSelectorByAST(ast->vectorSelctor.value());
+    }
+    if (!ast->Legendre) {
+        throw runtime_error("legendre polynomial is empty");
+    }
+    if (!(ast->Legendre.value() == 1 or ast->Legendre.value() == 2)) {
+        throw runtime_error("legendre polynomial must be 1 or 2");
+    }
+
+    LegendrePolynomial = ast->Legendre.value();
+
+    if (!ast->cutoff) {
+        throw runtime_error("`cutoff is empty");
+    } else if (ast->cutoff.value() <= 0) {
+        throw runtime_error("`cutoff` must be postive");
+    } else {
+        cutoff2 = pow(ast->cutoff.value(), 2);
+    }
+
+    if (!ast->time_increment_ps) {
+        this->time_increment_ps = 0.1;
+    } else if (ast->time_increment_ps.value() <= 0) {
+        throw runtime_error("`time_increment_ps` must be postive");
+    } else {
+        this->time_increment_ps = ast->time_increment_ps.value();
+    }
+
+    if (!ast->max_time_grap_ps) {
+        throw runtime_error("`max_time_grap_ps is empty");
+    } else if (ast->max_time_grap_ps.value() <= 0) {
+        throw runtime_error("`max_time_grap_ps` must be postive");
+    } else if (ast->max_time_grap_ps.value() <= this->time_increment_ps) {
+        throw runtime_error("`max_time_grap_ps` must be larger than `time_increment_ps`");
+    } else {
+        this->max_time_grap = ast->max_time_grap_ps.value();
+    }
+}
+
+
 tuple<double, double, double> RotAcfCutoff::calVector(shared_ptr<Molecule> &mol, shared_ptr<Frame> &frame) {
     return vectorSelector->calculateVector(mol, frame);
 }
@@ -182,3 +229,4 @@ void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
                       if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
                   });
 }
+

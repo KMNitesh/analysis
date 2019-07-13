@@ -100,3 +100,7 @@ gtest_discover_tests(test_GoGrammar)
 add_executable(test_LanguageGrammar test_LanguageGrammar.cpp)
 target_link_libraries(test_LanguageGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_LanguageGrammar)
+
+add_executable(test_RotAcfCutoffGrammar test_RotAcfCutoffGrammar.cpp)
+target_link_libraries(test_RotAcfCutoffGrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_RotAcfCutoffGrammar)

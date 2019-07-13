@@ -7,8 +7,13 @@
 
 #include "GoGrammar.hpp"
 #include "RotACFGrammar.hpp"
+#include "RotAcfCutoffGrammar.hpp"
 
-using LanguageNodeVariant = boost::variant<RotAcfNode, GoNode>;
+using LanguageNodeVariant = boost::variant<
+        RotAcfNode,
+        RotAcfCutoffNode,
+        GoNode
+>;
 
 using LanguageNode = std::shared_ptr<LanguageNodeVariant>;
 
@@ -24,6 +29,7 @@ struct LanguageGrammar : qi::grammar<Iterator, Language(), Skipper> {
 
     GoGrammar<Iterator, Skipper> goRule;
     RotAcfGrammar<Iterator, Skipper> rotAcfRule;
+    RotAcfCutoffGrammar<Iterator, Skipper> rotAcfCutoffRule;
 
     LanguageGrammar() : LanguageGrammar::base_type(languageRule) {
         using qi::lit;
@@ -31,7 +37,8 @@ struct LanguageGrammar : qi::grammar<Iterator, Language(), Skipper> {
         using qi::_1;
         using phoenix::push_back;
 
-        stmtRule = rotAcfRule[_val = make_shared_<LanguageNodeVariant>(_1)];
+        stmtRule = rotAcfRule[_val = make_shared_<LanguageNodeVariant>(_1)] |
+                   rotAcfCutoffRule[_val = make_shared_<LanguageNodeVariant>(_1)];
 
 
         semicolons = +(lit(";"));

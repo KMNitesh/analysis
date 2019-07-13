@@ -18,6 +18,7 @@
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
+#include "RotAcfCutoffGrammar.hpp"
 
 class Frame;
 
@@ -39,6 +40,8 @@ public:
     void print(std::ostream &os) override;
 
     void readInfo() override;
+
+    void readAST(const RotAcfCutoffNode &ast);
 
     static const std::string title() {
         return "Rotational autocorrelation function (Cutoff)";
