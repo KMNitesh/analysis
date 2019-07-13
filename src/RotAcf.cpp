@@ -198,5 +198,10 @@ void RotAcf::readAST(const RotAcfNode &ast) {
     } else {
         this->max_time_grap = ast->max_time_grap_ps.value();
     }
+    outfilename = ast->outfilename;
+    boost::trim(outfilename);
+    if (outfilename.empty()) {
+        throw runtime_error("outfilename cannot empty");
+    }
 }
 

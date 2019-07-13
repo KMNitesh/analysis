@@ -16,7 +16,7 @@ TEST(RotAcfCutoffGrammarTest, Simple) {
 
     std::string input_string = "rotacfcutoff(M = [@U], L= [@OW], vector = "
                                "normalVector([:1], [@O], [@1500]),"
-                               " P=1, cutoff = 3.0, time_increment_ps = 0.1, max_time_grap_ps = 100)";
+                               " P=1, cutoff = 3.0, time_increment_ps = 0.1, out = my-raf.xvg  , max_time_grap_ps = 100)";
     RotAcfCutoffNode ast;
     auto it = input_string.begin();
     bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, ast);
@@ -35,6 +35,7 @@ TEST(RotAcfCutoffGrammarTest, Simple) {
     node->cutoff = 3.0;
     node->time_increment_ps = 0.1;
     node->max_time_grap_ps = 100;
+    node->outfilename = "my-raf.xvg";
 
     ASSERT_EQ(ast, node);
 }

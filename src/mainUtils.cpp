@@ -137,8 +137,28 @@ void executeScript(const boost::program_options::options_description &desc,
         exit(EXIT_FAILURE);
     }
 
+    string scriptContent;
 
-    auto scriptContent = vm["script"].as<string>();
+    if (vm.count("script")) {
+        scriptContent = vm["script"].as<string>();
+
+    } else if (vm.count("script-file")) {
+
+        try {
+            ifstream f(vm["script-file"].as<string>());
+            string content((std::istreambuf_iterator<char>(f)),
+                           std::istreambuf_iterator<char>());
+            scriptContent = content;
+
+        } catch (std::exception &e) {
+            std::cerr << e.what() << '\n';
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        std::cerr << "program option error  \n";
+        exit(EXIT_FAILURE);
+    }
+
 
     LanguageGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
@@ -183,24 +203,21 @@ void executeScript(const boost::program_options::options_description &desc,
 
         shared_ptr<BasicAnalysis> operator()(GoNode &ast) {
             if (ast->start <= 0) {
-                cerr << "start frame can not less than 1\n";
+                cerr << "start frame cannot less than 1\n";
                 exit(EXIT_FAILURE);
             } else {
                 this->start = ast->start;
             }
 
-            if (ast->end <= 1) {
-                cerr << "end frame can not less than 2\n";
-                exit(EXIT_FAILURE);
-            } else if (ast->end <= this->start) {
-                cerr << "end frame can not less than start frame\n";
+            if (ast->end <= this->start and ast->end != 0) {
+                cerr << "end frame cannot less than start frame\n";
                 exit(EXIT_FAILURE);
             } else {
                 end = ast->end;
             }
 
             if (ast->step <= 0) {
-                cerr << "frame step can not less than 1\n";
+                cerr << "frame step cannot less than 1\n";
                 exit(EXIT_FAILURE);
             } else {
                 this->step = ast->step;
@@ -296,11 +313,10 @@ void executeScript(const boost::program_options::options_description &desc,
 
     std::fstream outfile;
     if (enable_outfile) {
-        if (!vm.count("output")) {
-            cerr << "Output file not given\n";
+        if (vm.count("output")) {
+            cerr << "Output file option do not need\n";
             exit(EXIT_FAILURE);
         }
-        outfile.open(vm["output"].as<std::string>(), std::ios_base::out);
     }
     std::shared_ptr<Frame> frame;
     int Clear = 0;
@@ -327,19 +343,17 @@ void executeScript(const boost::program_options::options_description &desc,
     }
     std::cout << std::endl;
 
-
-    if (outfile.is_open()) {
-        outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
-        outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
-    }
-
     for (auto &task : *task_list) {
-        task->print(outfile);
+        ofstream ofs(task->getOutfileName());
+        ofs << "#  workdir > " << boost::filesystem::current_path() << '\n';
+        ofs << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
+        if (vm.count("script-file")) {
+            ofs << "#  script-file > " << vm["script-file"].as<string>() << '\n';
+        }
+        ofs << "#  script BEGIN>\n" << scriptContent << "\n#  script END>\n";
+        task->print(ofs);
     }
-    if (outfile.is_open()) outfile.close();
-    std::cout << "Mission Complete" << std::endl;
-
-
+    std::cout << "Mission Complete\n";
 }
 
 void processTrajectory(const boost::program_options::options_description &desc,

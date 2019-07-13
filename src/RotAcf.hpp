@@ -37,6 +37,8 @@ public:
 
     void print(std::ostream &os) override;
 
+    std::string getOutfileName() override { return outfilename; }
+
     void readInfo() override;
 
     void readAST(const RotAcfNode &ast);
@@ -58,6 +60,8 @@ protected:
 
     int LegendrePolynomial;
     double max_time_grap;
+
+    std::string outfilename;
 };
 
 

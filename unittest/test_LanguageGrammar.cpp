@@ -14,7 +14,8 @@ TEST(LanguageGrammarTest, Simple) {
 
     LanguageGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    std::string input_string = "rotacf(vector = normalVector([:1], [@O], [@1500]), P=1, time_increment_ps = 0.1, max_time_grap_ps = 100);"
+    std::string input_string = "rotacf(vector = normalVector([:1], [@O], [@1500]), out = x-x-x.x, P=1,"
+                               " time_increment_ps = 0.1, max_time_grap_ps = 100);"
                                "go(start = 1, end = 1000, step = 1, nthreads =12)";
     Language ast;
     auto it = input_string.begin();
@@ -32,7 +33,7 @@ TEST(LanguageGrammarTest, Simple) {
     rotRafNode->Legendre = 1;
     rotRafNode->time_increment_ps = 0.1;
     rotRafNode->max_time_grap_ps = 100;
-
+    rotRafNode->outfilename = "x-x-x.x";
 
     auto goNode = make_shared<GoNodeStruct>();
     goNode->start = 1;

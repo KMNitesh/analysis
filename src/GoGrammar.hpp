@@ -68,7 +68,7 @@ struct GoGrammar : qi::grammar<Iterator, GoNode(), Skipper> {
                  lit("end") >> "=" >> uint_[at_c<1>(_r1) = _1] |
                  lit("step") >> "=" >> uint_[at_c<2>(_r1) = _1] |
                  lit("nthreads") >> "=" >> uint_[at_c<3>(_r1) = _1];
-        GoRule = "go" >> lit("(")[_val = make_shared_<GoNodeStruct>()] >> (option(_val) % ",") >> ")";
+        GoRule = "go" >> lit("(")[_val = make_shared_<GoNodeStruct>()] >> -(option(_val) % ",") >> ")";
     }
 };
 

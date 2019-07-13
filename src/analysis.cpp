@@ -62,6 +62,18 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (vm.count("target") and vm.count("script")) {
+        std::cerr << "target and script option cannot coexist\n";
+        exit(EXIT_FAILURE);
+    }
+    if (vm.count("target") and vm.count("script-file")) {
+        std::cerr << "target and script-file option cannot coexist\n";
+        exit(EXIT_FAILURE);
+    }
+    if (vm.count("script") and vm.count("script-file")) {
+        std::cerr << "script and script-file option cannot coexist\n";
+        exit(EXIT_FAILURE);
+    }
     /*
      *  when --target or -x option given,  fast trajectory convert mode is active
      *  Convert trajctory format for convenience
@@ -75,7 +87,7 @@ int main(int argc, char *argv[]) {
     /*
      * Enter script execution, for non-interactive mode
      */
-    if (vm.count("script")) {
+    if (vm.count("script") || vm.count("script-file")) {
         executeScript(desc, vm, xyzfiles, argc, argv);
         return EXIT_SUCCESS;
     }

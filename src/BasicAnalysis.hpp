@@ -23,6 +23,8 @@ public:
 
     virtual void readInfo() = 0;
 
+    virtual std::string getOutfileName() { return ""; }
+
     static const std::string title() { return "Base Class"; }
 
 

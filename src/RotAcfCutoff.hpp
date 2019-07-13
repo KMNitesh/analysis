@@ -35,6 +35,8 @@ public:
         enable_forcefield = true;
     }
 
+    std::string getOutfileName() override { return outfilename; }
+
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
@@ -95,6 +97,8 @@ private:
     int LegendrePolynomial;
 
     double max_time_grap;
+
+    std::string outfilename;
 };
 
 #endif //TINKER_ROTACFCUTOFF_HPP

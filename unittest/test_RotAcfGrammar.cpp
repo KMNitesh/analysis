@@ -13,7 +13,9 @@ TEST(RotACFGrammarTest, Simple) {
 
     RotAcfGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    std::string input_string = "rotacf(vector = normalVector([:1], [@O], [@1500]), P=1, time_increment_ps = 0.1, max_time_grap_ps = 100)";
+    std::string input_string = "rotacf(vector = normalVector([:1], [@O], [@1500]), "
+                               "P=1, time_increment_ps = 0.1, max_time_grap_ps = 100,"
+                               "out = a.xvg)";
     RotAcfNode ast;
     auto it = input_string.begin();
     bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, ast);
@@ -29,6 +31,7 @@ TEST(RotACFGrammarTest, Simple) {
     node->Legendre = 1;
     node->time_increment_ps = 0.1;
     node->max_time_grap_ps = 100;
+    node->outfilename = "a.xvg";
 
     ASSERT_EQ(ast, node);
 }

@@ -37,6 +37,7 @@ struct RotAcfCutoffNodeStruct {
     boost::optional<double> cutoff;
     boost::optional<double> time_increment_ps;
     boost::optional<double> max_time_grap_ps;
+    std::string outfilename;
 };
 
 using RotAcfCutoffNode = std::shared_ptr<RotAcfCutoffNodeStruct>;
@@ -51,6 +52,7 @@ BOOST_FUSION_ADAPT_ADT(
                 (boost::optional<double>, boost::optional<double>, obj->cutoff, obj->cutoff = val)
                 (boost::optional<double>, boost::optional<double>, obj->time_increment_ps, obj->time_increment_ps = val)
                 (boost::optional<double>, boost::optional<double>, obj->max_time_grap_ps, obj->max_time_grap_ps = val)
+                (std::string, std::string, obj->outfilename, obj->outfilename = val)
 
 )
 
@@ -71,6 +73,10 @@ struct RotAcfCutoffGrammar : qi::grammar<Iterator, RotAcfCutoffNode(), Skipper> 
         using qi::double_;
         using qi::int_;
         using qi::lit;
+        using qi::as_string;
+        using qi::lexeme;
+        using qi::alnum;
+        using qi::char_;
 
         mask %= "[" >> maskParser >> "]";
 
@@ -80,7 +86,8 @@ struct RotAcfCutoffGrammar : qi::grammar<Iterator, RotAcfCutoffNode(), Skipper> 
                  lit("P") >> "=" >> int_[at_c<3>(_r1) = _1] |
                  lit("cutoff") >> "=" >> double_[at_c<4>(_r1) = _1] |
                  lit("time_increment_ps") >> "=" >> double_[at_c<5>(_r1) = _1] |
-                 lit("max_time_grap_ps") >> "=" >> double_[at_c<6>(_r1) = _1];
+                 lit("max_time_grap_ps") >> "=" >> double_[at_c<6>(_r1) = _1] |
+                 lit("out") >> "=" >> as_string[lexeme[+(alnum | char_("_.-"))]][at_c<7>(_r1) = _1];
 
         RotAcfCutoffRule =
                 "rotacfcutoff" >> lit("(")[_val = make_shared_<RotAcfCutoffNodeStruct>()] >> (option(_val) % ",")
