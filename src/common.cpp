@@ -129,13 +129,14 @@ po::options_description make_program_options() {
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help,h", "show this help message")
-            ("topology,p", po::value<std::string>(), "topology file")
-            ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing(), "trajectory file")
-            ("output,o", po::value<std::string>(), "output file")
-            ("prm", po::value<std::string>(), "force field file")
-            ("target,x", po::value<std::string>(), "target trajectory file")
-            ("script", po::value<std::string>(), "script command for non-interactive")
-            ("script-file", po::value<std::string>(), "read command from script file");
+            ("topology,p", po::value<std::string>()->value_name("topology-file-name"), "topology file")
+            ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing()
+                    ->value_name("trajectory-file-name"), "trajectory file")
+            ("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")
+            ("prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")
+            ("target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")
+            ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive")
+            ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file");
 
     return desc;
 }

@@ -7,13 +7,10 @@
 
 
 #include "VectorSelector.hpp"
-#include "VectorSelectorFactoryGrammar.hpp"
 
 class VectorSelectorFactory {
 public:
     static std::shared_ptr<VectorSelector> getVectorSelector();
-
-    static std::shared_ptr<VectorSelector> getVectorSelectorByAST(vectorSelectorNode &ast);
 
 private:
     VectorSelectorFactory() = default;

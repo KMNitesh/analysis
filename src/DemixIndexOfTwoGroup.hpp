@@ -29,7 +29,11 @@ public:
 
     void readInfo() override;
 
+    void setParameters(const Atom::Node &id1, const Atom::Node &id2, const Grid &grid, const std::string &outfilename);
+
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+
+    std::string getOutfileName() override { return outfilename; }
 
     static const std::string title() { return "Calculate demix index of two groups"; }
 
@@ -48,6 +52,8 @@ private:
     int grid_z;
 
     std::list<std::tuple<double, double>> demix_index_list;
+
+    std::string outfilename;
 };
 
 

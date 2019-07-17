@@ -11,6 +11,7 @@
 using namespace std;
 
 int TwoAtomVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
+    if (!pairs.empty()) return pairs.size();
     for (auto &mol : frame->molecule_list) {
         shared_ptr<Atom> atom1, atom2;
         for (auto &atom : mol->atom_list) {
@@ -76,7 +77,7 @@ TwoAtomVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, con
     return calVector({atom1, atom2}, frame);
 }
 
-void TwoAtomVectorSelector::readAST(const TwoAtomVectorSelectorNode &ast) {
-    this->ids1 = ast->id1;
-    this->ids2 = ast->id2;
+void TwoAtomVectorSelector::setParameters(const Atom::Node &id1, const Atom::Node &id2) {
+    this->ids1 = id1;
+    this->ids2 = id2;
 }

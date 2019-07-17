@@ -36,6 +36,8 @@ class RadicalDistribtuionFunction : public BasicAnalysis {
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 
+    std::string outfilename;
+
 public:
     RadicalDistribtuionFunction() {
         enable_outfile = true;
@@ -48,6 +50,11 @@ public:
     void print(std::ostream &os) override;
 
     void readInfo() override;
+
+    void setParameters(const Atom::Node &id1, const Atom::Node &id2, double max_dist,
+                       double width, bool intramol, const std::string outfilename);
+
+    std::string getOutfileName() override { return outfilename; }
 
     static const std::string title() {
         return "Radical Distribution Function";

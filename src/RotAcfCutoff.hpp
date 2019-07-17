@@ -18,7 +18,6 @@
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
-#include "RotAcfCutoffGrammar.hpp"
 
 class Frame;
 
@@ -43,7 +42,9 @@ public:
 
     void readInfo() override;
 
-    void readAST(const RotAcfCutoffNode &ast);
+    void setParameters(const Atom::Node &M, const Atom::Node &L, std::shared_ptr<VectorSelector> vector,
+                       int LegendrePolynomial, double cutoff, double time_increment_ps,
+                       double max_time_grap_ps, const std::string &outfilename);
 
     static const std::string title() {
         return "Rotational autocorrelation function (Cutoff)";

@@ -37,6 +37,11 @@ public:
 
     void readInfo() override;
 
+    std::string getOutfileName() override { return outfilename; }
+
+    void
+    setParameters(const Atom::Node &mask, double time_increment_ps, int total_frames, const std::string &outfilename);
+
     static const std::string title() {
         return "Diffusion Coefficient by Einstein equation";
     }
@@ -62,6 +67,7 @@ private:
     Eigen::MatrixXd ycm;
     Eigen::MatrixXd zcm;
 
+    std::string outfilename;
 };
 
 

@@ -116,3 +116,23 @@ void DemixIndexOfTwoGroup::processFirstFrame(std::shared_ptr<Frame> &frame) {
                       if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
                   });
 }
+
+void DemixIndexOfTwoGroup::setParameters(const Atom::Node &id1, const Atom::Node &id2, const Grid &grid,
+                                         const std::string &outfilename) {
+    this->ids1 = id1;
+    this->ids2 = id2;
+
+    this->grid_x = grid.x;
+    this->grid_y = grid.y;
+    this->grid_z = grid.z;
+
+    if (grid.x < 1 or grid.y < 1 or grid.z < 1) {
+        throw runtime_error("grid component must large than one");
+    }
+
+    this->outfilename = outfilename;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
+        throw runtime_error("outfilename cannot empty");
+    }
+}

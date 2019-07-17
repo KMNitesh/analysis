@@ -10,7 +10,6 @@
 #include "atom.hpp"
 #include "molecule.hpp"
 #include "common.hpp"
-#include "DipoleVectorSelectorGrammar.hpp"
 
 class DipoleVectorSelector : public VectorSelector {
 public:
@@ -21,8 +20,8 @@ public:
     std::vector<std::tuple<double, double, double>> calculateVectors(const std::shared_ptr<Frame> &frame) override;
 
     void readInfo() override;
-    
-    void readAST(const DipoleVectorSelectorNode &ast);
+
+    void setParameters(const Atom::Node &id);
 
     std::tuple<double, double, double>
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;

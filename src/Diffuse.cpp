@@ -207,6 +207,32 @@ void Diffuse::print(std::ostream &os) {
 
 }
 
+void Diffuse::setParameters(const Atom::Node &mask, double time_increment_ps, int total_frames,
+                            const std::string &outfilename) {
+
+    this->ids = mask;
+
+    if (time_increment_ps <= 0) {
+        throw runtime_error("`time_increment_ps' must great than zero");
+    }
+    this->time_increment_ps = time_increment_ps;
+
+
+    if (total_frames <= 0) {
+        throw runtime_error("`total_frames' must great than zero");
+    }
+    this->total_frame_number = total_frames;
+
+    this->outfilename = outfilename;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
+        throw runtime_error("outfilename cannot empty");
+    }
+
+    bSerial = false;
+    enable_tbb = true;
+}
+
 void Diffuse::readInfo() {
     while (true) {
         time_increment_ps = 0.1;

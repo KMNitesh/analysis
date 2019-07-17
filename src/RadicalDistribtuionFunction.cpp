@@ -123,3 +123,33 @@ void RadicalDistribtuionFunction::processFirstFrame(std::shared_ptr<Frame> &fram
     numj = group1.size();
     numk = group2.size();
 }
+
+void
+RadicalDistribtuionFunction::setParameters(const Atom::Node &id1, const Atom::Node &id2,
+                                           double max_dist, double width, bool intramol,
+                                           std::string outfilename) {
+    this->ids1 = id1;
+    this->ids2 = id2;
+    if (max_dist <= 0) {
+        throw std::runtime_error("max_dist must large than zero");
+    }
+    rmax = max_dist;
+    if (width <= 0) {
+        throw std::runtime_error("max_dist must large than zero");
+    }
+
+    this->outfilename = outfilename;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
+        throw std::runtime_error("outfilename cannot empty");
+    }
+    this->width = width;
+    this->intramol = intramol;
+    nbin = int(rmax / width);
+    for (int i = 0; i <= nbin; i++) {
+        hist[i] = 0;
+        gr[i] = gs[i] = 0.0;
+    }
+
+}
+

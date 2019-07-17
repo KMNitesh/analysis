@@ -39,7 +39,7 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
     qi::rule<Iterator, Atom::Node(), Skipper> select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> factor, factor2;
     qi::rule<Iterator, Atom::Node(), Skipper> term;
-    qi::rule<Iterator, Atom::Node(), Skipper> expr;
+    qi::rule<Iterator, Atom::Node(), Skipper> maskParser;
 
     qi::rule<Iterator, std::string(), Skipper> str_with_wildcard;
 
@@ -50,7 +50,7 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::string, replace_all_copy, boost::replace_all_c
 
 
 template<typename Iterator, typename Skipper>
-Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
+Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser) {
     using qi::uint_;
     using qi::int_;
     using qi::eps;
@@ -115,13 +115,13 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
 
     select_rule = residue_select_rule | nametype_select_rule;
 
-    factor2 = "(" >> expr >> ")" | select_rule;
+    factor2 = "(" >> maskParser >> ")" | select_rule;
 
     factor = "!" >> factor2[_val = make_shared_<Atom::Operator>(Atom::Op::NOT, _1)] | factor2[_val = _1];
 
     term = factor[_val = _1] >> *("&" >> factor[_val = make_shared_<Atom::Operator>(Atom::Op::AND, _val, _1)]);
 
-    expr = term[_val = _1] >> *("|" >> term[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
+    maskParser = term[_val = _1] >> *("|" >> term[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
 
     str_with_wildcard.name("str_with_wildcard");
     select_item_rule.name("select_item_rule");
@@ -131,10 +131,10 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(expr) {
     factor2.name("factor2");
     factor.name("factor");
     term.name("term");
-    expr.name("expr");
+    maskParser.name("maskParser");
 
     on_error<fail>(
-            expr,
+            maskParser,
             std::cout
                     << val("Error! Expecting")
                     << _4

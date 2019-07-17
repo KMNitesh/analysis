@@ -8,6 +8,7 @@
 using namespace std;
 
 int DipoleVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
+    if (!selected_mols.empty()) return selected_mols.size();
     for (auto &atom : frame->atom_list) {
         if (Atom::is_match(atom, id)) {
             selected_mols.insert(atom->molecule.lock());
@@ -44,6 +45,6 @@ DipoleVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, cons
     return r;
 }
 
-void DipoleVectorSelector::readAST(const DipoleVectorSelectorNode &ast) {
-    this->id = ast->id;
+void DipoleVectorSelector::setParameters(const Atom::Node &id) {
+    this->id = id;
 }

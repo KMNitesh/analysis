@@ -23,11 +23,19 @@
 #include "mainUtils.hpp"
 #include "common.hpp"
 #include "frame.hpp"
-
+#include "TypeUtility.hpp"
 #include "Trajconv.hpp"
-#include "LanguageGrammar.hpp"
 #include "RotAcf.hpp"
 #include "RotAcfCutoff.hpp"
+#include "Interpreter.hpp"
+#include "ThrowAssert.hpp"
+#include "DipoleVectorSelector.hpp"
+#include "NormalVectorSelector.hpp"
+#include "TwoAtomVectorSelector.hpp"
+#include "RadicalDistribtuionFunction.hpp"
+#include "DemixIndexOfTwoGroup.hpp"
+#include "ResidenceTime.hpp"
+#include "Diffuse.hpp"
 
 
 using namespace std;
@@ -129,23 +137,19 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
 }
 
 void executeScript(const boost::program_options::options_description &desc,
-                   const boost::program_options::variables_map &vm, const std::vector<std::string> &xyzfiles,
+                   const boost::program_options::variables_map &vm, std::vector<std::string> &xyzfiles,
                    int argc, char *argv[]) {
-    if (!vm.count("file")) {
-        std::cerr << "input trajectory file is not set !" << std::endl;
-        std::cerr << desc;
-        exit(EXIT_FAILURE);
-    }
-
     string scriptContent;
 
+    boost::optional<string> script_file;
     if (vm.count("script")) {
         scriptContent = vm["script"].as<string>();
 
     } else if (vm.count("script-file")) {
 
         try {
-            ifstream f(vm["script-file"].as<string>());
+            script_file = vm["script-file"].as<string>();
+            ifstream f(script_file.value());
             string content((std::istreambuf_iterator<char>(f)),
                            std::istreambuf_iterator<char>());
             scriptContent = content;
@@ -159,13 +163,19 @@ void executeScript(const boost::program_options::options_description &desc,
         exit(EXIT_FAILURE);
     }
 
+    boost::optional<string> topology;
+    if (vm.count("topology")) topology = vm["topology"].as<string>();
+    boost::optional<string> forcefield_file;
+    if (vm.count("prm")) forcefield_file = vm["prm"].as<string>();
+    boost::optional<string> output_file;
+    if (vm.count("output")) output_file = vm["output"].as<string>();
 
-    LanguageGrammar<std::string::iterator, qi::ascii::space_type> grammar;
+    InterpreterGrammarT grammar;
 
 
-    Language ast;
+    boost::any ast;
     auto it = scriptContent.begin();
-    bool status = qi::phrase_parse(it, scriptContent.end(), grammar, qi::ascii::space, ast);
+    bool status = qi::phrase_parse(it, scriptContent.end(), grammar, SkipperT(), ast);
 
     if (!(status and it == scriptContent.end())) {
         std::cerr << "Syntax Parse Error\n";
@@ -176,184 +186,385 @@ void executeScript(const boost::program_options::options_description &desc,
         exit(EXIT_FAILURE);
     }
 
-
-    struct ExecutionEngine : boost::static_visitor<shared_ptr<BasicAnalysis>> {
-
-        shared_ptr<BasicAnalysis> operator()(RotAcfNode &ast) {
-            auto task = make_shared<RotAcf>();
-            try {
-                task->readAST(ast);
-            } catch (std::exception &e) {
-                std::cerr << e.what() << '\n';
-                exit(EXIT_FAILURE);
-            }
-            return task;
-        }
-
-        shared_ptr<BasicAnalysis> operator()(RotAcfCutoffNode &ast) {
-            auto task = make_shared<RotAcfCutoff>();
-            try {
-                task->readAST(ast);
-            } catch (std::exception &e) {
-                std::cerr << e.what() << '\n';
-                exit(EXIT_FAILURE);
-            }
-            return task;
-        }
-
-        shared_ptr<BasicAnalysis> operator()(GoNode &ast) {
-            if (ast->start <= 0) {
-                cerr << "start frame cannot less than 1\n";
-                exit(EXIT_FAILURE);
-            } else {
-                this->start = ast->start;
-            }
-
-            if (ast->end <= this->start and ast->end != 0) {
-                cerr << "end frame cannot less than start frame\n";
-                exit(EXIT_FAILURE);
-            } else {
-                end = ast->end;
-            }
-
-            if (ast->step <= 0) {
-                cerr << "frame step cannot less than 1\n";
-                exit(EXIT_FAILURE);
-            } else {
-                this->step = ast->step;
-            }
-
-            this->nthreads = ast->nthreads;
-
-            return {};
-        }
-
-        int start = 1;
-        int end = 0;
-        int step = 1;
-        int nthreads = 0;
-
-    } engine;
-
+    Interpreter interpreter;
 
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
 
+    interpreter.registerFunction(
+                    "rdf", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<RadicalDistribtuionFunction>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))),
+                                    AutoConvert(get<3>(args.at(4))),
+                                    AutoConvert(get<3>(args.at(5))));
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function rdf (" << __FILE__ << ":" << __LINE__ << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<Atom::Node>("M")
+            .addArgument<Atom::Node>("L")
+            .addArgument<double, int>("max_dist", 10.0)
+            .addArgument<double, int>("width", 0.01)
+            .addArgument<bool>("intramol", false)
+            .addArgument<string>("out");
 
-    for (auto &stmt : ast) {
-        auto task = boost::apply_visitor(engine, *stmt);
-        if (task) {
-            task_list->push_back(task);
-        }
-    }
 
-    if (enable_forcefield) {
-        if (vm.count("topology") && getFileType(vm["topology"].as<std::string>()) != FileType::ARC) {
+    interpreter.registerFunction(
+                    "rotacf", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<RotAcf>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))),
+                                    AutoConvert(get<3>(args.at(4))));
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function rotacf (" << __FILE__ << ":" << __LINE__ << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<shared_ptr<VectorSelector>>("vector")
+            .addArgument<int>("P")
+            .addArgument<double, int>("time_increment_ps", 0.1)
+            .addArgument<double, int>("max_time_grap_ps")
+            .addArgument<string>("out");
 
-        } else if (vm.count("prm")) {
-            auto ff = vm["prm"].as<std::string>();
-            if (boost::filesystem::exists(ff)) {
-                forcefield.read(ff);
-            } else {
-                std::cerr << "force field file " << ff << " is bad  !\n";
-                exit(EXIT_FAILURE);
-            }
-        } else {
-            std::cerr << "force field file not given !\n";
-            exit(EXIT_FAILURE);
-        }
-    }
 
-    int start = engine.start;
-    int step_size = engine.step;
-    int total_frames = engine.end;
+    interpreter.registerFunction(
+                    "rotacfCutoff", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<RotAcfCutoff>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))),
+                                    AutoConvert(get<3>(args.at(4))),
+                                    AutoConvert(get<3>(args.at(5))),
+                                    AutoConvert(get<3>(args.at(6))),
+                                    AutoConvert(get<3>(args.at(7))));
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function rotacfCutoff (" << __FILE__ << ":" << __LINE__ << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<Atom::Node>("M")
+            .addArgument<Atom::Node>("L")
+            .addArgument<shared_ptr<VectorSelector>>("vector")
+            .addArgument<int>("P")
+            .addArgument<double, int>("cutoff")
+            .addArgument<double, int>("time_increment_ps", 0.1)
+            .addArgument<double, int>("max_time_grap_ps")
+            .addArgument<string>("out");
 
-    tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
-    if (engine.nthreads > sysconf(_SC_NPROCESSORS_ONLN)) {
-        cout << "WARNING !! nthreads larger than max core of system CPU, will use automatic mode";
-        engine.nthreads = 0;
-    }
 
-    if (enable_tbb) {
-        tbb_init.initialize(engine.nthreads == 0 ? tbb::task_scheduler_init::automatic : engine.nthreads);
-    }
-    int current_frame_num = 0;
+    interpreter.registerFunction(
+                    "demix", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<DemixIndexOfTwoGroup>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))));
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function demix (" << __FILE__ << ":" << __LINE__ << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<Atom::Node>("component1")
+            .addArgument<Atom::Node>("component2")
+            .addArgument<Grid>("grid")
+            .addArgument<string>("out");
 
-    auto reader = std::make_shared<TrajectoryReader>();
-    bool b_added_topology = true;
-    auto ext = ext_filename(xyzfiles[0]);
-    if (ext == "nc" or ext == "xtc" or ext == "trr") {
-        b_added_topology = false;
-    } else {
-        if (vm.count("topology")) {
-            std::cerr << "WRANING !!  do not use topolgy file !\bn";
-        }
-    }
-    for (auto &xyzfile : xyzfiles) {
-        reader->add_filename(xyzfile);
-        std::string ext = ext_filename(xyzfile);
-        if (ext == "traj" && xyzfiles.size() != 1) {
-            std::cout << "traj file can not use multiple files" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-        if (!b_added_topology) {
-            if (vm.count("topology")) {
-                std::string topol = vm["topology"].as<std::string>();
-                if (boost::filesystem::exists(topol)) {
-                    reader->add_topology(topol);
-                    b_added_topology = true;
-                    continue;
+    interpreter.registerFunction(
+                    "residenceTime", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<ResidenceTime>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))),
+                                    AutoConvert(get<3>(args.at(4))));
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function residenceTime (" << __FILE__ << ":" << __LINE__ << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<Atom::Node>("M")
+            .addArgument<Atom::Node>("L")
+            .addArgument<double, int>("cutoff")
+            .addArgument<double, int>("time_star")
+            .addArgument<string>("out");
+
+
+    interpreter.registerFunction(
+                    "diffuse", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<Diffuse>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))),
+                                    AutoConvert(get<3>(args.at(4))));
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function diffuse (" << __FILE__ << ":" << __LINE__ << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<Atom::Node>("mask")
+            .addArgument<double, int>("time_increment_ps", 0.1)
+            .addArgument<int>("total_frames")
+            .addArgument<string>("out");
+
+    interpreter.registerFunction(
+            "DipoleVector", [](auto &args) -> boost::any {
+                auto vector = make_shared<DipoleVectorSelector>();
+                try {
+                    vector->setParameters(boost::any_cast<Atom::Node>(get<3>(args.at(0))));
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function DipoleVector (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
                 }
-                std::cerr << "topology file " << topol << " is bad ! please retype !\n";
-                exit(EXIT_FAILURE);
-            }
-            std::cerr << "topology file  not given !\n";
-            exit(EXIT_FAILURE);
-        }
-    }
+                return shared_ptr<VectorSelector>(vector);
+            }).addArgument<Atom::Node>("mask");
 
-    std::fstream outfile;
-    if (enable_outfile) {
-        if (vm.count("output")) {
-            cerr << "Output file option do not need\n";
-            exit(EXIT_FAILURE);
-        }
-    }
-    std::shared_ptr<Frame> frame;
-    int Clear = 0;
-    while ((frame = reader->readOneFrame())) {
-        current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames)
-            break;
-        if (current_frame_num % 10 == 0) {
-            if (Clear) {
-                std::cout << "\r";
-            }
-            std::cout << "Processing Coordinate Frame  " << current_frame_num << "   " << std::flush;
-            Clear = 1;
-        }
-        if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
-            if (current_frame_num == start) {
-                if (forcefield.isVaild()) {
-                    forcefield.assign_forcefield(frame);
+    interpreter.registerFunction(
+            "NormalVector", [](auto &args) -> boost::any {
+                auto vector = make_shared<NormalVectorSelector>();
+                try {
+                    vector->setParameters(AutoConvert(get<3>(args.at(0))),
+                                          AutoConvert(get<3>(args.at(1))),
+                                          AutoConvert(get<3>(args.at(2))));
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function NormalVector (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
                 }
-                processFirstFrame(frame, task_list);
-            }
-            processOneFrame(frame, task_list);
-        }
-    }
-    std::cout << std::endl;
+                return shared_ptr<VectorSelector>(vector);
+            }).addArgument<Atom::Node>("mask1").addArgument<Atom::Node>("mask2").addArgument<Atom::Node>("mask3");
 
-    for (auto &task : *task_list) {
-        ofstream ofs(task->getOutfileName());
-        ofs << "#  workdir > " << boost::filesystem::current_path() << '\n';
-        ofs << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
-        if (vm.count("script-file")) {
-            ofs << "#  script-file > " << vm["script-file"].as<string>() << '\n';
-        }
-        ofs << "#  script BEGIN>\n" << scriptContent << "\n#  script END>\n";
-        task->print(ofs);
-    }
-    std::cout << "Mission Complete\n";
+    interpreter.registerFunction(
+            "TwoAtomVector", [](auto &args) -> boost::any {
+                auto vector = make_shared<TwoAtomVectorSelector>();
+                try {
+                    vector->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))));
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function TwoAtomVector (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
+                }
+                return shared_ptr<VectorSelector>(vector);
+            }).addArgument<Atom::Node>("mask1").addArgument<Atom::Node>("mask2");
+
+    interpreter.registerFunction(
+            "Grid", [](auto &args) -> boost::any {
+                try {
+                    return Grid{AutoConvert(get<3>(args.at(0))),
+                                AutoConvert(get<3>(args.at(1))),
+                                AutoConvert(get<3>(args.at(2)))};
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function Grid (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
+                }
+            }).addArgument<int>("x").addArgument<int>("y").addArgument<int>("z");
+
+    interpreter.registerFunction(
+            "readTop", [&topology](auto &args) -> boost::any {
+                try {
+                    topology = AutoConvert(get<3>(args.at(0)));
+                    return topology.value();
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function readTop (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
+                }
+            }).addArgument<string>("file");
+
+    interpreter.registerFunction(
+            "trajin", [&xyzfiles](auto &args) -> boost::any {
+                try {
+                    string xyz = AutoConvert(get<3>(args.at(0)));
+                    xyzfiles.emplace_back(xyz);
+                    return xyz;
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function trajin (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
+                }
+            }).addArgument<string>("file");
+
+    interpreter.registerFunction(
+            "readFF", [&forcefield_file](auto &args) -> boost::any {
+                try {
+                    forcefield_file = AutoConvert(get<3>(args.at(0)));
+                    return forcefield_file.value();
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function readFF (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
+                }
+            }).addArgument<string>("file");
+
+    interpreter.registerFunction("go", [&](auto &args) -> boost::any {
+                int start, total_frames, step_size, nthreads;
+                try {
+                    start = AutoConvert(get<3>(args.at(0)));
+                    total_frames = AutoConvert(get<3>(args.at(1)));
+                    step_size = AutoConvert(get<3>(args.at(2)));
+                    nthreads = AutoConvert(get<3>(args.at(3)));
+                } catch (std::exception &e) {
+                    cerr << e.what() << " for function go (" << __FILE__ << ":" << __LINE__ << ")\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                cout << boost::format("Start Process...  start = %d, end= %d, step = %d, nthreads = %d\n")
+                        % start % total_frames % step_size % nthreads;
+
+                if (start <= 0) {
+                    cerr << "start frame cannot less than 1\n";
+                    exit(EXIT_FAILURE);
+                }
+                if (total_frames <= start and total_frames != 0) {
+                    cerr << format("end(%d) frame cannot less than start(%d) frame\n", total_frames, start);
+                    exit(EXIT_FAILURE);
+                }
+                if (step_size <= 0) {
+                    cerr << "frame step cannot less than 1\n";
+                    exit(EXIT_FAILURE);
+                }
+                if (nthreads < 0) {
+                    cerr << "thread number cannot less than zero\n";
+                    exit(EXIT_FAILURE);
+                }
+                if (enable_forcefield) {
+                    if (topology && getFileType(topology.value()) != FileType::ARC) {
+
+                    } else if (forcefield_file) {
+                        if (boost::filesystem::exists(forcefield_file.value())) {
+                            forcefield.read(forcefield_file.value());
+                        } else {
+                            std::cerr << "force field file " << forcefield_file.value() << " is bad  !\n";
+                            exit(EXIT_FAILURE);
+                        }
+                    } else {
+                        std::cerr << "force field file not given !\n";
+                        exit(EXIT_FAILURE);
+                    }
+                }
+
+                tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
+                if (nthreads > sysconf(_SC_NPROCESSORS_ONLN)) {
+                    cout << "WARNING !! nthreads larger than max core of system CPU, will use automatic mode";
+                    nthreads = 0;
+                }
+
+
+                tbb_init.initialize(nthreads == 0 ? tbb::task_scheduler_init::automatic : nthreads);
+
+                int current_frame_num = 0;
+
+                auto reader = std::make_shared<TrajectoryReader>();
+                bool b_added_topology = true;
+                auto ext = ext_filename(xyzfiles[0]);
+                if (ext == "nc" or ext == "xtc" or ext == "trr") {
+                    b_added_topology = false;
+                } else {
+                    if (topology) {
+                        std::cerr << "WRANING !!  do not use topolgy file !\bn";
+                    }
+                }
+
+                if (xyzfiles.empty()) {
+                    cerr << "trajectory file not set\n";
+                    exit(EXIT_FAILURE);
+                }
+                for (auto &xyzfile : xyzfiles) {
+                    reader->add_filename(xyzfile);
+                    std::string ext = ext_filename(xyzfile);
+                    if (ext == "traj" && xyzfiles.size() != 1) {
+                        std::cout << "traj file can not use multiple files" << std::endl;
+                        exit(EXIT_FAILURE);
+                    }
+                    if (!b_added_topology) {
+                        if (topology) {
+                            if (boost::filesystem::exists(topology.value())) {
+                                reader->add_topology(topology.value());
+                                b_added_topology = true;
+                                continue;
+                            }
+                            std::cerr << "topology file " << topology.value() << " is bad ! please retype !\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        std::cerr << "topology file  not given !\n";
+                        exit(EXIT_FAILURE);
+                    }
+                }
+
+                if (enable_outfile) {
+                    if (output_file) {
+                        cerr << "Output file option do not need\n";
+                        exit(EXIT_FAILURE);
+                    }
+                }
+                std::shared_ptr<Frame> frame;
+                int Clear = 0;
+                while ((frame = reader->readOneFrame())) {
+                    current_frame_num++;
+                    if (total_frames != 0 and current_frame_num > total_frames)
+                        break;
+                    if (current_frame_num % 10 == 0) {
+                        if (Clear) {
+                            std::cout << "\r";
+                        }
+                        std::cout << "Processing Coordinate Frame  " << current_frame_num << "   " << std::flush;
+                        Clear = 1;
+                    }
+                    if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
+                        if (current_frame_num == start) {
+                            if (forcefield.isVaild()) {
+                                forcefield.assign_forcefield(frame);
+                            }
+                            processFirstFrame(frame, task_list);
+                        }
+                        processOneFrame(frame, task_list);
+                    }
+                }
+                std::cout << '\n';
+
+                tbb::parallel_for_each(*task_list, [&](auto &task) {
+                    ofstream ofs(task->getOutfileName());
+                    ofs << "#  workdir > " << boost::filesystem::current_path() << '\n';
+                    ofs << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
+                    if (script_file) {
+                        ofs << "#  script-file > " << script_file.value() << '\n';
+                    }
+                    ofs << "#  script BEGIN>\n" << scriptContent << "\n#  script END>\n";
+                    task->print(ofs);
+                });
+                std::cout << "Mission Complete\n";
+
+                int totol_task_count = task_list->size();
+                task_list->clear();
+                return totol_task_count;
+            }).addArgument<int>("start", 1).addArgument<int>("end", 0)
+            .addArgument<int>("step", 1).addArgument<int>("nthreads", 0);
+
+    interpreter.execute(ast);
 }
 
 void processTrajectory(const boost::program_options::options_description &desc,

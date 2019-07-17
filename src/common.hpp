@@ -17,6 +17,7 @@
 #include <boost/optional.hpp>
 #include <stack>
 #include <boost/program_options.hpp>
+#include <boost/type_index.hpp>
 
 namespace po = boost::program_options;
 
@@ -65,19 +66,6 @@ std::vector<std::string> split(const std::string &str);
 
 std::string input(const std::string &prompt = "", std::istream &in = std::cin, std::ostream &out = std::cout);
 
-template<typename T>
-struct type_name_string;
-
-template<>
-struct type_name_string<int> {
-    constexpr static auto value = "int";
-};
-
-template<>
-struct type_name_string<double> {
-    constexpr static auto value = "double";
-};
-
 
 template<typename T, typename = std::enable_if_t<std::is_same_v<T, int> or std::is_same_v<T, double>>>
 T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T value = T(),
@@ -93,10 +81,11 @@ T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T val
             auto option = boost::lexical_cast<T>(input_line);
             if (option >= min and option <= max) return option;
 
-            out << "must be a " << type_name_string<T>::value << " range " << min << " and " << max
+            out << "must be a " << boost::typeindex::type_id<T>().pretty_name() << " range " << min << " and " << max
                 << "! please retype!\n";
         } catch (boost::bad_lexical_cast &e) {
-            out << "must be a " << type_name_string<T>::value << " ! please retype!" << e.what() << std::endl;
+            out << "must be a " << boost::typeindex::type_id<T>().pretty_name() << " ! please retype!" << e.what()
+                << '\n';
         }
     }
 }
@@ -520,6 +509,12 @@ std::tuple<T, T, T> &operator*=(std::tuple<T, T, T> &vector1, T norm) {
     std::get<2>(vector1) *= norm;
     return vector1;
 }
+
+
+class Grid {
+public:
+    int x, y, z;
+};
 
 
 #endif //TINKER_COMMON_HPP

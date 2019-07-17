@@ -23,6 +23,9 @@ void Forcefield::read(const std::string &filename) {
 }
 
 void Forcefield::read_tinker_prm(const std::string &filename) {
+    if (!mapping.empty())
+        return;
+
     std::fstream f;
     f.open(filename, std::ios::in);
     f.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);

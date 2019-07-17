@@ -8,7 +8,6 @@
 #include <list>
 #include "VectorSelector.hpp"
 #include "atom.hpp"
-#include "NormalVectorSelectorGrammar.hpp"
 
 
 class NormalVectorSelector : public VectorSelector {
@@ -19,7 +18,7 @@ public:
 
     void readInfo() override;
 
-    void readAST(const NormalVectorSelectorNode &ast);
+    void setParameters(const Atom::Node &id1, const Atom::Node &id2, const Atom::Node &id3);
 
     std::tuple<double, double, double>
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;

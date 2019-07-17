@@ -26,12 +26,106 @@ int mainMenu() {
     return choose<int>(0, 1, "select :");
 };
 
+void printSytaxDetails() {
+
+    cout <<
+         "\n"
+         "                         <Summary Syntax for Control Script>\n"
+         "\n"
+         " <-- Trajectory Analysis Commands -->"
+         "\n"
+         " Radical Distribution Function :\n"
+         "   rdf ( M : AmberMask, L : AmberMask, max_dist : double = 10.0,  width : double = 0.01,\n"
+         "                                                   intramol : bool = false, out : string )\n"
+         "\n"
+         " Rotational Autocorrelation Function :\n"
+         "   rotacf ( vector : VectorSelector, P : int, time_increment_ps : double = 0.1,\n"
+         "                                       max_time_grap_ps : double, out : string )\n"
+         "\n"
+         " Rotational Autocorrelation Function within Solvation Shell :\n"
+         "   rotacfCutoff ( M : AmberMask, L : AmberMask, vector : VectorSelector, P : int,\n"
+         "                               cutoff : double, time_increment_ps : double = 0.1,\n"
+         "                                         max_time_grap_ps : double, out : string )\n"
+         "\n"
+         " DemixIndex of Bi-component System :\n"
+         "   demix ( component1 : AmberMask, component2 : AmberMask, grid : Grid, out : string )\n"
+         "\n"
+         " Residence Time of Ligand in Solvation Shell :\n"
+         "   residenceTime ( M : AmberMask, L : AmberMask, cutoff : double, time_star : int, out : string )\n"
+         "\n"
+         " Self-Diffusion Coefficient Calculation based on Einstein Equation :\n"
+         "   diffuse ( mask : AmberMask, time_increment_ps : double = 0.1, total_frames : int, out : string )\n"
+         "\n"
+         "\n"
+         " <-- Utility Functions -->\n"
+         "     VectorSelector DipoleVector  ( mask  : AmberMask )\n"
+         "     VectorSelector TwoAtomVector ( mask1 : AmberMask, mask2 : AmberMask )\n"
+         "     VectorSelector NormalVector  ( mask1 : AmberMask, mask2 : AmberMask, mask3 : AmberMask )\n"
+         "     Grid  grid ( x : int, y : int, z : int )"
+         "\n"
+         " <-- State Control -->\n"
+         "\n"
+         "  Start Run Analysis Command\n"
+         "   go ( start : int = 1, end : int = 0, step : int = 1, nthreads = 0 )\n"
+         "\n"
+         " <-- Extended Backus-Naur Form for Script -->\n"
+         "\n"
+         " <literal> ::= <int> | <double> | <bool> | <AmberMask> | <string>\n"
+         " <for_stmt> ::= for ( <expr> ; <condtion_expr> ; <expr> ) { <stmts> }\n"
+         " <while_stmt> ::= while ( <condtion_expr> ) { <stmts> }\n"
+         " <if_else_stmt> ::= if ( <condtion_expr> ) { <stmts> } [ else { <stmts> } ]\n"
+         " <do_while_stmt> ::= do { <stmts> } while ( <condtion_expr> ) ; \n"
+         "\n"
+         "  <- Implemented Operator Precedence ->\n"
+         " Associativity ( L = Left-to-right, R = Right-to-left )\n"
+         " L          a()             Function call\n"
+         "---------------------------------------------------------------------------------\n"
+         " L          a++  a--        Suffix/postfix increament and decrement\n"
+         "---------------------------------------------------------------------------------\n"
+         " R          ++a  --a        Prefix increament and decrement\n"
+         " R           +a   -a        Unray plus and minus\n"
+         " R            !             Logical NOT\n"
+         "---------------------------------------------------------------------------------\n"
+         " L          a*b  a/b  a%b   Multiplication, division, and remainder\n"
+         "---------------------------------------------------------------------------------\n"
+         " L          a+b  a-b        Addition and subtraction\n"
+         "---------------------------------------------------------------------------------\n"
+         " L           <   <=         Less, less equal relational operaters\n"
+         " L           >   >=         Great, great equal relational operaters\n"
+         "---------------------------------------------------------------------------------\n"
+         " L          ==   !=         Equal, not equal releational operaters\n"
+         "---------------------------------------------------------------------------------\n"
+         " L           &              Bitwise AND\n"
+         "---------------------------------------------------------------------------------\n"
+         " L           |              Bitwise OR(inclusive or)\n"
+         "---------------------------------------------------------------------------------\n"
+         " L          &&              Logical AND\n"
+         "---------------------------------------------------------------------------------\n"
+         " L          ||              Logical OR\n"
+         "---------------------------------------------------------------------------------\n"
+         " R           =              Direct assignment\n"
+         " R          +=   -=         Compound assignment by sum and difference\n"
+         " R          *=   /=   %=    Compound assignment by product, quotient, and remainder\n"
+         " R          &=   |=         Compound assignment by bitwise AND and OR\n"
+         "\n"
+         "  <- Internal Functions ->\n"
+         "      int(), double(), bool(), sqrt(), abs(), log(), exp(), pow(), print()\n";
+
+}
 
 int main(int argc, char *argv[]) {
 
     std::cout << "Build DateTime : " << __DATE__ << " " << __TIME__ << endl;
 
     std::cout << "current work dir : " << boost::filesystem::current_path() << std::endl;
+
+#ifndef NDEBUG
+    std::cout << " Program Arugments < \n";
+    for (int i = 0; i < argc; i++) {
+        std::cout << "argv[" << i << "] = " << argv[i] << '\n';
+    }
+    std::cout << " > Program Arugments  \n";
+#endif
 
     auto desc = make_program_options();
     po::variables_map vm;
@@ -45,6 +139,7 @@ int main(int argc, char *argv[]) {
 
     if (vm.count("help")) {
         cout << desc;
+        printSytaxDetails();
         exit(EXIT_SUCCESS);
     }
 

@@ -15,11 +15,11 @@ add_executable(minimize minimize.f)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wall -Wextra")
-endif()
+endif ()
 
 
 add_library(base atom.cpp common.cpp molecule.cpp frame.cpp
-                   trajectoryreader.cpp forcefield.cpp gro_writer.cpp
+        trajectoryreader.cpp forcefield.cpp gro_writer.cpp
         xtc_writer.cpp trr_writer.cpp netcdf_writer.cpp
         Trajconv.cpp Distance.cpp CoordinateNumPerFrame.cpp FirstCoordExchangeSearch.cpp
         RadicalDistribtuionFunction.cpp RMSDCal.cpp RMSFCal.cpp HBond.cpp taskMenu.cpp
@@ -31,7 +31,8 @@ add_library(base atom.cpp common.cpp molecule.cpp frame.cpp
         TrajectoryWriterFactoryImpl.cpp PBCUtils.cpp DipoleAngleWithDistanceRange.cpp
         DipoleAxisDistribution.cpp EquatorialAngle.cpp PlaneAngle.cpp AngleWat.cpp
         RotAcf.cpp DistanceAngle.cpp Histrogram.cpp Histrogram2D.cpp NormalVectorSelector.cpp
-        TwoAtomVectorSelector.cpp VectorSelectorFactory.cpp DipoleVectorSelector.cpp DipoleVectorSelector.hpp DipoleAngleAxis3D.cpp DipoleAngleAxis3D.hpp GeneratorGrammar.hpp)
+        TwoAtomVectorSelector.cpp VectorSelectorFactory.cpp DipoleVectorSelector.cpp
+        DipoleAngleAxis3D.cpp Interpreter.cpp TypeUtility.cpp)
 
 add_executable(analysis analysis.cpp)
 target_link_libraries(analysis base)

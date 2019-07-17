@@ -8,8 +8,6 @@
 #include <list>
 #include "VectorSelector.hpp"
 #include "atom.hpp"
-#include "TwoAtomSelectorGrammar.hpp"
-
 
 class TwoAtomVectorSelector : public VectorSelector {
 public:
@@ -19,7 +17,7 @@ public:
 
     void readInfo() override;
 
-    void readAST(const TwoAtomVectorSelectorNode &ast);
+    void setParameters(const Atom::Node &id1, const Atom::Node &id2);
 
     void print(std::ostream &os) override;
 

@@ -27,7 +27,6 @@
 #include <boost/mpl/unique.hpp>
 #include <boost/mpl/string.hpp>
 
-
 namespace mpl = boost::mpl;
 
 #include "taskMenu.hpp"

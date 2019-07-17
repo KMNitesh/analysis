@@ -31,27 +31,3 @@ std::shared_ptr<VectorSelector> VectorSelectorFactory::getVectorSelector() {
     return mapping.at(choose(1, static_cast<int>(mapping.size()), " select > "))();
 
 }
-
-std::shared_ptr<VectorSelector> VectorSelectorFactory::getVectorSelectorByAST(vectorSelectorNode &ast) {
-    struct Selector : boost::static_visitor<std::shared_ptr<VectorSelector>> {
-        std::shared_ptr<VectorSelector> operator()(const NormalVectorSelectorNode &ast) const {
-            auto selector = make_shared<NormalVectorSelector>();
-            selector->readAST(ast);
-            return selector;
-        }
-
-        std::shared_ptr<VectorSelector> operator()(const TwoAtomVectorSelectorNode &ast) const {
-            auto selector = make_shared<TwoAtomVectorSelector>();
-            selector->readAST(ast);
-            return selector;
-        }
-
-        std::shared_ptr<VectorSelector> operator()(const DipoleVectorSelectorNode &ast) const {
-            auto selector = make_shared<DipoleVectorSelector>();
-            selector->readAST(ast);
-            return selector;
-        }
-    };
-
-    return boost::apply_visitor(Selector(), ast);
-}

@@ -54,6 +54,7 @@ void NormalVectorSelector::print(std::ostream &os) {
 }
 
 int NormalVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
+    if (!pairs.empty()) return pairs.size();
     for (auto &mol : frame->molecule_list) {
         shared_ptr<Atom> atom1, atom2, atom3;
         for (auto &atom : mol->atom_list) {
@@ -92,8 +93,8 @@ NormalVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, cons
     return calVector({atom1, atom2, atom3}, frame);
 }
 
-void NormalVectorSelector::readAST(const NormalVectorSelectorNode &ast) {
-    ids1 = ast->id1;
-    ids2 = ast->id2;
-    ids3 = ast->id3;
+void NormalVectorSelector::setParameters(const Atom::Node &id1, const Atom::Node &id2, const Atom::Node &id3) {
+    ids1 = id1;
+    ids2 = id2;
+    ids3 = id3;
 }

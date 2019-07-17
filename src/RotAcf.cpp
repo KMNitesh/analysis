@@ -9,8 +9,6 @@
 #include "molecule.hpp"
 #include "ThrowAssert.hpp"
 #include "VectorSelectorFactory.hpp"
-#include "RotACFGrammar.hpp"
-
 
 using namespace std;
 
@@ -166,41 +164,32 @@ void RotAcf::readInfo() {
                                  "Enter the Max Time Grap in Picoseconds :");
 }
 
-void RotAcf::readAST(const RotAcfNode &ast) {
-    if (!ast->vectorSelctor) {
-        throw runtime_error("vector not vaild");
-    } else {
-        vectorSelector = VectorSelectorFactory::getVectorSelectorByAST(ast->vectorSelctor.value());
-    }
-    if (!ast->Legendre) {
-        throw runtime_error("legendre polynomial is empty");
-    }
-    if (!(ast->Legendre.value() == 1 or ast->Legendre.value() == 2)) {
+void RotAcf::setParameters(std::shared_ptr<VectorSelector> vector, int LegendrePolynomial,
+                           double time_increment_ps, double max_time_grap_ps, std::string outfilename) {
+
+    vectorSelector = vector;
+    if (!(LegendrePolynomial == 1 or LegendrePolynomial == 2)) {
         throw runtime_error("legendre polynomial must be 1 or 2");
     }
 
-    LegendrePolynomial = ast->Legendre.value();
+    this->LegendrePolynomial = LegendrePolynomial;
 
-    if (ast->time_increment_ps) {
-        this->time_increment_ps = 0.1;
-    } else if (ast->time_increment_ps.value() <= 0) {
+    if (time_increment_ps <= 0) {
         throw runtime_error("`time_increment_ps` must be postive");
     } else {
-        this->time_increment_ps = ast->time_increment_ps.value();
+        this->time_increment_ps = time_increment_ps;
     }
 
-    if (!ast->max_time_grap_ps) {
-        throw runtime_error("`max_time_grap_ps is empty");
-    } else if (ast->max_time_grap_ps.value() <= 0) {
+    if (max_time_grap_ps <= 0) {
         throw runtime_error("`max_time_grap_ps` must be postive");
-    } else if (ast->max_time_grap_ps.value() <= this->time_increment_ps) {
+    } else if (max_time_grap_ps <= this->time_increment_ps) {
         throw runtime_error("`max_time_grap_ps` must be larger than `time_increment_ps`");
     } else {
-        this->max_time_grap = ast->max_time_grap_ps.value();
+        this->max_time_grap = max_time_grap_ps;
     }
-    outfilename = ast->outfilename;
-    boost::trim(outfilename);
-    if (outfilename.empty()) {
+    this->outfilename = outfilename;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
         throw runtime_error("outfilename cannot empty");
     }
 }

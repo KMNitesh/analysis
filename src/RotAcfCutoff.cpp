@@ -94,53 +94,45 @@ void RotAcfCutoff::readInfo() {
 
 }
 
-void RotAcfCutoff::readAST(const RotAcfCutoffNode &ast) {
+void RotAcfCutoff::setParameters(const Atom::Node &M, const Atom::Node &L, std::shared_ptr<VectorSelector> vector,
+                                 int LegendrePolynomial, double cutoff, double time_increment_ps,
+                                 double max_time_grap_ps, const std::string &outfilename) {
+    this->ids1 = M;
+    this->ids2 = L;
 
-    this->ids1 = ast->M;
-    this->ids2 = ast->L;
-
-    if (!ast->vectorSelctor) {
+    if (!vector) {
         throw runtime_error("vector not vaild");
     } else {
-        vectorSelector = VectorSelectorFactory::getVectorSelectorByAST(ast->vectorSelctor.value());
+        this->vectorSelector = vector;
     }
-    if (!ast->Legendre) {
-        throw runtime_error("legendre polynomial is empty");
-    }
-    if (!(ast->Legendre.value() == 1 or ast->Legendre.value() == 2)) {
+    if (!(LegendrePolynomial == 1 or LegendrePolynomial == 2)) {
         throw runtime_error("legendre polynomial must be 1 or 2");
     }
 
-    LegendrePolynomial = ast->Legendre.value();
+    this->LegendrePolynomial = LegendrePolynomial;
 
-    if (!ast->cutoff) {
-        throw runtime_error("`cutoff is empty");
-    } else if (ast->cutoff.value() <= 0) {
+    if (cutoff <= 0) {
         throw runtime_error("`cutoff` must be postive");
     } else {
-        cutoff2 = pow(ast->cutoff.value(), 2);
+        cutoff2 = cutoff * cutoff;
     }
 
-    if (!ast->time_increment_ps) {
-        this->time_increment_ps = 0.1;
-    } else if (ast->time_increment_ps.value() <= 0) {
+    if (time_increment_ps <= 0) {
         throw runtime_error("`time_increment_ps` must be postive");
     } else {
-        this->time_increment_ps = ast->time_increment_ps.value();
+        this->time_increment_ps = time_increment_ps;
     }
 
-    if (!ast->max_time_grap_ps) {
-        throw runtime_error("`max_time_grap_ps is empty");
-    } else if (ast->max_time_grap_ps.value() <= 0) {
+    if (max_time_grap_ps <= 0) {
         throw runtime_error("`max_time_grap_ps` must be postive");
-    } else if (ast->max_time_grap_ps.value() <= this->time_increment_ps) {
+    } else if (max_time_grap_ps <= this->time_increment_ps) {
         throw runtime_error("`max_time_grap_ps` must be larger than `time_increment_ps`");
     } else {
-        this->max_time_grap = ast->max_time_grap_ps.value();
+        this->max_time_grap = max_time_grap_ps;
     }
-    outfilename = ast->outfilename;
-    boost::trim(outfilename);
-    if (outfilename.empty()) {
+    this->outfilename = outfilename;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
         throw runtime_error("outfilename cannot empty");
     }
 }

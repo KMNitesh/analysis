@@ -17,7 +17,6 @@
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
-#include "RotACFGrammar.hpp"
 
 class Frame;
 
@@ -41,7 +40,8 @@ public:
 
     void readInfo() override;
 
-    void readAST(const RotAcfNode &ast);
+    void setParameters(std::shared_ptr<VectorSelector> vector, int LegendrePolynomial,
+                       double time_increment_ps, double max_time_grap_ps, std::string outfilename);
 
     static const std::string title() { return "Rotational autocorrelation function"; }
 

@@ -185,6 +185,31 @@ void ResidenceTime::readInfo() {
 
 }
 
+void ResidenceTime::setParameters(const Atom::Node &id1, const Atom::Node &id2,
+                                  double cutoff, int t_star, const std::string &outfilename) {
+    this->ids1 = id1;
+    this->ids2 = id2;
+
+
+    if (cutoff <= 0) {
+        throw runtime_error("cutoff must large than zero");
+    }
+
+    this->dis_cutoff = cutoff;
+
+    if (t_star == 0) {
+        throw runtime_error("t_star(t*) must large than zero");
+    }
+    this->time_star = t_star;
+
+    this->outfilename = outfilename;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
+        throw runtime_error("outfilename cannot empty");
+    }
+
+}
+
 void ResidenceTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
                   [this](shared_ptr<Atom> &atom) {
