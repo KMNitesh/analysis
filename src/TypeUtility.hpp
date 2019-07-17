@@ -107,7 +107,7 @@ public:
     }
 
     operator double() const {
-        cast_to_double(v);
+        return cast_to_double(v);
     }
 
     operator bool() const {

@@ -30,9 +30,11 @@ TEST(TypeCheckTest, IsIntOrDouble) {
     ASSERT_THAT(check(val), Eq(true));
 }
 
-TEST(TypePrettyNameTest, IntDoubleStringBoolAmberMask) {
-    TypePrettyNames<int, double, string, bool, Atom::Node> check{};
-    ASSERT_THAT(check(), ContainerEq(vector<string>{"int", "double", "string", "bool", "AmberMask"}));
+TEST(TypePrettyNameTest, ALLAccept) {
+    TypePrettyNames<int, double, string, bool, Atom::Node, Grid,
+            shared_ptr<BasicAnalysis>, shared_ptr<VectorSelector>> check{};
+    ASSERT_THAT(check(), ContainerEq(vector<string>{
+            "int", "double", "string", "bool", "AmberMask", "Grid", "BasicAnalysis", "VectorSelector"}));
 }
 
 TEST(getPrettyNameTest, BoostAny) {
@@ -57,5 +59,45 @@ TEST(AutoConvertTest, Int) {
     int i = AutoConvert(v);
     ASSERT_THAT(i, Eq(1));
 }
+
+TEST(AutoConvertTest, DoubleFromInt) {
+    boost::any v = 1;
+    double i = AutoConvert(v);
+    ASSERT_THAT(i, DoubleEq(1.0));
+}
+
+TEST(AutoConvertTest, DoubleFromDouble) {
+    boost::any v = 1.0;
+    double i = AutoConvert(v);
+    ASSERT_THAT(i, DoubleEq(1.0));
+}
+
+TEST(AutoConvertTest, DoubleFromBool) {
+    boost::any v = true;
+    double i;
+    ASSERT_NO_THROW((i = AutoConvert(v)));
+    ASSERT_THAT(i, DoubleEq(1.0));
+}
+
+TEST(AutoConvertTest, Bool) {
+    boost::any v = true;
+    bool i = AutoConvert(v);
+    ASSERT_THAT(i, Eq(true));
+}
+
+TEST(AutoConvertTest, String) {
+    boost::any v = string("Hello");
+    string i = AutoConvert(v);
+    ASSERT_THAT(i, Eq("Hello"));
+}
+
+TEST(AutoConvertTest, AmberMask) {
+    auto node = Atom::Node();
+    boost::any v = node;
+    Atom::Node i;
+    ASSERT_NO_THROW((i = AutoConvert(v)));
+}
+
+
 
 
