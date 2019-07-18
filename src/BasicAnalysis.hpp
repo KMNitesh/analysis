@@ -14,6 +14,8 @@
 class Frame;
 
 class BasicAnalysis {
+protected:
+    std::string outfilename;
 public:
     virtual void processFirstFrame(std::shared_ptr<Frame> &frame) {};
 
@@ -23,10 +25,11 @@ public:
 
     virtual void readInfo() = 0;
 
-    virtual std::string getOutfileName() { return ""; }
+    virtual std::string getOutfileName() { return outfilename; }
+
+    virtual std::string description() { return "Base Class"; }
 
     static const std::string title() { return "Base Class"; }
-
 
     virtual ~BasicAnalysis() = default;
 };

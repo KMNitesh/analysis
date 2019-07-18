@@ -154,3 +154,16 @@ void DiffuseCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
         exit(EXIT_FAILURE);
     }
 }
+
+string DiffuseCutoff::description() {
+    stringstream ss;
+    string title_line = "------ " + title() + " ------";
+    ss << title_line << "\n";
+    ss << " M                 = [ " << ids1 << " ]\n";
+    ss << " L                 = [ " << ids2 << " ]\n";
+    ss << " cutoff            = " << sqrt(cutoff2) << " (Ang)\n";
+    ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
+    ss << " outfilename       = " << outfilename << "\n";
+    ss << string(title_line.size(), '-') << '\n';
+    return ss.str();
+}

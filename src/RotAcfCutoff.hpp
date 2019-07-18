@@ -34,8 +34,6 @@ public:
         enable_forcefield = true;
     }
 
-    std::string getOutfileName() override { return outfilename; }
-
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
@@ -47,7 +45,7 @@ public:
                        double max_time_grap_ps, const std::string &outfilename);
 
     static const std::string title() {
-        return "Rotational autocorrelation function (Cutoff)";
+        return "Rotational Autocorrelation Function within Solvation Shell";
     }
 
     struct InnerAtom {
@@ -91,15 +89,16 @@ private:
     std::tuple<double, double, double> calVector(std::shared_ptr<Molecule> &mol, std::shared_ptr<Frame> &frame);
 
     std::shared_ptr<VectorSelector> vectorSelector;
+public:
+    std::string description() override;
 
+private:
     template<typename Function>
     void calculateAutocorrelaionFunction(std::vector<std::pair<unsigned long long, double>> &acf, Function f) const;
 
     int LegendrePolynomial;
 
     double max_time_grap;
-
-    std::string outfilename;
 };
 
 #endif //TINKER_ROTACFCUTOFF_HPP

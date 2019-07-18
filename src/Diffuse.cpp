@@ -6,7 +6,6 @@
 #include "Diffuse.hpp"
 #include "frame.hpp"
 
-
 using namespace std;
 
 void Diffuse::process(std::shared_ptr<Frame> &frame) {
@@ -186,11 +185,11 @@ void Diffuse::print(std::ostream &os) {
         zmsd[i] /= counts;
     }
 
-    os << "*********************************************************" << endl;
-    os << "Group :" << ids << endl;
-    os << "Mean Squared Displacements and Self-Diffusion Constant" << endl;
-    os << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD        Diff Const" << endl;
-    os << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)     (x 10^-5 cm**2/sec)" << endl;
+    os << "*********************************************************\n";
+    os << description();
+    os << "Mean Squared Displacements and Self-Diffusion Constant\n";
+    os << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD        Diff Const\n";
+    os << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)     (x 10^-5 cm**2/sec)\n";
 
     for (int i = 0; i < total_frame_number - 1; i++) {
         double delta = time_increment_ps * (i + 1);
@@ -201,9 +200,8 @@ void Diffuse::print(std::ostream &os) {
         double dvalue = dunits * rvalue / delta / 6.0;
         os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
               delta % xvalue % yvalue % zvalue % rvalue % dvalue;
-
     }
-    os << "*********************************************************" << endl;
+    os << "*********************************************************\n";
 
 }
 
@@ -297,5 +295,17 @@ void Diffuse::processFirstFrame(std::shared_ptr<Frame> &frame) {
                   [this](shared_ptr<Atom> &atom) {
                       if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
                   });
+}
+
+string Diffuse::description() {
+    stringstream ss;
+    string title_line = "------ " + title() + " ------";
+    ss << title_line << "\n";
+    ss << " mask              = [ " << ids << " ]\n";
+    ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
+    ss << " total_frames      = " << total_frame_number << " (frames)\n";
+    ss << " outfilename       = " << outfilename << "\n";
+    ss << string(title_line.size(), '-') << '\n';
+    return ss.str();
 }
 

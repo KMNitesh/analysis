@@ -25,6 +25,10 @@ public:
 
 protected:
     Atom::AtomIndenter ids1;
+public:
+    std::string description() override;
+
+protected:
     Atom::AtomIndenter ids2;
 public:
     std::tuple<double, double, double>

@@ -33,8 +33,6 @@ public:
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
-    std::string getOutfileName() override { return outfilename; }
-
     static const std::string title() { return "Calculate demix index of two groups"; }
 
 private:
@@ -53,7 +51,6 @@ private:
 
     std::list<std::tuple<double, double>> demix_index_list;
 
-    std::string outfilename;
 };
 
 

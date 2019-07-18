@@ -21,6 +21,8 @@ public:
 
     void readInfo() override;
 
+    std::string description() override;
+
     void setParameters(const Atom::Node &id);
 
     std::tuple<double, double, double>

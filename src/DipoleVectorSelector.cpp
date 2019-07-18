@@ -48,3 +48,9 @@ DipoleVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, cons
 void DipoleVectorSelector::setParameters(const Atom::Node &id) {
     this->id = id;
 }
+
+string DipoleVectorSelector::description() {
+    stringstream ss;
+    ss << "DipoleVector ( " << id << " )";
+    return ss.str();
+}

@@ -23,6 +23,8 @@ public:
     std::tuple<double, double, double>
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
 
+    std::string description() override;
+
     void print(std::ostream &os) override;
 
     static const std::string title() { return "Plane normal vector (define by three atoms in same molecule) selector"; }

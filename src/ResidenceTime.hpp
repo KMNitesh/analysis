@@ -33,8 +33,6 @@ public:
 
     void print(std::ostream &os) override;
 
-    std::string getOutfileName() override { return outfilename; }
-
     void setParameters(const Atom::Node &id1, const Atom::Node &id2,
                        double cutoff, int t_star, const std::string &outfilename);
 
@@ -66,7 +64,6 @@ private:
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 
-    std::string outfilename;
 };
 
 #endif //TINKER_RESIDENCETIME_HPP

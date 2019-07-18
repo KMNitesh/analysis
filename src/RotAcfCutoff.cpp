@@ -203,3 +203,19 @@ void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     }
 }
 
+string RotAcfCutoff::description() {
+    stringstream ss;
+    string title_line = "------ " + title() + " ------";
+    ss << title_line << "\n";
+    ss << " M                 = [ " << ids1 << " ]\n";
+    ss << " L                 = [ " << ids2 << " ]\n";
+    ss << " vector            = " << vectorSelector->description() << "\n";
+    ss << " P                 = " << this->LegendrePolynomial << "\n";
+    ss << " cutoff            = " << sqrt(cutoff2) << " (Ang)\n";
+    ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
+    ss << " max_time_grap_ps  = " << max_time_grap << " (ps)\n";
+    ss << " outfilename       = " << outfilename << "\n";
+    ss << string(title_line.size(), '-') << '\n';
+    return ss.str();
+}
+

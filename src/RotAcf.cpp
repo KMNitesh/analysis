@@ -194,3 +194,16 @@ void RotAcf::setParameters(std::shared_ptr<VectorSelector> vector, int LegendreP
     }
 }
 
+string RotAcf::description() {
+    stringstream ss;
+    string title_line = "------ " + title() + " ------";
+    ss << title_line << "\n";
+    ss << " vector            = " << vectorSelector->description() << "\n";
+    ss << " P                 = " << this->LegendrePolynomial << "\n";
+    ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
+    ss << " max_time_grap_ps  = " << max_time_grap << " (ps)\n";
+    ss << " outfilename       = " << outfilename << "\n";
+    ss << string(title_line.size(), '-') << '\n';
+    return ss.str();
+}
+

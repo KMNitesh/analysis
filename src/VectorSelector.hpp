@@ -26,6 +26,8 @@ public:
 
     virtual void readInfo() = 0;
 
+    virtual std::string description() = 0;
+
     virtual void print(std::ostream &os) = 0;
 
     virtual ~VectorSelector() = default;

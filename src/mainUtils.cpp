@@ -10,6 +10,7 @@
 #include <list>
 #include <vector>
 #include <iostream>
+#include <chrono>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/cxx11/one_of.hpp>
 
@@ -171,12 +172,9 @@ void executeScript(const boost::program_options::options_description &desc,
     boost::optional<string> output_file;
     if (vm.count("output")) output_file = vm["output"].as<string>();
 
-    InterpreterGrammarT grammar;
-
-
     boost::any ast;
     auto it = scriptContent.begin();
-    bool status = qi::phrase_parse(it, scriptContent.end(), grammar, SkipperT(), ast);
+    bool status = qi::phrase_parse(it, scriptContent.end(), InterpreterGrammarT(), SkipperT(), ast);
 
     if (!(status and it == scriptContent.end())) {
         std::cerr << "Syntax Parse Error\n";
@@ -232,6 +230,7 @@ void executeScript(const boost::program_options::options_description &desc,
                             exit(EXIT_FAILURE);
                         }
                         task_list->emplace_back(task);
+                        cout << task->description();
                         return shared_ptr<BasicAnalysis>(task);
                     })
             .addArgument<shared_ptr<VectorSelector>>("vector")
@@ -259,6 +258,7 @@ void executeScript(const boost::program_options::options_description &desc,
                             exit(EXIT_FAILURE);
                         }
                         task_list->emplace_back(task);
+                        cout << task->description();
                         return shared_ptr<BasicAnalysis>(task);
                     })
             .addArgument<Atom::Node>("M")
@@ -330,6 +330,7 @@ void executeScript(const boost::program_options::options_description &desc,
                             exit(EXIT_FAILURE);
                         }
                         task_list->emplace_back(task);
+                        cout << task->description();
                         return shared_ptr<BasicAnalysis>(task);
                     })
             .addArgument<Atom::Node>("mask")
@@ -352,6 +353,7 @@ void executeScript(const boost::program_options::options_description &desc,
                             exit(EXIT_FAILURE);
                         }
                         task_list->emplace_back(task);
+                        cout << task->description();
                         return shared_ptr<BasicAnalysis>(task);
                     })
             .addArgument<Atom::Node>("M")
@@ -456,8 +458,16 @@ void executeScript(const boost::program_options::options_description &desc,
                     exit(EXIT_FAILURE);
                 }
 
-                cout << boost::format("Start Process...  start = %d, end= %d, step = %d, nthreads = %d\n")
-                        % start % total_frames % step_size % nthreads;
+                if (task_list->empty()) {
+                    cerr << "Empty task in the pending list, skip go function ...\n";
+                    return 0;
+                }
+
+                auto start_time = chrono::steady_clock::now();
+
+                cout << boost::format("Start Process...  start = %d, end = %s, step = %d, nthreads = %s\n")
+                        % start % (total_frames == 0 ? "all" : to_string(total_frames)) % step_size
+                        % (nthreads == 0 ? "automatic" : to_string(nthreads));
 
                 if (start <= 0) {
                     cerr << "start frame cannot less than 1\n";
@@ -580,15 +590,24 @@ void executeScript(const boost::program_options::options_description &desc,
                     ofs << "#  script BEGIN>\n" << scriptContent << "\n#  script END>\n";
                     task->print(ofs);
                 });
-                std::cout << "Mission Complete\n";
 
                 int totol_task_count = task_list->size();
+
+                cout << "Complete " << totol_task_count << " task(s)         Run Time "
+                     << chrono::duration_cast<chrono::seconds>(chrono::steady_clock::now() - start_time).count()
+                     << " sec(s)\n";
                 task_list->clear();
                 return totol_task_count;
             }).addArgument<int>("start", 1).addArgument<int>("end", 0)
             .addArgument<int>("step", 1).addArgument<int>("nthreads", 0);
 
     interpreter.execute(ast);
+
+    if (!task_list->empty()) {
+        cout << "Program terminated with " << task_list->size() << " task(s) unperformed !\n";
+        cout << "Don't forget to put go function in the end of script\n";
+    }
+    cout << " < Mission Complete >\n";
 }
 
 void processTrajectory(const boost::program_options::options_description &desc,

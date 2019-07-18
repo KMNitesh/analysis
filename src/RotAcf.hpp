@@ -36,14 +36,14 @@ public:
 
     void print(std::ostream &os) override;
 
-    std::string getOutfileName() override { return outfilename; }
+    std::string description() override;
 
     void readInfo() override;
 
     void setParameters(std::shared_ptr<VectorSelector> vector, int LegendrePolynomial,
                        double time_increment_ps, double max_time_grap_ps, std::string outfilename);
 
-    static const std::string title() { return "Rotational autocorrelation function"; }
+    static const std::string title() { return "Rotational Autocorrelation Function"; }
 
 protected:
 
@@ -61,7 +61,6 @@ protected:
     int LegendrePolynomial;
     double max_time_grap;
 
-    std::string outfilename;
 };
 
 
