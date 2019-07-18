@@ -20,70 +20,21 @@ auto DiffuseCutoff::find_in(int seq) {
 }
 
 void DiffuseCutoff::process(std::shared_ptr<Frame> &frame) {
-
-
-    shared_ptr<Atom> ref;
-
-
-    for (auto &mol : frame->molecule_list) {
-        mol->bExculde = true;
-    }
-
-    for (auto &atom : group1) {
-        ref = atom;
-        if (!atom->molecule.expired()) atom->molecule.lock()->calc_mass();
-    }
-
-    for (auto &atom : group2) {
-        if (!atom->molecule.expired()) {
-            auto mol = atom->molecule.lock();
-
-            mol->calc_mass();
-            mol->bExculde = false;
-        }
-    }
-
-    if (!ref) {
-        std::cerr << "reference atom not found" << std::endl;
-        exit(5);
-    }
-    double ref_x = ref->x;
-    double ref_y = ref->y;
-    double ref_z = ref->z;
-    for (auto &mol: frame->molecule_list) {
-        if (!mol->bExculde) {
-            auto coord = mol->calc_weigh_center(frame);
-            double x1 = get<0>(coord);
-            double y1 = get<1>(coord);
-            double z1 = get<2>(coord);
-
-            double xr = x1 - ref_x;
-            double yr = y1 - ref_y;
-            double zr = z1 - ref_z;
-
-            frame->image(xr, yr, zr);
-
-            auto it = find_in(mol->seq());
-            if (xr * xr + yr * yr + zr * zr < cutoff2) {
+    for (auto &ref : group1) {
+        for (auto &atom2 : group2) {
+            auto it = find_in(atom2->molecule.lock()->seq());
+            if (atom_distance2(ref, atom2, frame) < cutoff2) {
                 // in the shell
+                auto coord = atom2->molecule.lock()->calc_weigh_center(frame);
                 if (it != inner_atoms.end()) {
                     auto &old = it->list_ptr->back();
-
-                    double xold = get<0>(old);
-                    double yold = get<1>(old);
-                    double zold = get<2>(old);
-
-                    xr = x1 - xold;
-                    yr = y1 - yold;
-                    zr = z1 - zold;
-
-                    frame->image(xr, yr, zr);
-
-                    it->list_ptr->emplace_back(xr + xold, yr + yold, zr + zold);
+                    auto shift = coord - old;
+                    frame->image(shift);
+                    it->list_ptr->push_back(shift + old);
                 } else {
                     auto list_ptr = new std::list<std::tuple<double, double, double>>();
-                    list_ptr->emplace_back(x1, y1, z1);
-                    inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
+                    list_ptr->push_back(coord);
+                    inner_atoms.insert(InnerAtom(atom2->molecule.lock()->seq(), list_ptr));
                     rcm.emplace_back(list_ptr);
                 }
             } else {
@@ -91,7 +42,6 @@ void DiffuseCutoff::process(std::shared_ptr<Frame> &frame) {
                     inner_atoms.erase(it);
                 }
             }
-
         }
     }
 }
@@ -171,10 +121,36 @@ void DiffuseCutoff::readInfo() {
 
 }
 
+void DiffuseCutoff::setParameters(const Atom::Node &M, const Atom::Node &L,
+                                  double cutoff, double time_increment_ps, const std::string &outfilename) {
+    this->ids1 = M;
+    this->ids2 = L;
+
+    if (cutoff <= 0) {
+        throw runtime_error("`cutoff` must large than zero");
+    }
+    this->cutoff2 = cutoff * cutoff;
+
+    if (time_increment_ps <= 0) {
+        throw runtime_error("`time_increment_ps` must large than zero");
+    }
+    this->time_increment_ps = time_increment_ps;
+
+    this->outfilename = outfilename;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
+        throw runtime_error("outfilename cannot empty");
+    }
+}
+
 void DiffuseCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
                   [this](shared_ptr<Atom> &atom) {
                       if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
                       if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
                   });
+    if (group1.size() > 1) {
+        cerr << "the reference(metal cation) atom for DiffuseCutoff function can only have one\n";
+        exit(EXIT_FAILURE);
+    }
 }

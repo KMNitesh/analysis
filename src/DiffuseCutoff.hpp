@@ -36,6 +36,11 @@ public:
 
     void readInfo() override;
 
+    std::string getOutfileName() override { return outfilename; }
+
+    void setParameters(const Atom::Node &M, const Atom::Node &L,
+                       double cutoff, double time_increment_ps, const std::string &outfilename);
+
     static const std::string title() {
         return "Diffusion Cutoff Coefficient by Einstein equation";
     }
@@ -79,6 +84,8 @@ private:
     std::list<std::list<std::tuple<double, double, double>> *> rcm;
 
     auto find_in(int seq);
+
+    std::string outfilename;
 
 };
 

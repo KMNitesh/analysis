@@ -22,52 +22,24 @@ auto RotAcfCutoff::find_in(int seq) {
 }
 
 void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
-
-    shared_ptr<Atom> ref;
-
-    for (auto &mol : frame->molecule_list) {
-        mol->bExculde = true;
-    }
-
-    for (auto &atom : group1) {
-        ref = atom;
-        if (!atom->molecule.expired()) atom->molecule.lock()->calc_mass();
-    }
-
-    if (!ref) {
-        std::cerr << "reference atom not found" << std::endl;
-        exit(5);
-    }
-    double ref_x = ref->x;
-    double ref_y = ref->y;
-    double ref_z = ref->z;
-    for (auto &atom2: group2) {
-        auto mol = atom2->molecule.lock();
-        auto coord = atom2->getCoordinate();
-        double x1 = get<0>(coord);
-        double y1 = get<1>(coord);
-        double z1 = get<2>(coord);
-
-        double xr = x1 - ref_x;
-        double yr = y1 - ref_y;
-        double zr = z1 - ref_z;
-
-        frame->image(xr, yr, zr);
-
-        auto it = find_in(mol->seq());
-        if (xr * xr + yr * yr + zr * zr < cutoff2) {
-            // in the shell
-            if (it != inner_atoms.end()) {
-                it->list_ptr->push_back(calVector(mol, frame));
+    for (auto &ref : group1) {
+        for (auto &atom2: group2) {
+            auto mol = atom2->molecule.lock();
+            auto it = find_in(mol->seq());
+            if (atom_distance2(ref, atom2, frame) < cutoff2) {
+                // in the shell
+                if (it != inner_atoms.end()) {
+                    it->list_ptr->push_back(calVector(mol, frame));
+                } else {
+                    auto list_ptr = new std::list<std::tuple<double, double, double>>();
+                    list_ptr->push_back(calVector(mol, frame));
+                    inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
+                    rots.emplace_back(list_ptr);
+                }
             } else {
-                auto list_ptr = new std::list<std::tuple<double, double, double>>();
-                list_ptr->push_back(calVector(mol, frame));
-                inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
-                rots.emplace_back(list_ptr);
-            }
-        } else {
-            if (it != inner_atoms.end()) {
-                inner_atoms.erase(it);
+                if (it != inner_atoms.end()) {
+                    inner_atoms.erase(it);
+                }
             }
         }
     }
@@ -225,5 +197,9 @@ void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
                       if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
                       if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
                   });
+    if (group1.size() > 1) {
+        cerr << "the reference(metal cation) atom for RotAcfCutoff function can only have one\n";
+        exit(EXIT_FAILURE);
+    }
 }
 

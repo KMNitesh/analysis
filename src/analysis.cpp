@@ -26,7 +26,7 @@ int mainMenu() {
     return choose<int>(0, 1, "select :");
 };
 
-void printSytaxDetails() {
+void printDSLDetails() {
 
     cout <<
          "\n"
@@ -55,6 +55,10 @@ void printSytaxDetails() {
          "\n"
          " Self-Diffusion Coefficient Calculation based on Einstein Equation :\n"
          "   diffuse ( mask : AmberMask, time_increment_ps : double = 0.1, total_frames : int, out : string )\n"
+         "\n"
+         " Self-Diffusion Coefficient Calculation based on Einstein Equation within Solvation Shell:\n"
+         "   diffuseCutoff ( M : AmberMask, L : AmberMask, cutoff : double,\n"
+         "                                       time_increment_ps : double = 0.1, out : string )\n"
          "\n"
          "\n"
          " <-- Auxiliary Functions -->\n"
@@ -140,7 +144,7 @@ int main(int argc, char *argv[]) {
 
     if (vm.count("help")) {
         cout << desc;
-        printSytaxDetails();
+        printDSLDetails();
         exit(EXIT_SUCCESS);
     }
 

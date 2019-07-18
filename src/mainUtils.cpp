@@ -36,6 +36,7 @@
 #include "DemixIndexOfTwoGroup.hpp"
 #include "ResidenceTime.hpp"
 #include "Diffuse.hpp"
+#include "DiffuseCutoff.hpp"
 
 
 using namespace std;
@@ -321,9 +322,9 @@ void executeScript(const boost::program_options::options_description &desc,
                         try {
                             task->setParameters(
                                     AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
                                     AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))),
-                                    AutoConvert(get<3>(args.at(4))));
+                                    AutoConvert(get<3>(args.at(3))));
                         } catch (std::exception &e) {
                             cerr << e.what() << " for function diffuse (" << __FILE__ << ":" << __LINE__ << ")\n";
                             exit(EXIT_FAILURE);
@@ -334,6 +335,29 @@ void executeScript(const boost::program_options::options_description &desc,
             .addArgument<Atom::Node>("mask")
             .addArgument<double, int>("time_increment_ps", 0.1)
             .addArgument<int>("total_frames")
+            .addArgument<string>("out");
+
+    interpreter.registerFunction(
+                    "diffuseCutoff", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<DiffuseCutoff>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))),
+                                    AutoConvert(get<3>(args.at(4))));
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function diffuseCutoff (" << __FILE__ << ":" << __LINE__ << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<Atom::Node>("M")
+            .addArgument<Atom::Node>("L")
+            .addArgument<double, int>("cutoff")
+            .addArgument<double, int>("time_increment_ps", 0.1)
             .addArgument<string>("out");
 
     interpreter.registerFunction(
