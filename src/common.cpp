@@ -6,13 +6,15 @@
 #include <tuple>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 #include <regex>
+#include <boost/filesystem.hpp>
 #include "common.hpp"
 #include "frame.hpp"
 #include "forcefield.hpp"
-#include <boost/filesystem.hpp>
+
 
 
 bool enable_read_velocity = false;
@@ -34,6 +36,16 @@ std::vector<std::string> split(const std::string &str) {
     boost::regex e("\\s+");
     std::string s = str;
     boost::regex_split(std::back_inserter(ret_), s, e);
+    return ret_;
+}
+
+std::vector<std::string> split_quoted(const std::string &str) {
+    std::vector<std::string> ret_;
+    std::istringstream iss(str);
+    std::string s;
+    while (iss >> std::quoted(s)) {
+        ret_.push_back(s);
+    }
     return ret_;
 }
 
@@ -135,7 +147,7 @@ po::options_description make_program_options() {
             ("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")
             ("prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")
             ("target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")
-            ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive")
+            ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")
             ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file");
 
     return desc;

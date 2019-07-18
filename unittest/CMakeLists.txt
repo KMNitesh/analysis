@@ -80,3 +80,7 @@ gtest_discover_tests(test_Interpreter)
 add_executable(test_TypeCheck test_TypeCheck.cpp)
 target_link_libraries(test_TypeCheck base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_TypeCheck)
+
+add_executable(test_split_quoted test_split_quoted.cpp)
+target_link_libraries(test_split_quoted base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_split_quoted)

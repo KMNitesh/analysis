@@ -64,6 +64,8 @@ std::vector<std::string> split(const std::string &str, const std::string &sep);
 
 std::vector<std::string> split(const std::string &str);
 
+std::vector<std::string> split_quoted(const std::string &str);
+
 std::string input(const std::string &prompt = "", std::istream &in = std::cin, std::ostream &out = std::cout);
 
 

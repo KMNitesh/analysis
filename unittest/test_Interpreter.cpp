@@ -83,9 +83,10 @@ TEST_F(InterpreterGrammarTest, Bitwise_AND_Operation) {
 
     ASSERT_EQ(result.type(), typeid(Atom::Node));
     ASSERT_THAT(boost::any_cast<Atom::Node>(result), Eq(
-            Atom::Node(make_shared<Atom::Operator>(Atom::Op::AND,
-                                                   boost::any_cast<Atom::Node>(interpreter.getVariables()["a"]),
-                                                   boost::any_cast<Atom::Node>(interpreter.getVariables()["b"])
+            Atom::Node(make_shared<Atom::Operator>(
+                    Atom::Op::AND,
+                    boost::any_cast<Atom::Node>(interpreter.getVariables()["a"]),
+                    boost::any_cast<Atom::Node>(interpreter.getVariables()["b"])
             ))));
 }
 
@@ -98,9 +99,10 @@ TEST_F(InterpreterGrammarTest, Bitwise_OR_Operation) {
 
     ASSERT_EQ(result.type(), typeid(Atom::Node));
     ASSERT_THAT(boost::any_cast<Atom::Node>(result), Eq(
-            Atom::Node(make_shared<Atom::Operator>(Atom::Op::OR,
-                                                   boost::any_cast<Atom::Node>(interpreter.getVariables()["a"]),
-                                                   boost::any_cast<Atom::Node>(interpreter.getVariables()["b"])
+            Atom::Node(make_shared<Atom::Operator>(
+                    Atom::Op::OR,
+                    boost::any_cast<Atom::Node>(interpreter.getVariables()["a"]),
+                    boost::any_cast<Atom::Node>(interpreter.getVariables()["b"])
             ))));
 }
 
@@ -112,8 +114,9 @@ TEST_F(InterpreterGrammarTest, Bitwise_NOT_Operation) {
 
     ASSERT_EQ(result.type(), typeid(Atom::Node));
     ASSERT_THAT(boost::any_cast<Atom::Node>(result), Eq(
-            Atom::Node(make_shared<Atom::Operator>(Atom::Op::NOT,
-                                                   boost::any_cast<Atom::Node>(interpreter.getVariables()["a"])
+            Atom::Node(make_shared<Atom::Operator>(
+                    Atom::Op::NOT,
+                    boost::any_cast<Atom::Node>(interpreter.getVariables()["a"])
             ))));
 }
 

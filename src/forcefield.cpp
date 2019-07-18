@@ -36,7 +36,7 @@ void Forcefield::read_tinker_prm(const std::string &filename) {
         } catch (std::exception &e) {
             return;
         }
-        auto field = split(line);
+        auto field = split_quoted(line);
         if (field.empty()) continue;
         if (field[0] == "atom") {
             int type = stoi(field[1]);
