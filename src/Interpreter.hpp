@@ -1,4 +1,3 @@
-#include <utility>
 
 //
 // Created by xiamr on 7/15/19.
@@ -7,13 +6,12 @@
 #ifndef TINKER_INTERPRETER_HPP
 #define TINKER_INTERPRETER_HPP
 
-
-#include <unordered_map>
-
 #ifndef BOOST_SPIRIT_DEBUG_MAIN_HPP
 #define BOOST_SPIRIT_DEBUG_MAIN_HPP
 #endif
 
+#include <utility>
+#include <unordered_map>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/phoenix.hpp>
@@ -25,6 +23,7 @@
 #include <boost/fusion/include/adapt_adt.hpp>
 #include <boost/any.hpp>
 #include <boost/type_index.hpp>
+#include <boost/algorithm/cxx11/one_of.hpp>
 
 #include <boost/range/combine.hpp>
 #include <functional>
@@ -39,9 +38,14 @@ namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 
-
 struct Identifer {
-    explicit Identifer(std::string name) : name(std::move(name)) {}
+    explicit Identifer(std::string name, bool &_pass) : name(std::move(name)) {
+        std::vector<std::string> keywords = {"for", "if", "else", "do", "while", "until"};
+        if (boost::algorithm::one_of_equal(keywords, this->name)) {
+            std::cerr << "keyword (" << this->name << ") is reserved and cannot use for indentifer name\n";
+            _pass = false;
+        }
+    }
 
     Identifer() = default;
 
@@ -171,6 +175,9 @@ struct AssignStmt {
     TYPE t;
 };
 
+/*
+ *   This the SDT for subset of C and Python
+ */
 
 template<typename Iterator, typename Skipper>
 struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
@@ -221,13 +228,15 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
         using qi::bool_;
         using qi::eps;
         using qi::skip;
+        using qi::_pass;
+        using qi::eoi;
 
         mask %= '[' >> skip(qi::ascii::space)[maskParser] >> ']';
 
         quoted_string %= as_string[lexeme['"' >> *(char_ - '"') >> '"']];
 
         identifer = as_string[lexeme[(alpha | char_("_"))
-                >> *(alnum | char_("_"))]][_val = construct<Identifer>(_1)];
+                >> *(alnum | char_("_"))]][_val = construct<Identifer>(_1, _pass)];
 
         literal %= lexeme[int_ >> !char_('.')] | double_ | bool_ | mask | quoted_string;
 
@@ -242,17 +251,17 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
 
         suffix_unary_op_expr = function_call_expr[_val = _1]
                 >> -(lit("++")[_val = construct<ArithmeticOperation>(ArithmeticOp::PostIncrement, _val)] |
-                     lit("--")[_val = construct<ArithmeticOperation>(ArithmeticOp::PostDecrement, _val)]);
+                        lit("--")[_val = construct<ArithmeticOperation>(ArithmeticOp::PostDecrement, _val)]);
 
         prefix_unary_op_expr = '!' >> prefix_unary_op_expr[_val = construct<LogicalOperation>(LogicalOp::Not, _1)] |
-                               "++" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
-                                       ArithmeticOp::PreIncrement, _1)] |
-                               "--" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
-                                       ArithmeticOp::PreDecrement, _1)] |
-                               '+' >> prefix_unary_op_expr[_val = _1] |
-                               '-' >> prefix_unary_op_expr[
-                                       _val = construct<ArithmeticOperation>(ArithmeticOp::Minus, _1)] |
-                               suffix_unary_op_expr[_val = _1];
+                "++" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
+                        ArithmeticOp::PreIncrement, _1)] |
+                "--" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
+                        ArithmeticOp::PreDecrement, _1)] |
+                '+' >> prefix_unary_op_expr[_val = _1] |
+                '-' >> prefix_unary_op_expr[
+                        _val = construct<ArithmeticOperation>(ArithmeticOp::Minus, _1)] |
+                suffix_unary_op_expr[_val = _1];
 
         arithmetic_high_expr = prefix_unary_op_expr[_val = _1]
                 >> *('*' >> prefix_unary_op_expr[
@@ -264,18 +273,18 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
 
         arithmetic_low_expr = arithmetic_high_expr[_val = _1]
                 >> *('+' >> arithmetic_high_expr[_val = construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1)] |
-                     '-' >> arithmetic_high_expr[
-                             _val = construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1)]);
+                        '-' >> arithmetic_high_expr[
+                                _val = construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1)]);
 
         logical_comp_expr = arithmetic_low_expr[_val = _1]
                 >> *("<=" >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::LessEqual, _val, _1)] |
-                     '<' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Less, _val, _1)] |
-                     ">=" >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::GreatEqual, _val, _1)] |
-                     '>' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Great, _val, _1)]);
+                        '<' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Less, _val, _1)] |
+                        ">=" >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::GreatEqual, _val, _1)] |
+                        '>' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Great, _val, _1)]);
 
         logical_equal_not_equal_expr = logical_comp_expr[_val = _1]
                 >> *("==" >> logical_comp_expr[_val = construct<LogicalOperation>(LogicalOp::Equal, _val, _1)] |
-                     "!=" >> logical_comp_expr[_val = construct<LogicalOperation>(LogicalOp::NotEqual, _val, _1)]);
+                        "!=" >> logical_comp_expr[_val = construct<LogicalOperation>(LogicalOp::NotEqual, _val, _1)]);
 
         bitwise_and_expr = logical_equal_not_equal_expr[_val = _1]
                 >> *('&' >> logical_equal_not_equal_expr[_val = construct<BitwiseOperation>(BitwiseOp::And, _val, _1)]);
@@ -292,44 +301,44 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
         assign_expr =
                 logical_or_expr[_val = _1]
                         >> -('=' >> assign_expr[_val = construct<AssignStmt>(_val, _1)] |
-                             "*=" >> assign_expr[_val = construct<AssignStmt>(
-                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Multiply, _val, _1),
-                                     AssignStmt::TYPE::Compound)] |
-                             "/=" >> assign_expr[_val = construct<AssignStmt>(
-                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Divide, _val, _1),
-                                     AssignStmt::TYPE::Compound)] |
-                             "%=" >> assign_expr[_val = construct<AssignStmt>(
-                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Mod, _val, _1),
-                                     AssignStmt::TYPE::Compound)] |
-                             "+=" >> assign_expr[_val = construct<AssignStmt>(
-                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1),
-                                     AssignStmt::TYPE::Compound)] |
-                             "-=" >> assign_expr[_val = construct<AssignStmt>(
-                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1),
-                                     AssignStmt::TYPE::Compound)] |
-                             "&=" >> assign_expr[_val = construct<AssignStmt>(
-                                     _val, construct<BitwiseOperation>(BitwiseOp::And, _val, _1),
-                                     AssignStmt::TYPE::Compound)] |
-                             "|=" >> assign_expr[_val = construct<AssignStmt>(
-                                     _val, construct<BitwiseOperation>(BitwiseOp::Or, _val, _1),
-                                     AssignStmt::TYPE::Compound)]);
+                                "*=" >> assign_expr[_val = construct<AssignStmt>(
+                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Multiply, _val, _1),
+                                        AssignStmt::TYPE::Compound)] |
+                                "/=" >> assign_expr[_val = construct<AssignStmt>(
+                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Divide, _val, _1),
+                                        AssignStmt::TYPE::Compound)] |
+                                "%=" >> assign_expr[_val = construct<AssignStmt>(
+                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Mod, _val, _1),
+                                        AssignStmt::TYPE::Compound)] |
+                                "+=" >> assign_expr[_val = construct<AssignStmt>(
+                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1),
+                                        AssignStmt::TYPE::Compound)] |
+                                "-=" >> assign_expr[_val = construct<AssignStmt>(
+                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1),
+                                        AssignStmt::TYPE::Compound)] |
+                                "&=" >> assign_expr[_val = construct<AssignStmt>(
+                                        _val, construct<BitwiseOperation>(BitwiseOp::And, _val, _1),
+                                        AssignStmt::TYPE::Compound)] |
+                                "|=" >> assign_expr[_val = construct<AssignStmt>(
+                                        _val, construct<BitwiseOperation>(BitwiseOp::Or, _val, _1),
+                                        AssignStmt::TYPE::Compound)]);
 
         stmt %= for_stmt | if_else_stmt | while_stmt | do_while_until_stmt | assign_expr >> ';';
 
         stmts = eps[_a = construct<std::vector<boost::any>>()] >> *(stmt[push_back(_a, _1)]) >> eps[_val = _a];
 
         for_stmt = lit("for") >> "(" >> assign_expr[_a = _1] >> ';'
-                              >> assign_expr[_b = _1] >> ';'
-                              >> assign_expr[_c = _1] >> ')' >> '{'
-                              >> stmts[_d = _1] >> '}'
-                              >> eps[_val = construct<ForStmt>(_a, _b, _c, _d)];
+                >> assign_expr[_b = _1] >> ';'
+                >> assign_expr[_c = _1] >> ')' >> '{'
+                >> stmts[_d = _1] >> '}'
+                >> eps[_val = construct<ForStmt>(_a, _b, _c, _d)];
 
         if_else_stmt = lit("if") >> '(' >> assign_expr[_a = _1] >> ')' >> '{' >> stmts[_b = _1] >> '}' >>
-                                 -(lit("else") >> '{' >> stmts[_c = _1] >> '}')
-                                 >> eps[_val = construct<IfElseStmt>(_a, _b, _c)];
+                                                                                                       -(lit("else") >> '{' >> stmts[_c = _1] >> '}')
+                                                                                                       >> eps[_val = construct<IfElseStmt>(_a, _b, _c)];
 
         while_stmt = lit("while") >> '(' >> assign_expr[_a = _1] >> ')' >> '{' >> stmts[_b = _1] >> '}'
-                                  >> eps[_val = construct<WhileStmt>(_a, _b)];
+                >> eps[_val = construct<WhileStmt>(_a, _b)];
 
         do_while_until_stmt = lit("do") >> '{' >> stmts[_a = _1] >> '}'
                                         >> (lit("until") >> '(' >> assign_expr[_b = _1] >> ')' >> ';'
@@ -337,7 +346,7 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
                                             lit("while") >> '(' >> assign_expr[_b = _1] >> ')' >> ';'
                                                          >> eps[_val = construct<DoWhileStmt>(_a, _b)]);
 
-        languague %= stmts;
+        languague %= stmts >> eoi;
     }
 };
 

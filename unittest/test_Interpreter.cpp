@@ -349,4 +349,52 @@ TEST_F(InterpreterGrammarTest, StringPlusBool) {
     ASSERT_THROW(interpreter.execute(ast), boost::bad_any_cast);
 }
 
+TEST_F(InterpreterGrammarTest, KeywordForReserve) {
+
+    input_string = R"( for = 1; )";
+    it = input_string.begin();
+    ASSERT_FALSE(qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end());
+}
+
+TEST_F(InterpreterGrammarTest, KeywordIfReserve) {
+
+    input_string = R"( if = 1; )";
+    it = input_string.begin();
+    ASSERT_FALSE(qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end());
+}
+
+TEST_F(InterpreterGrammarTest, KeywordElseReserve) {
+
+    input_string = R"( else = 1; )";
+    it = input_string.begin();
+    ASSERT_FALSE(qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end());
+}
+
+TEST_F(InterpreterGrammarTest, KeywordDoReserve) {
+
+    input_string = R"( do = 1; )";
+    it = input_string.begin();
+    ASSERT_FALSE(qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end());
+}
+
+TEST_F(InterpreterGrammarTest, KeywordWhileReserve) {
+
+    input_string = R"( while = 1; )";
+    it = input_string.begin();
+    ASSERT_FALSE(qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end());
+}
+
+TEST_F(InterpreterGrammarTest, KeywordUntilReserve) {
+
+    input_string = R"( until = 1; )";
+    it = input_string.begin();
+    ASSERT_FALSE(qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end());
+}
+
+
+
+
+
+
+
 

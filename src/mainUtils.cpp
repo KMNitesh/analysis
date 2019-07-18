@@ -480,8 +480,8 @@ void executeScript(const boost::program_options::options_description &desc,
 
                 auto reader = std::make_shared<TrajectoryReader>();
                 bool b_added_topology = true;
-                auto ext = ext_filename(xyzfiles[0]);
-                if (ext == "nc" or ext == "xtc" or ext == "trr") {
+                if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
+                        {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
                     b_added_topology = false;
                 } else {
                     if (topology) {
