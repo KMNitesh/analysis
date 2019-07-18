@@ -1,3 +1,5 @@
+#include <utility>
+
 
 //
 // Created by xiamr on 7/15/19.
@@ -8,6 +10,7 @@
 
 #ifndef BOOST_SPIRIT_DEBUG_MAIN_HPP
 #define BOOST_SPIRIT_DEBUG_MAIN_HPP
+
 #endif
 
 #include <utility>
@@ -156,8 +159,8 @@ enum class BitwiseOp {
 };
 
 struct BitwiseOperation {
-    BitwiseOperation(BitwiseOp op, const boost::any &operand1, const boost::any &operand2)
-            : op(op), operand1(operand1), operand2(operand2) {}
+    BitwiseOperation(BitwiseOp op, boost::any operand1, boost::any operand2)
+            : op(op), operand1(std::move(operand1)), operand2(std::move(operand2)) {}
 
     BitwiseOp op;
     boost::any operand1, operand2;
@@ -251,17 +254,17 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
 
         suffix_unary_op_expr = function_call_expr[_val = _1]
                 >> -(lit("++")[_val = construct<ArithmeticOperation>(ArithmeticOp::PostIncrement, _val)] |
-                        lit("--")[_val = construct<ArithmeticOperation>(ArithmeticOp::PostDecrement, _val)]);
+                     lit("--")[_val = construct<ArithmeticOperation>(ArithmeticOp::PostDecrement, _val)]);
 
         prefix_unary_op_expr = '!' >> prefix_unary_op_expr[_val = construct<LogicalOperation>(LogicalOp::Not, _1)] |
-                "++" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
-                        ArithmeticOp::PreIncrement, _1)] |
-                "--" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
-                        ArithmeticOp::PreDecrement, _1)] |
-                '+' >> prefix_unary_op_expr[_val = _1] |
-                '-' >> prefix_unary_op_expr[
-                        _val = construct<ArithmeticOperation>(ArithmeticOp::Minus, _1)] |
-                suffix_unary_op_expr[_val = _1];
+                               "++" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
+                                       ArithmeticOp::PreIncrement, _1)] |
+                               "--" >> prefix_unary_op_expr[_val = construct<ArithmeticOperation>(
+                                       ArithmeticOp::PreDecrement, _1)] |
+                               '+' >> prefix_unary_op_expr[_val = _1] |
+                               '-' >> prefix_unary_op_expr[
+                                       _val = construct<ArithmeticOperation>(ArithmeticOp::Minus, _1)] |
+                               suffix_unary_op_expr[_val = _1];
 
         arithmetic_high_expr = prefix_unary_op_expr[_val = _1]
                 >> *('*' >> prefix_unary_op_expr[
@@ -273,18 +276,18 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
 
         arithmetic_low_expr = arithmetic_high_expr[_val = _1]
                 >> *('+' >> arithmetic_high_expr[_val = construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1)] |
-                        '-' >> arithmetic_high_expr[
-                                _val = construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1)]);
+                     '-' >> arithmetic_high_expr[
+                             _val = construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1)]);
 
         logical_comp_expr = arithmetic_low_expr[_val = _1]
                 >> *("<=" >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::LessEqual, _val, _1)] |
-                        '<' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Less, _val, _1)] |
-                        ">=" >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::GreatEqual, _val, _1)] |
-                        '>' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Great, _val, _1)]);
+                     '<' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Less, _val, _1)] |
+                     ">=" >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::GreatEqual, _val, _1)] |
+                     '>' >> arithmetic_low_expr[_val = construct<LogicalOperation>(LogicalOp::Great, _val, _1)]);
 
         logical_equal_not_equal_expr = logical_comp_expr[_val = _1]
                 >> *("==" >> logical_comp_expr[_val = construct<LogicalOperation>(LogicalOp::Equal, _val, _1)] |
-                        "!=" >> logical_comp_expr[_val = construct<LogicalOperation>(LogicalOp::NotEqual, _val, _1)]);
+                     "!=" >> logical_comp_expr[_val = construct<LogicalOperation>(LogicalOp::NotEqual, _val, _1)]);
 
         bitwise_and_expr = logical_equal_not_equal_expr[_val = _1]
                 >> *('&' >> logical_equal_not_equal_expr[_val = construct<BitwiseOperation>(BitwiseOp::And, _val, _1)]);
@@ -301,44 +304,44 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
         assign_expr =
                 logical_or_expr[_val = _1]
                         >> -('=' >> assign_expr[_val = construct<AssignStmt>(_val, _1)] |
-                                "*=" >> assign_expr[_val = construct<AssignStmt>(
-                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Multiply, _val, _1),
-                                        AssignStmt::TYPE::Compound)] |
-                                "/=" >> assign_expr[_val = construct<AssignStmt>(
-                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Divide, _val, _1),
-                                        AssignStmt::TYPE::Compound)] |
-                                "%=" >> assign_expr[_val = construct<AssignStmt>(
-                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Mod, _val, _1),
-                                        AssignStmt::TYPE::Compound)] |
-                                "+=" >> assign_expr[_val = construct<AssignStmt>(
-                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1),
-                                        AssignStmt::TYPE::Compound)] |
-                                "-=" >> assign_expr[_val = construct<AssignStmt>(
-                                        _val, construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1),
-                                        AssignStmt::TYPE::Compound)] |
-                                "&=" >> assign_expr[_val = construct<AssignStmt>(
-                                        _val, construct<BitwiseOperation>(BitwiseOp::And, _val, _1),
-                                        AssignStmt::TYPE::Compound)] |
-                                "|=" >> assign_expr[_val = construct<AssignStmt>(
-                                        _val, construct<BitwiseOperation>(BitwiseOp::Or, _val, _1),
-                                        AssignStmt::TYPE::Compound)]);
+                             "*=" >> assign_expr[_val = construct<AssignStmt>(
+                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Multiply, _val, _1),
+                                     AssignStmt::TYPE::Compound)] |
+                             "/=" >> assign_expr[_val = construct<AssignStmt>(
+                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Divide, _val, _1),
+                                     AssignStmt::TYPE::Compound)] |
+                             "%=" >> assign_expr[_val = construct<AssignStmt>(
+                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Mod, _val, _1),
+                                     AssignStmt::TYPE::Compound)] |
+                             "+=" >> assign_expr[_val = construct<AssignStmt>(
+                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1),
+                                     AssignStmt::TYPE::Compound)] |
+                             "-=" >> assign_expr[_val = construct<AssignStmt>(
+                                     _val, construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1),
+                                     AssignStmt::TYPE::Compound)] |
+                             "&=" >> assign_expr[_val = construct<AssignStmt>(
+                                     _val, construct<BitwiseOperation>(BitwiseOp::And, _val, _1),
+                                     AssignStmt::TYPE::Compound)] |
+                             "|=" >> assign_expr[_val = construct<AssignStmt>(
+                                     _val, construct<BitwiseOperation>(BitwiseOp::Or, _val, _1),
+                                     AssignStmt::TYPE::Compound)]);
 
         stmt %= for_stmt | if_else_stmt | while_stmt | do_while_until_stmt | assign_expr >> ';';
 
         stmts = eps[_a = construct<std::vector<boost::any>>()] >> *(stmt[push_back(_a, _1)]) >> eps[_val = _a];
 
         for_stmt = lit("for") >> "(" >> assign_expr[_a = _1] >> ';'
-                >> assign_expr[_b = _1] >> ';'
-                >> assign_expr[_c = _1] >> ')' >> '{'
-                >> stmts[_d = _1] >> '}'
-                >> eps[_val = construct<ForStmt>(_a, _b, _c, _d)];
+                              >> assign_expr[_b = _1] >> ';'
+                              >> assign_expr[_c = _1] >> ')' >> '{'
+                              >> stmts[_d = _1] >> '}'
+                              >> eps[_val = construct<ForStmt>(_a, _b, _c, _d)];
 
         if_else_stmt = lit("if") >> '(' >> assign_expr[_a = _1] >> ')' >> '{' >> stmts[_b = _1] >> '}' >>
-                                                                                                       -(lit("else") >> '{' >> stmts[_c = _1] >> '}')
-                                                                                                       >> eps[_val = construct<IfElseStmt>(_a, _b, _c)];
+                                 -(lit("else") >> '{' >> stmts[_c = _1] >> '}')
+                                 >> eps[_val = construct<IfElseStmt>(_a, _b, _c)];
 
         while_stmt = lit("while") >> '(' >> assign_expr[_a = _1] >> ')' >> '{' >> stmts[_b = _1] >> '}'
-                >> eps[_val = construct<WhileStmt>(_a, _b)];
+                                  >> eps[_val = construct<WhileStmt>(_a, _b)];
 
         do_while_until_stmt = lit("do") >> '{' >> stmts[_a = _1] >> '}'
                                         >> (lit("until") >> '(' >> assign_expr[_b = _1] >> ')' >> ';'
@@ -365,19 +368,30 @@ class Interpreter;
 class FunctionObject {
     Interpreter *iterpreter{};
 public:
+    using function_sig =  std::function<
+            boost::any(
+                    std::vector<
+                            std::tuple<
+                                    std::string,
+                                    std::function<bool(const boost::any)>,
+                                    std::function<std::vector<std::string>()>,
+                                    boost::any
+                            >
+                    > &
+            )
+    >;
+
     FunctionObject() = default;
 
     FunctionObject(Interpreter *iterpreter, std::string name,
-                   std::function<boost::any(std::vector<std::tuple<std::string, std::function<bool(const boost::any)>,
-                           std::function<std::vector<std::string>()>, boost::any>> &)> f)
+                   function_sig f)
             : iterpreter(iterpreter), name(std::move(name)), f(std::move(f)) {}
 
     std::string name;
     std::vector<std::tuple<std::string, std::function<bool(const boost::any)>,
             std::function<std::vector<std::string>()>, boost::any>> argument_mapping;
 
-    std::function<boost::any(std::vector<std::tuple<std::string, std::function<bool(const boost::any)>,
-            std::function<std::vector<std::string>()>, boost::any>> &)> f;
+    function_sig f;
 
     boost::any
     invoke(std::vector<boost::any> &arguments, std::vector<std::pair<boost::any, boost::any>> &optional_arguments);
@@ -386,7 +400,7 @@ public:
     FunctionObject &addArgument(const std::string &arg_name, boost::any defaultValue = {}) {
         if (!defaultValue.empty()) {
             throw_assert(TypeIs<Ts...>()(defaultValue),
-                         "Arguemnt(" << arg_name << ") default value type error function (" << name << ")");
+                         "Arguemnt(" << arg_name << ") default value type error, function (" << name << ")");
         }
         argument_mapping.emplace_back(arg_name, TypeIs<Ts...>(), TypePrettyNames<Ts...>(), defaultValue);
         return *this;
@@ -408,16 +422,7 @@ public:
     }
 
     FunctionObject &registerFunction(const std::string &name,
-                                     const std::function<boost::any(
-                                             std::vector<
-                                                     std::tuple<
-                                                             std::string,
-                                                             std::function<bool(const boost::any)>,
-                                                             std::function<std::vector<std::string>()>,
-                                                             boost::any
-                                                     >
-                                             >
-                                             &)> &f) {
+                                     const FunctionObject::function_sig &f) {
         functions[name] = FunctionObject(this, name, f);
         return functions[name];
     }
