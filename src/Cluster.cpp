@@ -302,10 +302,11 @@ unordered_map<int, vector<int>> do_find_frames_in_same_clust(const vector<Cluste
 unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
         const vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list) {
     unordered_map<int, std::pair<int, double>> ret;
-    double rmsd_sum[clusts.size()] = {0.0};
+    assert(!clusts.empty());
+    vector<double> rmsd_sum(clusts.size(), 0.0);
     unordered_map<int, unordered_set<int>> s;
 
-    int clust_map[clusts.size()];
+    vector<int> clust_map(clusts.size());
 
     for (const auto &i : clusts) {
         s[i.clust].insert(i.conf);
@@ -320,21 +321,6 @@ unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
             rmsd_sum[i.j] += i.rms;
         }
     }
-
-#ifndef NDEBUG
-    // DEBUG
-//    if (outfile.is_open()) {
-//        outfile << "DEBUG INFORMATION BEGIN\n";
-//        for (const auto &p : rmsd_list) {
-//            outfile << format("i = %d,  j = %d, rmsd = %g\n", p.i, p.j, p.rms);
-//        }
-//        for (const auto rmsd : rmsd_sum) {
-//            outfile << "rmsd_sum = " << rmsd << '\n';
-//        }
-//        outfile << "DEBUG INFORMATION END\n";
-//    }
-    //
-#endif
     for (auto &j : s) {
         auto min = *boost::range::min_element(j.second,
                                               [&rmsd_sum](auto &lhs, auto &rhs) {
@@ -342,6 +328,5 @@ unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
                                               });
         ret[j.first] = {min, j.second.size() == 1 ? NAN : (rmsd_sum[min] / (j.second.size() - 1))};
     }
-
     return ret;
 }
