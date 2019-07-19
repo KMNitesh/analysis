@@ -24,6 +24,7 @@ void RotAcf::process(std::shared_ptr<Frame> &frame) {
     auto vectors = vectorSelector->calculateVectors(frame);
     auto it1 = vectors.begin();
     auto it2 = rots.begin();
+    assert(vectors.size() == rots.size());
     for (; it1 != vectors.end(); ++it1, ++it2) {
         it2->push_back(*it1);
     }
@@ -34,21 +35,16 @@ void RotAcf::print(std::ostream &os) {
             {1, [this] { return calculate([](auto x) { return x; }); }},
             {2, [this] { return calculate([](auto x) { return 0.5 * (3 * x * x - 1); }); }},
             {3, [this] { return calculate([](auto x) { return 0.5 * (5 * x * x * x - 3 * x); }); }},
-            {4, [this] { return calculate([](auto x) { return 1.0 / 8.0 * (35 * x * x * x * x - 30 * x * x + 3); }); }},
+            {4, [this] { return calculate([](auto x) { return 1.0 / 8.0 * (35 * x * x * x * x - 30 * x * x + 3); }); }}
     };
     auto acf = func_mapping.at(LegendrePolynomial)();
     vector<double> integration = integrate(acf);
-    os << "*********************************************************\n";
     os << description() << '\n';
-    vectorSelector->print(os);
-    os << "Legendre Polynomial : ";
-    os << LegendreStr.at(LegendrePolynomial) << '\n';
     os << "    Time Gap      ACF               integrate\n";
     os << "      (ps)                            (ps)\n";
     for (std::size_t t : boost::irange(acf.size() + 1)) {
         os << boost::format("%12.2f%18.14f%15.5f\n") % (t * time_increment_ps) % acf[t] % integration[t];
     }
-    os << "*********************************************************\n";
 }
 
 vector<double> RotAcf::integrate(const vector<double> &acf) const {
@@ -155,7 +151,7 @@ void RotAcf::readInfo() {
 }
 
 void RotAcf::setParameters(const shared_ptr<VectorSelector> &vector, int LegendrePolynomial,
-                           double time_increment_ps, double max_time_grap_ps, std::string outfilename) {
+                           double time_increment_ps, double max_time_grap_ps, const string &outfilename) {
 
     vectorSelector = vector;
     if (!(LegendrePolynomial >= 1 and LegendrePolynomial <= LegendreStr.size())) {
@@ -189,7 +185,7 @@ string RotAcf::description() {
     string title_line = "------ " + title() + " ------";
     ss << title_line << "\n";
     ss << " vector            = " << vectorSelector->description() << "\n";
-    ss << " P                 = " << this->LegendrePolynomial << "\n";
+    ss << " P                 = " << LegendrePolynomial << "  [ " << LegendreStr.at(LegendrePolynomial) << " ] \n";
     ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
     ss << " max_time_grap_ps  = " << max_time_grap << " (ps)\n";
     ss << " outfilename       = " << outfilename << "\n";

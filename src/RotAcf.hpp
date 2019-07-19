@@ -42,24 +42,25 @@ public:
     void readInfo() override;
 
     void setParameters(const std::shared_ptr<VectorSelector> &vector, int LegendrePolynomial,
-                       double time_increment_ps, double max_time_grap_ps, std::string outfilename);
+                       double time_increment_ps, double max_time_grap_ps, const std::string &outfilename);
 
     static const std::string title() { return "Rotational Autocorrelation Function"; }
 
 protected:
-
-    double time_increment_ps = 0.1;
-
-    std::vector<std::vector<std::tuple<double, double, double>>> rots;
-
-    std::shared_ptr<VectorSelector> vectorSelector;
 
     template<typename Function>
     std::vector<double> calculate(Function f) const;
 
     std::vector<double> integrate(const std::vector<double> &acf) const;
 
+    std::vector<std::vector<std::tuple<double, double, double>>> rots;
+
+    std::shared_ptr<VectorSelector> vectorSelector;
+
     int LegendrePolynomial;
+
+    double time_increment_ps = 0.1;
+
     double max_time_grap;
 
     const std::unordered_map<int, std::string> LegendreStr{
