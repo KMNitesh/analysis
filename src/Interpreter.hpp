@@ -1,6 +1,3 @@
-#include <utility>
-
-
 //
 // Created by xiamr on 7/15/19.
 //
@@ -217,11 +214,15 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
         using qi::char_;
         using qi::_val;
         using qi::_1;
+        using qi::_2;
+        using qi::_3;
+        using qi::_4;
         using qi::_a;
         using qi::_b;
         using qi::_c;
         using qi::_d;
         using qi::lit;
+        using phoenix::val;
         using phoenix::construct;
         using phoenix::push_back;
         using phoenix::at;
@@ -350,6 +351,19 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
                                                          >> eps[_val = construct<DoWhileStmt>(_a, _b)]);
 
         languague %= stmts >> eoi;
+
+
+        qi::on_error<qi::fail>(
+                languague,
+                std::cout
+                        << val("Error! Expecting")
+                        << _4
+                        << val(" here: \"")
+                        << phoenix::construct<std::string>(_3, _2)
+                        << val("\"")
+                        << std::endl
+        );
+
     }
 };
 

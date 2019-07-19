@@ -594,8 +594,8 @@ void executeScript(const boost::program_options::options_description &desc,
                 int totol_task_count = task_list->size();
 
                 cout << "Complete " << totol_task_count << " task(s)         Run Time "
-                     << chrono::duration_cast<chrono::seconds>(chrono::steady_clock::now() - start_time).count()
-                     << " sec(s)\n";
+                     << chrono_cast(chrono::steady_clock::now() - start_time) << '\n';
+
                 task_list->clear();
                 return totol_task_count;
             }).addArgument<int>("start", 1).addArgument<int>("end", 0)

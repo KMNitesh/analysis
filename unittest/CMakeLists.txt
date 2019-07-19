@@ -84,3 +84,7 @@ gtest_discover_tests(test_TypeCheck)
 add_executable(test_split_quoted test_split_quoted.cpp)
 target_link_libraries(test_split_quoted base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
 gtest_discover_tests(test_split_quoted)
+
+add_executable(test_chrono_cast test_chrono_cast.cpp)
+target_link_libraries(test_chrono_cast base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+gtest_discover_tests(test_chrono_cast)

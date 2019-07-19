@@ -27,7 +27,7 @@ TEST(make_program_options,TargetTrajectory) {
     ASSERT_THAT(vm.count("target"), Eq(1));
 }
 
-TEST(make_program_options, InvaildOption) {
+TEST(make_program_options, InvalidOption) {
     const char *argv[] = {
             "analysis",
             "-a"

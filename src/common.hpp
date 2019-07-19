@@ -18,6 +18,7 @@
 #include <stack>
 #include <boost/program_options.hpp>
 #include <boost/type_index.hpp>
+#include <chrono>
 
 namespace po = boost::program_options;
 
@@ -517,6 +518,29 @@ class Grid {
 public:
     int x, y, z;
 };
+
+template<typename T>
+std::string chrono_cast(const T &dur) {
+    auto secs = std::chrono::duration_cast<std::chrono::seconds>(dur).count();
+    std::string format_string;
+    auto hours = secs / 3600;
+    secs %= 3600;
+    if (hours > 0) {
+        format_string = std::to_string(hours) + (hours > 1 ? " hours" : " hour");
+    }
+    auto mins = secs / 60;
+    secs %= 60;
+    if (mins > 0) {
+        format_string += (format_string.empty() ? "" : " ") + std::to_string(mins) + (mins > 1 ? " mins" : " min");
+    }
+    if (secs > 0) {
+        format_string += (format_string.empty() ? "" : " ") + std::to_string(secs) + (secs > 1 ? " secs" : " sec");
+    }
+    if (format_string.empty()) {
+        format_string = "0 sec";
+    }
+    return format_string;
+}
 
 
 #endif //TINKER_COMMON_HPP
