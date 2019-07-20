@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <string>
 #include <list>
-#include "../src/common.hpp"
+#include "common.hpp"
 
 using namespace testing;
 

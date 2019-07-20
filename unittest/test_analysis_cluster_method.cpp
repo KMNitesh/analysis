@@ -2,8 +2,8 @@
 // Created by xiamr on 6/20/19.
 //
 
-#include "../src/Cluster.hpp"
-#include "../src/ThrowAssert.hpp"
+#include "Cluster.hpp"
+#include "ThrowAssert.hpp"
 #include <gmock/gmock.h>
 #include <unordered_map>
 #include <utility>

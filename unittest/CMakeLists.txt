@@ -1,4 +1,4 @@
-include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_BINARY_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/src/analysis ${PROJECT_BINARY_DIR}/src)
 
 add_executable(test_grammar test_grammar.cpp)
 target_link_libraries(test_grammar base)
@@ -16,75 +16,13 @@ add_test(NAME "TestTrajectoryReaderTPR" COMMAND test_trajectoryreader_tpr WORKIN
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 include(GoogleTest)
-add_executable(test_make_program_options test_make_program_options.cpp)
-target_link_libraries(test_make_program_options base ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_make_program_options)
 
-add_executable(test_range_object test_range_object.cpp)
-target_link_libraries(test_range_object  ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_range_object)
+file(GLOB GTEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
+list(REMOVE_ITEM GTEST_SRCS test_grammar.cpp test_trajectoryreader_tpr.cpp test_center_selection_grammar.cpp)
 
-
-add_executable(test_enumerate_object test_enumerate_object.cpp)
-target_link_libraries(test_enumerate_object  ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_enumerate_object)
-
-add_executable(test_format test_format.cpp)
-target_link_libraries(test_format  ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_format)
-
-add_executable(test_getFileType test_getFileType.cpp)
-target_link_libraries(test_getFileType base ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_getFileType)
-
-add_executable(test_print_cmdline test_print_cmdline.cpp)
-target_link_libraries(test_print_cmdline base ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_print_cmdline)
-
-add_executable(test_analysis_cluster_method test_analysis_cluster_method.cpp)
-target_link_libraries(test_analysis_cluster_method base ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_analysis_cluster_method)
-
-add_executable(test_combine_seq test_combine_seq.cpp)
-target_link_libraries(test_combine_seq base ${GTEST_BOTH_LIBRARIES})
-gtest_discover_tests(test_combine_seq)
-
-add_executable(test_trrwriter test_trrwriter.cpp)
-target_link_libraries(test_trrwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_trrwriter)
-
-add_executable(test_xtcwriter test_xtcwriter.cpp)
-target_link_libraries(test_xtcwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_xtcwriter)
-
-add_executable(test_netcdfwriter test_netcdfwriter.cpp)
-target_link_libraries(test_netcdfwriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_netcdfwriter)
-
-add_executable(test_growriter test_growriter.cpp)
-target_link_libraries(test_growriter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_growriter)
-
-add_executable(test_TrajectoryWriterFactoryImpl test_TrajectoryWriterFactoryImpl.cpp)
-target_link_libraries(test_TrajectoryWriterFactoryImpl base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_TrajectoryWriterFactoryImpl)
-
-add_executable(test_generatorgrammar test_generatorgrammar.cpp)
-target_link_libraries(test_generatorgrammar base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_generatorgrammar)
-
-add_executable(test_Interpreter test_Interpreter.cpp)
-target_link_libraries(test_Interpreter base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_Interpreter)
-
-add_executable(test_TypeCheck test_TypeCheck.cpp)
-target_link_libraries(test_TypeCheck base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_TypeCheck)
-
-add_executable(test_split_quoted test_split_quoted.cpp)
-target_link_libraries(test_split_quoted base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_split_quoted)
-
-add_executable(test_chrono_cast test_chrono_cast.cpp)
-target_link_libraries(test_chrono_cast base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
-gtest_discover_tests(test_chrono_cast)
+foreach (GTEST_TEST_CASE_SRC ${GTEST_SRCS})
+    get_filename_component(BASE_NAME ${GTEST_TEST_CASE_SRC} NAME_WE)
+    add_executable(${BASE_NAME} ${GTEST_TEST_CASE_SRC})
+    target_link_libraries(${BASE_NAME} base ${GTEST_BOTH_LIBRARIES} gmock gmock_main pthread)
+    gtest_discover_tests(${BASE_NAME})
+endforeach ()

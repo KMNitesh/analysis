@@ -146,6 +146,8 @@ endif ()
 
 enable_testing()
 
+file(REMOVE_RECURSE ${PROJECT_BINARY_DIR}/*.gcda)
+
 add_subdirectory(lib)
 add_subdirectory(src)
 if (ENABLE_UNITTEST)

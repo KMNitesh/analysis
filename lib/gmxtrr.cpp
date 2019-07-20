@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include "gmxtrr.h"
-#include "../src/common.hpp"
-#include "../src/ThrowAssert.hpp"
+#include "../src/analysis/common.hpp"
+#include "../src/analysis/ThrowAssert.hpp"
 
 using namespace std;
 

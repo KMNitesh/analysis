@@ -3,7 +3,7 @@
 //
 
 #include <gmock/gmock.h>
-#include "../src/common.hpp"
+#include "common.hpp"
 
 using namespace testing;
 
