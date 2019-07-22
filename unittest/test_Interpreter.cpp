@@ -44,36 +44,97 @@ TEST_F(InterpreterGrammarTest, LogicalOperation) {
     ASSERT_THAT(boost::any_cast<bool>(interpreter.getVariables().at("ret")), Eq(true));
 }
 
-TEST_F(InterpreterGrammarTest, ArithmeticOperation) {
+TEST_F(InterpreterGrammarTest, ArithmeticOperationIntAdd) {
 
-    input_string = R"(ret = 1;
-                             for (k = 1; k < 3; k = k +1) {
-                                  a = sqrt(value = k);
-                                  i = -15  + 9.9 * 2 / (8.9 + 1.1) ;
-                                  j = i + a;
-                                  if (a > 1 ) {
-                                    ret = a;
-                                  }
-                                  j = i + j;
-                             }
-                             do {
-                                ret = ret +1.7;
-                             } until(ret < 10);
-                             while(ret > 5 ){
-                                ret = ret * 0.9;
-                             }
-                             ret = ret + 1;
-                             b = "xxx";
-                             my_mask = [@O,N& :1];
-                             a = b + "bbb" + b;
-                            )";
+    input_string = R"(a = 1; b = 2; c = a + b;)";
     pass();
     ASSERT_NO_THROW((result = interpreter.execute(ast)));
 
-    ASSERT_EQ(result.type(), typeid(std::string));
-    ASSERT_THAT(boost::any_cast<std::string>(result), StrEq("xxxbbbxxx"));
-
+    ASSERT_EQ(result.type(), typeid(int));
+    ASSERT_THAT(boost::any_cast<int>(result), Eq(3));
 }
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationIntSubtract) {
+
+    input_string = R"(a = 1; b = 2; c = a - b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(int));
+    ASSERT_THAT(boost::any_cast<int>(result), Eq(-1));
+}
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationIntMultiply) {
+
+    input_string = R"(a = 3; b = 2; c = a * b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(int));
+    ASSERT_THAT(boost::any_cast<int>(result), Eq(6));
+}
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationIntDivide) {
+
+    input_string = R"(a = 3; b = 2; c = a / b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(int));
+    ASSERT_THAT(boost::any_cast<int>(result), Eq(1));
+}
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationIntMod) {
+
+    input_string = R"(a = 3; b = 2; c = a % b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(int));
+    ASSERT_THAT(boost::any_cast<int>(result), Eq(1));
+}
+
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationDoubleAdd) {
+
+    input_string = R"(a = 1.1; b = 2.4; c = a + b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(double));
+    ASSERT_THAT(boost::any_cast<double>(result), DoubleEq(3.5));
+}
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationDoubleubtract) {
+
+    input_string = R"(a = 1.1; b = 2.4; c = a - b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(double));
+    ASSERT_THAT(boost::any_cast<double>(result), DoubleEq(-1.3));
+}
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationDoubleMultiply) {
+
+    input_string = R"(a = 1.2; b = 2.4; c = a * b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(double));
+    ASSERT_THAT(boost::any_cast<double>(result), DoubleEq(2.88));
+}
+
+TEST_F(InterpreterGrammarTest, ArithmeticOperationDoubleDivide) {
+
+    input_string = R"(a = 1.1; b = 2.4; c = a / b;)";
+    pass();
+    ASSERT_NO_THROW((result = interpreter.execute(ast)));
+
+    ASSERT_EQ(result.type(), typeid(double));
+    ASSERT_THAT(boost::any_cast<double>(result), DoubleEq(1.1 / 2.4));
+}
+
 
 TEST_F(InterpreterGrammarTest, Bitwise_AND_Operation) {
 
