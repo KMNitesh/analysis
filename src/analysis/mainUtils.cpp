@@ -39,6 +39,17 @@
 #include "Diffuse.hpp"
 #include "DiffuseCutoff.hpp"
 
+using namespace std;
+
+int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv, const string &scriptContent,
+                    boost::optional<string> &script_file, boost::optional<string> &topology,
+                    boost::optional<string> &forcefield_file, const boost::optional<string> &output_file,
+                    shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list,
+                    int start,
+                    int total_frames,
+                    int step_size,
+                    int nthreads
+);
 
 using namespace std;
 
@@ -458,146 +469,10 @@ void executeScript(const boost::program_options::options_description &desc,
                     exit(EXIT_FAILURE);
                 }
 
-                if (task_list->empty()) {
-                    cerr << "Empty task in the pending list, skip go function ...\n";
-                    return 0;
-                }
+                return executeAnalysis(xyzfiles, argc, argv, scriptContent, script_file, topology, forcefield_file,
+                                       output_file, task_list,
+                                       start, total_frames, step_size, nthreads);
 
-                auto start_time = chrono::steady_clock::now();
-
-                cout << boost::format("Start Process...  start = %d, end = %s, step = %d, nthreads = %s\n")
-                        % start % (total_frames == 0 ? "all" : to_string(total_frames)) % step_size
-                        % (nthreads == 0 ? "automatic" : to_string(nthreads));
-
-                if (start <= 0) {
-                    cerr << "start frame cannot less than 1\n";
-                    exit(EXIT_FAILURE);
-                }
-                if (total_frames <= start and total_frames != 0) {
-                    cerr << format("end(%d) frame cannot less than start(%d) frame\n", total_frames, start);
-                    exit(EXIT_FAILURE);
-                }
-                if (step_size <= 0) {
-                    cerr << "frame step cannot less than 1\n";
-                    exit(EXIT_FAILURE);
-                }
-                if (nthreads < 0) {
-                    cerr << "thread number cannot less than zero\n";
-                    exit(EXIT_FAILURE);
-                }
-                if (enable_forcefield) {
-                    if (topology && getFileType(topology.value()) != FileType::ARC) {
-
-                    } else if (forcefield_file) {
-                        if (boost::filesystem::exists(forcefield_file.value())) {
-                            forcefield.read(forcefield_file.value());
-                        } else {
-                            std::cerr << "force field file " << forcefield_file.value() << " is bad  !\n";
-                            exit(EXIT_FAILURE);
-                        }
-                    } else {
-                        std::cerr << "force field file not given !\n";
-                        exit(EXIT_FAILURE);
-                    }
-                }
-
-                tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
-                if (nthreads > sysconf(_SC_NPROCESSORS_ONLN)) {
-                    cout << "WARNING !! nthreads larger than max core of system CPU, will use automatic mode";
-                    nthreads = 0;
-                }
-
-
-                tbb_init.initialize(nthreads == 0 ? tbb::task_scheduler_init::automatic : nthreads);
-
-                int current_frame_num = 0;
-
-                auto reader = std::make_shared<TrajectoryReader>();
-                bool b_added_topology = true;
-                if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
-                        {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
-                    b_added_topology = false;
-                } else {
-                    if (topology) {
-                        std::cerr << "WRANING !!  do not use topolgy file !\bn";
-                    }
-                }
-
-                if (xyzfiles.empty()) {
-                    cerr << "trajectory file not set\n";
-                    exit(EXIT_FAILURE);
-                }
-                for (auto &xyzfile : xyzfiles) {
-                    reader->add_filename(xyzfile);
-                    std::string ext = ext_filename(xyzfile);
-                    if (ext == "traj" && xyzfiles.size() != 1) {
-                        std::cout << "traj file can not use multiple files" << std::endl;
-                        exit(EXIT_FAILURE);
-                    }
-                    if (!b_added_topology) {
-                        if (topology) {
-                            if (boost::filesystem::exists(topology.value())) {
-                                reader->add_topology(topology.value());
-                                b_added_topology = true;
-                                continue;
-                            }
-                            std::cerr << "topology file " << topology.value() << " is bad ! please retype !\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        std::cerr << "topology file  not given !\n";
-                        exit(EXIT_FAILURE);
-                    }
-                }
-
-                if (enable_outfile) {
-                    if (output_file) {
-                        cerr << "Output file option do not need\n";
-                        exit(EXIT_FAILURE);
-                    }
-                }
-                std::shared_ptr<Frame> frame;
-                int Clear = 0;
-                while ((frame = reader->readOneFrame())) {
-                    current_frame_num++;
-                    if (total_frames != 0 and current_frame_num > total_frames)
-                        break;
-                    if (current_frame_num % 10 == 0) {
-                        if (Clear) {
-                            std::cout << "\r";
-                        }
-                        std::cout << "Processing Coordinate Frame  " << current_frame_num << "   " << std::flush;
-                        Clear = 1;
-                    }
-                    if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
-                        if (current_frame_num == start) {
-                            if (forcefield.isVaild()) {
-                                forcefield.assign_forcefield(frame);
-                            }
-                            processFirstFrame(frame, task_list);
-                        }
-                        processOneFrame(frame, task_list);
-                    }
-                }
-                std::cout << '\n';
-
-                tbb::parallel_for_each(*task_list, [&](auto &task) {
-                    ofstream ofs(task->getOutfileName());
-                    ofs << "#  workdir > " << boost::filesystem::current_path() << '\n';
-                    ofs << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
-                    if (script_file) {
-                        ofs << "#  script-file > " << script_file.value() << '\n';
-                    }
-                    ofs << "#  script BEGIN>\n" << scriptContent << "\n#  script END>\n";
-                    task->print(ofs);
-                });
-
-                int totol_task_count = task_list->size();
-
-                cout << "Complete " << totol_task_count << " task(s)         Run Time "
-                     << chrono_cast(chrono::steady_clock::now() - start_time) << '\n';
-
-                task_list->clear();
-                return totol_task_count;
             }).addArgument<int>("start", 1).addArgument<int>("end", 0)
             .addArgument<int>("step", 1).addArgument<int>("nthreads", 0);
 
@@ -608,6 +483,153 @@ void executeScript(const boost::program_options::options_description &desc,
         cout << "Don't forget to put go function in the end of script\n";
     }
     cout << " < Mission Complete >\n";
+}
+
+int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv, const string &scriptContent,
+                    boost::optional<string> &script_file, boost::optional<string> &topology,
+                    boost::optional<string> &forcefield_file, const boost::optional<string> &output_file,
+                    shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list, int start, int total_frames, int step_size,
+                    int nthreads) {
+    if (task_list->empty()) {
+        cerr << "Empty task in the pending list, skip go function ...\n";
+        return 0;
+    }
+
+    auto start_time = chrono::steady_clock::now();
+
+    cout << boost::format("Start Process...  start = %d, end = %s, step = %d, nthreads = %s\n")
+            % start % (total_frames == 0 ? "all" : to_string(total_frames)) % step_size
+            % (nthreads == 0 ? "automatic" : to_string(nthreads));
+
+    if (start <= 0) {
+        cerr << "start frame cannot less than 1\n";
+        exit(EXIT_FAILURE);
+    }
+    if (total_frames <= start and total_frames != 0) {
+        cerr << format("end(%d) frame cannot less than start(%d) frame\n", total_frames, start);
+        exit(EXIT_FAILURE);
+    }
+    if (step_size <= 0) {
+        cerr << "frame step cannot less than 1\n";
+        exit(EXIT_FAILURE);
+    }
+    if (nthreads < 0) {
+        cerr << "thread number cannot less than zero\n";
+        exit(EXIT_FAILURE);
+    }
+    if (enable_forcefield) {
+        if (topology && getFileType(topology.value()) != FileType::ARC) {
+
+        } else if (forcefield_file) {
+            if (boost::filesystem::exists(forcefield_file.value())) {
+                forcefield.read(forcefield_file.value());
+            } else {
+                cerr << "force field file " << forcefield_file.value() << " is bad  !\n";
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            cerr << "force field file not given !\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
+    if (nthreads > sysconf(_SC_NPROCESSORS_ONLN)) {
+        cout << "WARNING !! nthreads larger than max core of system CPU, will use automatic mode";
+        nthreads = 0;
+    }
+
+
+    tbb_init.initialize(nthreads == 0 ? tbb::task_scheduler_init::automatic : nthreads);
+
+    int current_frame_num = 0;
+
+    auto reader = make_shared<TrajectoryReader>();
+    bool b_added_topology = true;
+    if (boost::algorithm::one_of_equal<initializer_list<FileType>>(
+            {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
+        b_added_topology = false;
+    } else {
+        if (topology) {
+            cerr << "WRANING !!  do not use topolgy file !\bn";
+        }
+    }
+
+    if (xyzfiles.empty()) {
+        cerr << "trajectory file not set\n";
+        exit(EXIT_FAILURE);
+    }
+    for (auto &xyzfile : xyzfiles) {
+        reader->add_filename(xyzfile);
+        string ext = ext_filename(xyzfile);
+        if (ext == "traj" && xyzfiles.size() != 1) {
+            cout << "traj file can not use multiple files" << endl;
+            exit(EXIT_FAILURE);
+        }
+        if (!b_added_topology) {
+            if (topology) {
+                if (boost::filesystem::exists(topology.value())) {
+                    reader->add_topology(topology.value());
+                    b_added_topology = true;
+                    continue;
+                }
+                cerr << "topology file " << topology.value() << " is bad ! please retype !\n";
+                exit(EXIT_FAILURE);
+            }
+            cerr << "topology file  not given !\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if (enable_outfile) {
+        if (output_file) {
+            cerr << "Output file option do not need\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+    shared_ptr<Frame> frame;
+    int Clear = 0;
+    while ((frame = reader->readOneFrame())) {
+        current_frame_num++;
+        if (total_frames != 0 and current_frame_num > total_frames)
+            break;
+        if (current_frame_num % 10 == 0) {
+            if (Clear) {
+                cout << "\r";
+            }
+            cout << "Processing Coordinate Frame  " << current_frame_num << "   " << flush;
+            Clear = 1;
+        }
+        if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
+            if (current_frame_num == start) {
+                if (forcefield.isVaild()) {
+                    forcefield.assign_forcefield(frame);
+                }
+                processFirstFrame(frame, task_list);
+            }
+            processOneFrame(frame, task_list);
+        }
+    }
+    cout << '\n';
+
+    tbb::parallel_for_each(*task_list, [&](auto &task) {
+        ofstream ofs(task->getOutfileName());
+        ofs << "#  workdir > " << boost::filesystem::current_path() << '\n';
+        ofs << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
+        if (script_file) {
+            ofs << "#  script-file > " << script_file.value() << '\n';
+        }
+        ofs << "#  script BEGIN>\n" << scriptContent << "\n#  script END>\n";
+        task->print(ofs);
+    });
+
+    int totol_task_count = task_list->size();
+
+    cout << "Complete " << totol_task_count << " task(s)         Run Time "
+         << chrono_cast(chrono::steady_clock::now() - start_time) << '\n';
+
+    task_list->clear();
+    return totol_task_count;
 }
 
 void processTrajectory(const boost::program_options::options_description &desc,
