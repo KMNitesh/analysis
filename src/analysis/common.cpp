@@ -16,7 +16,6 @@
 #include "forcefield.hpp"
 
 
-
 bool enable_read_velocity = false;
 bool enable_tbb = false;
 bool enable_outfile = false;
@@ -90,7 +89,8 @@ FileType getFileType(const std::string &filename) {
             {".tpr",   FileType::TPR},
             {".mol2",  FileType::MOL2},
             {".prm",   FileType::PRM},
-            {".gro",   FileType::GRO}
+            {".gro",   FileType::GRO},
+            {".traj",  FileType::TRAJ}
     };
 
     auto it = mapping.find(extension);

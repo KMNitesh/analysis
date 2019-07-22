@@ -651,8 +651,8 @@ void processTrajectory(const boost::program_options::options_description &desc,
 
     auto reader = std::make_shared<TrajectoryReader>();
     bool b_added_topology = true;
-    auto ext = ext_filename(xyzfiles[0]);
-    if (ext == "nc" or ext == "xtc" or ext == "trr") {
+    if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
+            {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
         b_added_topology = false;
     } else {
         if (vm.count("topology")) {
@@ -661,8 +661,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
     }
     for (auto &xyzfile : xyzfiles) {
         reader->add_filename(xyzfile);
-        std::string ext = ext_filename(xyzfile);
-        if (ext == "traj" && xyzfiles.size() != 1) {
+        if (getFileType(xyzfile) == FileType::TRAJ && xyzfiles.size() != 1) {
             std::cout << "traj file can not use multiple files" << std::endl;
             exit(EXIT_FAILURE);
         }

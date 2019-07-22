@@ -39,10 +39,17 @@ TEST(getFileType, PRMFile) {
     ASSERT_EQ(getFileType("abx.prm"), FileType::PRM);
 }
 
-TEST(getFileType, GROGile) {
+TEST(getFileType, GROFile) {
     ASSERT_EQ(getFileType("abx.gro"), FileType::GRO);
 }
 
+TEST(getFileType, TrajFile) {
+    ASSERT_EQ(getFileType("abx.traj"), FileType::TRAJ);
+}
+
+TEST(getFileType, CapitalNameOfTrajFile) {
+    ASSERT_EQ(getFileType("abx.TRAJ"), FileType::TRAJ);
+}
 
 TEST(getFileType, NoExtension) {
     ASSERT_EQ(getFileType("abx"), FileType::UnKnown);

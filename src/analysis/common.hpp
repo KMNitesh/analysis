@@ -56,6 +56,7 @@ enum class FileType {
     MOL2,
     PRM,
     GRO,
+    TRAJ,
     UnKnown
 };
 
