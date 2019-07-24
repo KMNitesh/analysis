@@ -62,6 +62,7 @@ namespace mpl = boost::mpl;
 #include "RotAcf.hpp"
 #include "DistanceAngle.hpp"
 #include "DipoleAngleAxis3D.hpp"
+#include "DynFrameFind.hpp"
 
 
 using namespace std;
@@ -115,7 +116,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             AngleWat,
             RotAcf,
             DistanceAngle,
-            DipoleAngleAxis3D
+            DipoleAngleAxis3D,
+            DynFrameFind
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
