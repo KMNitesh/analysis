@@ -40,6 +40,8 @@ public:
 
     void readInfo() override;
 
+    std::string description() override;
+
     void setParameters(const Atom::Node &M, const Atom::Node &L, std::shared_ptr<VectorSelector> vector,
                        int LegendrePolynomial, double cutoff, double time_increment_ps,
                        double max_time_grap_ps, const std::string &outfilename);
@@ -89,10 +91,7 @@ private:
     std::tuple<double, double, double> calVector(std::shared_ptr<Molecule> &mol, std::shared_ptr<Frame> &frame);
 
     std::shared_ptr<VectorSelector> vectorSelector;
-public:
-    std::string description() override;
 
-private:
     template<typename Function>
     void calculateAutocorrelaionFunction(std::vector<std::pair<unsigned long long, double>> &acf, Function f) const;
 

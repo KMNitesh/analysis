@@ -101,6 +101,6 @@ void NormalVectorSelector::setParameters(const Atom::Node &id1, const Atom::Node
 
 string NormalVectorSelector::description() {
     stringstream ss;
-    ss << "NormalVector ( " << ids1 << ", " << ids2 << ", " << ids3 << " )";
+    ss << "NormalVector ( [" << ids1 << "] , [" << ids2 << "] , [" << ids3 << "] )";
     return ss.str();
 }

@@ -38,6 +38,7 @@
 #include "ResidenceTime.hpp"
 #include "Diffuse.hpp"
 #include "DiffuseCutoff.hpp"
+#include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 
 using namespace std;
 
@@ -372,6 +373,50 @@ void executeScript(const boost::program_options::options_description &desc,
             .addArgument<double, int>("cutoff")
             .addArgument<double, int>("time_increment_ps", 0.1)
             .addArgument<string>("out");
+
+
+    interpreter.registerFunction(
+                    "crossAngleCutoff", [&task_list](auto &args) -> boost::any {
+                        auto task = make_shared<AngleDistributionBetweenTwoVectorWithCutoff>();
+                        try {
+                            task->setParameters(
+                                    AutoConvert(get<3>(args.at(0))),
+                                    AutoConvert(get<3>(args.at(1))),
+                                    AutoConvert(get<3>(args.at(2))),
+                                    AutoConvert(get<3>(args.at(3))),
+                                    AutoConvert(get<3>(args.at(4))),
+                                    AutoConvert(get<3>(args.at(5))),
+                                    AutoConvert(get<3>(args.at(6))),
+                                    AutoConvert(get<3>(args.at(7))),
+                                    AutoConvert(get<3>(args.at(8)))
+                            );
+                        } catch (std::exception &e) {
+                            cerr << e.what() << " for function crossAngleCutoff (" << __FILE__ << ":" << __LINE__
+                                 << ")\n";
+                            exit(EXIT_FAILURE);
+                        }
+                        task_list->emplace_back(task);
+                        cout << task->description();
+                        return shared_ptr<BasicAnalysis>(task);
+                    })
+            .addArgument<Atom::Node>("M")
+            .addArgument<Atom::Node>("L")
+            .addArgument<shared_ptr<VectorSelector>>("vector1")
+            .addArgument<shared_ptr<VectorSelector>>("vector2")
+            .addArgument<double, int>("angle_max", 180)
+            .addArgument<double, int>("angle_width", 0.5)
+            .addArgument<double, int>("cutoff1", 0)
+            .addArgument<double, int>("cutoff2")
+            .addArgument<string>("out");
+    //  const Atom::Node &M,
+    //        const Atom::Node &L,
+    //        std::shared_ptr<VectorSelector> vector1,
+    //        std::shared_ptr<VectorSelector> vector2,
+    //        double angle_max,
+    //        double angle_width,
+    //        double cutoff1,
+    //        double cutoff2,
+    //        const std::string &outfilename
 
     interpreter.registerFunction(
             "DipoleVector", [](auto &args) -> boost::any {

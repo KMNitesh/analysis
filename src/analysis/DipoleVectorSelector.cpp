@@ -51,6 +51,6 @@ void DipoleVectorSelector::setParameters(const Atom::Node &id) {
 
 string DipoleVectorSelector::description() {
     stringstream ss;
-    ss << "DipoleVector ( " << id << " )";
+    ss << "DipoleVector ( [" << id << "] )";
     return ss.str();
 }

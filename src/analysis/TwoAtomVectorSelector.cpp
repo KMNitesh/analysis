@@ -84,6 +84,6 @@ void TwoAtomVectorSelector::setParameters(const Atom::Node &id1, const Atom::Nod
 
 string TwoAtomVectorSelector::description() {
     stringstream ss;
-    ss << "TwoAtomVector ( " << ids1 << ", " << ids2 << " )";
+    ss << "TwoAtomVector ( [" << ids1 << "] , [" << ids2 << "] )";
     return ss.str();
 }

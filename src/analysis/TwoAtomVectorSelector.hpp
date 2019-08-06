@@ -23,18 +23,14 @@ public:
 
     static const std::string title() { return "Two Atom vector (define by two atoms in same molecule) selector"; }
 
-protected:
-    Atom::AtomIndenter ids1;
-public:
     std::string description() override;
 
-protected:
-    Atom::AtomIndenter ids2;
-public:
     std::tuple<double, double, double>
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
 
 protected:
+    Atom::AtomIndenter ids1;
+    Atom::AtomIndenter ids2;
 
     std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
