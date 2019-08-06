@@ -96,7 +96,8 @@ std::tuple<double, double, double> Molecule::calc_charge_center(const std::share
         }
     }
     if (abs(mol_charge) < 1E-3) {
-        return {0, 0, 0};
+        calc_geom_center(frame);
+        return {center_x, center_y, center_z};
     }
 
     return {xmid / mol_charge, ymid / mol_charge, zmid / mol_charge};
@@ -108,18 +109,27 @@ std::tuple<double, double, double> Molecule::calc_dipole(const std::shared_ptr<F
     double dipole_y = 0.0;
     double dipole_z = 0.0;
 
-    auto[charge_center_x, charge_center_y, charge_center_z] = calc_charge_center(frame);
+    bool first_atom = true;
+
+    double first_x, first_y, first_z;
 
     for (auto &atom : atom_list) {
-        double xr = atom->x - charge_center_x;
-        double yr = atom->y - charge_center_y;
-        double zr = atom->z - charge_center_z;
+        if (first_atom) {
+            first_x = atom->x;
+            first_y = atom->y;
+            first_z = atom->z;
+            first_atom = false;
+        } else {
+            double xr = atom->x - first_x;
+            double yr = atom->y - first_y;
+            double zr = atom->z - first_z;
 
-        frame->image(xr, yr, zr);
+            frame->image(xr, yr, zr);
 
-        dipole_x += atom->charge.value() * xr;
-        dipole_y += atom->charge.value() * yr;
-        dipole_z += atom->charge.value() * zr;
+            dipole_x += atom->charge.value() * xr;
+            dipole_y += atom->charge.value() * yr;
+            dipole_z += atom->charge.value() * zr;
+        }
     }
     return {dipole_x, dipole_y, dipole_z};
 }
