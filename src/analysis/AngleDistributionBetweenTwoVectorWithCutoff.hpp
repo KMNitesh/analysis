@@ -49,11 +49,14 @@ protected:
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 
-    Histrogram hist;
+    Histrogram angle_hist;
+    Histrogram cos_hist;
 
     double cutoff1, cutoff2;
 
     std::shared_ptr<VectorSelector> vector1, vector2;
+
+    void init_cos_hist(double angle_max, double angle_width);
 };
 
 

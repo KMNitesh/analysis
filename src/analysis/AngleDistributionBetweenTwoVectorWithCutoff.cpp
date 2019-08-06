@@ -35,9 +35,13 @@ void AngleDistributionBetweenTwoVectorWithCutoff::process(std::shared_ptr<Frame>
                 auto v1 = vector1->calculateVector(ref->molecule.lock(), frame);
                 auto v2 = vector2->calculateVector(atom->molecule.lock(), frame);
 
-                double angle = radian * acos(dot_multiplication(v1, v2) / sqrt(vector_norm2(v1) * vector_norm2(v2)));
+                double cos_ = dot_multiplication(v1, v2) / sqrt(vector_norm2(v1) * vector_norm2(v2));
 
-                hist.update(angle);
+                cos_hist.update(cos_);
+
+                double angle = radian * acos(cos_);
+
+                angle_hist.update(angle);
             }
         }
     }
@@ -54,8 +58,8 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
     os << "# vector2 > ";
     vector2->print(os);
 
-    os << "# angle max   > " << hist.dimension_range.second << '\n';
-    os << "# angle width > " << hist.getWidth() << '\n';
+    os << "# angle max   > " << angle_hist.dimension_range.second << '\n';
+    os << "# angle width > " << angle_hist.getWidth() << '\n';
 
     os << "# cutoff1 > " << cutoff1 << '\n';
     os << "# cutoff2 > " << cutoff2 << '\n';
@@ -63,10 +67,15 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
     os << string(50, '#') << '\n';
 
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
-    for (auto[grid, value] : hist.getDistribution()) {
+    for (auto[grid, value] : angle_hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
     os << string(50, '#') << '\n';
+
+    os << format("#%15s %15s\n", "cos(theta)", "Probability Density(%)");
+    for (auto[grid, value] : cos_hist.getDistribution()) {
+        os << format("%15.3f %15.3f\n", grid, 100 * value);
+    }
 
 }
 
@@ -89,8 +98,11 @@ void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
 
     throw_assert(cutoff1 < cutoff2, "Cutoff1 must less than Cutoff2");
 
-    hist.initialize(angle_max, angle_width);
+    angle_hist.initialize(angle_max, angle_width);
+
+    init_cos_hist(angle_max, angle_width);
 }
+
 
 string AngleDistributionBetweenTwoVectorWithCutoff::description() {
     stringstream ss;
@@ -100,8 +112,8 @@ string AngleDistributionBetweenTwoVectorWithCutoff::description() {
     ss << " L                 = [ " << ids2 << " ]\n";
     ss << " vector1           = " << vector1->description() << "\n";
     ss << " vector2           = " << vector2->description() << "\n";
-    ss << " angle_max         = " << hist.dimension_range.second << " (degree)\n";
-    ss << " angle_width       = " << hist.getWidth() << " (degree)\n";
+    ss << " angle_max         = " << angle_hist.dimension_range.second << " (degree)\n";
+    ss << " angle_width       = " << angle_hist.getWidth() << " (degree)\n";
     ss << " cutoff1           = " << cutoff1 << " (Ang)\n";
     ss << " cutoff2           = " << cutoff2 << " (Ang)\n";
     ss << " outfilename       = " << outfilename << "\n";
@@ -160,7 +172,12 @@ void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(
         throw runtime_error("outfilename cannot empty");
     }
 
-    hist.initialize(angle_max, angle_width);
+    angle_hist.initialize(angle_max, angle_width);
+    init_cos_hist(angle_max, angle_width);
 
 }
 
+void AngleDistributionBetweenTwoVectorWithCutoff::init_cos_hist(double angle_max,
+                                                                double angle_width) {
+    cos_hist.initialize({cos(angle_max / radian), 1}, abs(1 - cos(angle_max / radian)) / (angle_max / angle_width));
+}
