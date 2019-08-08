@@ -7,9 +7,7 @@
 #ifndef TINKER_BASICANALYSIS_HPP
 #define TINKER_BASICANALYSIS_HPP
 
-#include <memory>
-#include <string>
-#include <ostream>
+#include "std.hpp"
 
 class Frame;
 

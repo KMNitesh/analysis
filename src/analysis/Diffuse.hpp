@@ -5,12 +5,7 @@
 #ifndef TINKER_DIFFUSE_HPP
 #define TINKER_DIFFUSE_HPP
 
-#include <memory>
-#include <unordered_set>
-#include <string>
-#include <map>
-#include <list>
-#include <utility>
+#include "std.hpp"
 
 #include <Eigen/Eigen>
 

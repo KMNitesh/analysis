@@ -5,10 +5,7 @@
 #ifndef TINKER_AMINOTOP_HPP
 #define TINKER_AMINOTOP_HPP
 
-#include <string>
-#include <list>
-#include <map>
-
+#include "std.hpp"
 #include <boost/bimap.hpp>
 #include <boost/bimap/unordered_set_of.hpp>
 #include <boost/bimap/set_of.hpp>

@@ -16,7 +16,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
     TrajectoryReader reader;
     reader.add_topology(topology_filename);
     auto frame = reader.readTopology();
-    if (forcefield.isVaild()) {
+    if (forcefield.isValid()) {
         forcefield.assign_forcefield(frame);
     }
 

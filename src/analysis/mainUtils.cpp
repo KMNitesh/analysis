@@ -647,7 +647,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
         }
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {
-                if (forcefield.isVaild()) {
+                if (forcefield.isValid()) {
                     forcefield.assign_forcefield(frame);
                 }
                 processFirstFrame(frame, task_list);
@@ -688,7 +688,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
 
     auto task_list = getTasks();
 
-    while (enable_forcefield) {
+    for (;;) {
         if (vm.count("topology") && getFileType(vm["topology"].as<std::string>()) != FileType::ARC) {
             break;
         }
@@ -697,9 +697,11 @@ void processTrajectory(const boost::program_options::options_description &desc,
             if (boost::filesystem::exists(ff)) {
                 forcefield.read(ff);
                 break;
+            } else if (enable_forcefield) {
+                std::cout << "force field file " << ff << " is bad ! please retype !" << std::endl;
+            } else {
+                break;
             }
-            std::cout << "force field file " << ff << " is bad ! please retype !" << std::endl;
-
         }
         forcefield.read(choose_file("force field filename:", true));
         break;
@@ -784,7 +786,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {
-                if (forcefield.isVaild()) {
+                if (forcefield.isValid()) {
                     forcefield.assign_forcefield(frame);
                 }
                 processFirstFrame(frame, task_list);

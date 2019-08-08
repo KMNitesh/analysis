@@ -6,7 +6,6 @@
 #define TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP
 
 #include "std.hpp"
-
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
 #include "Histrogram.hpp"

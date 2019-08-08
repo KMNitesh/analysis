@@ -5,10 +5,7 @@
 #ifndef TINKER_MOLECULE_HPP
 #define TINKER_MOLECULE_HPP
 
-#include "config.h"
-#include <list>
-#include <memory>
-#include <tuple>
+#include "std.hpp"
 #include <boost/optional.hpp>
 
 class Frame;

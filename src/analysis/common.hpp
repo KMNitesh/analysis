@@ -5,21 +5,14 @@
 #ifndef TINKER_COMMON_HPP
 #define TINKER_COMMON_HPP
 
-#include "config.h"
-#include <string>
-#include <vector>
-#include <type_traits>
-#include <iostream>
-#include <fstream>
+#include "std.hpp"
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/phoenix.hpp>
 #include <boost/optional.hpp>
-#include <stack>
 #include <boost/program_options.hpp>
 #include <boost/type_index.hpp>
 #include <boost/math/constants/constants.hpp>
-#include <chrono>
 
 namespace po = boost::program_options;
 

@@ -19,7 +19,7 @@ void Forcefield::read(const std::string &filename) {
         std::cerr << "Unrecognized file extension" << std::endl;
         exit(6);
     }
-    isvaild = true;
+    isvalid = true;
 }
 
 void Forcefield::read_tinker_prm(const std::string &filename) {
@@ -62,6 +62,7 @@ void Forcefield::read_tinker_prm(const std::string &filename) {
 
 
 double Forcefield::find_mass(const std::shared_ptr<Atom> &atom) {
+    if (atom->mass) return atom->mass.value();
     auto it = mapping.find(atom->typ);
     if (it != mapping.end()) {
         return it->second.mass;

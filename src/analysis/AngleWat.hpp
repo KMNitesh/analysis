@@ -5,9 +5,7 @@
 #ifndef TINKER_ANGLEWAT_HPP
 #define TINKER_ANGLEWAT_HPP
 
-#include <unordered_map>
-#include <unordered_set>
-#include <memory>
+#include "std.hpp"
 #include "BasicAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"

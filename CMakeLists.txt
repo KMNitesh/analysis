@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.13)
 project(Tinker)
+
 enable_language(Fortran C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+
 option(ENABLE_UNITTEST "Enable unit test cases" ON)
 option(ENABLE_NATIVE "Enable native cpu instruction support" ON)
-
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -pipe -ggdb3 -Wall -Wextra --coverage ")
@@ -53,7 +55,6 @@ include_directories(${GROMACS_SRC_ROOT}/src)
 include_directories(lib)
 
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 if (DEFINED ENV{LIBRARY_PATH})
     string(REPLACE ":" ";" LIBRARY_DIRS $ENV{LIBRARY_PATH})
@@ -147,6 +148,9 @@ endif ()
 enable_testing()
 
 file(REMOVE_RECURSE ${PROJECT_BINARY_DIR}/*.gcda)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+include_directories(include)
 
 add_subdirectory(lib)
 add_subdirectory(src)

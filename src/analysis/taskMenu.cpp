@@ -6,22 +6,36 @@
 #define BOOST_SPIRIT_USE_PHOENIX_V3
 
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
-#define BOOST_MPL_LIMIT_VECTOR_SIZE 50
+#define BOOST_MPL_LIMIT_VECTOR_SIZE 100
 
+#if (BOOST_MPL_LIMIT_VECTOR_SIZE <= 50)
+#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+#include <boost/mpl/vector.hpp>
+#else
 
-//#include <boost/spirit/include/qi.hpp>
-//#include <boost/spirit/include/phoenix.hpp>
-//#include <boost/bind.hpp>
-//#include <boost/lambda/lambda.hpp>
+#include <boost/preprocessor/iterate.hpp>
+#include <boost/mpl/vector/vector50.hpp>
+
+namespace boost {
+    namespace mpl {
+#define BOOST_PP_ITERATION_PARAMS_1 \
+        (3,(51, BOOST_MPL_LIMIT_VECTOR_SIZE, <boost/mpl/vector/aux_/numbered.hpp>))
+
+#include BOOST_PP_ITERATE()
+
+    } // namespace mpl
+} // namespace boost
+
+#define BOOST_MPL_PREPROCESSING_MODE
+
+#include <boost/mpl/vector.hpp>
+
+#undef BOOST_MPL_PREPROCESSING_MODE
+#endif
+
 #include <boost/phoenix.hpp>
-//#include <boost/variant.hpp>
-//#include <boost/optional.hpp>
-//#include <boost/fusion/sequence/intrinsic/at_c.hpp>
-//#include <boost/fusion/include/at_c.hpp>
-//#include <boost/phoenix/function/adapt_function.hpp>
 
 // Boost metaprogramming library
-#include <boost/mpl/vector.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/unique.hpp>
@@ -65,24 +79,17 @@ namespace mpl = boost::mpl;
 #include "DynFrameFind.hpp"
 #include "SpatialOrientationDistribution.hpp"
 #include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
+#include "HBondLifeTime.hpp"
 
 
 using namespace std;
 
-template<typename T1, typename T2>
-struct add_item {
-    add_item(T1 &v1, T2 &v2) : v1(v1), v2(v2) {};
+template<typename T>
+struct boost_type {
+    typedef T type;
 
-    template<typename T>
-    void operator()(boost::type<T>) {
-        v1.emplace_back(bind(make_shared<T>));
-        v2.emplace_back((boost::format("(%d) %s") % v1.size() % T::title()).str());
-    }
-
-    T1 &v1;
-    T2 &v2;
+    boost_type(boost::type<T>) {};
 };
-
 
 std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
@@ -121,7 +128,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             DipoleAngleAxis3D,
             DynFrameFind,
             SpatialOrientationDistribution,
-            AngleDistributionBetweenTwoVectorWithCutoff
+            AngleDistributionBetweenTwoVectorWithCutoff,
+            HBondLifeTime
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
@@ -129,16 +137,17 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
     std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
     std::vector<string> item_menu;
 
-    mpl::for_each<components, boost::type<mpl::_>>(add_item<
-            std::vector<std::function<shared_ptr<BasicAnalysis>()>>,
-            std::vector<string>
-    >(task_vec, item_menu));
+    mpl::for_each<components, boost::type<mpl::_>>([&task_vec, &item_menu](auto t) {
+        using T = typename decltype(boost_type(t))::type;
+        task_vec.emplace_back(bind(make_shared<T>));
+        item_menu.emplace_back((boost::format("(%d) %s") % task_vec.size() % T::title()).str());
+    });
 
     auto menu1 = [&item_menu]() {
         std::cout << "Please select the desired operation (Trajectory Analysis)" << std::endl;
         std::cout << "(0) Start\n";
         for_each(item_menu.cbegin(), item_menu.cend(), std::cout << boost::phoenix::placeholders::_1 << '\n');
-        return choose<int>(0, mpl::size<components>::value, "select :");
+        return choose<int>(0, mpl::size<components>::value, "select : ");
     };
     while (true) {
         int num = menu1();

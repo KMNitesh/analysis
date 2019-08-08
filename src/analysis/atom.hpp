@@ -5,13 +5,8 @@
 #ifndef TINKER_ATOM_HPP
 #define TINKER_ATOM_HPP
 
-#include "config.h"
-#include "molecule.hpp"
+#include "std.hpp"
 
-#include <string>
-#include <list>
-#include <memory>
-#include <tuple>
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 #include <boost/variant.hpp>
@@ -19,6 +14,8 @@
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
+
+#include "molecule.hpp"
 
 
 class Molecule;

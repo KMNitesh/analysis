@@ -5,14 +5,8 @@
 #ifndef TINKER_CLUSTER_HPP
 #define TINKER_CLUSTER_HPP
 
-#include <memory>
-#include <unordered_set>
-#include <unordered_map>
-#include <string>
-#include <map>
-#include <vector>
-#include <list>
-#include <utility>
+
+#include "std.hpp"
 
 #include "common.hpp"
 #include "BasicAnalysis.hpp"

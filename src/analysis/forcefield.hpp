@@ -43,12 +43,12 @@ public:
 
     void assign_forcefield(std::shared_ptr<Frame> &frame);
 
-    bool isVaild() { return isvaild; }
+    bool isValid() { return isvalid; }
 
 private:
     std::unordered_map<int, AtomItem> mapping;
 
-    bool isvaild = false;
+    bool isvalid = false;
 };
 
 

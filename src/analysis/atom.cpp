@@ -2,8 +2,6 @@
 // Created by xiamr on 3/17/19.
 //
 
-#include "config.h"
-
 #include <fnmatch.h>
 
 #include <boost/variant.hpp>
