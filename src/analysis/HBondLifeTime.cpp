@@ -17,15 +17,17 @@ HBondLifeTime::HBondLifeTime() {
 
 void HBondLifeTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &atom : frame->atom_list) {
-        switch (which(atom)) {
-            case Symbol::Hydrogen:
-                hydrogens.push_back(atom);
-                break;
-            case Symbol::Oxygen:
-                oxygens.push_back(atom);
-                break;
-            default:
-                break;
+        if (Atom::is_match(atom, water_mask)) {
+            switch (which(atom)) {
+                case Symbol::Hydrogen:
+                    hydrogens.push_back(atom);
+                    break;
+                case Symbol::Oxygen:
+                    oxygens.push_back(atom);
+                    break;
+                default:
+                    throw std::runtime_error("water_mask error!");
+            }
         }
     }
     hb_histroy.resize(hydrogens.size());
@@ -75,6 +77,7 @@ void HBondLifeTime::printData(std::ostream &os, const std::vector<double> &acf) 
     os << "# angle_HOO_cutoff  > " << angle_HOO_cutoff << '\n';
     os << "# time_increment_ps > " << time_increment_ps << '\n';
     os << "# max_time_grap_ps  > " << max_time_grap_ps << '\n';
+    os << "# water_mask > " << water_mask << '\n';
     os << std::string(50, '#') << '\n';
 
     os << boost::format("%15s %15s\n") % "Time(ps)" % "ACF";
@@ -117,4 +120,5 @@ void HBondLifeTime::readInfo() {
     angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", true, 30.0);
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
     max_time_grap_ps = choose(0.0, 100.0, "max_time_grap_ps [100 ps] :", true, 100.0);
+    Atom::select1group(water_mask, "Enter mask for water atoms in system > ");
 }

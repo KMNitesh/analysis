@@ -7,10 +7,9 @@
 
 #include "std.hpp"
 #include "BasicAnalysis.hpp"
+#include "atom.hpp"
 
 class Frame;
-
-class Atom;
 
 class HBondLifeTime : public BasicAnalysis {
 public:
@@ -28,6 +27,8 @@ public:
 
 protected:
 
+    Atom::Node water_mask;
+
     double dist_R_cutoff;
     double angle_HOO_cutoff;
 
@@ -39,7 +40,7 @@ protected:
     std::deque<std::shared_ptr<Atom>> hydrogens;
     std::deque<std::shared_ptr<Atom>> oxygens;
 
-    std::vector<double> calculateAcf() const;
+    [[nodiscard]] std::vector<double> calculateAcf() const;
 
     void printData(std::ostream &os, const std::vector<double> &acf) const;
 };
