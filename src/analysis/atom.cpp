@@ -18,7 +18,7 @@ namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 
-std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids) {
+std::ostream &operator<<(std::ostream &out, const Atom::AmberMask &ids) {
     std::string generated;
     throw_assert(format_node(ids, generated), "amberMask format error");
     out << generated;
@@ -164,10 +164,10 @@ void print::indent(int space_num) const {
 
 
 template<typename Iterator, typename Skipper>
-Atom::AtomIndenter input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &promot) {
+Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &promot) {
 
     for (;;) {
-        Atom::AtomIndenter mask;
+        Atom::AmberMask mask;
         auto input_string = input(promot);
         boost::trim(input_string);
         if (input_string.empty()) continue;
@@ -195,7 +195,7 @@ Atom::AtomIndenter input_atom_selection(const Grammar<Iterator, Skipper> &gramma
 
 
 void
-Atom::select2group(Atom::AtomIndenter &ids1, Atom::AtomIndenter &ids2,
+Atom::select2group(Atom::AmberMask &ids1, Atom::AmberMask &ids2,
                    const std::string &prompt1, const std::string &prompt2) {
 
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
@@ -205,7 +205,7 @@ Atom::select2group(Atom::AtomIndenter &ids1, Atom::AtomIndenter &ids2,
 
 }
 
-void Atom::select1group(AtomIndenter &ids, const std::string &prompt) {
+void Atom::select1group(AmberMask &ids, const std::string &prompt) {
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
     using ascii::char_;
@@ -220,7 +220,7 @@ bool is_match_impl(const std::shared_ptr<Atom> &atom, const Atom::Node &ast) {
     return boost::apply_visitor(AtomEqual(atom), ast);
 }
 
-bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AtomIndenter &id) {
+bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AmberMask &id) {
     return is_match_impl(atom, id);
 }
 

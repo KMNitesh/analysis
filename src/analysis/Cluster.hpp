@@ -37,7 +37,7 @@ public:
 
 private:
 
-    Atom::AtomIndenter ids;
+    Atom::AmberMask ids;
     std::unordered_set<std::shared_ptr<Atom>> group;
 
 
@@ -103,7 +103,7 @@ protected:
 
     std::list<Cluster::rmsd_matrix> do_calculate_rmsd_list_parallel();
 
-    void setSetting(const Atom::AtomIndenter &atomIndenter, double cutoff);
+    void setSetting(const Atom::AmberMask &atomIndenter, double cutoff);
 };
 
 std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std::vector<Cluster::conf_clust> &clusts);

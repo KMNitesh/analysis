@@ -219,3 +219,7 @@ string RotAcfCutoff::description() {
     return ss.str();
 }
 
+RotAcfCutoff::~RotAcfCutoff() {
+    std::for_each(rots.begin(), rots.end(), std::default_delete<std::list<std::tuple<double, double, double>>>());
+}
+

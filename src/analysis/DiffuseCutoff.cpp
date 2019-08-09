@@ -32,7 +32,7 @@ void DiffuseCutoff::process(std::shared_ptr<Frame> &frame) {
                     frame->image(shift);
                     it->list_ptr->push_back(shift + old);
                 } else {
-                    auto list_ptr = new std::list<std::tuple<double, double, double>>();
+                    auto list_ptr = new std::deque<std::tuple<double, double, double>>();
                     list_ptr->push_back(coord);
                     inner_atoms.insert(InnerAtom(atom2->molecule.lock()->seq(), list_ptr));
                     rcm.emplace_back(list_ptr);
@@ -166,4 +166,8 @@ string DiffuseCutoff::description() {
     ss << " outfilename       = " << outfilename << "\n";
     ss << string(title_line.size(), '-') << '\n';
     return ss.str();
+}
+
+DiffuseCutoff::~DiffuseCutoff() {
+    std::for_each(rcm.begin(), rcm.end(), std::default_delete<std::deque<std::tuple<double, double, double>>>());
 }

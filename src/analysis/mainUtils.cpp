@@ -800,6 +800,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
     if (outfile.is_open()) {
         outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
+        outfile << "#  start frame  > " << start << '\n';
+        outfile << "#  step (frame) > " << step_size << '\n';
+        outfile << "#  end   frame  > " << (total_frames == 0 ? "all" : std::to_string(total_frames)) << '\n';
     }
 
     for (auto &task : *task_list) {

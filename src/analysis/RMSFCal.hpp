@@ -20,7 +20,7 @@ class Frame;
 class RMSFCal : public BasicAnalysis {
 
 
-    Atom::AtomIndenter ids;
+    Atom::AmberMask ids;
 
     std::unordered_set<std::shared_ptr<Atom>> group;
 

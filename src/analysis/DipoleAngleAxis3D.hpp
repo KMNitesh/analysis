@@ -33,7 +33,7 @@ public:
 
 protected:
 
-    Atom::AtomIndenter ids;
+    Atom::AmberMask ids;
 
     std::unordered_set<std::shared_ptr<Molecule>> group;
 

@@ -39,7 +39,7 @@ struct grammar_fixture {
     }
 
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
-    Atom::AtomIndenter mask;
+    Atom::AmberMask mask;
     std::shared_ptr<Atom> atom;
     std::string input_string;
 };

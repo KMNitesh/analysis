@@ -5,17 +5,12 @@
 #ifndef TINKER_DIFFUSECUTOFF_HPP
 #define TINKER_DIFFUSECUTOFF_HPP
 
-
-#include <memory>
-#include <unordered_set>
-#include <string>
-#include <map>
-#include <list>
-#include <utility>
-
+#include "std.hpp"
+#include <boost/container_hash/hash.hpp>
 #include "common.hpp"
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
+
 
 class Frame;
 
@@ -47,9 +42,9 @@ public:
 
     struct InnerAtom {
         int index;
-        std::list<std::tuple<double, double, double>> *list_ptr = nullptr;
+        std::deque<std::tuple<double, double, double>> *list_ptr = nullptr;
 
-        InnerAtom(int index, std::list<std::tuple<double, double, double>> *list_ptr)
+        InnerAtom(int index, std::deque<std::tuple<double, double, double>> *list_ptr)
                 : index(index), list_ptr(list_ptr) {}
     };
 
@@ -58,30 +53,28 @@ public:
         typedef std::size_t result_type;
 
         result_type operator()(argument_type const &s) const noexcept {
-            result_type
-            const h1(std::hash<int>()
-            (s.index));
-            result_type
-            const h2(std::hash<std::list<std::tuple<double, double, double>> *>()
-            (s.list_ptr));
-            return h1 ^ (h2 << 1); // or use boost::hash_combine (see Discussion)
+            size_t seed = 0;
+            boost::hash_combine(seed, s.index);
+            boost::hash_combine(seed, s.list_ptr);
+            return seed;
         }
     };
 
+    virtual ~DiffuseCutoff();
 private:
 
     double time_increment_ps = 0.1;
     double cutoff2;
 
-    Atom::AtomIndenter ids1;
-    Atom::AtomIndenter ids2;
+    Atom::AmberMask ids1;
+    Atom::AmberMask ids2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 
     std::unordered_set<InnerAtom, InnerAtomHasher> inner_atoms;
 
-    std::list<std::list<std::tuple<double, double, double>> *> rcm;
+    std::deque<std::deque<std::tuple<double, double, double>> *> rcm;
 
     auto find_in(int seq);
 

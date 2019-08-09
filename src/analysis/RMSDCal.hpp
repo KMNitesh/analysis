@@ -23,7 +23,7 @@ class RMSDCal : public BasicAnalysis {
 
     double rmsvalue(std::shared_ptr<Frame> &frame);
 
-    Atom::AtomIndenter ids;
+    Atom::AmberMask ids;
 
     std::unordered_set<std::shared_ptr<Atom>> group;
 

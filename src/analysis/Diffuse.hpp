@@ -43,7 +43,7 @@ public:
 
 private:
 
-    Atom::AtomIndenter ids;
+    Atom::AmberMask ids;
 
     std::unordered_set<std::shared_ptr<Atom>> group;
     bool first_round = true;

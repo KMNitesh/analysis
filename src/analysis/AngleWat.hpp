@@ -31,7 +31,7 @@ public:
     static const std::string title() { return "Angle (Ow-Hw) Distribution with cutoff"; }
 
 protected:
-    Atom::AtomIndenter ids1, ids2, ids3;
+    Atom::AmberMask ids1, ids2, ids3;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
 

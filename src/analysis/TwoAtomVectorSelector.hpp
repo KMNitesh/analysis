@@ -29,8 +29,8 @@ public:
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
 
 protected:
-    Atom::AtomIndenter ids1;
-    Atom::AtomIndenter ids2;
+    Atom::AmberMask ids1;
+    Atom::AmberMask ids2;
 
     std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 

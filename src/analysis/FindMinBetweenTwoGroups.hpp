@@ -36,7 +36,7 @@ public:
     static const std::string title() { return "Find Min distance between two groups"; }
 
 private:
-    Atom::AtomIndenter ids;
+    Atom::AmberMask ids;
 
     int total_frames = 0;
 

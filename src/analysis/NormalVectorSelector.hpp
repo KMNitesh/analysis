@@ -30,9 +30,9 @@ public:
     static const std::string title() { return "Plane normal vector (define by three atoms in same molecule) selector"; }
 
 protected:
-    Atom::AtomIndenter ids1;
-    Atom::AtomIndenter ids2;
-    Atom::AtomIndenter ids3;
+    Atom::AmberMask ids1;
+    Atom::AmberMask ids2;
+    Atom::AmberMask ids3;
 
     std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 

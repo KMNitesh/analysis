@@ -33,7 +33,7 @@ public:
     static const std::string title() { return "Plane Angle Distribution with cutoff"; }
 
 protected:
-    Atom::AtomIndenter ids1, ids2, ids3, ids4;
+    Atom::AmberMask ids1, ids2, ids3, ids4;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3, group4;
 

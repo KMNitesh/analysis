@@ -123,16 +123,16 @@ public:
         explicit atom_element_names(const std::vector<std::string> &val) : val(val) {}
     };
 
-    using AtomIndenter = Atom::Node;
+    using AmberMask = Atom::Node;
 
-    static bool is_match(const std::shared_ptr<Atom> &atom, const AtomIndenter &id);
+    static bool is_match(const std::shared_ptr<Atom> &atom, const AmberMask &id);
 
     static void
-    select2group(Atom::AtomIndenter &ids1, Atom::AtomIndenter &ids2,
+    select2group(Atom::AmberMask &ids1, Atom::AmberMask &ids2,
                  const std::string &prompt1 = "Enter mask for atom1 : ",
                  const std::string &prompt2 = "Enter mask for atom2 : ");
 
-    static void select1group(AtomIndenter &ids, const std::string &prompt = "Enter mask for atom : ");
+    static void select1group(AmberMask &ids, const std::string &prompt = "Enter mask for atom : ");
 
 };
 
@@ -174,7 +174,7 @@ private:
 };
 
 
-std::ostream &operator<<(std::ostream &out, const Atom::AtomIndenter &ids);
+std::ostream &operator<<(std::ostream &out, const Atom::AmberMask &ids);
 
 inline bool operator==(const std::shared_ptr<Atom::residue_name_nums> &residues1,
                        const std::shared_ptr<Atom::residue_name_nums> &residues2) {
@@ -221,5 +221,9 @@ inline bool operator==(const std::shared_ptr<Atom::Operator> &op1,
     }
     return false;
 }
+
+
+using AmberMask = Atom::AmberMask;
+
 
 #endif //TINKER_ATOM_HPP

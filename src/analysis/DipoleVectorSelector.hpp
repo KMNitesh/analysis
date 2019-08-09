@@ -33,7 +33,7 @@ public:
     static const std::string title() { return "Dipole vector (define by molecule that has selected atom) selector"; }
 
 protected:
-    Atom::AtomIndenter id;
+    Atom::AmberMask id;
 
     std::set<std::shared_ptr<Molecule>> selected_mols;
 };

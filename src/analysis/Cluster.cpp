@@ -264,7 +264,7 @@ vector<Cluster::conf_clust> Cluster::initialize_conf_clust_vector(int conf_size)
 }
 
 void Cluster::readInfo() {
-    Atom::AtomIndenter atomIndenter;
+    Atom::AmberMask atomIndenter;
     Atom::select1group(atomIndenter, "Please enter group > ");
     setSetting(atomIndenter, choose(0.0, static_cast<double>(numeric_limits<int>::max()), "Cutoff > "));
 }
@@ -276,7 +276,7 @@ void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) {
                   });
 }
 
-void Cluster::setSetting(const Atom::AtomIndenter &atomIndenter, double cutoff) {
+void Cluster::setSetting(const Atom::AmberMask &atomIndenter, double cutoff) {
     this->ids = atomIndenter;
     throw_assert(cutoff > 0, "cutoff must postive (cutoff = " << cutoff << ")");
     this->cutoff = cutoff;

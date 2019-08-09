@@ -42,8 +42,8 @@ public:
 
 protected:
 
-    Atom::AtomIndenter ids1;
-    Atom::AtomIndenter ids2;
+    Atom::AmberMask ids1;
+    Atom::AmberMask ids2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
