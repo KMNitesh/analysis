@@ -13,10 +13,6 @@
 using namespace std;
 using namespace testing;
 
-struct VertexNode {
-    typedef boost::vertex_property_tag kind;
-};
-
 
 class MyVisitor : public boost::default_dfs_visitor {
 
@@ -25,7 +21,7 @@ public:
 
     template<typename Vertex, typename Graph>
     void discover_vertex(Vertex v, const Graph &g) const {
-        all_connected_atoms.emplace(boost::get(VertexNode(), g, v));
+        all_connected_atoms.emplace(g[v]);
     }
 
 private:
@@ -36,7 +32,7 @@ private:
 
 TEST(BoostGraph, Start) {
 
-    typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, boost::property<VertexNode, int>> graph_t;
+    typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, int> graph_t;
 
     graph_t g;
 
@@ -62,6 +58,9 @@ TEST(BoostGraph, Start) {
 
     ASSERT_THAT(all_connected_atoms, UnorderedElementsAre(10, 13, 15));
 
+    boost::remove_edge_if([](auto) { return true; }, g);
+    ASSERT_THAT(boost::num_vertices(g), Eq(4));
+    ASSERT_THAT(boost::num_edges(g), Eq(0));
 
 }
 //#include <boost/graph/adjacency_list.hpp>

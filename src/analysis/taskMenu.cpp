@@ -81,6 +81,7 @@ namespace mpl = boost::mpl;
 #include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 #include "HBondLifeTime.hpp"
 #include "HBondLifeTimeCutoff.hpp"
+#include "HBondSpread.hpp"
 
 
 using namespace std;
@@ -131,7 +132,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             SpatialOrientationDistribution,
             AngleDistributionBetweenTwoVectorWithCutoff,
             HBondLifeTime,
-            HBondLifeTimeCutoff
+            HBondLifeTimeCutoff,
+            HBondSpread
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
