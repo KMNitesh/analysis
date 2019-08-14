@@ -475,6 +475,22 @@ std::tuple<T, T, T> operator+(const std::tuple<T, T, T> &vector1, const std::tup
 }
 
 template<typename T>
+std::tuple<T, T, T> &operator+=(std::tuple<T, T, T> &vector1, const std::tuple<T, T, T> &vector2) {
+    std::get<0>(vector1) += std::get<0>(vector2);
+    std::get<1>(vector1) += std::get<1>(vector2);
+    std::get<2>(vector1) += std::get<2>(vector2);
+    return vector1;
+}
+
+template<typename T>
+std::tuple<T, T, T> &operator-=(std::tuple<T, T, T> &vector1, const std::tuple<T, T, T> &vector2) {
+    std::get<0>(vector1) -= std::get<0>(vector2);
+    std::get<1>(vector1) -= std::get<1>(vector2);
+    std::get<2>(vector1) -= std::get<2>(vector2);
+    return vector1;
+}
+
+template<typename T>
 std::tuple<T, T, T> operator/(const std::tuple<T, T, T> &vector1, T norm) {
     return {std::get<0>(vector1) / norm,
             std::get<1>(vector1) / norm,
@@ -538,5 +554,6 @@ std::string chrono_cast(const T &dur) {
     return format_string;
 }
 
+std::string getOutputFilename(const po::variables_map &vm);
 
 #endif //TINKER_COMMON_HPP

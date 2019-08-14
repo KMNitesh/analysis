@@ -22,7 +22,7 @@ struct VertexNode {
 class MyVisitor : public boost::default_dfs_visitor {
 
 public:
-    MyVisitor(std::unordered_set<int> &all_connected_atoms) : all_connected_atoms(all_connected_atoms) {};
+    explicit MyVisitor(std::unordered_set<int> &all_connected_atoms) : all_connected_atoms(all_connected_atoms) {};
 
     template<typename Vertex, typename Graph>
     void discover_vertex(Vertex v, const Graph &g) const {
@@ -46,7 +46,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Hydrogen Bond Spread Analysis"; }
+    static std::string title() { return "Hydrogen Bond Spread Analysis"; }
 
 protected:
 

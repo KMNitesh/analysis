@@ -766,10 +766,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
     }
 
-    std::fstream outfile;
+    std::ofstream outfile;
     if (enable_outfile) {
-        outfile.open(vm.count("output") ? vm["output"].as<std::string>() : choose_file("Output file: ", false),
-                     std::ios_base::out);
+        outfile.open(getOutputFilename(vm));
     }
     std::shared_ptr<Frame> frame;
     int Clear = 0;

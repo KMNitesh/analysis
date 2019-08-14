@@ -163,3 +163,7 @@ std::string print_cmdline(int argc, const char *const argv[]) {
     }
     return cmdline;
 }
+
+std::string getOutputFilename(const po::variables_map &vm) {
+    return vm.count("output") ? vm["output"].as<std::string>() : choose_file("output file :", false);
+}

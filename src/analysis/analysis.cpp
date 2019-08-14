@@ -11,6 +11,7 @@ namespace po = boost::program_options;
 #include "common.hpp"
 
 #include "mainUtils.hpp"
+#include "IRSpectrum.hpp"
 
 using namespace std;
 
@@ -23,7 +24,8 @@ int mainMenu() {
     std::cout << "Main Menu\n";
     std::cout << "(0) Trajectory Analysis\n";
     std::cout << "(1) Print Topology\n";
-    return choose<int>(0, 1, "select :");
+    std::cout << "(2) Infrared radiation (IR) Spectrum\n";
+    return choose<int>(0, 2, "select :");
 };
 
 void printDSLDetails() {
@@ -118,6 +120,7 @@ void printDSLDetails() {
 
 }
 
+
 int main(int argc, char *argv[]) {
 
     std::cout << "Build DateTime : " << __DATE__ << " " << __TIME__ << endl;
@@ -193,23 +196,23 @@ int main(int argc, char *argv[]) {
     }
 
 
-    /*
-     *  examine the tpr file of gromcas and show the content
-     */
-    if (mainMenu() == 1) {
-        printTopolgy(vm);
-        return EXIT_SUCCESS;
+    switch (mainMenu()) {
+        case 0:
+            // handle normal trajctories
+            processTrajectory(desc, vm, xyzfiles, argc, argv);
+            break;
+        case 1:
+            printTopolgy(vm);
+            break;
+        case 2:
+            IRSpectrum::calculateIRSpectrum(getOutputFilename(vm));
+            break;
     }
-
-
-    /*
-     *  At last, handle normal trajctories
-     */
-    processTrajectory(desc, vm, xyzfiles, argc, argv);
 
     return EXIT_SUCCESS;
 
 }
+
 
 
 

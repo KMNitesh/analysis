@@ -1522,7 +1522,7 @@ c
    10 format (/,' Total Electric Charge :',13x,f12.5,' Electrons')
       write (iout,20)  netdpl,xdpl,ydpl,zdpl
    20 format (/,' Dipole Moment Magnitude :',11x,f12.3,' Debyes',
-     &        //,' Dipole X,Y,Z-Components :',11x,3f12.3)
+     &        //,' Dipole X,Y,Z-Components :',11x,3f20.14)
       write (iout,30)  xxqdp,xyqdp,xzqdp,yxqdp,yyqdp,
      &                 yzqdp,zxqdp,zyqdp,zzqdp
    30 format (/,' Quadrupole Moment Tensor :',10x,3f12.3,
