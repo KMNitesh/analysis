@@ -89,9 +89,9 @@ protected:
 
     std::shared_ptr<Frame> readOneFrameArc();
 
+    void assignAtom2Molecule();
+
 public:
-
-
 
     void add_filename(const std::string &filename);
 

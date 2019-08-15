@@ -161,11 +161,18 @@ int TrajectoryReader::readOneFrameTrr() {
     gmx::gmx_bool bOK;
     gmx::rvec box[3];
     gmx::rvec *coord = nullptr;
+    gmx::rvec *velocities = nullptr;
     if (gmx::fread_trnheader(fio, &trnheader, &bOK)) {
         if (bOK) {
             coord = new gmx::rvec[trnheader.natoms];
+            if (trnheader.v_size) {
+                velocities = new gmx::rvec[trnheader.natoms];
+            } else if (enable_read_velocity) {
+                std::cerr << "Gromacs TRR Trajectory file do not have velocities !\n";
+                exit(4);
+            }
             if (trnheader.box_size) {
-                gmx::fread_htrn(fio, &trnheader, box, coord, NULL, NULL);
+                gmx::fread_htrn(fio, &trnheader, box, coord, velocities, nullptr);
                 translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
                           &(frame->alpha), &(frame->beta), &(frame->gamma));
                 if (frame->enable_bound) {
@@ -185,7 +192,7 @@ int TrajectoryReader::readOneFrameTrr() {
                 frame->beta = 0.0;
                 frame->gamma = 0.0;
                 frame->enable_bound = false;
-                gmx::fread_htrn(fio, &trnheader, NULL, coord, NULL, NULL);
+                gmx::fread_htrn(fio, &trnheader, nullptr, coord, velocities, nullptr);
             }
             if (static_cast<int>(frame->atom_list.size()) != trnheader.natoms) {
                 std::cerr << "ERROR! the atom number do not match" << std::endl;
@@ -196,9 +203,18 @@ int TrajectoryReader::readOneFrameTrr() {
                 atom->x = coord[i][0] * 10;
                 atom->y = coord[i][1] * 10;
                 atom->z = coord[i][2] * 10;
+                if (velocities) {
+                    atom->vx = velocities[i][0] * 10;
+                    atom->vy = velocities[i][1] * 10;
+                    atom->vz = velocities[i][2] * 10;
+                }
                 i++;
             }
             delete[] coord;
+            coord = nullptr;
+            delete[] velocities;
+            velocities = nullptr;
+
             return 1;
         }
     }
@@ -338,13 +354,7 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameTpr() {
 
 
     if (first_time) {
-        for (auto &atom : frame->atom_list) {
-            if (!atom->molecule.lock()) {
-                auto molecule = std::make_shared<Molecule>();
-                add_to_mol(atom, molecule, frame);
-                frame->molecule_list.push_back(molecule);
-            }
-        }
+        assignAtom2Molecule();
     }
 
     if (atoms.nres != boost::numeric_cast<int>(frame->molecule_list.size())) {
@@ -353,6 +363,16 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameTpr() {
     }
 
     return frame;
+}
+
+void TrajectoryReader::assignAtom2Molecule() {
+    for (auto &atom : frame->atom_list) {
+        if (!atom->molecule.lock()) {
+            auto molecule = std::make_shared<Molecule>();
+            add_to_mol(atom, molecule, frame);
+            frame->molecule_list.push_back(molecule);
+        }
+    }
 }
 
 std::shared_ptr<Frame> TrajectoryReader::readOneFrameMol2() {
@@ -443,13 +463,7 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameMol2() {
         }
     }
     if (first_time) {
-        for (auto &atom : frame->atom_list) {
-            if (!atom->molecule.lock()) {
-                auto molecule = std::make_shared<Molecule>();
-                add_to_mol(atom, molecule, frame);
-                frame->molecule_list.push_back(molecule);
-            }
-        }
+        assignAtom2Molecule();
     }
     return frame;
 
@@ -474,7 +488,7 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameArc() {
     if (frame->enable_bound) {
         std::getline(position_file, line);
         field = split(line);
-        if (field.empty()){
+        if (field.empty()) {
             throw std::exception();
         }
         frame->a_axis = std::stod(field[0]);
@@ -523,13 +537,7 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameArc() {
             frame->atom_map[atom->seq] = atom;
         }
 
-        for (auto &atom : frame->atom_list) {
-            if (!atom->molecule.lock()) {
-                auto molecule = std::make_shared<Molecule>();
-                add_to_mol(atom, molecule, frame);
-                frame->molecule_list.push_back(molecule);
-            }
-        }
+        assignAtom2Molecule();
 
     } else {
         for (auto &atom : frame->atom_list) {
@@ -583,12 +591,21 @@ void TrajectoryReader::open(const std::string &filename) {
         position_file.open(filename);
     }
     if (enable_read_velocity) {
-        velocity_file.open(field[0] + ".vel");
-        velocity_file.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-        if (velocity_file.good()) this->openvel = true;
-        else {
-            std::cerr << "Error open velocity file" << std::endl;
-            exit(3);
+        switch (getFileType(filename)) {
+            case FileType::ARC:
+                velocity_file.open(field[0] + ".vel");
+                velocity_file.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+                if (velocity_file.good()) this->openvel = true;
+                else {
+                    std::cerr << "Error open velocity file" << std::endl;
+                    exit(3);
+                }
+                break;
+            case FileType::TRR:
+                break;
+            default:
+                std::cerr << "trajectory file do not have velocity data\n";
+                exit(3);
         }
     }
 }

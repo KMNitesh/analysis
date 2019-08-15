@@ -54,15 +54,14 @@ VelocityAutocorrelationFunction::calculateAcf(
 
     const auto max_calculate_length = std::min<std::size_t>(velocities.at(0).size(), max_time_grap_frame + 1);
     auto[acf, ntime]= tbb::parallel_reduce(
-            tbb::blocked_range<size_t>(0, velocities.size()),
+            tbb::blocked_range2d<size_t>(0, velocities.size(), 0, velocities.front().size()),
             std::make_pair(std::vector<long double>(max_calculate_length), std::vector<long>(max_calculate_length)),
-            [&velocities, max_time_grap_frame](const tbb::blocked_range<size_t> &range, auto init) {
-                for (auto index = range.begin(); index != range.end(); ++index) {
+            [&velocities, max_time_grap_frame](const tbb::blocked_range2d<size_t> &range, auto init) {
+                for (auto index = range.rows().begin(); index != range.rows().end(); ++index) {
                     auto &vel = velocities[index];
                     auto &[acf, ntime] = init;
-                    for (size_t i = 0; i < vel.size(); ++i) {
-                        for (size_t j = i;
-                             j < std::min<std::size_t>(vel.size(), max_time_grap_frame + i + 1); ++j) {
+                    for (auto i = range.cols().begin(); i != range.cols().end(); ++i) {
+                        for (auto j = i; j < std::min<std::size_t>(vel.size(), max_time_grap_frame + i + 1); ++j) {
                             auto n = j - i;
                             ++ntime[n];
                             acf[n] += dot_multiplication(vel[i], vel[j]);
