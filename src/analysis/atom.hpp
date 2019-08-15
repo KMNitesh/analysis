@@ -29,6 +29,8 @@ public:
 
     std::tuple<double, double, double> getCoordinate() const { return {x, y, z}; }
 
+    std::tuple<double, double, double> getVelocities() const { return {vx, vy, vz}; }
+
     double vx = 0.0, vy = 0.0, vz = 0.0; // velocity
 
     int typ; // atom type

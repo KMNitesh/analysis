@@ -11,6 +11,7 @@
 IRSpectrumElectricalFlux::IRSpectrumElectricalFlux() {
     enable_outfile = true;
     enable_read_velocity = true;
+    enable_tbb = true;
 }
 
 void IRSpectrumElectricalFlux::process(std::shared_ptr<Frame> &frame) {
