@@ -592,7 +592,9 @@ void TrajectoryReader::open(const std::string &filename) {
     }
     if (enable_read_velocity) {
         switch (getFileType(filename)) {
-            case FileType::ARC:
+            case FileType::TRR:
+                break;
+            default:
                 velocity_file.open(field[0] + ".vel");
                 velocity_file.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
                 if (velocity_file.good()) this->openvel = true;
@@ -601,11 +603,6 @@ void TrajectoryReader::open(const std::string &filename) {
                     exit(3);
                 }
                 break;
-            case FileType::TRR:
-                break;
-            default:
-                std::cerr << "trajectory file do not have velocity data\n";
-                exit(3);
         }
     }
 }
