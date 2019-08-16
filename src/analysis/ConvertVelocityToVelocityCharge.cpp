@@ -8,12 +8,12 @@
 #include "trr_writer.hpp"
 #include "atom.hpp"
 
-ConvertVelocityToVelocityCharge::ConvertVelocityToVelocityCharge() {
+ConvertVelocityToVelocityCharge::ConvertVelocityToVelocityCharge(std::unique_ptr<TRRWriter> writer)
+        : writer(std::move(writer)) {
     enable_read_velocity = true;
 }
 
 void ConvertVelocityToVelocityCharge::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    writer = std::make_unique<TRRWriter>();
     writer->open(trr_vq_outfilename);
     writer->setWriteVelocities(true);
 }

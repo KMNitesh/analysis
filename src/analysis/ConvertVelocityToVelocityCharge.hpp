@@ -13,7 +13,7 @@ class Frame;
 
 class ConvertVelocityToVelocityCharge : public BasicAnalysis {
 public:
-    ConvertVelocityToVelocityCharge();
+    ConvertVelocityToVelocityCharge(std::unique_ptr<TRRWriter> writer = std::make_unique<TRRWriter>());
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 

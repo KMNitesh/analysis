@@ -28,7 +28,7 @@ public:
 
     void close() override;
 
-    void setWriteVelocities(bool writeVelocities) {
+    virtual void setWriteVelocities(bool writeVelocities) {
         this->writeVelocities = writeVelocities;
     }
 
@@ -36,7 +36,7 @@ public:
         return writeVelocities;
     }
 
-    void setCurrentTime(gmx::real t) {
+    virtual void setCurrentTime(gmx::real t) {
         this->time = t;
     }
 
@@ -49,5 +49,7 @@ protected:
         static GromacsImpl impl;
         return &impl;
     }
+
 };
+
 #endif //TINKER_TRR_WRITER_HPP
