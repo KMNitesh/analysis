@@ -807,7 +807,6 @@ void processTrajectory(const boost::program_options::options_description &desc,
     for (auto &task : *task_list) {
         task->print(outfile);
     }
-    if (outfile.is_open()) outfile.close();
     std::cout << "Mission Complete" << std::endl;
 }
 

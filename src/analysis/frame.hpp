@@ -14,10 +14,21 @@
 #include <cassert>
 
 class Atom;
+
 class Molecule;
 
 class Frame {
+
+    std::optional<float> current_time;
 public:
+    const std::optional<float> &getCurrentTime() const {
+        return current_time;
+    }
+
+    void setCurrentTime(const std::optional<float> &currentTime) {
+        current_time = currentTime;
+    }
+
     double a_axis = 0.0;
     double b_axis = 0.0;
     double c_axis = 0.0;

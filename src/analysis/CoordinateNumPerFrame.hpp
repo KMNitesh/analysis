@@ -29,7 +29,7 @@ class CoordinateNumPerFrame : public BasicAnalysis {
 public:
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
-public:
+
     CoordinateNumPerFrame() {
         enable_outfile = true;
     }

@@ -128,9 +128,9 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameTraj() {
 }
 
 int TrajectoryReader::readOneFrameNetCDF() {
-    auto coord = new double[NC.ncatom3];
+    auto coord = std::make_unique<double[]>(NC.ncatom3);
     double box[6];
-    int ret = netcdfGetNextFrame(&NC, coord, box);
+    int ret = netcdfGetNextFrame(&NC, coord.get(), box);
     if (ret == 0) return ret;
     int i = 0;
     for (auto &atom : frame->atom_list) {
@@ -151,8 +151,6 @@ int TrajectoryReader::readOneFrameNetCDF() {
         frame->b_axis_half = frame->b_axis / 2;
         frame->c_axis_half = frame->c_axis / 2;
     }
-
-    delete[] coord;
     return ret;
 }
 
@@ -160,19 +158,20 @@ int TrajectoryReader::readOneFrameTrr() {
     gmx::t_trnheader trnheader;
     gmx::gmx_bool bOK;
     gmx::rvec box[3];
-    gmx::rvec *coord = nullptr;
-    gmx::rvec *velocities = nullptr;
+    std::unique_ptr<gmx::rvec[]> coord;
+    std::unique_ptr<gmx::rvec[]> velocities;
     if (gmx::fread_trnheader(fio, &trnheader, &bOK)) {
+        frame->setCurrentTime(trnheader.t);
         if (bOK) {
-            coord = new gmx::rvec[trnheader.natoms];
+            coord = std::make_unique<gmx::rvec[]>(trnheader.natoms);
             if (trnheader.v_size) {
-                velocities = new gmx::rvec[trnheader.natoms];
+                velocities = std::make_unique<gmx::rvec[]>(trnheader.natoms);
             } else if (enable_read_velocity) {
                 std::cerr << "Gromacs TRR Trajectory file do not have velocities !\n";
                 exit(4);
             }
             if (trnheader.box_size) {
-                gmx::fread_htrn(fio, &trnheader, box, coord, velocities, nullptr);
+                gmx::fread_htrn(fio, &trnheader, box, coord.get(), velocities.get(), nullptr);
                 translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
                           &(frame->alpha), &(frame->beta), &(frame->gamma));
                 if (frame->enable_bound) {
@@ -192,7 +191,7 @@ int TrajectoryReader::readOneFrameTrr() {
                 frame->beta = 0.0;
                 frame->gamma = 0.0;
                 frame->enable_bound = false;
-                gmx::fread_htrn(fio, &trnheader, nullptr, coord, velocities, nullptr);
+                gmx::fread_htrn(fio, &trnheader, nullptr, coord.get(), velocities.get(), nullptr);
             }
             if (static_cast<int>(frame->atom_list.size()) != trnheader.natoms) {
                 std::cerr << "ERROR! the atom number do not match" << std::endl;
@@ -210,10 +209,6 @@ int TrajectoryReader::readOneFrameTrr() {
                 }
                 i++;
             }
-            delete[] coord;
-            coord = nullptr;
-            delete[] velocities;
-            velocities = nullptr;
 
             return 1;
         }

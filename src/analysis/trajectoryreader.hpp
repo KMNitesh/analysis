@@ -62,12 +62,9 @@ class TrajectoryReader {
 
     std::list<std::string> arc_filename_list; // the continuous trajectory files
 
-
-
     void close();
 
     void readOneFrameVel();
-
 
     int readOneFrameNetCDF();
 
@@ -75,9 +72,7 @@ class TrajectoryReader {
 
     int readOneFrameXtc();
 
-
     void open(const std::string &filename);
-
 
 protected:
 

@@ -20,12 +20,25 @@ class TRRWriter : public TrajectoryFormatWriter {
     gmx::t_fileio *xd = nullptr;
     int step;
     float time;
+    bool writeVelocities = false;
 public:
     void open(const std::string &filename) override;
 
     void write(const std::shared_ptr<Frame> &frame) override;
 
     void close() override;
+
+    void setWriteVelocities(bool writeVelocities) {
+        this->writeVelocities = writeVelocities;
+    }
+
+    [[nodiscard]] bool isWriteVelocities() const {
+        return writeVelocities;
+    }
+
+    void setCurrentTime(gmx::real t) {
+        this->time = t;
+    }
 
 protected:
 
