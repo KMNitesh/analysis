@@ -56,12 +56,23 @@ TEST(TRRWriter, WriteFrameToFile) {
     atom1->x = -9.90;
     atom1->y = 8.89;
     atom1->z = 2.1;
+
+    atom1->vx = -1.90;
+    atom1->vy = 9.89;
+    atom1->vz = 2.7;
+
     atom1->seq = 1;
 
     auto atom2 = make_shared<Atom>();
+
     atom2->x = 0.90;
     atom2->y = 3.19;
     atom2->z = 4.1;
+
+    atom2->vx = 9.90;
+    atom2->vy = 2.19;
+    atom2->vz = 4.2;
+
     atom1->seq = 2;
 
     frame->atom_list = {atom1, atom2};
@@ -74,15 +85,26 @@ TEST(TRRWriter, WriteFrameToFile) {
     gmx::rvec x[2] = {{-0.99, 0.889, 0.21},
                       {0.09,  0.319, 0.41}};
 
+    gmx::rvec v[2] = {{-0.19, 0.989, 0.27},
+                      {0.99,  0.219, 0.42}};
+
     EXPECT_CALL(mock, open_trn(StrEq(filename), StrEq("w"))).WillOnce(Return(fio));
     EXPECT_CALL(mock, fwrite_trn(fio, 0, 0.0, 0.0, FLOAT_ARRAY_EQ(box, 9), 2, FLOAT_ARRAY_EQ(x, 6), NULL, NULL)).Times(
             1);
     EXPECT_CALL(mock, fwrite_trn(fio, 1, 1.0, 0.0, FLOAT_ARRAY_EQ(box, 9), 2, FLOAT_ARRAY_EQ(x, 6), NULL, NULL)).Times(
             1);
+    EXPECT_CALL(mock,
+                fwrite_trn(fio, 2, FloatEq(100.0), 0.0, FLOAT_ARRAY_EQ(box, 9), 2, FLOAT_ARRAY_EQ(x, 6),
+                           FLOAT_ARRAY_EQ(v, 6),
+                           NULL)).Times(1);
+
     EXPECT_CALL(mock, close_trn(fio)).Times(1);
 
     writer.open(filename);
     writer.write(frame);
+    writer.write(frame);
+    writer.setCurrentTime(100);
+    writer.setWriteVelocities(true);
     writer.write(frame);
     writer.close();
 }
@@ -145,3 +167,6 @@ TEST(TRRWriter, NULL_vs_nullptr) {
     fio = nullptr;
     ASSERT_TRUE(fio == nullptr);
 }
+
+
+

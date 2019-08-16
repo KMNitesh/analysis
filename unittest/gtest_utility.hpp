@@ -14,9 +14,8 @@ template<typename T, typename T1, typename T2>
 bool array_eq_impl(const T1 &a1, const T2 a2, int n) {
     auto p1 = (T *) a1;
     auto p2 = (T *) a2;
-    constexpr double eps = 1E-5;
     while (n > 0) {
-        if (abs(*(p1++) - *(p2++)) > eps) {
+        if (abs(*(p1++) - *(p2++)) > std::numeric_limits<T>::epsilon()) {
             return false;
         }
         n--;
