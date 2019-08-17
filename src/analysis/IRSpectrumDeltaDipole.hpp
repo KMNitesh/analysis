@@ -15,6 +15,8 @@ public:
 
     static std::string title() { return "Infrared radiation (IR) Spectrum from delta Dipole"; }
 
+    static void calculateIRSpectrum(const std::string &out);
+
 };
 
 

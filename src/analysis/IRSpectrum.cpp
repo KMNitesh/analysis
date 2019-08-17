@@ -2,12 +2,15 @@
 // Created by xiamr on 8/11/19.
 //
 
+#include <tbb/tbb.h>
+#include <boost/range/algorithm.hpp>
 #include "IRSpectrum.hpp"
 #include "common.hpp"
 #include "frame.hpp"
 
 IRSpectrum::IRSpectrum() {
     enable_outfile = true;
+    enable_tbb = true;
 }
 
 void IRSpectrum::process(std::shared_ptr<Frame> &frame) {
@@ -70,17 +73,31 @@ IRSpectrum::calculateAcf(const std::deque<std::tuple<double, double, double>> &d
 
     auto max_calc_length = dipole_evolution.size() / 3;
 
-    std::vector<long double> acf(max_calc_length, 0);
-    std::vector<long> ntime(max_calc_length, 0);
+    auto[acf, ntime] = tbb::parallel_reduce(
+            tbb::blocked_range(std::size_t(0), dipole_evolution.size()),
+            std::make_pair(std::vector<long double>(max_calc_length), std::vector<long>(max_calc_length)),
+            [&dipole_evolution, max_calc_length](const tbb::blocked_range<size_t> &range, auto init) {
+                auto &[acf, ntime] = init;
+                for (size_t i = range.begin(); i != range.end(); ++i) {
+                    for (size_t j = i; j < std::min(dipole_evolution.size(), i + max_calc_length); ++j) {
+                        auto n = j - i;
+                        ++ntime[n];
+                        acf[n] += dot_multiplication(dipole_evolution[i], dipole_evolution[j]);
+                    }
+                }
+                return init;
+            },
+            [](const auto &lhs, const auto &rhs) {
+                auto &[lhs_acf, lhs_ntime] = lhs;
+                auto &[rhs_acf, rhs_ntime] = rhs;
+                std::vector<long double> acf(lhs_acf.size());
+                std::vector<long> ntime(lhs_ntime.size());
+                boost::transform(lhs_acf, rhs_acf, acf.begin(), std::plus<>());
+                boost::transform(lhs_ntime, rhs_ntime, ntime.begin(), std::plus<>());
+                return std::make_pair(acf, ntime);
+            }
+    );
 
-
-    for (size_t i = 0; i < dipole_evolution.size(); ++i) {
-        for (size_t j = i; j < std::min(dipole_evolution.size(), i + max_calc_length); ++j) {
-            auto n = j - i;
-            ++ntime[n];
-            acf[n] += dot_multiplication(dipole_evolution[i], dipole_evolution[j]);
-        }
-    }
     acf[0] /= ntime[0];
 
     for (size_t i = 1; i < acf.size(); ++i) {
