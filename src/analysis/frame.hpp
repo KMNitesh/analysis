@@ -17,7 +17,7 @@ class Atom;
 
 class Molecule;
 
-class Frame {
+class Frame : public std::enable_shared_from_this<Frame> {
 
     std::optional<float> current_time;
 public:
@@ -58,6 +58,8 @@ public:
         assert(enable_bound);
         return a_axis * b_axis * c_axis;
     }
+
+    std::tuple<double, double, double> getDipole();
 };
 
 #endif //TINKER_FRAME_HPP

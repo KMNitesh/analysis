@@ -87,6 +87,7 @@ namespace mpl = boost::mpl;
 #include "IRSpectrumElectricalFlux.hpp"
 #include "DensityOfStates.hpp"
 #include "ConvertVelocityToVelocityCharge.hpp"
+#include "IRSpectrumDeltaDipole.hpp"
 
 using namespace std;
 
@@ -142,7 +143,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             VelocityAutocorrelationFunction,
             IRSpectrumElectricalFlux,
             DensityOfStates,
-            ConvertVelocityToVelocityCharge
+            ConvertVelocityToVelocityCharge,
+            IRSpectrumDeltaDipole
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

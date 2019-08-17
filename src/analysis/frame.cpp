@@ -4,6 +4,8 @@
 #include "config.h"
 #include "frame.hpp"
 #include "common.hpp"
+#include "molecule.hpp"
+#include "atom.hpp"
 
 
 void Frame::image(double &xr, double &yr, double &zr) const {
@@ -17,3 +19,14 @@ void Frame::image(std::tuple<double, double, double> &r) const {
     auto &[xr, yr, zr] = r;
     image(xr, yr, zr);
 }
+
+std::tuple<double, double, double> Frame::getDipole() {
+    auto frame = shared_from_this();
+    std::tuple<double, double, double> system_dipole{};
+    for (auto &mol : this->molecule_list) {
+        system_dipole += mol->calc_dipole(frame);
+    }
+    return system_dipole;
+}
+
+

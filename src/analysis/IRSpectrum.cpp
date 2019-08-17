@@ -11,12 +11,7 @@ IRSpectrum::IRSpectrum() {
 }
 
 void IRSpectrum::process(std::shared_ptr<Frame> &frame) {
-    std::tuple<double, double, double> system_dipole{};
-    for (auto &mol : frame->molecule_list) {
-        system_dipole += mol->calc_dipole(frame);
-    }
-
-    dipole_evolution.emplace_back(system_dipole);
+    dipole_evolution.emplace_back(frame->getDipole());
 }
 
 void IRSpectrum::print(std::ostream &os) {
