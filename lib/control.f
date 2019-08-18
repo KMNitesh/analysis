@@ -39,6 +39,7 @@ c
       archive = .false.
       gmxtrr = .false.
       netcdf = .false.
+      printDipole = .false.
       noversion = .false.
       overwrite = .false.
       cyclesave = .false.
@@ -80,6 +81,8 @@ c
             gmxtrr = .true.
          else if (keyword(1:7) .eq. 'NETCDF ') then
             netcdf = .true.
+         else if (keyword(1:13) .eq. 'PRINT-DIPOLE ') then
+            printDipole = .true.
          else if (keyword(1:10) .eq. 'NOVERSION ') then
             noversion = .true.
          else if (keyword(1:10) .eq. 'OVERWRITE ') then

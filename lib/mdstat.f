@@ -32,6 +32,8 @@ c
       use units
       use usage
       use warp
+      use moment
+      use output
       implicit none
       integer istep,modstep
       real*8 dt,temp,pres
@@ -348,5 +350,13 @@ c
             end if
          end if
       end if
+
+      if (printDipole) then
+        call moments
+        write (iout,330)  netdpl,xdpl,ydpl,zdpl
+  330   format (/,' Dipole Moment Magnitude :',11x,f12.3,' Debyes',
+     &        //,' Dipole X,Y,Z-Components :',11x,3f20.14)
+      end if
+
       return
       end

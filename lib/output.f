@@ -24,6 +24,7 @@ c
       logical archive
       logical gmxtrr
       logical netcdf
+      logical printDipole
       logical noversion
       logical overwrite
       logical cyclesave
