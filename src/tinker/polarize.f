@@ -123,7 +123,7 @@ c
          write (iout,80)  alpha(1,1),alpha(1,2),alpha(1,3),
      &                    alpha(2,1),alpha(2,2),alpha(2,3),
      &                    alpha(3,1),alpha(3,2),alpha(3,3)
-   80    format (15x,3f12.4,/,15x,3f12.4,/,15x,3f12.4)
+   80    format (15x,3f20.14,/,15x,3f20.14,/,15x,3f20.14)
       end if
 c
 c     diagonalize the tensor and get molecular polarizability
