@@ -44,7 +44,7 @@ void IRSpectrumElectricalFlux::print(std::ostream &os) {
     os << boost::format("%15s %15s\n") % "Frequency (cm-1)" % "Intensity";
 
     for (std::size_t i = 0; i < intense.size(); ++i) {
-        os << boost::format("%15.3f %15.5f\n") % (i + 400) % intense[i];
+        os << boost::format("%15.3f %15.5f\n") % (i + 1) % intense[i];
     }
 
     os << std::string(50, '#') << '\n';

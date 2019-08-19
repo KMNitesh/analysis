@@ -43,7 +43,7 @@ void IRSpectrum::printData(std::ostream &os,
     os << boost::format("%15s %15s\n") % "Frequency (cm-1)" % "Intensity";
 
     for (std::size_t i = 0; i < intense.size(); ++i) {
-        os << boost::format("%15.3f %15.5f\n") % (i + 400) % intense[i];
+        os << boost::format("%15.3f %15.5f\n") % (i + 1) % intense[i];
     }
 
     os << std::string(50, '#') << '\n';
@@ -54,9 +54,9 @@ std::vector<double> IRSpectrum::calculateIntense(const std::vector<long double> 
 
     const double factor = 2.0 * pi * lightSpeed;
 
-    std::vector<double> intense(3601, 0);
+    std::vector<double> intense(5000, 0);
     for (size_t f = 0; f < intense.size(); ++f) {
-        auto freq = f + 400;
+        auto freq = f + 1;
         for (size_t k = 0; k < acf.size(); ++k) {
             intense[f] += acf[k] * cos(freq * factor * time_increment_ps * k);
         }
