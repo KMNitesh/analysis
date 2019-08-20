@@ -37,12 +37,20 @@ c
       real*8 alpha(3,3)
       real*8 valpha(3,3)
       character*40 fstr
+      character*120 netcdffile
+      logical usenetcdf
+      integer*8 inetcdf
+      integer frame
 c
 c
 c     get the coordinates and required force field parameters
 c
       call initial
       call getxyz
+
+      usenetcdf = .false.
+      call getnetcdf(netcdffile,usenetcdf)
+
       call attach
       call field
       call molecule
@@ -74,87 +82,116 @@ c
          write (iout,40)  fstr(1:36),addu
    40    format (/,a36,f15.4)
       end if
+
+      if (usenetcdf) then
+        call opennetcdf(netcdffile,inetcdf)
+        call readnetcdf(inetcdf)
+      end if
+
+      frame = 0
+
+      do while (.not. abort)
+         frame = frame + 1
+         if (frame .gt. 1) then
+            write (iout,41)  frame
+   41       format (/,' Analysis for Archive Structure :',8x,i8)
+         end if
 c
 c     compute each column of the polarizability tensor
 c
-      external = 0.01d0
-      do i = 1, 3
-         exfield(i) = 0.0d0
-      end do
-      exfield(1) = external
-      call moluind (exfield,umol)
-      alpha(1,1) = umol(1) / exfield(1)
-      alpha(2,1) = umol(2) / exfield(1)
-      alpha(3,1) = umol(3) / exfield(1)
-      do i = 1, 3
-         exfield(i) = 0.0d0
-      end do
-      exfield(2) = external
-      call moluind (exfield,umol)
-      alpha(1,2) = umol(1) / exfield(2)
-      alpha(2,2) = umol(2) / exfield(2)
-      alpha(3,2) = umol(3) / exfield(2)
-      do i = 1, 3
-         exfield(i) = 0.0d0
-      end do
-      exfield(3) = external
-      call moluind (exfield,umol)
-      alpha(1,3) = umol(1) / exfield(3)
-      alpha(2,3) = umol(2) / exfield(3)
-      alpha(3,3) = umol(3) / exfield(3)
+          external = 0.01d0
+          do i = 1, 3
+             exfield(i) = 0.0d0
+          end do
+          exfield(1) = external
+          call moluind (exfield,umol)
+          alpha(1,1) = umol(1) / exfield(1)
+          alpha(2,1) = umol(2) / exfield(1)
+          alpha(3,1) = umol(3) / exfield(1)
+          do i = 1, 3
+             exfield(i) = 0.0d0
+          end do
+          exfield(2) = external
+          call moluind (exfield,umol)
+          alpha(1,2) = umol(1) / exfield(2)
+          alpha(2,2) = umol(2) / exfield(2)
+          alpha(3,2) = umol(3) / exfield(2)
+          do i = 1, 3
+             exfield(i) = 0.0d0
+          end do
+          exfield(3) = external
+          call moluind (exfield,umol)
+          alpha(1,3) = umol(1) / exfield(3)
+          alpha(2,3) = umol(2) / exfield(3)
+          alpha(3,3) = umol(3) / exfield(3)
 c
 c     print out the full polarizability tensor
 c
-      fstr = ' Total Polarizability Tensor :    '
-      if (nmol .eq. 1)  fstr = ' Molecular Polarizability Tensor :'
-      write (iout,50)  fstr(1:34)
-   50 format (/,a34,/)
-      if (digits .ge. 8) then
-         write (iout,60)  alpha(1,1),alpha(1,2),alpha(1,3),
-     &                    alpha(2,1),alpha(2,2),alpha(2,3),
-     &                    alpha(3,1),alpha(3,2),alpha(3,3)
-   60    format (15x,3f16.8,/,15x,3f16.8,/,15x,3f16.8)
-      else if (digits .ge. 6) then
-         write (iout,70)  alpha(1,1),alpha(1,2),alpha(1,3),
-     &                    alpha(2,1),alpha(2,2),alpha(2,3),
-     &                    alpha(3,1),alpha(3,2),alpha(3,3)
-   70    format (15x,3f14.6,/,15x,3f14.6,/,15x,3f14.6)
-      else
-         write (iout,80)  alpha(1,1),alpha(1,2),alpha(1,3),
-     &                    alpha(2,1),alpha(2,2),alpha(2,3),
-     &                    alpha(3,1),alpha(3,2),alpha(3,3)
-   80    format (15x,3f20.14,/,15x,3f20.14,/,15x,3f20.14)
-      end if
+          fstr = ' Total Polarizability Tensor :    '
+          if (nmol .eq. 1)  fstr = ' Molecular Polarizability Tensor :'
+          write (iout,50)  fstr(1:34)
+   50     format (/,a34,/)
+          if (digits .ge. 8) then
+             write (iout,60)  alpha(1,1),alpha(1,2),alpha(1,3),
+     &                        alpha(2,1),alpha(2,2),alpha(2,3),
+     &                        alpha(3,1),alpha(3,2),alpha(3,3)
+   60        format (15x,3f16.8,/,15x,3f16.8,/,15x,3f16.8)
+          else if (digits .ge. 6) then
+             write (iout,70)  alpha(1,1),alpha(1,2),alpha(1,3),
+     &                        alpha(2,1),alpha(2,2),alpha(2,3),
+     &                        alpha(3,1),alpha(3,2),alpha(3,3)
+   70        format (15x,3f14.6,/,15x,3f14.6,/,15x,3f14.6)
+          else
+             write (iout,80)  alpha(1,1),alpha(1,2),alpha(1,3),
+     &                        alpha(2,1),alpha(2,2),alpha(2,3),
+     &                        alpha(3,1),alpha(3,2),alpha(3,3)
+   80        format (15x,3f20.14,/,15x,3f20.14,/,15x,3f20.14)
+          end if
 c
 c     diagonalize the tensor and get molecular polarizability
 c
-      call jacobi (3,alpha,dalpha,valpha)
-      if (nmol .eq. 1)  fstr = ' Polarizability Tensor Eigenvalues :'
-      write (iout,90)  fstr(1:36)
-   90 format (/,a36,/)
-      if (digits .ge. 8) then
-         write (iout,100)  dalpha(1),dalpha(2),dalpha(3)
-  100    format (15x,3f16.8)
-      else if (digits .ge. 6) then
-         write (iout,110)  dalpha(1),dalpha(2),dalpha(3)
-  110    format (15x,3f14.6)
-      else
-         write (iout,120)  dalpha(1),dalpha(2),dalpha(3)
-  120    format (15x,3f12.4)
-      end if
-      malpha = (dalpha(1)+dalpha(2)+dalpha(3)) / 3.0d0
-      fstr = ' Interactive Total Polarizability :    '
-      if (nmol .eq. 1)  fstr = ' Interactive Molecular Polarizability :'
-      if (digits .ge. 8) then
-         write (iout,130)  fstr(1:39),malpha
-  130    format (/,a39,f16.8)
-      else if (digits .ge. 6) then
-         write (iout,140)  fstr(1:39),malpha
-  140    format (/,a39,f14.6)
-      else
-         write (iout,150)  fstr(1:39),malpha
-  150    format (/,a39,f12.4)
-      end if
+          call jacobi (3,alpha,dalpha,valpha)
+          if (nmol .eq. 1) then
+              fstr = ' Polarizability Tensor Eigenvalues :'
+          end if
+          write (iout,90)  fstr(1:36)
+   90     format (/,a36,/)
+          if (digits .ge. 8) then
+             write (iout,100)  dalpha(1),dalpha(2),dalpha(3)
+  100        format (15x,3f16.8)
+          else if (digits .ge. 6) then
+             write (iout,110)  dalpha(1),dalpha(2),dalpha(3)
+  110        format (15x,3f14.6)
+          else
+             write (iout,120)  dalpha(1),dalpha(2),dalpha(3)
+  120        format (15x,3f12.4)
+          end if
+          malpha = (dalpha(1)+dalpha(2)+dalpha(3)) / 3.0d0
+          fstr = ' Interactive Total Polarizability :    '
+          if (nmol .eq. 1) then
+              fstr = ' Interactive Molecular Polarizability :'
+          end if
+          if (digits .ge. 8) then
+              write (iout,130)  fstr(1:39),malpha
+  130         format (/,a39,f16.8)
+          else if (digits .ge. 6) then
+              write (iout,140)  fstr(1:39),malpha
+  140         format (/,a39,f14.6)
+          else
+              write (iout,150)  fstr(1:39),malpha
+  150         format (/,a39,f12.4)
+          end if
+
+          write (iout,151)  alpha(1,1),alpha(2,2),alpha(3,3)
+  151     format (' Polarizability Tensor for Raman : ',
+     &             3f20.14,/,15x,3f20.14,/,15x,3f20.14)
+
+          if (usenetcdf) then
+              call readnetcdf(inetcdf)
+          else
+              abort = .true.
+          end if
+      end do
 c
 c     perform any final tasks before program exit
 c
