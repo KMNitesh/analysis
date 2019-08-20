@@ -68,21 +68,22 @@ std::vector<double> IRSpectrum::calculateIntense(const std::vector<long double> 
     return intense;
 }
 
-std::vector<long double>
-IRSpectrum::calculateAcf(const std::deque<std::tuple<double, double, double>> &dipole_evolution) {
 
-    auto max_calc_length = dipole_evolution.size() / 3;
+template<typename Container>
+std::vector<long double> IRSpectrum::calculateAcf(const Container &evolution) {
+
+    auto max_calc_length = evolution.size() / 3;
 
     auto[acf, ntime] = tbb::parallel_reduce(
-            tbb::blocked_range(std::size_t(0), dipole_evolution.size()),
+            tbb::blocked_range(std::size_t(0), evolution.size()),
             std::make_pair(std::vector<long double>(max_calc_length), std::vector<long>(max_calc_length)),
-            [&dipole_evolution, max_calc_length](const tbb::blocked_range<size_t> &range, auto init) {
+            [&evolution, max_calc_length](const tbb::blocked_range<size_t> &range, auto init) {
                 auto &[acf, ntime] = init;
                 for (size_t i = range.begin(); i != range.end(); ++i) {
-                    for (size_t j = i; j < std::min(dipole_evolution.size(), i + max_calc_length); ++j) {
+                    for (size_t j = i; j < std::min(evolution.size(), i + max_calc_length); ++j) {
                         auto n = j - i;
                         ++ntime[n];
-                        acf[n] += dot_multiplication(dipole_evolution[i], dipole_evolution[j]);
+                        acf[n] += dot_multiplication(evolution[i], evolution[j]);
                     }
                 }
                 return init;
@@ -107,11 +108,13 @@ IRSpectrum::calculateAcf(const std::deque<std::tuple<double, double, double>> &d
     return acf;
 }
 
+template std::vector<long double> IRSpectrum::calculateAcf(const std::deque<double> &);
+
 void IRSpectrum::readInfo() {
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
 }
 
-void IRSpectrum::calculateIRSpectrum(const std::string &out) {
+void IRSpectrum::calculateSpectrum(const std::string &out) {
     auto time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.001 ps] :", true, 0.001);
     auto file = choose_file("Enter Dipole Evolution Data File : ", true);
 

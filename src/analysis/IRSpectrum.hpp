@@ -25,10 +25,10 @@ public:
 
     static std::vector<double> calculateIntense(const std::vector<long double> &acf, double time_increment_ps);
 
-    [[nodiscard]] static std::vector<long double>
-    calculateAcf(const std::deque<std::tuple<double, double, double>> &dipole_evolution);
+    template<typename Container>
+    static std::vector<long double> calculateAcf(const Container &evolution);
 
-    static void calculateIRSpectrum(const std::string &out);
+    static void calculateSpectrum(const std::string &out);
 
     static void printData(std::ostream &os,
                           const std::deque<std::tuple<double, double, double>> &dipole_evolution,

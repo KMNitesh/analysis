@@ -13,6 +13,7 @@ namespace po = boost::program_options;
 #include "mainUtils.hpp"
 #include "IRSpectrum.hpp"
 #include "IRSpectrumDeltaDipole.hpp"
+#include "RamanSpectrum.hpp"
 
 using namespace std;
 
@@ -27,7 +28,8 @@ int mainMenu() {
     std::cout << "(1) Print Topology\n";
     std::cout << "(2) Infrared radiation (IR) Spectrum\n";
     std::cout << "(3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
-    return choose<int>(0, 3, "select :");
+    std::cout << "(4) " << RamanSpectrum::title() << '\n';
+    return choose<int>(0, 4, "select :");
 };
 
 void printDSLDetails() {
@@ -207,10 +209,13 @@ int main(int argc, char *argv[]) {
             printTopolgy(vm);
             break;
         case 2:
-            IRSpectrum::calculateIRSpectrum(getOutputFilename(vm));
+            IRSpectrum::calculateSpectrum(getOutputFilename(vm));
             break;
         case 3:
-            IRSpectrumDeltaDipole::calculateIRSpectrum(getOutputFilename(vm));
+            IRSpectrumDeltaDipole::calculateSpectrum(getOutputFilename(vm));
+            break;
+        case 4:
+            RamanSpectrum::calculateSpectrum(getOutputFilename(vm));
             break;
     }
 
