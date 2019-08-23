@@ -782,6 +782,13 @@ c
       character*20 keyword
       character*120 record
       character*120 string
+ccccccccccccccccccccccccccccccccccccccc
+      logical use_slice
+      real*8 x_lowbound, x_upbound
+      real*8 y_lowbound, y_upbound
+      real*8 z_lowbound, z_upbound
+      real*8 grid_step
+ccccccccccccccccccccccccccccccccccccccc
 c
 c
 c     set default values for grid point generation parameters
@@ -794,6 +801,7 @@ c
       rfactor = 1.0d0
       roffset = 1.0d0
       round = 0.000001d0
+      use_slice = .false.
 c
 c     check for keywords containing any altered parameters
 c
@@ -812,101 +820,126 @@ c
             read (string,*,err=10,end=10)  rfactor
          else if (keyword(1:17) .eq. 'POTENTIAL-OFFSET ') then
             read (string,*,err=10,end=10)  roffset
+         else if (keyword(1:16) .eq. 'POTENTIAL-SLICE ') then
+            read (string,*,err=10,end=10) x_lowbound, x_upbound,
+     &                                    y_lowbound, y_upbound,
+     &                                    z_lowbound, z_upbound,
+     &                                    grid_step
+            use_slice = .true.
          end if
    10    continue
       end do
+
+      if (.not. use_slice) then
 c
 c     perform dynamic allocation of some local arrays
 c
-      allocate (rad(n))
-      allocate (rad2(n))
+          allocate (rad(n))
+          allocate (rad2(n))
 c
 c     get modified atomic radii from consensus vdw values
 c
-      do i = 1, n
-         atn = atmnum(type(i))
-         rad(i) = vdwrad(atn)
-         if (rad(i) .eq. 0.0d0)  rad(i) = 1.7d0
-         rad(i) = rfactor*rad(i) + roffset
-         rad2(i) = rad(i) * rad(i)
-      end do
+          do i = 1, n
+             atn = atmnum(type(i))
+             rad(i) = vdwrad(atn)
+             if (rad(i) .eq. 0.0d0)  rad(i) = 1.7d0
+             rad(i) = rfactor*rad(i) + roffset
+             rad2(i) = rad(i) * rad(i)
+          end do
 c
 c     perform dynamic allocation of some local arrays
 c
-      allocate (dot(3,maxdot))
+          allocate (dot(3,maxdot))
 c
 c     find points on each of the molecular surface shells
 c
-      do m = 1, nshell
-         if (m .ne. 1) then
-            do i = 1, n
-               rad(i) = rad(i) + spacing
-               rad2(i) = rad(i) * rad(i)
-            end do
-         end if
-         do i = 1, n
-            xi = x(i)
-            yi = y(i)
-            zi = z(i)
-            ndot = int(density*rad2(i))
-            if (ndot .gt. maxdot) then
-               write (iout,20)
-   20          format (/,' POTGRID  --  Too many Surface Grid Points;',
+          do m = 1, nshell
+             if (m .ne. 1) then
+                do i = 1, n
+                   rad(i) = rad(i) + spacing
+                   rad2(i) = rad(i) * rad(i)
+                end do
+             end if
+             do i = 1, n
+                xi = x(i)
+                yi = y(i)
+                zi = z(i)
+                ndot = int(density*rad2(i))
+                if (ndot .gt. maxdot) then
+                   write (iout,20)
+   20           format (/,' POTGRID  --  Too many Surface Grid Points;',
      &                    ' Increase MAXDOT')
-               call fatal
-            end if
-            call sphere (ndot,dot)
-            do j = 1, ndot
-               xj = xi + rad(i)*dot(1,j)
-               yj = yi + rad(i)*dot(2,j)
-               zj = zi + rad(i)*dot(3,j)
-               xj = dble(nint(xj/round)) * round
-               yj = dble(nint(yj/round)) * round
-               zj = dble(nint(zj/round)) * round
-               do k = 1, i-1
-                  xr = xj - x(k)
-                  yr = yj - y(k)
-                  zr = zj - z(k)
-                  r2 = xr*xr + yr*yr + zr*zr
-                  if (r2 .lt. rad2(k))  goto 30
-               end do
-               do k = i+1, n
-                  xr = xj - x(k)
-                  yr = yj - y(k)
-                  zr = zj - z(k)
-                  r2 = xr*xr + yr*yr + zr*zr
-                  if (r2 .lt. rad2(k))  goto 30
-               end do
-               npoint = npoint + 1
-               ipgrid(npoint,iconf) = i
-               pgrid(1,npoint,iconf) = xj
-               pgrid(2,npoint,iconf) = yj
-               pgrid(3,npoint,iconf) = zj
-   30          continue
-            end do
-         end do
-      end do
+                   call fatal
+                end if
+                call sphere (ndot,dot)
+                do j = 1, ndot
+                   xj = xi + rad(i)*dot(1,j)
+                   yj = yi + rad(i)*dot(2,j)
+                   zj = zi + rad(i)*dot(3,j)
+                   xj = dble(nint(xj/round)) * round
+                   yj = dble(nint(yj/round)) * round
+                   zj = dble(nint(zj/round)) * round
+                   do k = 1, i-1
+                      xr = xj - x(k)
+                      yr = yj - y(k)
+                      zr = zj - z(k)
+                      r2 = xr*xr + yr*yr + zr*zr
+                      if (r2 .lt. rad2(k))  goto 30
+                   end do
+                   do k = i+1, n
+                      xr = xj - x(k)
+                      yr = yj - y(k)
+                      zr = zj - z(k)
+                      r2 = xr*xr + yr*yr + zr*zr
+                      if (r2 .lt. rad2(k))  goto 30
+                   end do
+                   npoint = npoint + 1
+                   ipgrid(npoint,iconf) = i
+                   pgrid(1,npoint,iconf) = xj
+                   pgrid(2,npoint,iconf) = yj
+                   pgrid(3,npoint,iconf) = zj
+   30             continue
+                end do
+             end do
+          end do
 c
 c     perform deallocation of some local arrays
 c
-      deallocate (rad)
-      deallocate (rad2)
-      deallocate (dot)
+          deallocate (rad)
+          deallocate (rad2)
+          deallocate (dot)
 c
 c     use potential grid points only for active grid atoms
 c
-      k = npoint
-      npoint = 0
-      do i = 1, k
-         if (gatm(ipgrid(i,iconf))) then
-            npoint = npoint + 1
-            ipgrid(npoint,iconf) = ipgrid(i,iconf)
-            pgrid(1,npoint,iconf) = pgrid(1,i,iconf)
-            pgrid(2,npoint,iconf) = pgrid(2,i,iconf)
-            pgrid(3,npoint,iconf) = pgrid(3,i,iconf)
-         end if
-      end do
-      npgrid(iconf) = npoint
+          k = npoint
+          npoint = 0
+          do i = 1, k
+             if (gatm(ipgrid(i,iconf))) then
+                npoint = npoint + 1
+                ipgrid(npoint,iconf) = ipgrid(i,iconf)
+                pgrid(1,npoint,iconf) = pgrid(1,i,iconf)
+                pgrid(2,npoint,iconf) = pgrid(2,i,iconf)
+                pgrid(3,npoint,iconf) = pgrid(3,i,iconf)
+             end if
+          end do
+          npgrid(iconf) = npoint
+
+      else
+          npoint = 0
+          do xr = x_lowbound, x_upbound, grid_step
+              do yr = y_lowbound, y_upbound, grid_step
+                  do zr = z_lowbound, z_upbound, grid_step
+                      npoint = npoint + 1
+                      ipgrid(npoint,iconf) = 1
+                      pgrid(1,npoint,iconf) = xr
+                      pgrid(2,npoint,iconf) = yr
+                      pgrid(3,npoint,iconf) = zr
+                  end do
+              end do
+          end do
+          npgrid(iconf) = npoint
+
+      end if
       return
       end
 c
