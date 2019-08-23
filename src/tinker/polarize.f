@@ -47,6 +47,7 @@ c     get the coordinates and required force field parameters
 c
       call initial
       call getxyz
+      call active
 
       usenetcdf = .false.
       call getnetcdf(netcdffile,usenetcdf)
@@ -219,6 +220,7 @@ c
       use polar
       use polpot
       use units
+      use usage
       implicit none
       integer i,j,iter
       integer maxiter
@@ -350,9 +352,11 @@ c
          umol(j) = 0.0d0
       end do
       do i = 1, npole
-         umol(1) = umol(1) + uind(1,i)
-         umol(2) = umol(2) + uind(2,i)
-         umol(3) = umol(3) + uind(3,i)
+         if (use(i)) then
+             umol(1) = umol(1) + uind(1,i)
+             umol(2) = umol(2) + uind(2,i)
+             umol(3) = umol(3) + uind(3,i)
+         end if
       end do
 c
 c     perform deallocation of some local arrays
