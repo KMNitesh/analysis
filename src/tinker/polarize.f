@@ -37,9 +37,15 @@ c
       real*8 alpha(3,3)
       real*8 valpha(3,3)
       character*40 fstr
+ccccccccccccccccccccccccccccccccc
       character*120 netcdffile
       logical usenetcdf
       integer*8 inetcdf
+
+      character*120 trrfile
+      logical usetrr
+      integer*8 itrr
+ccccccccccccccccccccccccccccccccc
       integer frame
 c
 c
@@ -48,10 +54,12 @@ c
       call initial
       call getxyz
       call active
-
+      usetrr = .false.
       usenetcdf = .false.
-      call getnetcdf(netcdffile,usenetcdf)
-
+      call gettrr(trrfile,usetrr)
+      if (.not. usetrr) then
+          call getnetcdf(netcdffile,usenetcdf)
+      end if
       call attach
       call field
       call molecule
@@ -83,10 +91,12 @@ c
          write (iout,40)  fstr(1:36),addu
    40    format (/,a36,f15.4)
       end if
-
-      if (usenetcdf) then
-        call opennetcdf(netcdffile,inetcdf)
-        call readnetcdf(inetcdf)
+      if (usetrr) then
+          call opentrr(trrfile,itrr)
+          call readtrr(itrr)
+      else if (usenetcdf) then
+          call opennetcdf(netcdffile,inetcdf)
+          call readnetcdf(inetcdf)
       end if
 
       frame = 0
@@ -186,8 +196,9 @@ c
           write (iout,151)  alpha(1,1),alpha(2,2),alpha(3,3)
   151     format (' Polarizability Tensor for Raman : ',
      &             3f20.14,/,15x,3f20.14,/,15x,3f20.14)
-
-          if (usenetcdf) then
+          if (usetrr) then
+              call readtrr (itrr)
+          else if (usenetcdf) then
               call readnetcdf(inetcdf)
           else
               abort = .true.

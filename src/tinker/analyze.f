@@ -54,7 +54,7 @@ c
       call initial
       call getxyz
       usetrr = .false.
-c      call gettrr(trrfile,usetrr)
+      call gettrr(trrfile,usetrr)
       usenetcdf = .false.
       if (.not. usetrr) then
           call getnetcdf(netcdffile,usenetcdf)
