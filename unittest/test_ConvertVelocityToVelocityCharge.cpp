@@ -38,6 +38,15 @@ TEST(ConvertVelocityToVelocityCharge, Default) {
                 : ConvertVelocityToVelocityCharge(std::move(writer)) {
             trr_vq_outfilename = "test_out.trr";
         }
+
+        void setSelectedMols(const std::unordered_set<std::shared_ptr<Molecule>> &mols) {
+            selected_mols = mols;
+        }
+
+    protected:
+        void do_select_mol(std::shared_ptr<Frame> &frame) override {
+
+        }
     } convertor(std::move(mock));
 
     ASSERT_THAT(enable_read_velocity, Eq(true));
@@ -66,6 +75,17 @@ TEST(ConvertVelocityToVelocityCharge, Default) {
     atom2->charge = 1.5;
 
     frame->atom_list.push_back(atom2);
+
+    auto mol = std::make_shared<Molecule>();
+    atom1->molecule = mol;
+    atom2->molecule = mol;
+
+    mol->atom_list.push_back(atom1);
+    mol->atom_list.push_back(atom2);
+
+    frame->molecule_list.push_back(mol);
+
+    convertor.setSelectedMols({mol});
 
     EXPECT_CALL(*mock_ptr, open(StrEq("test_out.trr"))).Times(1);
     EXPECT_CALL(*mock_ptr, setWriteVelocities(true)).Times(1);

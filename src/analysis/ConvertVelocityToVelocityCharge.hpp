@@ -8,6 +8,7 @@
 #include "std.hpp"
 #include "BasicAnalysis.hpp"
 #include "trr_writer.hpp"
+#include "atom.hpp"
 
 class Frame;
 
@@ -26,9 +27,16 @@ public:
     static std::string title() { return "Convert velocities to velocities * charge in order to use velacc of gmx"; }
 
 protected:
+
+    virtual void do_select_mol(std::shared_ptr<Frame> &frame);
+
     std::unique_ptr<TRRWriter> writer;
 
     std::string trr_vq_outfilename;
+
+    AmberMask selected_mols_mask;
+
+    std::unordered_set<std::shared_ptr<Molecule>> selected_mols;
 };
 
 

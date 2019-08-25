@@ -15,6 +15,8 @@ class IRSpectrumElectricalFlux : public BasicAnalysis {
 public:
     IRSpectrumElectricalFlux();
 
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
@@ -29,7 +31,9 @@ protected:
 
     std::deque<std::tuple<double, double, double>> electricalFlux;
 
+    AmberMask selected_mols_mask;
 
+    std::unordered_set<std::shared_ptr<Molecule>> selected_mols;
 };
 
 

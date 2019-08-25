@@ -140,7 +140,11 @@ void IRSpectrum::calculateSpectrum(const std::string &out) {
 
 void IRSpectrum::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) { selected_mols.push_back(atom->molecule.lock()); });
+                    [this](std::shared_ptr<Atom> &atom) {
+                        if (Atom::is_match(atom, selected_mols_mask)) {
+                            selected_mols.insert(atom->molecule.lock());
+                        }
+                    });
 }
 
 std::tuple<double, double, double> IRSpectrum::getDipole(std::shared_ptr<Frame> &frame) {

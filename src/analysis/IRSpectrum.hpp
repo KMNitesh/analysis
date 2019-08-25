@@ -47,7 +47,7 @@ protected:
 
     AmberMask selected_mols_mask;
 
-    std::vector<std::shared_ptr<Molecule>> selected_mols;
+    std::unordered_set<std::shared_ptr<Molecule>> selected_mols;
 };
 
 

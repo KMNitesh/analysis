@@ -2,6 +2,8 @@
 // Created by xiamr on 8/13/19.
 //
 
+#include <boost/range/algorithm.hpp>
+#include <boost/range/numeric.hpp>
 #include "IRSpectrumElectricalFlux.hpp"
 #include "common.hpp"
 #include "frame.hpp"
@@ -15,10 +17,15 @@ IRSpectrumElectricalFlux::IRSpectrumElectricalFlux() {
 }
 
 void IRSpectrumElectricalFlux::process(std::shared_ptr<Frame> &frame) {
-    auto flux = std::accumulate(frame->atom_list.begin(), frame->atom_list.end(),
-                                std::tuple<double, double, double>{}, [](auto flux, auto &atom) {
-                return flux + std::make_tuple(atom->vx, atom->vy, atom->vz) * atom->charge.value();
-            });
+
+    std::tuple<double, double, double> flux{};
+
+    for (auto &mol : selected_mols) {
+        for (auto &atom : mol->atom_list) {
+            flux += std::make_tuple(atom->vx, atom->vy, atom->vz) * atom->charge.value();
+        }
+    }
+
     electricalFlux.emplace_back(flux);
 }
 
@@ -27,6 +34,7 @@ void IRSpectrumElectricalFlux::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
     os << "# time_increment_ps > " << time_increment_ps << '\n';
+    os << "# AmberMask > " << selected_mols_mask << '\n';
     os << std::string(50, '#') << '\n';
 
     os << boost::format("%15s %15s\n") % "Time(ps)" % "ACF";
@@ -53,4 +61,14 @@ void IRSpectrumElectricalFlux::print(std::ostream &os) {
 
 void IRSpectrumElectricalFlux::readInfo() {
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
+    Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
+}
+
+void IRSpectrumElectricalFlux::processFirstFrame(std::shared_ptr<Frame> &frame) {
+    boost::for_each(frame->atom_list,
+                    [this](std::shared_ptr<Atom> &atom) {
+                        if (Atom::is_match(atom, selected_mols_mask)) {
+                            selected_mols.insert(atom->molecule.lock());
+                        }
+                    });
 }
