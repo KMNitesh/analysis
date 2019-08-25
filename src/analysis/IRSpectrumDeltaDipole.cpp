@@ -8,10 +8,10 @@
 
 void IRSpectrumDeltaDipole::process(std::shared_ptr<Frame> &frame) {
     if (dipole_evolution.empty()) {
-        dipole_evolution.emplace_back(frame->getDipole());
+        dipole_evolution.emplace_back(getDipole(frame));
     } else {
         auto last_it = --dipole_evolution.end();
-        auto dipole = frame->getDipole();
+        auto dipole = getDipole(frame);
         *last_it = dipole - *last_it;
         dipole_evolution.emplace_back(dipole);
     }

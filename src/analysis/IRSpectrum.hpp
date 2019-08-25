@@ -21,6 +21,8 @@ public:
 
     void readInfo() override;
 
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+
     static std::string title() { return "Infrared radiation (IR) Spectrum"; }
 
     static std::vector<double> calculateIntense(const std::vector<long double> &acf, double time_increment_ps);
@@ -32,13 +34,20 @@ public:
 
     static void printData(std::ostream &os,
                           const std::deque<std::tuple<double, double, double>> &dipole_evolution,
-                          double time_increment_ps);
+                          double time_increment_ps,
+                          boost::optional<AmberMask> mask = boost::optional<AmberMask>{});
 
 protected:
+
+    std::tuple<double, double, double> getDipole(std::shared_ptr<Frame> &frame);
 
     double time_increment_ps;
 
     std::deque<std::tuple<double, double, double>> dipole_evolution;
+
+    AmberMask selected_mols_mask;
+
+    std::vector<std::shared_ptr<Molecule>> selected_mols;
 };
 
 

@@ -4,6 +4,7 @@
 
 #include <tbb/tbb.h>
 #include <boost/range/algorithm.hpp>
+#include <boost/range/numeric.hpp>
 #include "IRSpectrum.hpp"
 #include "common.hpp"
 #include "frame.hpp"
@@ -14,20 +15,23 @@ IRSpectrum::IRSpectrum() {
 }
 
 void IRSpectrum::process(std::shared_ptr<Frame> &frame) {
-    dipole_evolution.emplace_back(frame->getDipole());
+    dipole_evolution.emplace_back(getDipole(frame));
 }
 
 void IRSpectrum::print(std::ostream &os) {
-    printData(os, dipole_evolution, time_increment_ps);
+    printData(os, dipole_evolution, time_increment_ps, selected_mols_mask);
 }
 
 void IRSpectrum::printData(std::ostream &os,
                            const std::deque<std::tuple<double, double, double>> &dipole_evolution,
-                           double time_increment_ps) {
+                           double time_increment_ps, boost::optional<AmberMask> mask) {
     auto acf = calculateAcf(dipole_evolution);
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
     os << "# time_increment_ps > " << time_increment_ps << '\n';
+    if (mask) {
+        os << "# AmberMask > " << mask.value() << '\n';
+    }
     os << std::string(50, '#') << '\n';
 
     os << boost::format("%15s %15s\n") % "Time(ps)" % "ACF";
@@ -112,6 +116,7 @@ template std::vector<long double> IRSpectrum::calculateAcf(const std::deque<doub
 
 void IRSpectrum::readInfo() {
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
+    Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }
 
 void IRSpectrum::calculateSpectrum(const std::string &out) {
@@ -131,4 +136,17 @@ void IRSpectrum::calculateSpectrum(const std::string &out) {
     std::ofstream ofstream(out);
 
     printData(ofstream, dipole_evolution, time_increment_ps);
+}
+
+void IRSpectrum::processFirstFrame(std::shared_ptr<Frame> &frame) {
+    boost::for_each(frame->atom_list,
+                    [this](std::shared_ptr<Atom> &atom) { selected_mols.push_back(atom->molecule.lock()); });
+}
+
+std::tuple<double, double, double> IRSpectrum::getDipole(std::shared_ptr<Frame> &frame) {
+
+    return boost::accumulate(selected_mols, std::tuple<double, double, double>{},
+                             [&frame](auto &init, auto &mol) {
+                                 return init + mol->calc_dipole(frame);
+                             });
 }
