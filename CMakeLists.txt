@@ -5,7 +5,7 @@ enable_language(Fortran C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+#set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
 
 option(ENABLE_UNITTEST "Enable unit test cases" ON)
 option(ENABLE_NATIVE "Enable native cpu instruction support" ON)
@@ -14,31 +14,30 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -pipe -ggdb3 -Wall -Wextra --coverage ")
     set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -pipe -O3 -ffast-math  -fopenmp")
     if (ENABLE_NATIVE)
-         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
-    endif()
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+    endif ()
 endif ()
 
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_C_FLAGS_DEBUG "-O0 -pipe -ggdb3 -Wall -Wextra --coverage ")
     set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -pipe -O3 -ffast-math -fopenmp")
-     if (ENABLE_NATIVE)
-         set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
-    endif()
+    if (ENABLE_NATIVE)
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
+    endif ()
 endif ()
 
 if ("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_Fotran_FLAGS_DEBUG "-O0 -pipe -ggdb3 -Wall -Wextra -coverage ")
     set(CMAKE_Fortran_FLAGS_RELEASE "-DNDEBUG -pipe -O3 -ffast-math -fopenmp")
-      if (ENABLE_NATIVE)
-         set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
-    endif()
+    if (ENABLE_NATIVE)
+        set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
+    endif ()
 endif ()
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Set global property (all targets are impacted)
-set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
-
+#set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 
 
 if (NOT GROMACS_SRC_ROOT)
@@ -53,7 +52,6 @@ message("gromacs 5.1.4 source root : " ${GROMACS_SRC_ROOT})
 
 include_directories(${GROMACS_SRC_ROOT}/src)
 include_directories(lib)
-
 
 
 if (DEFINED ENV{LIBRARY_PATH})
@@ -120,17 +118,25 @@ if (NOT TBB_INCLUDES)
 endif ()
 include_directories(${TBB_INCLUDES})
 
-find_library(TBB_LIBS tbb PATHS ${LIBRARY_DIRS})
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(TBB_LIB_NAME tbb_debug)
+    set(TBBMALLOC_LIB_NAME tbbmalloc_debug)
+else ()
+    set(TBB_LIB_NAME tbb)
+    set(TBBMALLOC_LIB_NAME tbbmalloc)
+endif ()
+
+find_library(TBB_LIBS ${TBB_LIB_NAME} PATHS ${LIBRARY_DIRS})
 if (NOT TBB_LIBS)
     message(FATAL_ERROR "tbb library not found")
 endif ()
 link_libraries(${TBB_LIBS})
 
-#find_library(TBBMALLOC_LIBS tbbmalloc_proxy PATHS ${LIBRARY_DIRS})
-#if (NOT TBBMALLOC_LIBS)
-#message(FATAL_ERROR "tbbmalloc_proxy library not found")
-#endif ()
-#link_libraries(${TBBMALLOC_LIBS})
+find_library(TBBMALLOC_LIBS ${TBBMALLOC_LIB_NAME} PATHS ${LIBRARY_DIRS})
+if (NOT TBBMALLOC_LIBS)
+    message(FATAL_ERROR "tbbmalloc library not found")
+endif ()
+link_libraries(${TBBMALLOC_LIBS})
 
 # Boost
 set(BOOST_INCLUDEDIR ${INCLUES_PATH})
