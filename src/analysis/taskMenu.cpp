@@ -88,6 +88,7 @@ namespace mpl = boost::mpl;
 #include "DensityOfStates.hpp"
 #include "ConvertVelocityToVelocityCharge.hpp"
 #include "IRSpectrumDeltaDipole.hpp"
+#include "ClusterVolume.hpp"
 
 using namespace std;
 
@@ -144,7 +145,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             IRSpectrumElectricalFlux,
             DensityOfStates,
             ConvertVelocityToVelocityCharge,
-            IRSpectrumDeltaDipole
+            IRSpectrumDeltaDipole,
+            ClusterVolume
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

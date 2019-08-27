@@ -13,8 +13,11 @@ auto
 DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame) {
 
     auto box_index_x = int(atom->x / (frame->a_axis / grid_x)) % grid_x;
+    while (box_index_x < 0) box_index_x += grid_x;
     auto box_index_y = int(atom->y / (frame->b_axis / grid_y)) % grid_y;
+    while (box_index_y < 0) box_index_y += grid_y;
     auto box_index_z = int(atom->z / (frame->c_axis / grid_z)) % grid_z;
+    while (box_index_z < 0) box_index_z += grid_z;
 
 
     if (!atom->mass) {

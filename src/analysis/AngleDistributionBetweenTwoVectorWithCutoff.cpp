@@ -2,6 +2,7 @@
 // Created by xiamr on 8/6/19.
 //
 
+#include <boost/range/adaptors.hpp>
 #include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 #include "frame.hpp"
 #include "ThrowAssert.hpp"
@@ -27,6 +28,7 @@ void AngleDistributionBetweenTwoVectorWithCutoff::processFirstFrame(std::shared_
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::process(std::shared_ptr<Frame> &frame) {
+    nframe++;
     for (auto &ref : group1) {
         for (auto &atom: group2) {
             double distance = atom_distance(ref, atom, frame);
@@ -41,10 +43,13 @@ void AngleDistributionBetweenTwoVectorWithCutoff::process(std::shared_ptr<Frame>
 
                 double angle = radian * acos(cos_);
 
+                angle_evolution.emplace(nframe, std::make_pair<int>(atom->seq, angle));
+
                 angle_hist.update(angle);
             }
         }
     }
+
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
@@ -64,8 +69,39 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
     os << "# cutoff1 > " << cutoff1 << '\n';
     os << "# cutoff2 > " << cutoff2 << '\n';
 
-    os << string(50, '#') << '\n';
 
+    std::set<int> appeared_atoms;
+
+    for (auto &it : angle_evolution) {
+        appeared_atoms.insert(it.second.first);
+    }
+
+    os << string(25, '#') << "Angle(degree)" << string(25, '#') << '\n';
+    os << format("#%15s", "Frame");
+    for (auto i : appeared_atoms) {
+        os << format(" [ %10d ]", i);
+    }
+    os << '\n';
+
+    for (auto i = 1; i <= nframe; ++i) {
+        os << format("%15.3d", i);
+        std::map<int, double> mapping;
+        for (auto it = angle_evolution.lower_bound(i); it != angle_evolution.upper_bound(i); ++it) {
+            mapping.insert(it->second);
+        }
+        for (auto seq : appeared_atoms) {
+            auto it = mapping.find(seq);
+            if (it != mapping.end()) {
+                os << format(" %15.3f", it->second);
+            } else {
+                os << string(16, ' ');
+            }
+        }
+        os << '\n';
+    }
+
+
+    os << string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
     for (auto[grid, value] : angle_hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);

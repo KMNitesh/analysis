@@ -20,6 +20,10 @@ Symbol which(const std::shared_ptr<Atom> &atom) {
         return Symbol::Nitrogen;
     else if (mass >= 15.0 and mass < 17.0)
         return Symbol::Oxygen;
+    else if (mass >= 30.0 and mass < 31.5)
+        return Symbol::Phosphorus;
+    else if (mass >= 31.5 and mass < 33.0)
+        return Symbol::Sulfur;
     else return Symbol::Unknown;
 }
 

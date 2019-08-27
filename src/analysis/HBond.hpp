@@ -22,6 +22,8 @@ enum class Symbol {
     Carbon,
     Nitrogen,
     Oxygen,
+    Phosphorus,
+    Sulfur,
     X,
     Unknown
 };

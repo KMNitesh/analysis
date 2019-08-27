@@ -55,6 +55,9 @@ protected:
 
     std::shared_ptr<VectorSelector> vector1, vector2;
 
+    std::multimap<int, std::pair<int, double>> angle_evolution;
+
+    int nframe = 0;
     void init_cos_hist(double angle_max, double angle_width);
 };
 
