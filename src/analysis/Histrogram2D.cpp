@@ -26,7 +26,7 @@ std::vector<std::tuple<double, double, double>> Histrogram2D::getDistribution() 
             distribution.emplace_back(
                     (ibin1 - 0.5) * dimension1_width + dimension1_range.first,
                     (ibin2 - 0.5) * dimension2_width + dimension2_range.first,
-                    hist.at({ibin1, ibin2}));
+                    hist.at({ibin1, ibin2}) / (dimension1_width * dimension2_width));
         }
     }
     return distribution;

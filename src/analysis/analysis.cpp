@@ -14,6 +14,7 @@ namespace po = boost::program_options;
 #include "IRSpectrum.hpp"
 #include "IRSpectrumDeltaDipole.hpp"
 #include "RamanSpectrum.hpp"
+#include "CrossCorrelation.hpp"
 
 using namespace std;
 
@@ -29,7 +30,8 @@ int mainMenu() {
     std::cout << "(2) Infrared radiation (IR) Spectrum\n";
     std::cout << "(3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
     std::cout << "(4) " << RamanSpectrum::title() << '\n';
-    return choose<int>(0, 4, "select :");
+    std::cout << "(5) " << CrossCorrelation::title() << '\n';
+    return choose<int>(0, 5, "select :");
 };
 
 void printDSLDetails() {
@@ -216,6 +218,9 @@ int main(int argc, char *argv[]) {
             break;
         case 4:
             RamanSpectrum::calculateSpectrum(getOutputFilename(vm));
+            break;
+        case 5:
+            CrossCorrelation::calculate(getOutputFilename(vm));
             break;
     }
 
