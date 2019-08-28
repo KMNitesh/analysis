@@ -28,17 +28,11 @@ void CrossCorrelation::calculate(const std::string &out) {
 
     os << "correlation factor from Covariance Analysis: " << correlation_factor << '\n';
 
-    auto cross_correlation_function = calculateCrossCorrelation(series);
+    printCrossCorrelationFunction(calculateCrossCorrelation(series), series, os);
 
-    printCrossCorrelationFunction(cross_correlation_function, series, os);
+    printConvolutionFunction(calculateConvolutionFunction(series), series, os);
 
-    auto convolution_function = calculateConvolutionFunction(series);
-
-    printConvolutionFunction(convolution_function, series, os);
-
-    auto distribution = getDistribution(series);
-
-    printHistrogramDistribution(distribution, os);
+    printHistrogramDistribution(getDistribution(series), os);
 
     os << std::string(50, '#') << '\n';
 
