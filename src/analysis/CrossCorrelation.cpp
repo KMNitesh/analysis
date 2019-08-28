@@ -19,12 +19,7 @@ namespace std {
 }
 
 void CrossCorrelation::calculate(const std::string &out) {
-    auto file = choose_file("Enter Data File: ", true);
-
-    std::ifstream f{file};
-    std::deque<std::tuple<double, double, double>> series(
-            std::istream_iterator<std::tuple<double, double, double>>{f},
-            std::istream_iterator<std::tuple<double, double, double>>{});
+    auto series = readAngleSeries();
 
     auto correlation_factor = calCovariance(series);
 
@@ -35,6 +30,50 @@ void CrossCorrelation::calculate(const std::string &out) {
 
     auto cross_correlation_function = calculateCrossCorrelation(series);
 
+    printCrossCorrelationFunction(cross_correlation_function, series, os);
+
+    auto convolution_function = calculateConvolutionFunction(series);
+
+    printConvolutionFunction(convolution_function, series, os);
+
+    auto distribution = getDistribution(series);
+
+    printHistrogramDistribution(distribution, os);
+
+    os << std::string(50, '#') << '\n';
+
+}
+
+void
+CrossCorrelation::printHistrogramDistribution(const std::vector<std::tuple<double, double, double>> &distribution,
+                                              std::ofstream &os) {
+    os << std::string(50, '#') << '\n';
+
+    os << boost::format("%15s %15s %15s\n") % "Angle1(degree)" % "Angle2(degree)" % "Probability Density(degree-2)";
+
+    for (auto[angle1, angle2, density] : distribution) {
+        os << boost::format("%15.6f %15.5f %15.5f\n") % angle1 % angle2 % (100 * density);
+    }
+
+}
+
+void CrossCorrelation::printConvolutionFunction(const std::vector<double> &convolution_function,
+                                                std::deque<std::tuple<double, double, double>> &series,
+                                                std::ofstream &os) {
+    os << std::string(50, '#') << '\n';
+
+    os << boost::format("%15s %20s\n") % "Time" % "convolution function";
+
+    for (std::size_t i = 0; i < convolution_function.size(); ++i) {
+        os << boost::format("%15.6f %20.5f\n")
+              % (i == 0 ? 0.0 : std::get<0>(series[i - 1]))
+              % convolution_function[i];
+    }
+}
+
+void CrossCorrelation::printCrossCorrelationFunction(const std::vector<double> &cross_correlation_function,
+                                                     std::deque<std::tuple<double, double, double>> &series,
+                                                     std::ofstream &os) {
     os << std::string(50, '#') << '\n';
 
     os << boost::format("%15s %20s\n") % "Time" % "Cross-correlation function";
@@ -44,21 +83,10 @@ void CrossCorrelation::calculate(const std::string &out) {
               % (i == 0 ? 0.0 : std::get<0>(series[i - 1]))
               % cross_correlation_function[i];
     }
+}
 
-    os << std::string(50, '#') << '\n';
-
-    auto convolution_function = calculateConvolutionFunction(series);
-
-    os << boost::format("%15s %20s\n") % "Time" % "convolution function";
-
-    for (std::size_t i = 0; i < convolution_function.size(); ++i) {
-        os << boost::format("%15.6f %20.5f\n")
-              % (i == 0 ? 0.0 : std::get<0>(series[i - 1]))
-              % convolution_function[i];
-    }
-
-    os << std::string(50, '#') << '\n';
-
+std::vector<std::tuple<double, double, double>>
+CrossCorrelation::getDistribution(const std::deque<std::tuple<double, double, double>> &series) {
     Histrogram2D histrogram;
     histrogram.initialize(180, 5, 180, 5);
 
@@ -66,14 +94,16 @@ void CrossCorrelation::calculate(const std::string &out) {
         histrogram.update(x, y);
     }
 
-    os << boost::format("%15s %15s %15s\n") % "Angle1(degree)" % "Angle2(degree)" % "Probability Density(degree-2)";
+    return histrogram.getDistribution();
+}
 
-    for (auto[angle1, angle2, density] : histrogram.getDistribution()) {
-        os << boost::format("%15.6f %15.5f %15.5f\n") % angle1 % angle2 % (100 * density);
-    }
+std::deque<std::tuple<double, double, double>> CrossCorrelation::readAngleSeries() {
+    auto file = choose_file("Enter Data File: ", true);
 
-    os << std::string(50, '#') << '\n';
-
+    std::ifstream f{file};
+    return std::deque<std::tuple<double, double, double>>(
+            std::istream_iterator<std::tuple<double, double, double>>{f},
+            std::istream_iterator<std::tuple<double, double, double>>{});
 }
 
 std::vector<double>
