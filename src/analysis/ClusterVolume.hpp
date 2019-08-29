@@ -28,17 +28,29 @@ public:
 
 protected:
 
+    enum class ATOM_Category : uint8_t {
+        EMPTY, DEST, OTHER
+    };
+
     static double getVdwRadii(const std::shared_ptr<Atom> &atom);
+
+    void fill_atom(std::vector<std::vector<std::vector<ATOM_Category>>> &grid,
+                   double grid_x_step, double grid_y_step, double grid_z_step,
+                   const std::shared_ptr<Atom> &atom, ATOM_Category category);
+
+    std::vector<std::tuple<int, int, int>>
+    generate_neighbor_grids(double grid_x_step, double grid_y_step, double grid_z_step) const;
 
     AmberMask atom_mask;
 
-    std::unordered_set<std::shared_ptr<Atom>> atom_group;
+    std::unordered_set<std::shared_ptr<Atom>> atom_group, other_atoms;
 
     int grid_x;
     int grid_y;
     int grid_z;
 
-    std::deque<std::pair<double, double>> volumes;
+    std::deque<std::tuple<double, double, double, double>> volumes;
+
 
     inline static std::unordered_map<Symbol, double> vdWRadiis{
             {Symbol::Hydrogen,   1.10},
@@ -48,6 +60,11 @@ protected:
             {Symbol::Phosphorus, 1.80},
             {Symbol::Sulfur,     1.80}
     };
+
+    size_t countFilledGridPoints(const std::vector<std::vector<std::vector<ATOM_Category>>> &grid) const;
+
+    bool fill_space(std::vector<std::vector<std::vector<ATOM_Category>>> &grid,
+                    double grid_x_step, double grid_y_step, double grid_z_step) const;
 };
 
 
