@@ -6,6 +6,7 @@
 #define TINKER_CLUSTERVOLUME_HPP
 
 #include "std.hpp"
+#include <boost/multi_array.hpp>
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
 #include "HBond.hpp"
@@ -34,8 +35,7 @@ protected:
 
     static double getVdwRadii(const std::shared_ptr<Atom> &atom);
 
-    void fill_atom(std::vector<std::vector<std::vector<ATOM_Category>>> &grid,
-                   double grid_x_step, double grid_y_step, double grid_z_step,
+    void fill_atom(double grid_x_step, double grid_y_step, double grid_z_step,
                    const std::shared_ptr<Atom> &atom, ATOM_Category category);
 
     std::vector<std::tuple<int, int, int>>
@@ -61,10 +61,11 @@ protected:
             {Symbol::Sulfur,     1.80}
     };
 
-    size_t countFilledGridPoints(const std::vector<std::vector<std::vector<ATOM_Category>>> &grid) const;
+    size_t countFilledGridPoints() const;
 
-    bool fill_space(std::vector<std::vector<std::vector<ATOM_Category>>> &grid,
-                    double grid_x_step, double grid_y_step, double grid_z_step) const;
+    bool fill_space(double grid_x_step, double grid_y_step, double grid_z_step);
+
+    boost::multi_array<ATOM_Category, 3> grid;
 };
 
 
