@@ -42,8 +42,10 @@ void Forcefield::read_tinker_prm(const std::string &filename) {
             int type = stoi(field[1]);
             int class_num = stoi(field[2]);
             auto name = field[3];
+            int at_no = stod(field[field.size() - 3]);
             double mass = stod(field[field.size() - 2]);
-            mapping.emplace(type, AtomItem(type, class_num, name, mass));
+            auto res = field[4];
+            mapping.emplace(type, AtomItem(type, class_num, name, res, at_no, mass));
         } else if (field[0] == "multipole") {
             int type = stoi(field[1]);
             double charge = stod(field[field.size() - 1]);
@@ -76,7 +78,9 @@ void Forcefield::assign_forcefield(std::shared_ptr<Frame> &frame) {
         throw_assert(it != mapping.end(), "Atom mass not found for type = " << atom->typ << "!");
         atom->mass = it->second.mass;
         atom->charge = it->second.charge.value();
+        atom->setAtNo(it->second.at_no);
         atom->atom_name = it->second.name;
+        atom->residue_name = it->second.res;
     }
 }
 

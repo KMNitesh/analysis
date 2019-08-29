@@ -21,9 +21,19 @@
 class Molecule;
 
 class Atom {
+
+    boost::optional<int> at_no;
 public:
     std::size_t seq;
     std::string atom_name;
+
+    const boost::optional<int> &getAtNo() const {
+        return at_no;
+    }
+
+    void setAtNo(const boost::optional<int> &atNo) {
+        at_no = atNo;
+    }
 
     double x, y, z;  // position
 

@@ -15,6 +15,7 @@ namespace po = boost::program_options;
 #include "IRSpectrumDeltaDipole.hpp"
 #include "RamanSpectrum.hpp"
 #include "CrossCorrelation.hpp"
+#include "GmxTopologyPrinter.hpp"
 
 using namespace std;
 
@@ -31,7 +32,8 @@ int mainMenu() {
     std::cout << "(3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
     std::cout << "(4) " << RamanSpectrum::title() << '\n';
     std::cout << "(5) " << CrossCorrelation::title() << '\n';
-    return choose<int>(0, 5, "select :");
+    std::cout << "(6) " << GmxTopologyPrinter::title() << '\n';
+    return choose<int>(0, 6, "select :");
 };
 
 void printDSLDetails() {
@@ -221,6 +223,11 @@ int main(int argc, char *argv[]) {
             break;
         case 5:
             CrossCorrelation::calculate(getOutputFilename(vm));
+            break;
+        case 6:
+            GmxTopologyPrinter::print(vm["topology"].as<std::string>(),
+                                      vm["prm"].as<std::string>(),
+                                      getOutputFilename(vm));
             break;
     }
 

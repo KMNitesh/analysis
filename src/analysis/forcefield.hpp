@@ -20,13 +20,14 @@ class Frame;
 
 class AtomItem {
 public:
-    AtomItem(int typ, int classNum, std::string name, double mass) :
-            typ(typ), class_num(classNum), name(std::move(name)), mass(mass) {}
+    AtomItem(int typ, int classNum, std::string name, std::string res, int at_no, double mass) :
+            typ(typ), class_num(classNum), name(std::move(name)), res(std::move(res)), at_no(at_no), mass(mass) {}
 
     int typ;
     int class_num;
-
     std::string name;
+    std::string res;
+    int at_no;
     double mass;
 
     boost::optional<double> charge;
