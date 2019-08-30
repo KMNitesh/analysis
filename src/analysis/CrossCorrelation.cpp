@@ -32,6 +32,8 @@ void CrossCorrelation::calculate(const std::string &out) {
 
     printCrossCorrelationFunction(calculateCrossCorrelation(series), series, os);
 
+    printCrossCorrelationFunction2(calculateCrossCorrelation2(series), series, os);
+
     printConvolutionFunction(calculateConvolutionFunction(series), series, os);
 
     printHistrogramDistribution(getDistribution(series), os);
@@ -73,6 +75,20 @@ void CrossCorrelation::printCrossCorrelationFunction(const std::vector<double> &
     os << std::string(50, '#') << '\n';
 
     os << boost::format("%15s %20s\n") % "Time" % "Cross-correlation function";
+
+    for (std::size_t i = 0; i < cross_correlation_function.size(); ++i) {
+        os << boost::format("%15.6f %20.5f\n")
+              % (i == 0 ? 0.0 : std::get<0>(series[i - 1]))
+              % cross_correlation_function[i];
+    }
+}
+
+void CrossCorrelation::printCrossCorrelationFunction2(const std::vector<double> &cross_correlation_function,
+                                                      std::deque<std::tuple<double, double, double>> &series,
+                                                      std::ofstream &os) {
+    os << std::string(50, '#') << '\n';
+
+    os << boost::format("%15s %20s\n") % "Time" % "Cross-correlation function2";
 
     for (std::size_t i = 0; i < cross_correlation_function.size(); ++i) {
         os << boost::format("%15.6f %20.5f\n")
@@ -146,6 +162,41 @@ CrossCorrelation::calculateCrossCorrelation(std::deque<std::tuple<double, double
     return cross_correlation_function;
 }
 
+
+std::vector<double>
+CrossCorrelation::calculateCrossCorrelation2(std::deque<std::tuple<double, double, double>> &series) {
+
+    std::vector<double> cross_correlation_function(series.size());
+    std::vector<std::size_t> ntime(series.size());
+
+    auto[u, v] = calcSeriesAverage(series);
+
+    for (std::size_t i = 0; i < series.size(); ++i) {
+        for (std::size_t j = i; j < series.size(); ++j) {
+            auto n = j - i;
+            cross_correlation_function[n] += (std::get<1>(series[i]) - u) * (std::get<2>(series[j]) - v);
+            ++ntime[n];
+        }
+    }
+
+    auto[stdev_u, stdev_v] = boost::accumulate(series, std::pair<double, double>(),
+                                               [u, v](auto &p, auto &t) {
+                                                   std::get<0>(p) += std::pow(std::get<1>(t) - u, 2);
+                                                   std::get<1>(p) += std::pow(std::get<2>(t) - v, 2);
+                                                   return p;
+                                               });
+
+    stdev_u = std::sqrt(stdev_u / series.size());
+    stdev_v = std::sqrt(stdev_v / series.size());
+
+    for (std::size_t n = 0; n < cross_correlation_function.size(); ++n) {
+        cross_correlation_function[n] /= (ntime[n] * stdev_u * stdev_v);
+    }
+
+
+    return cross_correlation_function;
+}
+
 double CrossCorrelation::calCovariance(const std::deque<std::tuple<double, double, double>> &series) {
 
     auto[u, v] = calcSeriesAverage(series);
@@ -199,16 +250,18 @@ double CrossCorrelation::calculateCrossCorrelationDWang(std::deque<std::tuple<do
 
 double CrossCorrelation::calculateCrossCorrelationDWang2(std::deque<std::tuple<double, double, double>> &series) {
 
-    std::vector<std::tuple<double, double, double>> difference_series;
+    std::vector<std::tuple<double, double>> difference_series;
+    difference_series.reserve(series.size() - 1);
 
-    boost::adjacent_difference(series, std::back_inserter(difference_series), [](auto &lhs, auto &rhs) {
-        return std::make_tuple(std::get<0>(lhs) - std::get<0>(rhs),
-                               std::get<1>(lhs) - std::get<1>(rhs),
-                               std::get<2>(lhs) - std::get<2>(rhs));
-    });
+
+    for (std::size_t i = 0; i < series.size() - 1; ++i) {
+        auto &rhs = series[i];
+        auto &lhs = series[i + 1];
+        difference_series.emplace_back(std::get<1>(lhs) - std::get<1>(rhs), std::get<2>(lhs) - std::get<2>(rhs));
+    }
 
     auto result = 0.0;
-    for (auto[t, f, g] : difference_series) {
+    for (auto[f, g] : difference_series) {
         result += f * g;
     }
 
