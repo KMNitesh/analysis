@@ -27,6 +27,8 @@ void CrossCorrelation::calculate(const std::string &out) {
     os << "# " << title() << '\n';
 
     os << "correlation factor from Covariance Analysis: " << correlation_factor << '\n';
+    os << "cross-correlation @DWang : " << calculateCrossCorrelationDWang(series) << '\n';
+    os << "cross-correlation2 @DWang : " << calculateCrossCorrelationDWang2(series) << '\n';
 
     printCrossCorrelationFunction(calculateCrossCorrelation(series), series, os);
 
@@ -134,25 +136,19 @@ CrossCorrelation::calculateCrossCorrelation(std::deque<std::tuple<double, double
         }
     }
 
+    auto[u, v] = calcSeriesAverage(series);
+
+    auto normal_factor = u * v;
     for (std::size_t n = 0; n < cross_correlation_function.size(); ++n) {
-        cross_correlation_function[n] /= ntime[n];
+        cross_correlation_function[n] /= (ntime[n] * normal_factor);
     }
+
     return cross_correlation_function;
 }
 
 double CrossCorrelation::calCovariance(const std::deque<std::tuple<double, double, double>> &series) {
 
-    boost::contract::check check = boost::contract::public_function<CrossCorrelation>()
-            .precondition([&] { BOOST_CONTRACT_ASSERT(!series.empty()); });
-
-    auto[u_sum, v_sum] = boost::accumulate(series, std::pair<double, double>(),
-                                           [](auto &p, auto &t) {
-                                               std::get<0>(p) += std::get<1>(t);
-                                               std::get<1>(p) += std::get<2>(t);
-                                               return p;
-                                           });
-    auto u = u_sum / series.size();
-    auto v = v_sum / series.size();
+    auto[u, v] = calcSeriesAverage(series);
 
     auto[stdev_u, stdev_v] = boost::accumulate(series, std::pair<double, double>(),
                                                [u, v](auto &p, auto &t) {
@@ -175,3 +171,52 @@ double CrossCorrelation::calCovariance(const std::deque<std::tuple<double, doubl
 
     return correlation_factor;
 }
+
+std::pair<double, double>
+CrossCorrelation::calcSeriesAverage(const std::deque<std::tuple<double, double, double>> &series) {
+
+    boost::contract::check check = boost::contract::public_function<CrossCorrelation>()
+            .precondition([&] { BOOST_CONTRACT_ASSERT(!series.empty()); });
+
+    auto[u_sum, v_sum] = boost::accumulate(series, std::pair<double, double>(),
+                                           [](auto &p, auto &t) {
+                                               std::get<0>(p) += std::get<1>(t);
+                                               std::get<1>(p) += std::get<2>(t);
+                                               return p;
+                                           });
+
+    return {u_sum / series.size(), v_sum / series.size()};
+}
+
+double CrossCorrelation::calculateCrossCorrelationDWang(std::deque<std::tuple<double, double, double>> &series) {
+    auto[u, v] = calcSeriesAverage(series);
+
+    return boost::accumulate(series, 0.0, [u, v](double r, auto &element) {
+        return r + (std::get<1>(element) - u) * (std::get<2>(element) - v);
+    }) / series.size();
+
+}
+
+double CrossCorrelation::calculateCrossCorrelationDWang2(std::deque<std::tuple<double, double, double>> &series) {
+
+    std::vector<std::tuple<double, double, double>> difference_series;
+
+    boost::adjacent_difference(series, std::back_inserter(difference_series), [](auto &lhs, auto &rhs) {
+        return std::make_tuple(std::get<0>(lhs) - std::get<0>(rhs),
+                               std::get<1>(lhs) - std::get<1>(rhs),
+                               std::get<2>(lhs) - std::get<2>(rhs));
+    });
+
+    auto result = 0.0;
+    for (auto[t, f, g] : difference_series) {
+        result += f * g;
+    }
+
+    auto[u, v] = calcSeriesAverage(series);
+
+    auto normal_factor = u * v;
+
+    return result / (series.size() * normal_factor);
+
+}
+

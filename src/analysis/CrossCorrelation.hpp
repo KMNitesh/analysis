@@ -17,7 +17,8 @@ public:
 
     static std::vector<double> calculateCrossCorrelation(std::deque<std::tuple<double, double, double>> &series);
 
-    static std::vector<double> calculateConvolutionFunction(const std::deque<std::tuple<double, double, double>> &series);
+    static std::vector<double>
+    calculateConvolutionFunction(const std::deque<std::tuple<double, double, double>> &series);
 
     static std::deque<std::tuple<double, double, double>> readAngleSeries();
 
@@ -33,6 +34,13 @@ public:
 
     static void
     printHistrogramDistribution(const std::vector<std::tuple<double, double, double>> &distribution, std::ofstream &os);
+
+    static std::pair<double, double> calcSeriesAverage(const std::deque<std::tuple<double, double, double>> &series);
+
+    static double calculateCrossCorrelationDWang(std::deque<std::tuple<double, double, double>> &series);
+
+    static double calculateCrossCorrelationDWang2(std::deque<std::tuple<double, double, double>> &series);
+
 };
 
 
