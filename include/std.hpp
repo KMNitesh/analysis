@@ -44,4 +44,6 @@
 #include <chrono>
 #include <numeric>
 
+#include <functional>
+
 #endif //TINKER_STD_HPP

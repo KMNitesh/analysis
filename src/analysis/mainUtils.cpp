@@ -42,18 +42,6 @@
 
 using namespace std;
 
-int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv, const string &scriptContent,
-                    boost::optional<string> &script_file, boost::optional<string> &topology,
-                    boost::optional<string> &forcefield_file, const boost::optional<string> &output_file,
-                    shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list,
-                    int start,
-                    int total_frames,
-                    int step_size,
-                    int nthreads
-);
-
-using namespace std;
-
 void processOneFrame(shared_ptr<Frame> &frame,
                      shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
     for (auto &task : *task_list) {
@@ -770,32 +758,30 @@ void processTrajectory(const boost::program_options::options_description &desc,
     if (enable_outfile) {
         outfile.open(getOutputFilename(vm));
     }
-    std::shared_ptr<Frame> frame;
     int Clear = 0;
-    while ((frame = reader->readOneFrame())) {
-        current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames)
-            break;
-        if (current_frame_num % 10 == 0) {
-            if (Clear) {
-                std::cout << "\r";
+
+    std::shared_ptr<BasicAnalysis> parallel_while_task;
+    for (auto &task : *task_list) {
+        if (task->enable_parralle_while()) {
+            if (parallel_while_task) {
+                std::cerr << "Cannot select more than one task do parallel_while parallelism\n";
+                exit(EXIT_FAILURE);
+            } else {
+                parallel_while_task = task;
             }
-            std::cout << "Processing Coordinate Frame  " << current_frame_num << "   " << std::flush;
-            Clear = 1;
-        }
-        if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
-            if (current_frame_num == start) {
-                if (forcefield.isValid()) {
-                    forcefield.assign_forcefield(frame);
-                }
-                processFirstFrame(frame, task_list);
-            }
-            processOneFrame(frame, task_list);
         }
     }
-    std::cout << std::endl;
 
-
+    if (parallel_while_task) {
+        task_list->remove(parallel_while_task);
+        parallel_while_task->do_parallel_while([&] {
+            return getFrame(task_list, start, step_size, total_frames, current_frame_num, reader, Clear);
+        });
+    } else {
+        while (getFrame(task_list, start, step_size, total_frames, current_frame_num, reader, Clear));
+    }
+    std::cout << '\n';
+    task_list->push_back(parallel_while_task);
     if (outfile.is_open()) {
         outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
@@ -808,5 +794,34 @@ void processTrajectory(const boost::program_options::options_description &desc,
         task->print(outfile);
     }
     std::cout << "Mission Complete" << std::endl;
+}
+
+std::shared_ptr<Frame>
+getFrame(shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list, int start, int step_size, int total_frames,
+         int &current_frame_num, shared_ptr<TrajectoryReader> &reader, int &Clear) {
+    std::shared_ptr<Frame> frame;
+    while ((frame = reader->readOneFrame())) {
+        current_frame_num++;
+        if (total_frames != 0 and current_frame_num > total_frames)
+            break;
+        if (current_frame_num % 10 == 0) {
+            if (Clear) {
+                cout << "\r";
+            }
+            cout << "Processing Coordinate Frame  " << current_frame_num << "   " << flush;
+            Clear = 1;
+        }
+        if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
+            if (current_frame_num == start) {
+                if (forcefield.isValid()) {
+                    forcefield.assign_forcefield(frame);
+                }
+                processFirstFrame(frame, task_list);
+            }
+            processOneFrame(frame, task_list);
+            return frame;
+        }
+    }
+    return {};
 }
 

@@ -7,6 +7,8 @@
 #ifndef TINKER_BASICANALYSIS_HPP
 #define TINKER_BASICANALYSIS_HPP
 
+#include <utility>
+
 #include "std.hpp"
 
 class Frame;
@@ -29,7 +31,20 @@ public:
 
     static const std::string title() { return "Base Class"; }
 
+    void do_parallel_while(std::function<std::shared_ptr<Frame>()> func) {
+        do_parallel_while_impl(std::move(func));
+    }
+
+    bool enable_parralle_while() {
+        return enable_paralel_while_impl();
+    }
+
     virtual ~BasicAnalysis() = default;
+
+protected:
+    virtual void do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) {};
+
+    virtual bool enable_paralel_while_impl() { return false; }
 };
 
 
