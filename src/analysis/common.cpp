@@ -67,14 +67,9 @@ std::string ext_filename(const std::string &filename) {
 }
 
 FileType getFileType(const std::string &filename) {
-//    if (!boost::filesystem::is_regular_file(filename)){
-//        throw std::runtime_error("ERROR !! not regular file !");
-//    }
     auto extension = boost::filesystem::extension(filename);
     boost::to_lower(extension);
-    /*
-     *      XTC,TRR,NC,ARC,TPR,MOL2,PRM, UnKnown
-     */
+
     const std::unordered_map<std::string, FileType> mapping = {
             {".xtc",   FileType::XTC},
             {".trr",   FileType::TRR},
