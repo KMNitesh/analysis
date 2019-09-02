@@ -777,11 +777,13 @@ void processTrajectory(const boost::program_options::options_description &desc,
         parallel_while_task->do_parallel_while([&] {
             return getFrame(task_list, start, step_size, total_frames, current_frame_num, reader, Clear);
         });
+        task_list->push_back(parallel_while_task);
     } else {
         while (getFrame(task_list, start, step_size, total_frames, current_frame_num, reader, Clear));
     }
     std::cout << '\n';
-    task_list->push_back(parallel_while_task);
+
+
     if (outfile.is_open()) {
         outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
