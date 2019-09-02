@@ -4,7 +4,7 @@
 
 #include "DiffuseCutoff.hpp"
 #include "frame.hpp"
-
+#include "molecule.hpp"
 
 using namespace std;
 

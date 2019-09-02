@@ -3,10 +3,9 @@
 //
 
 #include "FindMinBetweenTwoGroups.hpp"
-
 #include "frame.hpp"
-
 #include "atom.hpp"
+#include "molecule.hpp"
 
 using namespace std;
 

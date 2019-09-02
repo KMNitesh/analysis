@@ -7,7 +7,7 @@
 #include "ThrowAssert.hpp"
 #include "frame.hpp"
 #include "common.hpp"
-
+#include "molecule.hpp"
 
 using namespace std;
 

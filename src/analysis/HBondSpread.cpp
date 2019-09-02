@@ -10,6 +10,7 @@
 #include "HBond.hpp"
 #include "frame.hpp"
 #include "ThrowAssert.hpp"
+#include "molecule.hpp"
 
 HBondSpread::HBondSpread() {
     enable_outfile = true;

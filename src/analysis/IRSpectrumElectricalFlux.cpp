@@ -9,6 +9,7 @@
 #include "frame.hpp"
 #include "VelocityAutocorrelationFunction.hpp"
 #include "IRSpectrum.hpp"
+#include "molecule.hpp"
 
 IRSpectrumElectricalFlux::IRSpectrumElectricalFlux() {
     enable_outfile = true;

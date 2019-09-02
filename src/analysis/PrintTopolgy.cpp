@@ -9,6 +9,7 @@
 #include "frame.hpp"
 #include "atom.hpp"
 #include "forcefield.hpp"
+#include "molecule.hpp"
 
 namespace qi = boost::spirit::qi;
 

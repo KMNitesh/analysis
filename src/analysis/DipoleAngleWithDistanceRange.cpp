@@ -5,6 +5,7 @@
 #include "DipoleAngleWithDistanceRange.hpp"
 #include "frame.hpp"
 #include "ThrowAssert.hpp"
+#include "molecule.hpp"
 
 using namespace std;
 

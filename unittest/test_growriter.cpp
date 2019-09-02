@@ -8,6 +8,7 @@
 #include "atom.hpp"
 #include "frame.hpp"
 #include "common.hpp"
+#include "molecule.hpp"
 
 using namespace std;
 using namespace testing;

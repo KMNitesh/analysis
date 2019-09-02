@@ -8,6 +8,7 @@
 #include "IRSpectrum.hpp"
 #include "common.hpp"
 #include "frame.hpp"
+#include "molecule.hpp"
 
 IRSpectrum::IRSpectrum() {
     enable_outfile = true;

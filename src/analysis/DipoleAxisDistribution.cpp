@@ -4,6 +4,7 @@
 
 #include "DipoleAxisDistribution.hpp"
 #include "frame.hpp"
+#include "molecule.hpp"
 
 using namespace std;
 

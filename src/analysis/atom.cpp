@@ -13,6 +13,7 @@
 #include "grammar.hpp"
 #include "GeneratorGrammar.hpp"
 #include "ThrowAssert.hpp"
+#include "molecule.hpp"
 
 namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;

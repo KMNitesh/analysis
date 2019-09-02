@@ -7,6 +7,7 @@
 #include "frame.hpp"
 #include "HBond.hpp"
 #include "ThrowAssert.hpp"
+#include "molecule.hpp"
 
 
 bool operator==(const HBondLifeTimeCutoff::InnerAtom &i1, const HBondLifeTimeCutoff::InnerAtom &i2) {

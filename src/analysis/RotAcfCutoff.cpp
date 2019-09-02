@@ -3,10 +3,10 @@
 //
 
 #include "RotAcfCutoff.hpp"
-
 #include "frame.hpp"
 #include "atom.hpp"
 #include "VectorSelectorFactory.hpp"
+#include "molecule.hpp"
 
 using namespace std;
 

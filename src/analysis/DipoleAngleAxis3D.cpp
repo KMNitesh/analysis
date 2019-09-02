@@ -4,6 +4,7 @@
 
 #include "DipoleAngleAxis3D.hpp"
 #include "frame.hpp"
+#include "molecule.hpp"
 
 using namespace std;
 

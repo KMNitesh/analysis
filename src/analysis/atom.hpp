@@ -15,8 +15,6 @@
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
 
-#include "molecule.hpp"
-
 
 class Molecule;
 

@@ -8,6 +8,7 @@
 #include "frame.hpp"
 #include "trr_writer.hpp"
 #include "atom.hpp"
+#include "molecule.hpp"
 
 ConvertVelocityToVelocityCharge::ConvertVelocityToVelocityCharge(std::unique_ptr<TRRWriter> writer)
         : writer(std::move(writer)) {
