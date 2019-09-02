@@ -230,9 +230,7 @@ int main(int argc, char *argv[]) {
             CrossCorrelation::calculate(getOutputFilename(vm));
             break;
         case 6:
-            GmxTopologyPrinter::print(vm["topology"].as<std::string>(),
-                                      vm["prm"].as<std::string>(),
-                                      getOutputFilename(vm));
+            GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm));
             break;
     }
 

@@ -562,6 +562,12 @@ std::string chrono_cast(const T &dur) {
 
 std::string getOutputFilename(const po::variables_map &vm);
 
+std::string getTopologyFilename(const po::variables_map &vm);
+
+std::string getTrajectoryFilename(const po::variables_map &vm);
+
+std::string getPrmFilename(const po::variables_map &vm);
+
 std::size_t getDefaultVectorReserve();
 
 #endif //TINKER_COMMON_HPP
