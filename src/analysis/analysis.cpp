@@ -141,6 +141,11 @@ int main(int argc, char *argv[]) {
         std::cout << "argv[" << i << "] = " << argv[i] << '\n';
     }
     std::cout << " > Program Arugments  \n";
+
+    std::cout << "Envirment Variables :\n";
+
+    std::cout << "ANALYSIS_VECTOR_RESERVE = " << getDefaultVectorReserve() << '\n';
+
 #endif
 
     auto desc = make_program_options();

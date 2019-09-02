@@ -167,3 +167,8 @@ std::string print_cmdline(int argc, const char *const argv[]) {
 std::string getOutputFilename(const po::variables_map &vm) {
     return vm.count("output") ? vm["output"].as<std::string>() : choose_file("output file :", false);
 }
+
+std::size_t getDefaultVectorReserve() {
+    auto p = std::getenv("ANALYSIS_VECTOR_RESERVE");
+    return p ? std::stoi(p) : 100000;
+}
