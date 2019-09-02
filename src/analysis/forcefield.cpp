@@ -79,7 +79,6 @@ void Forcefield::assign_forcefield(std::shared_ptr<Frame> &frame) {
         atom->mass = it->second.mass;
         atom->charge = it->second.charge.value();
         atom->setAtNo(it->second.at_no);
-        atom->atom_name = it->second.name;
         atom->residue_name = it->second.res;
     }
 }
