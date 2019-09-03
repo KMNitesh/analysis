@@ -23,11 +23,12 @@
 15.  Other practical utilities for using Tinker
 
 #### Build Requirements
-- language : C++17 ( GCC 7.x or above ) and its STL
-- third-party libraries :  Boost 1.67 or above,
+- Language : C++17 ( GCC 7.x or above ) and its STL
+- Build System :  CMake 3.13 or above
+- Third-party libraries :  Boost 1.67 or above,
                            Intel thread building blocks(TBB) ( for Multi-Core Parallelism ), 
                            NetCDF,  FFTW3 , 
-                           GROMACS library ( for reading and writting Gromacs topolgy and trajectory file ),
+                           GROMACS library ( for reading and writting Gromacs topology and trajectory file ),
                            Google Test ( for unit test )
 
                            
