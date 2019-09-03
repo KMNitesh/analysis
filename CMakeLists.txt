@@ -97,19 +97,6 @@ if (NOT FFTW3_threads_LIBS)
 endif ()
 link_libraries(fftw3 ${FFTW3_threads_LIBS})
 
-# readline
-find_path(READLINE_INCLUDES "readline/readline.h" HITS ${INCLUES_PATH})
-if (NOT READLINE_INCLUDES)
-    message(FATAL_ERROR "readline header not found")
-endif ()
-include_directories(${READLINE_INCLUDES})
-
-find_library(READLINE_LIBS readline PATHS ${LIBRARY_DIRS})
-if (NOT READLINE_LIBS)
-    message(FATAL_ERROR "readline library not found")
-endif ()
-link_libraries(${READLINE_LIBS})
-
 
 # intel tbb
 find_path(TBB_INCLUDES "tbb/tbb.h" HITS ${INCLUES_PATH})
