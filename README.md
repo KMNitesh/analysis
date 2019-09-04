@@ -18,9 +18,10 @@
 10.  Density of State (DOS) Spectrum
 11.  Hydrogen bond lifetime analysis
 12.  Various angle related analysis and can convert probability distribution to Gibbs free energy plot
-13.  Use AmberMask for select Residues, Atoms in topolgoy structure
-14.  Use Domain Specific Language(DSL) script to drive analysis process 
-15.  Other practical utilities for using Tinker
+13.  Orientation-Resolved Radial Distribution Functions (JCTC 2019, 15, 803−812)
+14.  Use AmberMask for select Residues, Atoms in topology structure
+15.  Use Domain Specific Language(DSL) script to drive analysis process 
+16.  Other practical utilities for using Tinker
 
 #### Build Requirements
 - Language : C++17 ( GCC 7.x or above ) and its STL
