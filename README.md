@@ -1,8 +1,9 @@
 ## Molecular dynamics trajectory analysis package for Tinker & Gromacs software
 
-- add discrete charge transfer term to AMOEBA polarizable force field
-- add binary trajectory format (NetCDF,from Amber) support in molecular dynamics and post-analysis program
-- addtional trajectory analysis based on C++, includes
+#### Function enhancement to MD Engine
+
+1. add discrete charge transfer term to AMOEBA polarizable force field
+2. add binary trajectory format (NetCDF,from Amber) support in molecular dynamics and post-analysis program
 
 #### Typical analysis functions
  
