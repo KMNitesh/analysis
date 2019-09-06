@@ -56,6 +56,7 @@ void OrientationResolvedRadialDistributionFunction::print(std::ostream &os) {
     os << title() << '\n';
     os << "# reference atom > " << reference_atom_mask << '\n';
     os << "# water Ow atoms > " << water_Ow_atom_mask << '\n';
+    vectorSelector->print(os);
     os << "# distance_width(Ang) > " << distance_width << '\n';
     os << "# angle_width(deg) > " << angle_width * 180 / M_PI << '\n';
     os << "# max_distance(Ang) > " << max_distance << '\n';
