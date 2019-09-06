@@ -132,6 +132,10 @@ find_package(Boost 1.67 REQUIRED COMPONENTS regex program_options filesystem con
 include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/sanitizers-cmake/cmake" ${CMAKE_MODULE_PATH})
+# Google Sanitizer
+find_package(Sanitizers)
+
 # gromacs
 find_library(GROMACS_LIBS NAMES gromacs gromacs_mpi PATHS ${LIBRARY_DIRS})
 if (NOT GROMACS_LIBS)
