@@ -3,12 +3,20 @@
 //
 
 #include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
+#include <boost/range/irange.hpp>
+
 #include "ConditionalTimeCorrelationFunction.hpp"
 #include "common.hpp"
 #include "frame.hpp"
 #include "VectorSelectorFactory.hpp"
 
-ConditionalTimeCorrelationFunction::ConditionalTimeCorrelationFunction() {
+ConditionalTimeCorrelationFunction::ConditionalTimeCorrelationFunction() : func_mapping{
+        {1, [this] { calculateFrame([](auto x) { return x; }); }},
+        {2, [this] { calculateFrame([](auto x) { return 0.5 * (3 * x * x - 1); }); }},
+        {3, [this] { calculateFrame([](auto x) { return 0.5 * (5 * x * x * x - 3 * x); }); }},
+        {4, [this] { calculateFrame([](auto x) { return 1.0 / 8.0 * (35 * x * x * x * x - 30 * x * x + 3); }); }}
+} {
     enable_outfile = true;
 }
 
@@ -51,7 +59,11 @@ void ConditionalTimeCorrelationFunction::process(std::shared_ptr<Frame> &frame) 
         it2->push_back(unit_vector);
         d_ref_vector.push_back(atom_distance(reference_atom, *it1, frame));
     }
+    func_mapping.at(LegendrePolynomial)();
+}
 
+template<typename Function>
+void ConditionalTimeCorrelationFunction::calculateFrame(Function f) {
     if (cb_vector.at(0).full()) {
         for (std::size_t i = 0; i < water_Ow_atoms.size(); ++i) {
             auto d_ref = cache_x[0][i];
@@ -59,7 +71,7 @@ void ConditionalTimeCorrelationFunction::process(std::shared_ptr<Frame> &frame) 
             if (rbin < distance_bins) {
                 auto &cb = cb_vector[i];
                 for (int t = 0; t < max_time_gap_frame; ++t) {
-                    ctcf[rbin][t] += dot_multiplication(cb[0], cb[t]);
+                    ctcf[rbin][t] += f(dot_multiplication(cb[0], cb[t]));
                 }
             }
         }
@@ -73,6 +85,8 @@ void ConditionalTimeCorrelationFunction::print(std::ostream &os) {
     os << "# " << title() << '\n';
     os << "# reference atom > " << reference_atom_mask << '\n';
     os << "# water Ow atoms > " << water_Ow_atoms_mask << '\n';
+    vectorSelector->print(os);
+    os << "# LegendrePolynomial = " << LegendrePolynomial << "  [ " << LegendreStr.at(LegendrePolynomial) << " ] \n";
     os << "# distance_width(Ang) > " << distance_width << '\n';
     os << "# max_distance(Ang) > " << max_distance << '\n';
     os << "# time_increment_ps(ps) > " << time_increment_ps << "\n";
@@ -106,6 +120,11 @@ void ConditionalTimeCorrelationFunction::readInfo() {
     vectorSelector = VectorSelectorFactory::getVectorSelector();
     vectorSelector->readInfo();
 
+    std::cout << "Legendre Polynomial\n";
+    boost::range::for_each(boost::irange<int>(1, LegendreStr.size() + 1),
+                           [this](auto i) { std::cout << i << ". " << LegendreStr.at(i) << '\n'; });
+    LegendrePolynomial = choose<int>(1, LegendreStr.size(), "select > ");
+
     distance_width = choose<double>(0, 1000, "Binwidth in r (Ang) [ 0.01 ] > ", true, 0.01);
     max_distance = choose<double>(0, 1000, "Maximum value of r (Ang) [ 10.0 ] >", true, 10.0);
 
@@ -117,5 +136,7 @@ void ConditionalTimeCorrelationFunction::readInfo() {
     max_time_gap_ps = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Gap in Picoseconds :");
 
     max_time_gap_frame = std::ceil(max_time_gap_ps / time_increment_ps);
+
+
 }
 

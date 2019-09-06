@@ -33,6 +33,12 @@ protected:
 
     void normalize();
 
+    template<typename Function>
+    void calculateFrame(Function f);
+
+    const std::unordered_map<int, std::function<void()>> func_mapping;
+
+
     AmberMask reference_atom_mask;
     AmberMask water_Ow_atoms_mask;
 
@@ -54,6 +60,8 @@ protected:
     double max_distance;
     double distance_width;
     int distance_bins;
+
+    int LegendrePolynomial;
 
     boost::multi_array<double, 2> ctcf;
 
