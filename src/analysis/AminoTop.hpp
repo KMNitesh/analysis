@@ -41,13 +41,12 @@ public:
         std::list<int> linked_atom_nos;
         std::shared_ptr<Atom> atom;
         std::string H_;
-
     };
 
     std::map<int, std::shared_ptr<AminoItem>> topmap;
 
     void atom_null() {
-        for (auto item : topmap) {
+        for (auto &item : topmap) {
             item.second->atom.reset();
         }
     }

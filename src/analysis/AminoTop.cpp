@@ -7,8 +7,6 @@
 #include "AminoTop.hpp"
 #include "common.hpp"
 
-using namespace std;
-
 boost::bimap<boost::bimaps::set_of<AminoAcidType>, boost::bimaps::set_of<std::string>> aminotype_str_bimap =
         boost::assign::list_of<boost::bimap<boost::bimaps::set_of<AminoAcidType>, boost::bimaps::set_of<std::string>>::relation>
                 (AminoAcidType::H3N_Ala, "H3N_Ala")
@@ -28,14 +26,19 @@ boost::bimap<boost::bimaps::set_of<AminoAcidType>, boost::bimaps::set_of<std::st
                 (AminoAcidType::Arg, "Arg");
 
 void AminoTop::readTop(const std::string &filename) {
-    std::fstream f;
-    f.open(filename);
+    std::fstream f(filename);
+    if (!f) {
+        throw std::runtime_error("Can not open file : " + filename);
+    }
     std::string line;
     while (true) {
-        getline(f, line);
+        std::getline(f, line);
         auto field = split(line);
         if (field.empty()) break;
-        auto item = make_shared<AminoItem>();
+        auto item = std::make_shared<AminoItem>();
+        if (field.size() < 3) {
+            throw std::runtime_error("file <" + filename + "> content sytanx error \n");
+        }
         item->no = stoi(field[0]);
         auto sym = field[1];
         if (sym == "H") item->symbol = Symbol::Hydrogen;
@@ -43,15 +46,13 @@ void AminoTop::readTop(const std::string &filename) {
         else if (sym == "N") item->symbol = Symbol::Nitrogen;
         else if (sym == "O") item->symbol = Symbol::Oxygen;
         else if (sym == "X") item->symbol = Symbol::X;
-
-
+        else {
+            throw std::runtime_error("file <" + filename + "> has unrecognized element symbol " + sym + '\n');
+        }
         item->H_ = field[2];
-
         for (unsigned int i = 3; i < field.size(); i++) {
             item->linked_atom_nos.push_back(stoi(field[i]));
         }
         topmap[item->no] = item;
-
     }
-
 }
