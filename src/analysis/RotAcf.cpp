@@ -13,6 +13,7 @@
 #include "molecule.hpp"
 #include "ThrowAssert.hpp"
 #include "VectorSelectorFactory.hpp"
+#include "LegendrePolynomial.hpp"
 
 using namespace std;
 
@@ -32,10 +33,10 @@ void RotAcf::process(std::shared_ptr<Frame> &frame) {
 
 void RotAcf::print(std::ostream &os) {
     const std::unordered_map<int, std::function<std::vector<double>()>> func_mapping{
-            {1, [this] { return calculate([](auto x) { return x; }); }},
-            {2, [this] { return calculate([](auto x) { return 0.5 * (3 * x * x - 1); }); }},
-            {3, [this] { return calculate([](auto x) { return 0.5 * (5 * x * x * x - 3 * x); }); }},
-            {4, [this] { return calculate([](auto x) { return 1.0 / 8.0 * (35 * x * x * x * x - 30 * x * x + 3); }); }}
+            {1, [this] { return calculate(LegendrePolynomialLevel1()); }},
+            {2, [this] { return calculate(LegendrePolynomialLevel2()); }},
+            {3, [this] { return calculate(LegendrePolynomialLevel3()); }},
+            {4, [this] { return calculate(LegendrePolynomialLevel4()); }}
     };
     auto acf = func_mapping.at(LegendrePolynomial)();
     vector<double> integration = integrate(acf);

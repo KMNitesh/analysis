@@ -10,12 +10,13 @@
 #include "common.hpp"
 #include "frame.hpp"
 #include "VectorSelectorFactory.hpp"
+#include "LegendrePolynomial.hpp"
 
 ConditionalTimeCorrelationFunction::ConditionalTimeCorrelationFunction() : func_mapping{
-        {1, [this] { calculateFrame([](auto x) { return x; }); }},
-        {2, [this] { calculateFrame([](auto x) { return 0.5 * (3 * x * x - 1); }); }},
-        {3, [this] { calculateFrame([](auto x) { return 0.5 * (5 * x * x * x - 3 * x); }); }},
-        {4, [this] { calculateFrame([](auto x) { return 1.0 / 8.0 * (35 * x * x * x * x - 30 * x * x + 3); }); }}
+        {1, [this] { calculateFrame(LegendrePolynomialLevel1()); }},
+        {2, [this] { calculateFrame(LegendrePolynomialLevel2()); }},
+        {3, [this] { calculateFrame(LegendrePolynomialLevel3()); }},
+        {4, [this] { calculateFrame(LegendrePolynomialLevel4()); }}
 } {
     enable_outfile = true;
 }
@@ -122,7 +123,7 @@ void ConditionalTimeCorrelationFunction::readInfo() {
 
     std::cout << "Legendre Polynomial\n";
     boost::range::for_each(boost::irange<int>(1, LegendreStr.size() + 1),
-                           [this](auto i) { std::cout << i << ". " << LegendreStr.at(i) << '\n'; });
+                           [](auto i) { std::cout << i << ". " << LegendreStr.at(i) << '\n'; });
     LegendrePolynomial = choose<int>(1, LegendreStr.size(), "select > ");
 
     distance_width = choose<double>(0, 1000, "Binwidth in r (Ang) [ 0.01 ] > ", true, 0.01);

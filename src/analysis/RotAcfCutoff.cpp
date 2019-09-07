@@ -7,6 +7,7 @@
 #include "atom.hpp"
 #include "VectorSelectorFactory.hpp"
 #include "molecule.hpp"
+#include "LegendrePolynomial.hpp"
 
 using namespace std;
 
@@ -119,10 +120,10 @@ void RotAcfCutoff::print(std::ostream &os) {
     acf.emplace_back(0, 0.0);
     switch (LegendrePolynomial) {
         case 1:
-            calculateAutocorrelaionFunction(acf, [](auto x) { return x; });
+            calculateAutocorrelaionFunction(acf, LegendrePolynomialLevel1());
             break;
         case 2:
-            calculateAutocorrelaionFunction(acf, [](auto x) { return 0.5 * (3 * x * x - 1); });
+            calculateAutocorrelaionFunction(acf, LegendrePolynomialLevel2());
             break;
     }
 
