@@ -91,6 +91,7 @@ namespace mpl = boost::mpl;
 #include "ClusterVolume.hpp"
 #include "OrientationResolvedRadialDistributionFunction.hpp"
 #include "ConditionalTimeCorrelationFunction.hpp"
+#include "RadiusOfGyration.hpp"
 
 using namespace std;
 
@@ -150,7 +151,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             IRSpectrumDeltaDipole,
             ClusterVolume,
             OrientationResolvedRadialDistributionFunction,
-            ConditionalTimeCorrelationFunction
+            ConditionalTimeCorrelationFunction,
+            RadiusOfGyration
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

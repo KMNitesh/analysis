@@ -21,9 +21,10 @@
 12.  Various angle related analysis and can convert probability distribution to Gibbs free energy plot
 13.  Orientation-Resolved Radial Distribution Functions (JCTC 2019, 15, 803−812)
 14.  Conditional Time Correlation Function (JCTC 2019, 15, 803−812)
-15.  Use AmberMask for selecting Residues, Atoms in topology structure
-16.  Use Domain Specific Language(DSL) script to drive analysis process 
-17.  Other practical utilities for using Tinker
+15.  Radius of gyration (mass-weighted)
+16.  Use AmberMask for selecting Residues, Atoms in topology structure
+17.  Use Domain Specific Language(DSL) script to drive analysis process 
+18.  Other practical utilities for using Tinker
 
 #### Build Requirements
 - Language : C++17 ( GCC 7.x or above ) and its STL
