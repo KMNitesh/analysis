@@ -26,7 +26,7 @@ public:
     void readInfo() override;
 
     static std::string title() {
-        return "Orientation-Resolved Radial Distribution Functions (JCTC 2019, 15, 803−812)";
+        return "Orientation-Resolved Radial Distribution Function (JCTC 2019, 15, 803−812)";
     }
 
 protected:

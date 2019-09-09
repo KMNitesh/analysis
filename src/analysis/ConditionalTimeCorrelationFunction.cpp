@@ -115,7 +115,7 @@ void ConditionalTimeCorrelationFunction::normalize() {
 }
 
 void ConditionalTimeCorrelationFunction::readInfo() {
-    Atom::select1group(reference_atom_mask, "Eneter mask for reference atom > ");
+    Atom::select1group(reference_atom_mask, "Enter mask for reference atom > ");
     Atom::select1group(water_Ow_atoms_mask, "Enter mask for OW atoms > ");
 
     vectorSelector = VectorSelectorFactory::getVectorSelector();
