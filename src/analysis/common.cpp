@@ -89,13 +89,14 @@ FileType getFileType(const std::string &filename) {
 
 }
 
-bool choose_bool(const std::string &prompt, boost::optional<Default<bool>> defaultValue,
+
+bool choose_bool(const std::string &prompt, Default<bool> defaultValue,
                  std::istream &in, std::ostream &out) {
     while (true) {
         std::string input_line = input(prompt, in, out);
         boost::trim(input_line);
         if (input_line.empty()) {
-            if (defaultValue) return defaultValue.value().getValue();
+            if (defaultValue) return defaultValue.getValue();
         }
         boost::to_lower(input_line);
 

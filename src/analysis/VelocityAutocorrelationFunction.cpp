@@ -90,7 +90,7 @@ VelocityAutocorrelationFunction::calculateAcf(
 }
 
 void VelocityAutocorrelationFunction::readInfo() {
-    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
-    max_time_grap_ps = choose(0.0, 10000.0, "max_time_grap_ps [100 ps] :", true, 100.0);
+    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
+    max_time_grap_ps = choose(0.0, 10000.0, "max_time_grap_ps [100 ps] :", Default(100.0));
 }
 

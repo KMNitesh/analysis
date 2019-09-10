@@ -126,13 +126,13 @@ void ConditionalTimeCorrelationFunction::readInfo() {
                            [](auto i) { std::cout << i << ". " << LegendreStr.at(i) << '\n'; });
     LegendrePolynomial = choose<int>(1, LegendreStr.size(), "select > ");
 
-    distance_width = choose<double>(0, 1000, "Binwidth in r (Ang) [ 0.01 ] > ", true, 0.01);
-    max_distance = choose<double>(0, 1000, "Maximum value of r (Ang) [ 10.0 ] >", true, 10.0);
+    distance_width = choose<double>(0, 1000, "Binwidth in r (Ang) [ 0.01 ] > ", Default(0.01));
+    max_distance = choose<double>(0, 1000, "Maximum value of r (Ang) [ 10.0 ] >", Default(10.0));
 
     distance_bins = static_cast<int>(max_distance / distance_width);
 
     time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
-                               "Enter the Time Increment in Picoseconds [0.1]:", true, 0.1);
+                               "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
 
     max_time_gap_ps = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Gap in Picoseconds :");
 

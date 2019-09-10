@@ -106,8 +106,8 @@ void HBondSpread::print(std::ostream &os) {
 }
 
 void HBondSpread::readInfo() {
-    dist_R_cutoff = choose(0.0, 100.0, "Distance Cutoff(O-O) for Hydogen Bond [3.5 Ang] :", true, 3.5);
-    angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", true, 30.0);
+    dist_R_cutoff = choose(0.0, 100.0, "Distance Cutoff(O-O) for Hydogen Bond [3.5 Ang] :", Default(3.5));
+    angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", Default(30.0));
     auto cutoff = choose(0.0, 100.0, "cutoff :");
     cutoff2 = cutoff * cutoff;
     Atom::select1group(center_Metal_atom_mask, "Enter mask for Metal > ");

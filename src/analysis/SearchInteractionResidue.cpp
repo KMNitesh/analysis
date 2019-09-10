@@ -89,9 +89,9 @@ void SearchInteractionResidue::print(std::ostream &os) {
 void SearchInteractionResidue::readInfo() {
     std::cout << "The output residues is in the second group\n";
     Atom::select2group(ids1, ids2);
-    cutoff = choose(0.0, std::numeric_limits<double>::max(), "cutoff [Ang]:", false);
+    cutoff = choose(0.0, std::numeric_limits<double>::max(), "cutoff [Ang]:");
     std::cout << "(0) bool style\n(1) number style\n";
-    style = static_cast<OutputStyle>(choose(0, 1, "which style ? [ 0 ] ", true, 0));
+    style = static_cast<OutputStyle>(choose(0, 1, "which style ? [ 0 ] ", Default(0)));
 }
 
 void SearchInteractionResidue::processFirstFrame(std::shared_ptr<Frame> &frame) {

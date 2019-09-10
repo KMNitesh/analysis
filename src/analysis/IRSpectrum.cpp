@@ -116,12 +116,12 @@ std::vector<long double> IRSpectrum::calculateAcf(const Container &evolution) {
 template std::vector<long double> IRSpectrum::calculateAcf(const std::deque<double> &);
 
 void IRSpectrum::readInfo() {
-    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
+    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
     Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }
 
 void IRSpectrum::calculateSpectrum(const std::string &out) {
-    auto time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.001 ps] :", true, 0.001);
+    auto time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.001 ps] :", Default(0.001));
     auto file = choose_file("Enter Dipole Evolution Data File : ", true);
 
     std::deque<std::tuple<double, double, double>> dipole_evolution;

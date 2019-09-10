@@ -61,7 +61,7 @@ void RotAcfCutoff::readInfo() {
     this->cutoff2 = cutoff * cutoff;
 
     this->time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
-                                     "Enter the Time Increment in Picoseconds [0.1]:", true, 0.1);
+                                     "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
     this->max_time_grap = choose(0.0, std::numeric_limits<double>::max(),
                                  "Enter the Max Time Grap in Picoseconds :");
 

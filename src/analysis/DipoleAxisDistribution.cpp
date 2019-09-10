@@ -51,8 +51,8 @@ void DipoleAxisDistribution::print(std::ostream &os) {
 
 void DipoleAxisDistribution::readInfo() {
     Atom::select1group(ids);
-    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
-    auto angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
+    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
+    auto angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));
 
     auto menu = [] {
         cout << "Axis selection \n";

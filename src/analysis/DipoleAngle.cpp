@@ -64,11 +64,11 @@ void DipoleAngle::print(std::ostream &os) {
 void DipoleAngle::readInfo() {
     Atom::select2group(ids1, ids2);
     double rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:",
-                         true, 10.0);
-    distance_width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:", true,
-                            0.01);
-    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
-    angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
+                         Default(10.0));
+    distance_width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:",
+                            Default(0.01));
+    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
+    angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));
 
     distance_bins = int(rmax / distance_width);
     angle_bins = int(angle_max / angle_width);

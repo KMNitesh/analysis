@@ -40,16 +40,10 @@ void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 void RadicalDistribtuionFunction::readInfo() {
 
     Atom::select2group(ids1, ids2);
-    rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:", true,
-                  10.0);
-    width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:", true, 0.01);
-    auto inputline = input("Include Intramolecular Pairs in Distribution[N]:");
-    boost::trim(inputline);
-    if (!inputline.empty()) {
-        if (boost::to_lower_copy(inputline) == "y") {
-            intramol = true;
-        }
-    }
+    rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:",
+                  Default(10.0));
+    width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:", Default(0.01));
+    intramol = choose_bool("Include Intramolecular Pairs in Distribution[N]:", Default(false));
     nbin = int(rmax / width);
     for (int i = 0; i <= nbin; i++) {
         hist[i] = 0;

@@ -102,11 +102,11 @@ void PlaneAngle::readInfo() {
     Atom::select1group(ids3, "Enter mask for atom3 (Hw) : ");
     Atom::select1group(ids4, "Enter mask for atom4 (Metal) : ");
 
-    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", true, 180.0);
-    angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", true, 0.5);
+    double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
+    angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));
 
-    cutoff1 = choose(0.0, 100.0, "Cutoff1 [Angstrom]:", false);
-    cutoff2 = choose(0.0, 100.0, "Cutoff2 [Angstrom]:", false);
+    cutoff1 = choose(0.0, 100.0, "Cutoff1 [Angstrom]:");
+    cutoff2 = choose(0.0, 100.0, "Cutoff2 [Angstrom]:");
 
     throw_assert(cutoff1 < cutoff2, "Cutoff1 must less than Cutoff2");
 

@@ -43,9 +43,9 @@ void ShellDensity::print(std::ostream &os) {
 void ShellDensity::readInfo() {
     Atom::select2group(ids1, ids2);
     double rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:",
-                         true, 10.0);
-    distance_width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:", true,
-                            0.01);
+                         Default(10.0));
+    distance_width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:",
+                            Default(0.01));
     distance_bins = int(rmax / distance_width);
     for (int i = 1; i <= distance_bins; i++) {
         hist[i] = 0;

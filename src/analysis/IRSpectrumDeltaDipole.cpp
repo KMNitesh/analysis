@@ -27,7 +27,7 @@ void IRSpectrumDeltaDipole::print(std::ostream &os) {
 
 
 void IRSpectrumDeltaDipole::calculateSpectrum(const std::string &out) {
-    auto time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.001 ps] :", true, 0.001);
+    auto time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.001 ps] :", Default(0.001));
     auto file = choose_file("Enter Dipole Evolution Data File : ", true);
 
     std::deque<std::tuple<double, double, double>> dipole_evolution;

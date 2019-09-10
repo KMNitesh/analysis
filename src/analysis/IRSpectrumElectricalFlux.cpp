@@ -61,7 +61,7 @@ void IRSpectrumElectricalFlux::print(std::ostream &os) {
 }
 
 void IRSpectrumElectricalFlux::readInfo() {
-    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
+    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
     Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }
 

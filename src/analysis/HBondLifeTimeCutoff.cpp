@@ -157,10 +157,10 @@ std::vector<double> HBondLifeTimeCutoff::calculateAcf() const {
 }
 
 void HBondLifeTimeCutoff::readInfo() {
-    dist_R_cutoff = choose(0.0, 100.0, "Distance Cutoff(O-O) for Hydogen Bond [3.5 Ang] :", true, 3.5);
-    angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", true, 30.0);
-    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", true, 0.1);
-    max_time_grap_ps = choose(0.0, 100.0, "max_time_grap_ps [100 ps] :", true, 100.0);
+    dist_R_cutoff = choose(0.0, 100.0, "Distance Cutoff(O-O) for Hydogen Bond [3.5 Ang] :", Default(3.5));
+    angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", Default(30.0));
+    time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
+    max_time_grap_ps = choose(0.0, 100.0, "max_time_grap_ps [100 ps] :", Default(100.0));
     auto cutoff = choose(0.0, 100.0, "cutoff :");
     cutoff2 = cutoff * cutoff;
     Atom::select1group(center_Metal_atom_mask, "Enter mask for Metal > ");

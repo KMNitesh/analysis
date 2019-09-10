@@ -48,6 +48,6 @@ void DipoleAngle2Gibbs::printData(ostream &os) const {
 
 void DipoleAngle2Gibbs::readInfo() {
     DipoleAngle::readInfo();
-    temperature = choose(0.0, 10000.0, "Temperature [298] (K):", true, 298.0);
+    temperature = choose(0.0, 10000.0, "Temperature [298] (K):", Default(298.0));
 }
 

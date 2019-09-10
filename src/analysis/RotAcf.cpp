@@ -141,12 +141,12 @@ void RotAcf::readInfo() {
     vectorSelector->readInfo();
     std::cout << "Legendre Polynomial\n";
     boost::range::for_each(boost::irange<int>(1, LegendreStr.size() + 1),
-                           [this](auto i) { cout << to_string(i) << ". " << LegendreStr.at(i) << '\n'; });
+                           [](auto i) { cout << to_string(i) << ". " << LegendreStr.at(i) << '\n'; });
 
     LegendrePolynomial = choose<int>(1, LegendreStr.size(), "select > ");
 
     time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
-                               "Enter the Time Increment in Picoseconds [0.1]:", true, 0.1);
+                               "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
 
     max_time_grap = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Grap in Picoseconds :");
 }

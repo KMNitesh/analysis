@@ -115,11 +115,11 @@ void OrientationResolvedRadialDistributionFunction::readInfo() {
     vectorSelector = VectorSelectorFactory::getVectorSelector();
     vectorSelector->readInfo();
 
-    distance_width = choose<double>(0, 1000, "Binwidth in r (Ang) [ 0.01 ] > ", true, 0.01);
-    angle_width = choose<double>(0, 360, "Binwidth in theta (deg) [ 0.5 ] > ", true, 0.5);
+    distance_width = choose<double>(0, 1000, "Binwidth in r (Ang) [ 0.01 ] > ", Default(0.01));
+    angle_width = choose<double>(0, 360, "Binwidth in theta (deg) [ 0.5 ] > ", Default(0.5));
     angle_width = angle_width / 180 * M_PI;
 
-    max_distance = choose<double>(0, 1000, "Maximum value of r (Ang) [ 10.0 ] >", true, 10.0);
+    max_distance = choose<double>(0, 1000, "Maximum value of r (Ang) [ 10.0 ] >", Default(10.0));
 
     distance_bins = static_cast<int>(max_distance / distance_width);
     angle_bins = M_PI / angle_width;

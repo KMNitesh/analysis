@@ -66,15 +66,26 @@ std::vector<std::string> split_quoted(const std::string &str);
 std::string input(const std::string &prompt = "", std::istream &in = std::cin, std::ostream &out = std::cout);
 
 
+template<typename T>
+class Default {
+public:
+    Default() = default;
+    explicit Default(T x) : x(x) {}
+
+    T getValue() { return x.value(); }
+
+    operator bool() { return x.has_value();}
+private:
+    boost::optional<T> x;
+};
+
 template<typename T, typename = std::enable_if_t<std::is_same_v<T, int> or std::is_same_v<T, double>>>
-T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T value = T(),
+T choose(T min, T max, const std::string &prompt, Default<T> defaultValue = {},
          std::istream &in = std::cin, std::ostream &out = std::cout) {
     while (true) {
         std::string input_line = input(prompt, in, out);
-        boost::trim(input_line);
         if (input_line.empty()) {
-            if (!hasdefault) continue;
-            return value;
+            if (defaultValue) return defaultValue.getValue();
         }
         try {
             auto option = boost::lexical_cast<T>(input_line);
@@ -89,18 +100,7 @@ T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T val
     }
 }
 
-template<typename T>
-class Default {
-public:
-    explicit Default(T x) : x(x) {}
-
-    T getValue() { return x; }
-
-private:
-    T x;
-};
-
-bool choose_bool(const std::string &prompt, boost::optional<Default<bool>> defaultValue = {},
+bool choose_bool(const std::string &prompt, Default<bool> defaultValue = {},
                  std::istream &in = std::cin, std::ostream &out = std::cout);
 
 std::string ext_filename(const std::string &filename);

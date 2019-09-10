@@ -694,14 +694,14 @@ void processTrajectory(const boost::program_options::options_description &desc,
         forcefield.read(choose_file("force field filename:", true));
         break;
     }
-    int start = choose(1, INT32_MAX, "Enter the start frame[1]:", true, 1);
-    int step_size = choose(1, INT32_MAX, "Enter the step size[1]:", true, 1);
-    int total_frames = choose(0, INT32_MAX, "How many frames to read [all]:", true);
+    int start = choose(1, INT32_MAX, "Enter the start frame[1]:", Default(1));
+    int step_size = choose(1, INT32_MAX, "Enter the step size[1]:", Default(1));
+    int total_frames = choose(0, INT32_MAX, "How many frames to read [all]:", Default(0));
 
     tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
     if (enable_tbb) {
         int threads = choose<int>(0, sysconf(_SC_NPROCESSORS_ONLN),
-                                  "How many cores to used in parallel[automatic]:", true);
+                                  "How many cores to used in parallel[automatic]:", Default(0));
         tbb_init.initialize(threads == 0 ? tbb::task_scheduler_init::automatic : threads);
     }
     int current_frame_num = 0;
@@ -738,19 +738,15 @@ void processTrajectory(const boost::program_options::options_description &desc,
     }
 
 
-    auto input_line = input("Do you want to use multiple files [No]:");
-    boost::trim(input_line);
-    if (!input_line.empty()) {
-        if (input_line[0] == 'Y' or input_line[0] == 'y') {
-            while (true) {
-                input_line = choose_file("next file [Enter for End]:", true, "", true);
-                if (input_line.empty()) break;
-                if (ext_filename(input_line) == "traj") {
-                    std::cout << "traj file can not use multiple files [retype]" << std::endl;
-                    continue;
-                }
-                reader->add_filename(input_line);
+    if (choose_bool("Do you want to use multiple files [N]:", Default(false))) {
+        while (true) {
+            auto input_line = choose_file("next file [Enter for End]:", true, "", true);
+            if (input_line.empty()) break;
+            if (ext_filename(input_line) == "traj") {
+                std::cout << "traj file can not use multiple files [retype]" << std::endl;
+                continue;
             }
+            reader->add_filename(input_line);
         }
     }
 
