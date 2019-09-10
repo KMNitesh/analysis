@@ -30,16 +30,16 @@ void RadiusOfGyration::process(std::shared_ptr<Frame> &frame) {
     int ntime = 0;
     for (auto &mol : moles) {
         auto mass_center = mol->calc_weigh_center(frame);
-        double radius{};
+        double radius2{};
         for (auto &atom : mol->atom_list) {
             auto v = atom->getCoordinate() - mass_center;
             frame->image(v);
-            radius += vector_norm(v) * atom->mass.value();
+            radius2 += vector_norm2(v) * atom->mass.value();
         }
         mol->calc_mass();
-        radius /= mol->mass;
+        radius2 /= mol->mass;
         ++ntime;
-        total_radius += radius;
+        total_radius += std::sqrt(radius2);
     }
 
     series.push_back(total_radius / ntime);
