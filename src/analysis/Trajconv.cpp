@@ -42,7 +42,7 @@ void Trajconv::readInfo() {
 
 void Trajconv::inputOutputFiles(std::istream &in, std::ostream &out) {
     for (;;) {
-        auto filename = choose_file("output file [empty for next]: ", false, "", true, in, out);
+        std::string filename = choose_file("output file [empty for next]: ", in, out).isExist(false).can_empty(true);
         if (filename.empty()) {
             if (!writers.empty()) {
                 break;

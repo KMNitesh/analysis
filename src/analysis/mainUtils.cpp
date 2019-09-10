@@ -135,7 +135,7 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
         }
         cout << "topology file " << topol << " is bad ! please retype !" << endl;
     }
-    printer.action(choose_file("input topology file : ", true));
+    printer.action(choose_file("input topology file : ").isExist(true));
 }
 
 void executeScript(const boost::program_options::options_description &desc,
@@ -691,7 +691,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
                 break;
             }
         }
-        forcefield.read(choose_file("force field filename:", true));
+        forcefield.read(choose_file("force field filename:").isExist(true));
         break;
     }
     int start = choose(1, INT32_MAX, "Enter the start frame[1]:", Default(1));
@@ -732,7 +732,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
                 }
                 std::cout << "topology file " << topol << " is bad ! please retype !" << std::endl;
             }
-            reader->add_topology(choose_file("input topology file : ", true));
+            reader->add_topology(choose_file("input topology file : ").isExist(true));
             b_added_topology = true;
         }
     }
@@ -740,9 +740,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
 
     if (choose_bool("Do you want to use multiple files [N]:", Default(false))) {
         while (true) {
-            auto input_line = choose_file("next file [Enter for End]:", true, "", true);
+            std::string input_line = choose_file("next file [Enter for End]:").isExist(true).can_empty(true);
             if (input_line.empty()) break;
-            if (ext_filename(input_line) == "traj") {
+            if (getFileType(input_line) == FileType::TRAJ) {
                 std::cout << "traj file can not use multiple files [retype]" << std::endl;
                 continue;
             }

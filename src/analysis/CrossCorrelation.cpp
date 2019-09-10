@@ -110,7 +110,7 @@ CrossCorrelation::getDistribution(const std::deque<std::tuple<double, double, do
 }
 
 std::deque<std::tuple<double, double, double>> CrossCorrelation::readAngleSeries() {
-    auto file = choose_file("Enter Data File: ", true);
+    std::string file = choose_file("Enter Data File: ").isExist(true);
 
     std::ifstream f{file};
     return std::deque<std::tuple<double, double, double>>(

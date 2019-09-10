@@ -56,7 +56,7 @@ void ConvertVelocityToVelocityCharge::print(std::ostream &os) {
 }
 
 void ConvertVelocityToVelocityCharge::readInfo() {
-    trr_vq_outfilename = choose_file("Enter trr output filename > ", false, "trr");
+    trr_vq_outfilename = choose_file("Enter trr output filename > ").isExist(false).extension("trr");
     Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }
 

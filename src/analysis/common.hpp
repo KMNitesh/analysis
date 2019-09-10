@@ -105,6 +105,64 @@ bool choose_bool(const std::string &prompt, Default<bool> defaultValue = {},
 
 std::string ext_filename(const std::string &filename);
 
+class ChooseFile {
+public:
+    ChooseFile(std::string prompt, std::istream &in, std::ostream &out)
+            : prompt(std::move(prompt)), in(in), out(out) {}
+
+    ChooseFile &isExist(bool exist) {
+        is_exist = exist;
+        return *this;
+    }
+
+    ChooseFile &extension(std::string ext) {
+        this->ext = std::move(ext);
+        return *this;
+    }
+
+    ChooseFile &can_empty(bool b_can_empty) {
+        this->b_can_empty = b_can_empty;
+        return *this;
+    }
+
+    operator std::string() {
+
+        while (true) {
+            std::string input_line = input(prompt, in, out);
+            boost::trim(input_line);
+            if (!input_line.empty()) {
+                if (ext.length()) {
+                    if (ext_filename(input_line) != boost::to_lower_copy(ext)) {
+                        out << "wrong file extesion name : must be " << ext << std::endl;
+                        continue;
+                    }
+                }
+                if (!is_exist) return input_line;
+                std::fstream in(input_line, std::ofstream::in);
+                if (in.good()) {
+                    return input_line;
+                    break;
+                } else {
+                    out << "The file is bad [retype]" << std::endl;
+                }
+            }
+            if (b_can_empty) return "";
+        }
+    }
+
+private:
+    const std::string prompt;
+    std::istream &in;
+    std::ostream &out;
+    bool is_exist = false;
+    std::string ext;
+    bool b_can_empty = false;
+};
+
+inline ChooseFile choose_file(const std::string &prompt, std::istream &in = std::cin, std::ostream &out = std::cout) {
+    return {prompt, in, out};
+}
+
 std::string choose_file(const std::string &prompt, bool exist, std::string ext = "", bool can_empty = false,
                         std::istream &in = std::cin, std::ostream &out = std::cout);
 

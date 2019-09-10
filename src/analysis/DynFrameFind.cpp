@@ -57,7 +57,7 @@ void DynFrameFind::print(std::ostream &os) {
 
 void DynFrameFind::readInfo() {
     reader = std::make_shared<TinkerDynReader>(
-            std::make_shared<std::fstream>(choose_file("Enter dyn file :", true, "dyn")));
+            std::make_shared<std::fstream>(choose_file("Enter dyn file :").isExist(true).extension("dyn")));
     reader->readContent();
     eps = choose<double>(0, 0.1, "Enter eps [ 0.0001 ] : ", Default(0.0001));
 }

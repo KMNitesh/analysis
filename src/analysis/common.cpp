@@ -7,6 +7,7 @@
 #include <boost/regex.hpp>
 #include <regex>
 #include <boost/filesystem.hpp>
+#include <utility>
 #include "common.hpp"
 #include "frame.hpp"
 #include "forcefield.hpp"
@@ -181,19 +182,19 @@ std::string print_cmdline(int argc, const char *const argv[]) {
 }
 
 std::string getOutputFilename(const po::variables_map &vm) {
-    return vm.count("output") ? vm["output"].as<std::string>() : choose_file("output file :", false);
+    return vm.count("output") ? vm["output"].as<std::string>() : choose_file("output file :").isExist(false);
 }
 
 std::string getTopologyFilename(const po::variables_map &vm) {
-    return vm.count("topology") ? vm["topology"].as<std::string>() : choose_file("topology file :", true);
+    return vm.count("topology") ? vm["topology"].as<std::string>() : choose_file("topology file :").isExist(true);
 }
 
 std::string getTrajectoryFilename(const po::variables_map &vm) {
-    return vm.count("file") ? vm["file"].as<std::string>() : choose_file("trajectory file :", true);
+    return vm.count("file") ? vm["file"].as<std::string>() : choose_file("trajectory file :").isExist(true);
 }
 
 std::string getPrmFilename(const po::variables_map &vm) {
-    return vm.count("prm") ? vm["prm"].as<std::string>() : choose_file("Tinker prm file :", true);
+    return vm.count("prm") ? vm["prm"].as<std::string>() : choose_file("Tinker prm file :").isExist(true);
 }
 
 std::size_t getDefaultVectorReserve() {
