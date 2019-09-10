@@ -113,27 +113,7 @@ bool choose_bool(const std::string &prompt, Default<bool> defaultValue,
 
 std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty,
                         std::istream &in, std::ostream &out) {
-    while (true) {
-        std::string input_line = input(prompt, in, out);
-        boost::trim(input_line);
-        if (!input_line.empty()) {
-            if (ext.length()) {
-                if (ext_filename(input_line) != boost::to_lower_copy(ext)) {
-                    out << "wrong file extesion name : must be " << ext << std::endl;
-                    continue;
-                }
-            }
-            if (!exist) return input_line;
-            std::fstream in(input_line, std::ofstream::in);
-            if (in.good()) {
-                return input_line;
-                break;
-            } else {
-                out << "The file is bad [retype]" << std::endl;
-            }
-        }
-        if (can_empty) return "";
-    }
+    return choose_file(prompt, in, out).isExist(exist).extension(std::move(ext)).can_empty(can_empty);
 }
 
 double
