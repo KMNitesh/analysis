@@ -23,7 +23,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Hydrogen Bond LifeTime for Water(Ci, history independent)"; }
+    static std::string title() { return "Hydrogen Bond LifeTime for Water(Ci, history independent)"; }
 
 protected:
 
@@ -40,9 +40,9 @@ protected:
     std::deque<std::shared_ptr<Atom>> hydrogens;
     std::deque<std::shared_ptr<Atom>> oxygens;
 
-    [[nodiscard]] std::vector<double> calculateAcf() const;
+    [[nodiscard]] virtual std::vector<double> calculateAcf() const;
 
-    void printData(std::ostream &os, const std::vector<double> &acf) const;
+    void printData(std::ostream &os, const std::vector<double> &acf, std::string_view title) const;
 };
 
 

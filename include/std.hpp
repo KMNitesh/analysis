@@ -46,4 +46,7 @@
 
 #include <functional>
 
+// C Library
+#include <cmath>
+
 #endif //TINKER_STD_HPP

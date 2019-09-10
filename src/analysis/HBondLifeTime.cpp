@@ -67,12 +67,12 @@ void HBondLifeTime::process(std::shared_ptr<Frame> &frame) {
 
 void HBondLifeTime::print(std::ostream &os) {
     auto acf = calculateAcf();
-    printData(os, acf);
+    printData(os, acf, title());
 }
 
-void HBondLifeTime::printData(std::ostream &os, const std::vector<double> &acf) const {
+void HBondLifeTime::printData(std::ostream &os, const std::vector<double> &acf, std::string_view title) const {
     os << std::string(50, '#') << '\n';
-    os << "# " << title() << '\n';
+    os << "# " << title << '\n';
     os << "# dist_R_cutoff     > " << dist_R_cutoff << '\n';
     os << "# angle_HOO_cutoff  > " << angle_HOO_cutoff << '\n';
     os << "# time_increment_ps > " << time_increment_ps << '\n';
@@ -96,11 +96,11 @@ std::vector<double> HBondLifeTime::calculateAcf() const {
 
     for (auto &sample : hb_histroy) {
         for (std::size_t i = 0; i < sample.size() - 1; ++i) {
-            for (std::size_t j = i + 1; j < std::min<std::size_t>(sample.size(), max_time_grap_frame + 1 + i); ++j) {
+            for (std::size_t j = i; j < std::min<std::size_t>(sample.size(), max_time_grap_frame + 1 + i); ++j) {
                 auto n = j - i;
                 assert(n < ntime.size());
                 ++ntime[n];
-                if (sample[i] == sample[j]) {
+                if (sample[i] != 0 and sample[i] == sample[j]) {
                     ++acf[n];
                 }
             }
@@ -108,10 +108,11 @@ std::vector<double> HBondLifeTime::calculateAcf() const {
     }
 
     std::vector<double> acff(acf.size(), 0);
-    acff[0] = 1.0;
+    acff[0] = double(acf[0]) / ntime[0];
     for (std::size_t i = 1; i < acf.size(); ++i) {
-        acff[i] = double(acf[i]) / ntime[i];
+        acff[i] = acf[i] / (ntime[i] * acff[0]);
     }
+    acff[0] = 1.0;
     return acff;
 }
 

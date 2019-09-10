@@ -92,15 +92,18 @@ namespace mpl = boost::mpl;
 #include "OrientationResolvedRadialDistributionFunction.hpp"
 #include "ConditionalTimeCorrelationFunction.hpp"
 #include "RadiusOfGyration.hpp"
+#include "HBondLifeTimeContinuous.hpp"
+#include "HBondLifeTimeCutoffContinuous.hpp"
 
 using namespace std;
+namespace {
+    template<typename T>
+    struct boost_type {
+        typedef T type;
 
-template<typename T>
-struct boost_type {
-    typedef T type;
-
-    boost_type(boost::type<T>) {};
-};
+        boost_type(boost::type<T>) {};
+    };
+}
 
 std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
@@ -152,7 +155,9 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             ClusterVolume,
             OrientationResolvedRadialDistributionFunction,
             ConditionalTimeCorrelationFunction,
-            RadiusOfGyration
+            RadiusOfGyration,
+            HBondLifeTimeContinuous,
+            HBondLifeTimeCutoffContinuous
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

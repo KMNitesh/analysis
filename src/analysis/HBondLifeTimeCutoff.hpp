@@ -25,7 +25,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string
+    static std::string
     title() { return "Hydrogen Bond LifeTime for Water in Solvation Shell(Ci, history independent)"; }
 
     struct InnerAtom {
@@ -50,7 +50,7 @@ public:
         }
     };
 
-    virtual ~HBondLifeTimeCutoff();
+    ~HBondLifeTimeCutoff() override;
 
 
 protected:
@@ -75,9 +75,9 @@ protected:
     //  Ow, Hw
     std::vector<std::pair<std::shared_ptr<Atom>, std::deque<std::shared_ptr<Atom>>>> water_struct;
 
-    [[nodiscard]] std::vector<double> calculateAcf() const;
+    [[nodiscard]] virtual std::vector<double> calculateAcf() const;
 
-    void printData(std::ostream &os, const std::vector<double> &acf) const;
+    void printData(std::ostream &os, const std::vector<double> &acf, std::string_view title) const;
 
     auto find_in(int seq);
 
