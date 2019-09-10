@@ -89,6 +89,20 @@ T choose(T min, T max, const std::string &prompt, bool hasdefault = false, T val
     }
 }
 
+template<typename T>
+class Default {
+public:
+    explicit Default(T x) : x(x) {}
+
+    T getValue() { return x; }
+
+private:
+    T x;
+};
+
+bool choose_bool(const std::string &prompt, boost::optional<Default<bool>> defaultValue = {},
+                 std::istream &in = std::cin, std::ostream &out = std::cout);
+
 std::string ext_filename(const std::string &filename);
 
 std::string choose_file(const std::string &prompt, bool exist, std::string ext = "", bool can_empty = false,

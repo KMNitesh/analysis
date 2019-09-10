@@ -30,6 +30,8 @@ protected:
     AmberMask atomMask;
     std::deque<double> series;
     std::unordered_set<std::shared_ptr<Molecule>> moles;
+
+    bool bIncludeHydrogen;
 };
 
 

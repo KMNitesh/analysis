@@ -89,6 +89,26 @@ FileType getFileType(const std::string &filename) {
 
 }
 
+bool choose_bool(const std::string &prompt, boost::optional<Default<bool>> defaultValue,
+                 std::istream &in, std::ostream &out) {
+    while (true) {
+        std::string input_line = input(prompt, in, out);
+        boost::trim(input_line);
+        if (input_line.empty()) {
+            if (defaultValue) return defaultValue.value().getValue();
+        }
+        boost::to_lower(input_line);
+
+        if (input_line == "y") {
+            return true;
+        } else if (input_line == "n") {
+            return false;
+        } else {
+            out << "Input Error, must be either y or n !!\n";
+        }
+    }
+}
+
 std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty,
                         std::istream &in, std::ostream &out) {
     while (true) {
@@ -162,6 +182,7 @@ std::string print_cmdline(int argc, const char *const argv[]) {
 std::string getOutputFilename(const po::variables_map &vm) {
     return vm.count("output") ? vm["output"].as<std::string>() : choose_file("output file :", false);
 }
+
 std::string getTopologyFilename(const po::variables_map &vm) {
     return vm.count("topology") ? vm["topology"].as<std::string>() : choose_file("topology file :", true);
 }

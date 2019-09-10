@@ -9,6 +9,7 @@
 #include "frame.hpp"
 #include "forcefield.hpp"
 #include "ThrowAssert.hpp"
+#include "HBond.hpp"
 
 int Molecule::seq() {
     if (atom_list.empty()) return 0;
@@ -25,7 +26,8 @@ void Molecule::calc_mass() {
 }
 
 
-std::tuple<double, double, double> Molecule::calc_weigh_center(const std::shared_ptr<Frame> &frame) {
+std::tuple<double, double, double>
+Molecule::calc_weigh_center(const std::shared_ptr<Frame> &frame, bool includeHydrogen) {
     double xmid = 0.0;
     double ymid = 0.0;
     double zmid = 0.0;
@@ -33,6 +35,8 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(const std::shared
     double first_x, first_y, first_z;
     double mol_mass = 0.0;
     for (auto &atom : atom_list) {
+        if (!includeHydrogen and which(atom) == Symbol::Hydrogen) continue;
+
         if (first_atom) {
             first_atom = false;
             first_x = atom->x;

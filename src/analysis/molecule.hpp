@@ -27,7 +27,8 @@ public:
 
     void calc_mass();
 
-    std::tuple<double, double, double> calc_weigh_center(const std::shared_ptr<Frame> &frame);
+    std::tuple<double, double, double>
+    calc_weigh_center(const std::shared_ptr<Frame> &frame, bool includeHydrogen = true);
 
     std::tuple<double, double, double> calc_charge_center(const std::shared_ptr<Frame> &frame);
 
