@@ -24,6 +24,7 @@ enum class Symbol {
     Oxygen,
     Phosphorus,
     Sulfur,
+    Sodium,
     X,
     Unknown
 };

@@ -24,6 +24,8 @@ Symbol which(const std::shared_ptr<Atom> &atom) {
         return Symbol::Phosphorus;
     else if (mass >= 31.5 and mass < 33.0)
         return Symbol::Sulfur;
+    else if (mass >= 22.5 and mass < 23.5)
+        return Symbol::Sodium;
     else return Symbol::Unknown;
 }
 

@@ -78,7 +78,8 @@ protected:
             {Symbol::Nitrogen,   1.55},
             {Symbol::Oxygen,     1.52},
             {Symbol::Phosphorus, 1.80},
-            {Symbol::Sulfur,     1.80}
+            {Symbol::Sulfur,     1.80},
+            {Symbol::Sodium,     2.27}
     };
 
     size_t countFilledGridPoints(boost::multi_array<ATOM_Category, 3> *grid) const;
