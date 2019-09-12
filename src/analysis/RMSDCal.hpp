@@ -22,6 +22,8 @@ class RMSDCal : public BasicAnalysis {
 
     double rmsvalue(std::shared_ptr<Frame> &frame);
 
+    void save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame) const;
+
     AmberMask mask_for_superpose;
     AmberMask mask_for_rmscalc;
 
@@ -56,8 +58,6 @@ public:
     static void center(int n1, double x1[], double y1[], double z1[],
                        int n2, double x2[], double y2[], double z2[],
                        double mid[], int nfit);
-
-    void save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame);
 };
 
 #endif //TINKER_RMSDCAL_HPP

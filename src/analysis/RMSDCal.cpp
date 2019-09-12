@@ -51,7 +51,7 @@ double RMSDCal::rmsvalue(std::shared_ptr<Frame> &frame) {
     return rmsfit(x1, y1, z1, x2, y2, z2, n_rms_calc);
 }
 
-void RMSDCal::save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame) {
+void RMSDCal::save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame) const {
     int index = 0;
     bool first_atom = true;
     double first_x, first_y, first_z;
