@@ -4,6 +4,7 @@
 
 #include <boost/range/algorithm.hpp>
 #include <boost/range/adaptors.hpp>
+#include <boost/checked_delete.hpp>
 #include "RMSDCal.hpp"
 #include "frame.hpp"
 
@@ -25,7 +26,7 @@ void RMSDCal::print(std::ostream &os) {
 
 void RMSDCal::readInfo() {
     Atom::select1group(mask_for_superpose, "Please enter atoms for superpose > ");
-    Atom::select1group(mask_for_rmscalc, "Please enter atoms for rms calc   > ");
+    Atom::select1group(mask_for_rmscalc, "Please enter atoms for rms calc  > ");
 }
 
 
@@ -33,8 +34,6 @@ double RMSDCal::rmsvalue(std::shared_ptr<Frame> &frame) {
 
     auto nfit = static_cast<int>(this->atoms_for_superpose.size());
     auto n_rms_calc = nfit + static_cast<int>(this->atoms_for_rmscalc.size());
-
-    BOOST_ASSERT_MSG(n_rms_calc < ATOM_MAX, "need to increase ATOM_MAX");
 
     if (first_frame) {
         first_frame = false;
@@ -358,4 +357,25 @@ void RMSDCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
                     atoms_for_rmscalc.insert(atom);
                 }
             });
+    auto n_size = atoms_for_superpose.size() + atoms_for_rmscalc.size();
+
+    x1 = new double[n_size];
+    y1 = new double[n_size];
+    z1 = new double[n_size];
+
+
+    x2 = new double[n_size];
+    y2 = new double[n_size];
+    z2 = new double[n_size];
+
+}
+
+RMSDCal::~RMSDCal() {
+    boost::checked_array_delete(x1);
+    boost::checked_array_delete(y1);
+    boost::checked_array_delete(z1);
+
+    boost::checked_array_delete(x2);
+    boost::checked_array_delete(y2);
+    boost::checked_array_delete(z2);
 }

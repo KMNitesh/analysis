@@ -17,8 +17,8 @@ class RMSDCal : public BasicAnalysis {
     std::deque<double> rmsds;
     bool first_frame = true;
 
-    double x1[ATOM_MAX], y1[ATOM_MAX], z1[ATOM_MAX];
-    double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
+    double *x1 = nullptr, *y1 = nullptr, *z1 = nullptr;
+    double *x2 = nullptr, *y2 = nullptr, *z2 = nullptr;
 
     double rmsvalue(std::shared_ptr<Frame> &frame);
 
@@ -33,6 +33,8 @@ public:
         enable_outfile = true;
     }
 
+    ~RMSDCal() override;
+
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -41,9 +43,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "RMSD Calculator";
-    }
+    static std::string title() { return "RMSD Calculator"; }
 
     static double rmsfit(double x1[], double y1[], double z1[],
                          double x2[], double y2[], double z2[], int n_rms_calc);
