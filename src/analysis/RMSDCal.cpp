@@ -3,12 +3,12 @@
 //
 
 #include <boost/range/algorithm.hpp>
+#include <boost/range/adaptors.hpp>
 #include "RMSDCal.hpp"
 #include "frame.hpp"
 
 void RMSDCal::process(std::shared_ptr<Frame> &frame) {
-    steps++;
-    rmsd_map[steps] = rmsvalue(frame);
+    rmsds.push_back(rmsvalue(frame));
 }
 
 void RMSDCal::print(std::ostream &os) {
@@ -17,8 +17,8 @@ void RMSDCal::print(std::ostream &os) {
     os << "# AmberMask for superpose : " << mask_for_superpose << '\n';
     os << "# AmberMask for rms calc  : " << mask_for_rmscalc << '\n';
     os << "***************************\n";
-    for (auto cyc : range(1, steps + 1)) {
-        os << cyc << "     " << rmsd_map[cyc] << '\n';
+    for (const auto &ele : rmsds | boost::adaptors::indexed(1)) {
+        os << ele.index() << "     " << ele.value() << '\n';
     }
     os << "***************************\n";
 }
@@ -31,18 +31,18 @@ void RMSDCal::readInfo() {
 
 double RMSDCal::rmsvalue(std::shared_ptr<Frame> &frame) {
 
-    int nfit;
-    nfit = static_cast<int>(this->atoms_for_superpose.size());
-    int n_rms_calc = nfit + static_cast<int>(this->atoms_for_rmscalc.size());
+    auto nfit = static_cast<int>(this->atoms_for_superpose.size());
+    auto n_rms_calc = nfit + static_cast<int>(this->atoms_for_rmscalc.size());
+
     BOOST_ASSERT_MSG(n_rms_calc < ATOM_MAX, "need to increase ATOM_MAX");
 
     if (first_frame) {
         first_frame = false;
         save_frame_coord(x1, y1, z1, frame);
         return 0.0;
-    } else {
-        save_frame_coord(x2, y2, z2, frame);
     }
+
+    save_frame_coord(x2, y2, z2, frame);
 
     double mid[3];
     center(nfit, x1, y1, z1, nfit, x2, y2, z2, mid, nfit);
@@ -121,8 +121,6 @@ void RMSDCal::center(int n1, double x1[], double y1[], double z1[],
         y1[i] -= mid[1];
         z1[i] -= mid[2];
     }
-
-
 }
 
 void RMSDCal::quatfit(int /* n1 */, double x1[], double y1[], double z1[],
@@ -196,7 +194,6 @@ void RMSDCal::quatfit(int /* n1 */, double x1[], double y1[], double z1[],
         y2[i] = yrot;
         z2[i] = zrot;
     }
-
 }
 
 double RMSDCal::rmsfit(double x1[], double y1[], double z1[],

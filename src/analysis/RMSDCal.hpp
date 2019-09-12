@@ -14,8 +14,7 @@
 
 class RMSDCal : public BasicAnalysis {
 
-    int steps = 0; // current frame number
-    std::map<int, double> rmsd_map;
+    std::deque<double> rmsds;
     bool first_frame = true;
 
     double x1[ATOM_MAX], y1[ATOM_MAX], z1[ATOM_MAX];
