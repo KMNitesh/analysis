@@ -34,10 +34,21 @@ void ResidenceTime::calculate() {
                 count1 = k;
             } else if (mark(k, atom) && (!swi)) {
                 swi = true;
-                atom_star_map[atom].emplace_back(count1, k - 1);
+                if (k - 1 - count1 > time_star) atom_star_map[atom].emplace_back(count1, k - 1);
             }
         }
     }
+
+    std::vector<std::unordered_set<int>> hydrationed_atoms(steps);
+
+    for (std::size_t step = 0; step < steps; ++step) {
+        for (int atom = 0; atom < atom_num; atom++) {
+            if (mark(step, atom)) {
+                hydrationed_atoms[step].insert(atom);
+            }
+        }
+    }
+
 
     class Body {
     public:
@@ -45,22 +56,23 @@ void ResidenceTime::calculate() {
         int atom_num;
 
         Eigen::MatrixXi &mark;
-        double time_star;
         std::vector<std::vector<std::pair<unsigned int, unsigned int>>> &atom_star_map;
 
         std::vector<int, tbb::tbb_allocator<int>> time_array;
         std::vector<double, tbb::tbb_allocator<double>> Rt_array;
+        std::vector<std::unordered_set<int>> &hydrationed_atoms;
 
-        Body(std::size_t steps, int atom_num, Eigen::MatrixXi &mark, double time_star,
-             std::vector<std::vector<std::pair<unsigned int, unsigned int>>> &atom_star_map) :
+        Body(std::size_t steps, int atom_num, Eigen::MatrixXi &mark,
+             std::vector<std::vector<std::pair<unsigned int, unsigned int>>> &atom_star_map,
+             std::vector<std::unordered_set<int>> &hydrationed_atoms) :
                 steps(steps), atom_num(atom_num), mark(mark),
-                time_star(time_star), atom_star_map(atom_star_map),
-                time_array(steps - 1), Rt_array(steps - 1) {}
+                atom_star_map(atom_star_map),
+                time_array(steps - 1), Rt_array(steps - 1), hydrationed_atoms(hydrationed_atoms) {}
 
         Body(Body &body, tbb::split) :
                 steps(body.steps), atom_num(body.atom_num), mark(body.mark),
-                time_star(body.time_star), atom_star_map(body.atom_star_map),
-                time_array(body.steps - 1), Rt_array(body.steps - 1) {}
+                atom_star_map(body.atom_star_map),
+                time_array(body.steps - 1), Rt_array(body.steps - 1), hydrationed_atoms(body.hydrationed_atoms) {}
 
         void join(const Body &rhs) {
             for (std::size_t step = 0; step < steps - 1; step++) {
@@ -71,22 +83,20 @@ void ResidenceTime::calculate() {
 
         void operator()(const tbb::blocked_range<std::size_t> &r) {
             for (size_t i = r.begin(); i != r.end(); ++i) {
-                int CN = 0;
-                for (int atom = 0; atom < atom_num; atom++) CN += mark(i, atom);
-
+                auto CN = hydrationed_atoms[i].size();
                 if (CN == 0) {
                     std::cerr << "Warning !!! Coordination Number is zero,  skip frame (start from 0) = " << i << "\n";
                     continue;
                 }
-                auto factor = 1 / static_cast<double>(CN);
+                auto factor = 1.0 / CN;
                 for (size_t j = i + 1; j < steps; j++) {
                     int value = 0.0;
                     auto n = j - i - 1;
-                    for (int atom = 0; atom < atom_num; atom++) {
-                        if (mark(i, atom) && mark(j, atom)) {
+                    for (auto atom : hydrationed_atoms[i]) {
+                        if (mark(j, atom)) {
                             bool to_increment = true;
                             for (auto[a, b] : atom_star_map[atom]) {
-                                if (i < a and b < j and b - a > time_star) {
+                                if (i < a and b < j) {
                                     to_increment = false;
                                     break;
                                 }
@@ -100,7 +110,7 @@ void ResidenceTime::calculate() {
             }
 
         }
-    } body(steps, atom_num, mark, time_star, atom_star_map);
+    } body(steps, atom_num, mark, atom_star_map, hydrationed_atoms);
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, steps - 1), body);
     for (std::size_t step = 0; step < steps - 1; step++) {
         Rt_array[step] = body.Rt_array[step];
