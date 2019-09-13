@@ -47,7 +47,7 @@ void ResidenceTime::calculate() {
                 int out_frame = steps;
                 for (auto[a, b] : atom_star_map[atom]) {
                     if (step < a) {
-                        out_frame = b;
+                        out_frame = a;
                         break;
                     }
                 }
@@ -58,24 +58,25 @@ void ResidenceTime::calculate() {
 
     class Body {
     public:
-        size_t steps;
+        int steps;
         int atom_num;
 
+        Eigen::MatrixXi &mark;
         std::vector<int, tbb::tbb_allocator<int>> time_array;
         std::vector<double, tbb::tbb_allocator<double>> Rt_array;
         std::vector<std::vector<std::pair<int, int>>> &hydrationed_atoms;
 
-        Body(std::size_t steps, int atom_num,
+        Body(int steps, int atom_num, Eigen::MatrixXi &mark,
              std::vector<std::vector<std::pair<int, int>>> &hydrationed_atoms) :
-                steps(steps), atom_num(atom_num),
+                steps(steps), atom_num(atom_num), mark(mark),
                 time_array(steps - 1), Rt_array(steps - 1), hydrationed_atoms(hydrationed_atoms) {}
 
         Body(Body &body, tbb::split) :
-                steps(body.steps), atom_num(body.atom_num),
+                steps(body.steps), atom_num(body.atom_num), mark(body.mark),
                 time_array(body.steps - 1), Rt_array(body.steps - 1), hydrationed_atoms(body.hydrationed_atoms) {}
 
         void join(const Body &rhs) {
-            for (std::size_t step = 0; step < steps - 1; step++) {
+            for (int step = 0; step < steps - 1; step++) {
                 time_array[step] += rhs.time_array[step];
                 Rt_array[step] += rhs.Rt_array[step];
             }
@@ -89,11 +90,11 @@ void ResidenceTime::calculate() {
                     continue;
                 }
                 auto factor = 1.0 / CN;
-                for (size_t j = i + 1; j < steps; j++) {
+                for (int j = i + 1; j < steps; j++) {
                     int value = 0.0;
                     auto n = j - i - 1;
                     for (auto[atom, outframe] : hydrationed_atoms[i]) {
-                        if (j < outframe) value++;
+                        if (mark(j, atom) and j < outframe) value++;
                     }
                     ++time_array[n];
                     Rt_array[n] += value * factor;
@@ -101,7 +102,7 @@ void ResidenceTime::calculate() {
             }
 
         }
-    } body(steps, atom_num, hydrationed_atoms);
+    } body(steps, atom_num, mark, hydrationed_atoms);
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, steps - 1), body);
     for (std::size_t step = 0; step < steps - 1; step++) {
         Rt_array[step] = body.Rt_array[step];
