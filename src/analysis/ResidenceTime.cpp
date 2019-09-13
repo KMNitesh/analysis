@@ -19,118 +19,96 @@ void ResidenceTime::setSteps(size_t steps, int atom_num) {
     Rt_array = new double[steps - 1];
     bzero(Rt_array, sizeof(double) * (steps - 1));
     this->atom_num = atom_num;
-    mark = new int *[atom_num];
-    for (int i = 0; i < atom_num; ++i)
-        mark[i] = new int[steps];
-
+    mark = Eigen::MatrixXi::Zero(steps, atom_num);
 }
 
 void ResidenceTime::calculate() {
 
-    auto atom_star_map = new std::list<pair<unsigned int, unsigned int>>[atom_num];
+    std::vector<std::vector<std::pair<unsigned int, unsigned int>>> atom_star_map(atom_num);
     for (int atom = 0; atom < atom_num; atom++) {
         unsigned int count1 = 0;
         bool swi = true;
         for (unsigned int k = 0; k < steps; k++) {
-            if ((!mark[atom][k]) && swi) {
+            if ((!mark(k, atom)) && swi) {
                 swi = false;
                 count1 = k;
-            } else if (mark[atom][k] && (!swi)) {
+            } else if (mark(k, atom) && (!swi)) {
                 swi = true;
                 atom_star_map[atom].emplace_back(count1, k - 1);
             }
         }
-
     }
+
     class Body {
     public:
         size_t steps;
         int atom_num;
-        int *time_array = nullptr;
-        double *Rt_array = nullptr;
-        int **mark = nullptr;
-        double time_star;
-        std::list<std::pair<unsigned int, unsigned int>> *atom_star_map;
 
-        Body(size_t &steps, int &atom_num, int * /* time_array */,
-             double * /* Rt_array */, int **mark, double time_star,
-             std::list<std::pair<unsigned int, unsigned int>> *atom_star_map) :
+        Eigen::MatrixXi &mark;
+        double time_star;
+        std::vector<std::vector<std::pair<unsigned int, unsigned int>>> &atom_star_map;
+
+        std::vector<int, tbb::tbb_allocator<int>> time_array;
+        std::vector<double, tbb::tbb_allocator<double>> Rt_array;
+
+        Body(std::size_t steps, int atom_num, Eigen::MatrixXi &mark, double time_star,
+             std::vector<std::vector<std::pair<unsigned int, unsigned int>>> &atom_star_map) :
                 steps(steps), atom_num(atom_num), mark(mark),
-                time_star(time_star), atom_star_map(atom_star_map) {
-            this->time_array = new int[steps - 1];
-            bzero(this->time_array, sizeof(int) * (steps - 1));
-            this->Rt_array = new double[steps - 1];
-            bzero(this->Rt_array, sizeof(double) * (steps - 1));
-        }
+                time_star(time_star), atom_star_map(atom_star_map),
+                time_array(steps - 1), Rt_array(steps - 1) {}
 
         Body(Body &body, tbb::split) :
                 steps(body.steps), atom_num(body.atom_num), mark(body.mark),
-                time_star(body.time_star), atom_star_map(body.atom_star_map) {
-            this->time_array = new int[body.steps - 1];
-            bzero(this->time_array, sizeof(int) * (body.steps - 1));
-            this->Rt_array = new double[body.steps - 1];
-            bzero(this->Rt_array, sizeof(double) * (body.steps - 1));
-        }
+                time_star(body.time_star), atom_star_map(body.atom_star_map),
+                time_array(body.steps - 1), Rt_array(body.steps - 1) {}
 
-        ~Body() {
-            delete[] time_array;
-            delete[] Rt_array;
-        }
-
-        void join(const Body &y) {
-            for (unsigned int step = 0; step < steps - 1; step++) {
-                time_array[step] += y.time_array[step];
-                Rt_array[step] += y.Rt_array[step];
+        void join(const Body &rhs) {
+            for (std::size_t step = 0; step < steps - 1; step++) {
+                time_array[step] += rhs.time_array[step];
+                Rt_array[step] += rhs.Rt_array[step];
             }
         }
 
-        void operator()(const tbb::blocked_range<size_t> &r) const {
+        void operator()(const tbb::blocked_range<std::size_t> &r) {
             for (size_t i = r.begin(); i != r.end(); ++i) {
                 int CN = 0;
-                for (int atom = 0; atom < atom_num; atom++)
-                    CN += mark[atom][i];
+                for (int atom = 0; atom < atom_num; atom++) CN += mark(i, atom);
+
                 if (CN == 0) {
                     std::cerr << "Warning !!! Coordination Number is zero,  skip frame (start from 0) = " << i << "\n";
                     continue;
                 }
+                auto factor = 1 / static_cast<double>(CN);
                 for (size_t j = i + 1; j < steps; j++) {
-                    double value = 0.0;
+                    int value = 0.0;
+                    auto n = j - i - 1;
                     for (int atom = 0; atom < atom_num; atom++) {
-                        if (mark[atom][i] && mark[atom][j]) {
-                            auto &li = atom_star_map[atom];
-                            unsigned int maxcount = 0;
-                            for (auto &pi : li) {
-                                unsigned int a = pi.first;
-                                unsigned int b = pi.second;
-                                if (i < a and j < b) continue;
-                                else if (i < a and b < j) {
-                                    if (maxcount < b - a) maxcount = b - a;
-                                } else if (a < i and b < j) continue;
-                                else {
-                                    cerr << boost::format(" i = %d, j = %d, a = %d, d = %d\n") % i % j % a % b;
-                                    cerr << "error " << __FILE__ << " : " << __LINE__ << endl;
-                                    exit(1);
+                        if (mark(i, atom) && mark(j, atom)) {
+                            bool to_increment = true;
+                            for (auto[a, b] : atom_star_map[atom]) {
+                                if (i < a and b < j and b - a > time_star) {
+                                    to_increment = false;
+                                    break;
                                 }
                             }
-                            if (maxcount <= time_star) value++;
+                            if (to_increment) value++;
                         }
                     }
-                    time_array[j - i - 1]++;
-                    Rt_array[j - i - 1] += value / CN;
+                    ++time_array[n];
+                    Rt_array[n] += value * factor;
                 }
             }
 
         }
-    } body(steps, atom_num, time_array, Rt_array, mark, time_star, atom_star_map);
-    tbb::parallel_reduce(tbb::blocked_range<size_t>(0, steps - 1), body, tbb::auto_partitioner());
-    for (unsigned int step = 0; step < steps - 1; step++) {
+    } body(steps, atom_num, mark, time_star, atom_star_map);
+    tbb::parallel_reduce(tbb::blocked_range<size_t>(0, steps - 1), body);
+    for (std::size_t step = 0; step < steps - 1; step++) {
         Rt_array[step] = body.Rt_array[step];
         time_array[step] = body.time_array[step];
     }
 
-    for (unsigned int i = 0; i < steps - 1; i++)
+    for (std::size_t i = 0; i < steps - 1; i++)
         Rt_array[i] /= time_array[i];
-    delete[] atom_star_map;
 }
 
 
@@ -160,7 +138,7 @@ void ResidenceTime::print(std::ostream &os) {
     for (const auto &it : mark_map) {
         auto atom_no = it.first;
         for (const auto &ele : it.second | boost::adaptors::indexed(0)) {
-            mark[atom_no][ele.index()] = int(ele.value());
+            mark(ele.index(), atom_no) = int(ele.value());
         }
     }
     calculate();
@@ -221,10 +199,5 @@ void ResidenceTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
 ResidenceTime::~ResidenceTime() {
     boost::checked_array_delete(time_array);
     boost::checked_array_delete(Rt_array);
-    if (mark) {
-        for (int i = 0; i < atom_num; ++i)
-            boost::checked_array_delete(mark[i]);
-        boost::checked_array_delete(mark);
-    }
 }
 

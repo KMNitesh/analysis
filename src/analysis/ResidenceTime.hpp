@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <string>
 #include <map>
+#include <Eigen/Eigen>
 
 #include "common.hpp"
 #include "BasicAnalysis.hpp"
@@ -55,7 +56,7 @@ private:
     int atom_num = 0;
     int *time_array = nullptr;
     double *Rt_array = nullptr;
-    int **mark = nullptr;
+    Eigen::MatrixXi mark;
     double time_star = 0;
 
     Atom::AmberMask ids1;
