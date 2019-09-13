@@ -39,7 +39,7 @@ void ResidenceTime::calculate() {
         }
     }
 
-    std::vector<std::vector<std::pair<int, int>>> hydrationed_atoms(steps);
+    std::vector<std::vector<int>> hydrationed_atoms(steps);
 
     for (std::size_t step = 0; step < steps; ++step) {
         for (int atom = 0; atom < atom_num; atom++) {
@@ -51,7 +51,7 @@ void ResidenceTime::calculate() {
                         break;
                     }
                 }
-                hydrationed_atoms[step].emplace_back(atom, out_frame);
+                hydrationed_atoms[step].emplace_back(out_frame);
             }
         }
     }
@@ -63,10 +63,10 @@ void ResidenceTime::calculate() {
 
         std::vector<int, tbb::tbb_allocator<int>> time_array;
         std::vector<double, tbb::tbb_allocator<double>> Rt_array;
-        std::vector<std::vector<std::pair<int, int>>> &hydrationed_atoms;
+        std::vector<std::vector<int>> &hydrationed_atoms;
 
         Body(std::size_t steps, int atom_num,
-             std::vector<std::vector<std::pair<int, int>>> &hydrationed_atoms) :
+             std::vector<std::vector<int>> &hydrationed_atoms) :
                 steps(steps), atom_num(atom_num),
                 time_array(steps - 1), Rt_array(steps - 1), hydrationed_atoms(hydrationed_atoms) {}
 
@@ -92,7 +92,7 @@ void ResidenceTime::calculate() {
                 for (size_t j = i + 1; j < steps; j++) {
                     int value = 0.0;
                     auto n = j - i - 1;
-                    for (auto[atom, outframe] : hydrationed_atoms[i]) {
+                    for (auto outframe : hydrationed_atoms[i]) {
                         if (j < outframe) value++;
                     }
                     ++time_array[n];
