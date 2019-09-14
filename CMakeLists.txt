@@ -133,6 +133,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/sanitizers-cmake/cmake" ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 # Google Sanitizer
 find_package(Sanitizers)
 
@@ -142,11 +144,15 @@ if (NOT GROMACS_LIBS)
     message(FATAL_ERROR "gromacs library not found")
 endif ()
 
+# Eigen3
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+include_directories(${EIGEN3_INCLUDE_DIR})
+link_libraries(Eigen3::Eigen)
+
 enable_testing()
 
 file(REMOVE_RECURSE ${PROJECT_BINARY_DIR}/*.gcda)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include_directories(include)
 
 add_subdirectory(lib)

@@ -33,7 +33,8 @@
                            Intel Threading Building Blocks(TBB) ( for Multi-Core Parallelism ), 
                            NetCDF,  FFTW3 , 
                            GROMACS library ( for reading and writting Gromacs topology and trajectory file ),
-                           Google Test ( for unit test )
+                           Google Test ( for unit test ),
+                           Eigen 3.3 ( C++ template library for linear algebra )
 
                            
 
