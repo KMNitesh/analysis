@@ -145,9 +145,9 @@ if (NOT GROMACS_LIBS)
 endif ()
 
 # Eigen3
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-include_directories(${EIGEN3_INCLUDE_DIR})
+find_package(Eigen3 3.3 REQUIRED)
 link_libraries(Eigen3::Eigen)
+message(STATUS "FOUND Eigen3: ${EIGEN3_INCLUDE_DIR}")
 
 enable_testing()
 
