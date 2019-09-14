@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <Eigen/Eigen>
+#include <tbb/tbb.h>
 
 #include "common.hpp"
 #include "BasicAnalysis.hpp"
@@ -39,9 +40,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "ResidenceTime";
-    }
+    static std::string title() { return "ResidenceTime"; }
 
 private:
 
@@ -54,9 +53,9 @@ private:
     double dis_cutoff;
     size_t steps = 0;
     int atom_num = 0;
-    int *time_array = nullptr;
-    double *Rt_array = nullptr;
-    Eigen::MatrixXi mark;
+    std::vector<double, tbb::tbb_allocator<double>> Rt_array;
+
+    Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> mark;
     double time_star = 0;
 
     Atom::AmberMask ids1;
