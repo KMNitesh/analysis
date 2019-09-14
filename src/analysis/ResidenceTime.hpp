@@ -22,12 +22,12 @@ class ResidenceTime : public BasicAnalysis {
 
 public:
 
-    ResidenceTime() {
+    ResidenceTime() : timeStarMode(TimeStarMode::Loose) {
         enable_tbb = true;
         enable_outfile = true;
     }
 
-    ~ResidenceTime();;
+    ~ResidenceTime() override;
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -48,20 +48,23 @@ private:
 
     void calculate();
 
-    void setSteps(size_t steps, int atom_num);
-
-    double dis_cutoff;
-    size_t steps = 0;
+    double dis_cutoff{};
+    int steps = 0;
     int atom_num = 0;
     std::vector<double, tbb::tbb_allocator<double>> Rt_array;
 
     Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> mark;
-    double time_star = 0;
+    int time_star = 0;
 
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
+    enum class TimeStarMode : int {
+        Loose = 0,
+        Strict = 1
+    } timeStarMode;
 
-    std::unordered_set<std::shared_ptr<Atom>> group1;
+    AmberMask center_atom_mask;
+    AmberMask Ow_atom_mask;
+
+    std::unordered_set<std::shared_ptr<Atom>> center_atom_group;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 
 };

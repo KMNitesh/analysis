@@ -70,17 +70,19 @@ template<typename T>
 class Default {
 public:
     Default() = default;
+
     explicit Default(T x) : x(x) {}
 
-    T getValue() { return x.value(); }
+    T getValue() const { return x.value(); }
 
-    operator bool() { return x.has_value();}
+    operator bool() const { return x.has_value(); }
+
 private:
     boost::optional<T> x;
 };
 
 template<typename T, typename = std::enable_if_t<std::is_same_v<T, int> or std::is_same_v<T, double>>>
-T choose(T min, T max, const std::string &prompt, Default<T> defaultValue = {},
+T choose(T min, T max, const std::string &prompt, const Default<T> &defaultValue = {},
          std::istream &in = std::cin, std::ostream &out = std::cout) {
     while (true) {
         std::string input_line = input(prompt, in, out);
@@ -98,6 +100,12 @@ T choose(T min, T max, const std::string &prompt, Default<T> defaultValue = {},
                 << '\n';
         }
     }
+}
+
+template<typename T>
+T choose(T min, const std::string &prompt, const Default<T> &defaultValue = {},
+         std::istream &in = std::cin, std::ostream &out = std::cout) {
+    return choose<T>(min, std::numeric_limits<T>::max(), prompt, defaultValue, in, out);
 }
 
 bool choose_bool(const std::string &prompt, Default<bool> defaultValue = {},
