@@ -134,13 +134,12 @@ void ResidenceTime::print(std::ostream &os) {
     }
     calculate();
 
-    os << "# typ1: " << ids1 << ",  typ2: " << ids2 << "  dist_cutoff = " << dis_cutoff << " t* = "
-       << time_star
-       << std::endl;
+    os << "# typ1: " << ids1 << ",  typ2: " << ids2 << "  dist_cutoff = " << dis_cutoff
+       << " t* = " << time_star << '\n';
 
-    os << "# Frame        R " << std::endl;
+    os << "# Frame        R \n";
     for (unsigned int i = 0; i < steps - 1; i++)
-        os << i + 1 << "    " << Rt_array[i] << std::endl;
+        os << i + 1 << "    " << Rt_array[i] << '\n';
 }
 
 void ResidenceTime::readInfo() {
