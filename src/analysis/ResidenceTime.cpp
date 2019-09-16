@@ -107,7 +107,7 @@ void ResidenceTime::process(std::shared_ptr<Frame> &frame) {
     steps++;
     int atom_no = 0;
     for (auto &atom1 : center_atom_group) {
-        for (auto &atom2 : group2) {
+        for (auto &atom2 : Ow_atom_group) {
             double xr = atom1->x - atom2->x;
             double yr = atom1->y - atom2->y;
             double zr = atom1->z - atom2->z;
@@ -120,18 +120,7 @@ void ResidenceTime::process(std::shared_ptr<Frame> &frame) {
 }
 
 void ResidenceTime::print(std::ostream &os) {
-    if (steps < 2) {
-        cerr << "Too few frame number :" << steps << endl;
-        exit(1);
-    }
-    atom_num = static_cast<int>(mark_map.size());
-    mark = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>::Zero(steps, atom_num);
-    for (const auto &it : mark_map) {
-        auto atom_no = it.first;
-        for (const auto &ele : it.second | boost::adaptors::indexed(0)) {
-            mark(ele.index(), atom_no) = ele.value();
-        }
-    }
+    fill_mark();
     calculate();
 
     os << "# " << title() << '\n';
@@ -146,13 +135,34 @@ void ResidenceTime::print(std::ostream &os) {
     }
 }
 
+void ResidenceTime::fill_mark() {
+    if (steps < 2) {
+        cerr << "Too few frame number :" << steps << endl;
+        exit(1);
+    }
+    atom_num = static_cast<int>(mark_map.size());
+    mark.resize(steps, atom_num);
+    for (const auto &it : mark_map) {
+        auto atom_no = it.first;
+        for (const auto &ele : it.second | boost::adaptors::indexed(0)) {
+            mark(ele.index(), atom_no) = ele.value();
+        }
+    }
+    mark_map.clear();
+}
+
 void ResidenceTime::readInfo() {
+    readBasicSetting();
+    readTimeStarSetting();
+}
 
+void ResidenceTime::readBasicSetting() {
     Atom::select2group(center_atom_mask, Ow_atom_mask, "Enter mask for center atom > ", "Enter mask for Ow atoms > ");
-
     dis_cutoff = choose(0.0, "Please enter distance cutoff1: ");
-    time_star = choose(0, "Please enter t*: ( unit: frame) : ");
+}
 
+void ResidenceTime::readTimeStarSetting() {
+    time_star = choose(0, "Please enter t*: ( unit: frame) : ");
     timeStarMode = static_cast<TimeStarMode >(choose(0, 1, "t* mode\n(0) Loose\n(1) Strict\nchoose : "));
 }
 
@@ -185,7 +195,7 @@ void ResidenceTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list,
                     [this](shared_ptr<Atom> &atom) {
                         if (Atom::is_match(atom, this->center_atom_mask)) this->center_atom_group.insert(atom);
-                        if (Atom::is_match(atom, this->Ow_atom_mask)) this->group2.insert(atom);
+                        if (Atom::is_match(atom, this->Ow_atom_mask)) this->Ow_atom_group.insert(atom);
                     });
 }
 

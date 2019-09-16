@@ -42,7 +42,7 @@ public:
 
     static std::string title() { return "ResidenceTime"; }
 
-private:
+protected:
 
     std::map<int, std::list<bool>> mark_map;
 
@@ -54,6 +54,7 @@ private:
     std::vector<double, tbb::tbb_allocator<double>> Rt_array;
 
     Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> mark;
+
     int time_star = 0;
 
     enum class TimeStarMode : int {
@@ -65,8 +66,13 @@ private:
     AmberMask Ow_atom_mask;
 
     std::unordered_set<std::shared_ptr<Atom>> center_atom_group;
-    std::unordered_set<std::shared_ptr<Atom>> group2;
+    std::unordered_set<std::shared_ptr<Atom>> Ow_atom_group;
 
+    void fill_mark();
+
+    void readTimeStarSetting();
+
+    void readBasicSetting();
 };
 
 #endif //TINKER_RESIDENCETIME_HPP
