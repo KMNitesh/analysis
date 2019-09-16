@@ -94,6 +94,7 @@ namespace mpl = boost::mpl;
 #include "RadiusOfGyration.hpp"
 #include "HBondLifeTimeContinuous.hpp"
 #include "HBondLifeTimeCutoffContinuous.hpp"
+#include "SspResidenceTime.hpp"
 
 using namespace std;
 namespace {
@@ -157,7 +158,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             ConditionalTimeCorrelationFunction,
             RadiusOfGyration,
             HBondLifeTimeContinuous,
-            HBondLifeTimeCutoffContinuous
+            HBondLifeTimeCutoffContinuous,
+            SspResidenceTime
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
