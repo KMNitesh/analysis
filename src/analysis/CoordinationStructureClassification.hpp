@@ -48,7 +48,7 @@ protected:
     std::vector<std::shared_ptr<Atom>> Ow_atoms;
     double cutoff2;
     double rmsd_cutoff;
-    std::map<int, std::unordered_map<int, std::vector<std::tuple<double, double, double>>>> systems;
+    std::map<int, std::deque<std::pair<int, std::vector<std::tuple<double, double, double>>>>> systems;
     int nframe = 0;
 
     std::unordered_map<int, int> frame_cn_mapping;

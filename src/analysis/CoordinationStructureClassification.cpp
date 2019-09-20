@@ -38,7 +38,7 @@ void CoordinationStructureClassification::process(std::shared_ptr<Frame> &frame)
         }
     }
     frame_cn_mapping[nframe] = coord.size();
-    systems[coord.size()][nframe] = coord;
+    systems[coord.size()].emplace_back(nframe, coord);
     nframe++;
 }
 
@@ -96,18 +96,13 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
     class Body {
     public:
         std::list<Cluster::rmsd_matrix> local_rms_list;
-        int steps;
-        int cn;
+        std::deque<std::pair<int, std::vector<std::tuple<double, double, double>>>> &tables;
         CoordinationStructureClassification *parent;
 
-        Body(int steps, int cn, CoordinationStructureClassification *parent) :
-                steps(steps), cn(cn), parent(parent) {};
+        Body(std::deque<std::pair<int, std::vector<std::tuple<double, double, double>>>> &tables,
+             CoordinationStructureClassification *parent) : tables(tables), parent(parent) {};
 
-        Body(Body &c, tbb::split) {
-            steps = c.steps;
-            cn = c.cn;
-            parent = c.parent;
-        }
+        Body(Body &c, tbb::split) : tables(c.tables), parent(c.parent) {}
 
         void join(Body &c) {
             local_rms_list.merge(c.local_rms_list,
@@ -116,25 +111,22 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
                                  });
         }
 
-        void operator()(const tbb::blocked_range<int> &range) {
-            auto &tables = parent->systems[cn];
-            for (int index1 = range.begin(); index1 != range.end(); ++index1) {
-                auto it1 = tables.find(index1);
-                if (it1 != tables.end()) {
-                    auto &item1 = it1->second;
-                    for (int index2 = index1 + 1; index2 < steps; ++index2) {
-                        auto it2 = tables.find(index2);
-                        if (it2 != tables.end()) {
-                            auto &item2 = it2->second;
-                            local_rms_list.emplace_back(
-                                    index1, index2,
-                                    CoordinationStructureClassification::calculateRmsdOfTwoStructs(item1, item2));
-                        }
-                    }
+        void operator()(const tbb::blocked_range<std::size_t> &range) {
+            for (std::size_t index1 = range.begin(); index1 != range.end(); ++index1) {
+                for (std::size_t index2 = index1 + 1; index2 < tables.size(); ++index2) {
+                    auto &item1 = tables[index1];
+                    auto &item2 = tables[index2];
+                    local_rms_list.emplace_back(
+                            item1.first, item2.first,
+                            CoordinationStructureClassification::calculateRmsdOfTwoStructs(item1.second,
+                                                                                           item2.second));
                 }
+
             }
             local_rms_list.sort(
-                    [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) { return (m1.rms < m2.rms); });
+                    [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
+                        return (m1.rms < m2.rms);
+                    });
         }
     };
 
@@ -142,11 +134,11 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
 
     tbb::task_group taskGroup;
     for (auto &element : systems) {
-        bodys.insert({element.first, Body(nframe, element.first, this)});
+        bodys.insert({element.first, Body(element.second, this)});
         auto b = &bodys.at(element.first);
-        taskGroup.run([b, this] { tbb::parallel_reduce(tbb::blocked_range<int>(0, this->nframe), *b); });
+        taskGroup.run(
+                [b, &element] { tbb::parallel_reduce(tbb::blocked_range<std::size_t>(0, element.second.size()), *b); });
     }
-
     taskGroup.wait();
 
     std::map<int, std::list<Cluster::rmsd_matrix>> rmsd_list_map;
@@ -174,7 +166,7 @@ CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::
 
     for (auto c2_index1 : boost::irange<int>(0, c2.size())) {
         for (auto c2_index2 : boost::irange<int>(0, c2.size())) {
-            if (c1_index1 == c2_index2) continue;
+            if (c2_index1 == c2_index2) continue;
 
             x1[0] = y1[0] = z1[0] = x2[0] = y2[0] = z2[0] = 0.0;
 
@@ -223,7 +215,7 @@ void CoordinationStructureClassification::fill_coord(double x[], double y[], dou
     std::tie(x[2], y[2], z[2]) = c[index2];
 
     int index = 3;
-    for (auto i : boost::irange<int>(3, c.size())) {
+    for (auto i : boost::irange<int>(0, c.size())) {
         if (i != index1 and i != index2) {
             std::tie(x[index], y[index], z[index]) = c[i];
             index++;
