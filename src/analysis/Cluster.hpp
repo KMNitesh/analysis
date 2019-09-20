@@ -88,15 +88,18 @@ public:
     };
 
 
-    static std::vector<Cluster::conf_clust> do_cluster(const std::list<rmsd_matrix> &rmsd_list, int conf_size,double cutoff);
+    static std::vector<Cluster::conf_clust>
+    do_cluster(const std::list<rmsd_matrix> &rmsd_list, int conf_size, double cutoff);
 
-    static int do_sort_and_renumber_parallel(std::vector<conf_clust> &conf_clust_vector) ;
+    static int do_sort_and_renumber_parallel(std::vector<conf_clust> &conf_clust_vector);
 
-    static void do_sort_clust_parallel(std::vector<conf_clust> &conf_clust_vector) ;
+protected:
 
-    static void do_sort_conf_parallel(std::vector<conf_clust> &conf_clust_vector) ;
+    static void do_sort_clust_parallel(std::vector<conf_clust> &conf_clust_vector);
 
-    static int do_renumber_clust(std::vector<conf_clust> &conf_clust_vector) ;
+    static void do_sort_conf_parallel(std::vector<conf_clust> &conf_clust_vector);
+
+    static int do_renumber_clust(std::vector<conf_clust> &conf_clust_vector);
 
     static std::vector<Cluster::conf_clust> initialize_conf_clust_vector(int conf_size);
 

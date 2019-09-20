@@ -27,17 +27,19 @@ public:
     static std::string title() { return "Coordination Structure Classification based on RMSD"; }
 
     static double calculateRmsdOfTwoStructs(std::vector<std::tuple<double, double, double>> &c1,
-                                     std::vector<std::tuple<double, double, double>> &c2);
+                                            std::vector<std::tuple<double, double, double>> &c2);
+
+protected:
 
     static std::pair<int, int> find_min_distance_pair(std::vector<std::tuple<double, double, double>> &c);
 
     static void fill_coord(double x[], double y[], double z[], int index1, int index2,
-                    std::vector<std::tuple<double, double, double>> &c);
+                           std::vector<std::tuple<double, double, double>> &c);
 
     static void permutation(double x1[], double y1[], double z1[],
-                     double x2[], double y2[], double z2[], int start, int end/*not included*/);
+                            double x2[], double y2[], double z2[], int start, int end/*not included*/);
 
-    [[nodiscard]] std::map<int ,std::list<Cluster::rmsd_matrix>> do_calculate_rmsd_list_parallel();
+    [[nodiscard]] std::map<int, std::list<Cluster::rmsd_matrix>> do_calculate_rmsd_list_parallel();
 
     AmberMask metal_mask;
     AmberMask Ow_atom_mask;
@@ -49,7 +51,7 @@ public:
     std::map<int, std::unordered_map<int, std::vector<std::tuple<double, double, double>>>> systems;
     int nframe = 0;
 
-    std::unordered_map<int,int> frame_cn_mapping;
+    std::unordered_map<int, int> frame_cn_mapping;
 
 };
 
