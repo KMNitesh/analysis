@@ -131,7 +131,7 @@ void Cluster::print(std::ostream &os) {
     }
 
 
-    vector<conf_clust> c = do_cluster(rmsd_list, steps);
+    vector<conf_clust> c = do_cluster(rmsd_list, steps, this->cutoff);
 
 
     cout << "Sorting and renumbering clusters..." << endl;
@@ -187,7 +187,7 @@ void Cluster::print(std::ostream &os) {
  *
  */
 
-int Cluster::do_sort_and_renumber_parallel(vector<conf_clust> &conf_clust_vector) const {
+int Cluster::do_sort_and_renumber_parallel(vector<conf_clust> &conf_clust_vector)  {
 
     do_sort_clust_parallel(conf_clust_vector);
     int total_clust = do_renumber_clust(conf_clust_vector);
@@ -195,7 +195,7 @@ int Cluster::do_sort_and_renumber_parallel(vector<conf_clust> &conf_clust_vector
     return total_clust;
 }
 
-int Cluster::do_renumber_clust(vector<Cluster::conf_clust> &conf_clust_vector) const {
+int Cluster::do_renumber_clust(vector<Cluster::conf_clust> &conf_clust_vector)  {
     int cid = 1;
     unsigned int k;
     for (k = 1; k < conf_clust_vector.size(); k++) {
@@ -211,12 +211,12 @@ int Cluster::do_renumber_clust(vector<Cluster::conf_clust> &conf_clust_vector) c
     return cid;
 }
 
-void Cluster::do_sort_conf_parallel(vector<Cluster::conf_clust> &conf_clust_vector) const {
+void Cluster::do_sort_conf_parallel(vector<Cluster::conf_clust> &conf_clust_vector)  {
     tbb::parallel_sort(conf_clust_vector.begin(), conf_clust_vector.end(),
                        [](const conf_clust &i, const conf_clust &j) { return (i.conf < j.conf); });
 }
 
-void Cluster::do_sort_clust_parallel(vector<Cluster::conf_clust> &conf_clust_vector) const {
+void Cluster::do_sort_clust_parallel(vector<Cluster::conf_clust> &conf_clust_vector)  {
     tbb::parallel_sort(conf_clust_vector.begin(), conf_clust_vector.end(),
                        [](const conf_clust &i, const conf_clust &j) { return (i.clust < j.clust); });
 }
@@ -227,7 +227,7 @@ void Cluster::do_sort_clust_parallel(vector<Cluster::conf_clust> &conf_clust_vec
  *
  */
 
-vector<Cluster::conf_clust> Cluster::do_cluster(const list<rmsd_matrix> &rmsd_list, int conf_size) const {
+vector<Cluster::conf_clust> Cluster::do_cluster(const list<rmsd_matrix> &rmsd_list, int conf_size, double cutoff)  {
     vector<Cluster::conf_clust> c = initialize_conf_clust_vector(conf_size);
 
     // The algorithm of blow code block comes from gromacs
@@ -255,7 +255,7 @@ vector<Cluster::conf_clust> Cluster::do_cluster(const list<rmsd_matrix> &rmsd_li
     return c;
 }
 
-vector<Cluster::conf_clust> Cluster::initialize_conf_clust_vector(int conf_size) const {
+vector<Cluster::conf_clust> Cluster::initialize_conf_clust_vector(int conf_size)  {
     vector<conf_clust> c;
     for (int i = 0; i < conf_size; i++) {
         c.emplace_back(i, i);
