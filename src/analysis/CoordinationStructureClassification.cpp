@@ -28,7 +28,7 @@ void CoordinationStructureClassification::processFirstFrame(std::shared_ptr<Fram
 }
 
 void CoordinationStructureClassification::process(std::shared_ptr<Frame> &frame) {
-    nframe++;
+
     std::vector<std::tuple<double, double, double>> coord;
     for (auto &atom : Ow_atoms) {
         auto r = atom->getCoordinate() - metal->getCoordinate();
@@ -37,64 +37,59 @@ void CoordinationStructureClassification::process(std::shared_ptr<Frame> &frame)
             coord.push_back(r);
         }
     }
+    frame_cn_mapping[nframe] = coord.size();
     systems[coord.size()][nframe] = coord;
+    nframe++;
 }
 
 void CoordinationStructureClassification::print(std::ostream &os) {
     auto rmsd_list_map = do_calculate_rmsd_list_parallel();
 
-    os << "***************************\n";
-    os << "*" << title() << "*\n";
+    os << std::string(50, '#') << '\n';
+    os << "# " << title() << " # \n";
     os << "# metal atom mask > " << metal_mask << '\n';
     os << "# coodination atom mask > " << Ow_atom_mask << '\n';
     os << "# first hydration shell cutoff(Ang) = " << std::sqrt(cutoff2) << '\n';
     os << "# rmsd cutoff(Ang) = " << rmsd_cutoff << '\n';
-    os << "***************************\n";
-
+    os << std::string(50, '#') << '\n';
 
     std::list<Cluster::rmsd_matrix> rmsd_list;
-    for (auto &element : rmsd_list_map) {
-        rmsd_list.splice(std::end(rmsd_list), element.second);
-    }
+
+    boost::for_each(rmsd_list_map,
+                    [&rmsd_list](auto &element) { rmsd_list.splice(std::end(rmsd_list), element.second); });
+
     std::vector<Cluster::conf_clust> c = Cluster::do_cluster(rmsd_list, nframe, rmsd_cutoff);
 
     int cid = Cluster::do_sort_and_renumber_parallel(c);
-    os << "Total cluster number : " << cid << '\n';
-    os << "***************************\n";
-    for (std::size_t k = 0; k < c.size(); k++) {
-        os << k + 1 << "   " << c[k].clust << '\n';
+    os << "# Total cluster number : " << cid << '\n';
+    os << std::string(50, '#') << '\n';
+    os << format("#%15s %15s %15s\n", "Frame", "C.N.", "Clust No.");
+    for (auto k : boost::irange<int>(0, c.size())) {
+        os << format(" %15d %15d %15d\n", k + 1, frame_cn_mapping[k], c[k].clust);
     }
-    os << "***************************\n";
+    os << std::string(50, '#') << '\n';
+
+    // do statistics
     std::unordered_map<int, std::vector<int>> mm = do_find_frames_in_same_clust(c);
-    os << "# Clust No.   Count      Frames";
+    os << format("#%-10s %-5s %-13s %-13s %-13s %-13s",
+                 "Clust No.", "C.N.", "Frame Count", "MediumFrame", "AvgRMSD", "Frames enumeration");
+    std::unordered_map<int, std::pair<int, double>> mm2 = do_find_medium_in_clust(c, rmsd_list);
     for (auto i_clust : range(1, cid + 1)) {
-
         auto &s = mm[i_clust];
-        int index = 0;
+        std::size_t string_length = 0;
+        os << format("\n %-10d %-5d %-13d %-13d %-13g ", i_clust, frame_cn_mapping[s.front()], s.size(),
+                     mm2[i_clust].first + 1, mm2[i_clust].second);
         for (const auto &frame : combine_seq(s | boost::adaptors::transformed([](auto i) { return i + 1; }))) {
-
-            if (index % 10 == 0) {
-                if (index == 0) {
-                    os << format("\n%-10d      %-10d ", i_clust, s.size());
-                } else {
-                    os << '\n' << std::string(27, ' ');
-                }
+            if (string_length > 80) {
+                os << '\n' << std::string(60, ' ');
+                string_length = 0;
             }
             os << ' ' << frame << ' ';
-            index++;
+            string_length += frame.length() + 2;
         }
     }
-    os << "\n***************************\n";
-
-    std::unordered_map<int, std::pair<int, double>> mm2 = do_find_medium_in_clust(c, rmsd_list);
-
-    os << "#     Clust No.      Fame Count    Medium_Frame         AvgRMSD\n";
-    for (int i_clust : range(1, cid + 1)) {
-        os << format("%15d %15d %15d %15g\n",
-                     i_clust, mm[i_clust].size(), mm2[i_clust].first + 1, mm2[i_clust].second);
-    }
-    os << "***************************\n";
-
+    os << '\n';
+    os << std::string(50, '#') << '\n';
 }
 
 std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassification::do_calculate_rmsd_list_parallel() {
@@ -149,7 +144,7 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
     for (auto &element : systems) {
         bodys.insert({element.first, Body(nframe, element.first, this)});
         auto b = &bodys.at(element.first);
-        taskGroup.run([b, this] { tbb::parallel_reduce(tbb::blocked_range<int>(0, this->nframe - 1), *b); });
+        taskGroup.run([b, this] { tbb::parallel_reduce(tbb::blocked_range<int>(0, this->nframe), *b); });
     }
 
     taskGroup.wait();
@@ -242,7 +237,6 @@ void CoordinationStructureClassification::permutation(double x1[], double y1[], 
 
     for (auto i : boost::irange(start, end)) {
         double min_distance2 = std::numeric_limits<double>::max();
-        int min_index;
         for (auto j : boost::irange(i, end)) {
             auto xr = x1[i] - x2[j];
             auto yr = y1[i] - y2[j];
@@ -252,7 +246,6 @@ void CoordinationStructureClassification::permutation(double x1[], double y1[], 
 
             if (distance2 < min_distance2) {
                 min_distance2 = distance2;
-                min_index = j;
             }
             std::swap(x2[i], x2[j]);
             std::swap(y2[i], y2[j]);

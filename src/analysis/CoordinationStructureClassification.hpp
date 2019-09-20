@@ -49,6 +49,8 @@ public:
     std::map<int, std::unordered_map<int, std::vector<std::tuple<double, double, double>>>> systems;
     int nframe = 0;
 
+    std::unordered_map<int,int> frame_cn_mapping;
+
 };
 
 

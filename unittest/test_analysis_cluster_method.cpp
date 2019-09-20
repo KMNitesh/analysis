@@ -46,14 +46,14 @@ TEST(ClusterTest, do_clust) {
     class ClusterTest : public Cluster {
     public:
         std::vector<Cluster::conf_clust>
-        test_do_cluster(const std::list<Cluster::rmsd_matrix> &rmsd_list, int conf_size) const {
-            return Cluster::do_cluster(rmsd_list, conf_size);
+        test_do_cluster(const std::list<Cluster::rmsd_matrix> &rmsd_list, int conf_size, double cutoff) const {
+            return Cluster::do_cluster(rmsd_list, conf_size, cutoff);
         }
 
-        explicit ClusterTest(double cutoff) : Cluster() { setSetting({}, cutoff); }
-    } cluster(1.0);
+        explicit ClusterTest() { setSetting({}, 1.0); }
+    } cluster;
 
-    ASSERT_THAT(cluster.test_do_cluster(list<Cluster::rmsd_matrix>{{0, 1, 1.1}}, 2),
+    ASSERT_THAT(cluster.test_do_cluster(list<Cluster::rmsd_matrix>{{0, 1, 1.1}}, 2, 1.0),
                 ContainerEq(vector<Cluster::conf_clust>{{0, 0},
                                                         {1, 1}}));
 
@@ -71,7 +71,7 @@ TEST(ClusterTest, do_clust) {
                                        {0, 2, 1.2},
                                        {1, 2, 1.2},
                                        {0, 3, 1.3},
-                                       {2, 3, 2.0}}, 4),
+                                       {2, 3, 2.0}}, 4, 1.0),
                 ContainerEq(vector<Cluster::conf_clust>{{0, 0},
                                                         {1, 1},
                                                         {2, 2},
@@ -90,7 +90,7 @@ TEST(ClusterTest, do_clust) {
                                        {1, 3, 1.1},
                                        {2, 0, 1.2},
                                        {1, 2, 1.2},
-                                       {0, 3, 1.3}}, 4),
+                                       {0, 3, 1.3}}, 4, 1.0),
                 ContainerEq(vector<Cluster::conf_clust>{{0, 0},
                                                         {1, 0},
                                                         {2, 2},
