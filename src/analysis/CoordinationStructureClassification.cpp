@@ -98,11 +98,18 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
         std::list<Cluster::rmsd_matrix> local_rms_list;
         std::deque<std::pair<int, std::vector<std::tuple<double, double, double>>>> &tables;
         CoordinationStructureClassification *parent;
+        std::atomic<std::size_t> &current_completed_compute_amount;
+        std::size_t &total_compute_amount;
 
         Body(std::deque<std::pair<int, std::vector<std::tuple<double, double, double>>>> &tables,
-             CoordinationStructureClassification *parent) : tables(tables), parent(parent) {};
+             CoordinationStructureClassification *parent, std::atomic<std::size_t> &current_completed_compute_amount,
+             std::size_t &total_compute_amount)
+                : tables(tables), parent(parent), current_completed_compute_amount(current_completed_compute_amount),
+                  total_compute_amount(total_compute_amount) {};
 
-        Body(Body &c, tbb::split) : tables(c.tables), parent(c.parent) {}
+        Body(Body &c, tbb::split) : tables(c.tables), parent(c.parent),
+                                    current_completed_compute_amount(c.current_completed_compute_amount),
+                                    total_compute_amount(c.total_compute_amount) {}
 
         void join(Body &c) {
             local_rms_list.merge(c.local_rms_list,
@@ -121,7 +128,10 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
                             CoordinationStructureClassification::calculateRmsdOfTwoStructs(item1.second,
                                                                                            item2.second));
                 }
-
+                auto total_complete = tables.size() - index1 - 1;
+                current_completed_compute_amount += total_complete;
+                std::cout << "\rTBB parallel block Complete " << std::setw(3)
+                          << (100 * current_completed_compute_amount) / total_compute_amount << " %    " << std::flush;
             }
             local_rms_list.sort(
                     [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
@@ -132,14 +142,21 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
 
     std::map<int, Body> bodys;
 
+    std::size_t total_compute_amount = 0;
+    std::atomic<std::size_t> current_completed_compute_amount = 0;
+
     tbb::task_group taskGroup;
     for (auto &element : systems) {
-        bodys.insert({element.first, Body(element.second, this)});
+        bodys.insert(
+                {element.first, Body(element.second, this, current_completed_compute_amount, total_compute_amount)});
         auto b = &bodys.at(element.first);
         taskGroup.run(
                 [b, &element] { tbb::parallel_reduce(tbb::blocked_range<std::size_t>(0, element.second.size()), *b); });
+        total_compute_amount += 0.5 * std::pow(element.second.size(), 2);
     }
+    std::cout << "\rTBB parallel block Complete   0 %    " << std::flush;
     taskGroup.wait();
+    std::cout << "\rTBB parallel block Complete 100 %    " << std::endl;
 
     std::map<int, std::list<Cluster::rmsd_matrix>> rmsd_list_map;
 

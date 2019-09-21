@@ -32,6 +32,13 @@
 #include <vector>
 
 #include <initializer_list>
+
+// multi-threading
+#include <atomic>
+#include <condition_variable>
+#include <future>
+#include <thread>
+
 // Other
 #include <memory>
 #include <string>
