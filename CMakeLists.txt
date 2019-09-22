@@ -125,6 +125,8 @@ if (NOT TBBMALLOC_LIBS)
 endif ()
 link_libraries(${TBBMALLOC_LIBS})
 
+link_libraries(rt)
+
 # Boost
 set(BOOST_INCLUDEDIR ${INCLUES_PATH})
 set(BOOST_LIBRARYDIR ${LIBRARY_DIRS})

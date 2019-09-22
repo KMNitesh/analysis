@@ -8,6 +8,7 @@
 #include <boost/range/adaptors.hpp>
 #include <boost/range/irange.hpp>
 #include <tbb/tbb.h>
+#include <tbb/tick_count.h>
 #include "frame.hpp"
 #include "common.hpp"
 #include "RMSDCal.hpp"
@@ -154,9 +155,11 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
                 [b, &element] { tbb::parallel_reduce(tbb::blocked_range<std::size_t>(0, element.second.size()), *b); });
         total_compute_amount += 0.5 * std::pow(element.second.size(), 2);
     }
+    auto start_time = tbb::tick_count::now();
     std::cout << "\rTBB parallel block Complete   0 %    " << std::flush;
     taskGroup.wait();
-    std::cout << "\rTBB parallel block Complete 100 %    " << std::endl;
+    std::cout << "\rTBB parallel block Complete 100 %   elapsed time "
+              << static_cast<int>((tbb::tick_count::now() - start_time).seconds()) << " seconds" << std::endl;
 
     std::map<int, std::list<Cluster::rmsd_matrix>> rmsd_list_map;
 
