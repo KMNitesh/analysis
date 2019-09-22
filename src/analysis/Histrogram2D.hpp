@@ -18,10 +18,11 @@ public:
     Histrogram2D() = default;
 
     void update(double value1, double value2);
+    void update(std::pair<double,double> value_pair);
 
-    std::vector<std::tuple<double, double, double>> getDistribution() const;
+    [[nodiscard]] std::vector<std::tuple<double, double, double>> getDistribution() const;
 
-    std::pair<double, double> getWidths() const { return {dimension1_width, dimension2_width}; }
+    [[nodiscard]] std::pair<double, double> getWidths() const { return {dimension1_width, dimension2_width}; }
 
     void initialize(const std::pair<double, double> &range1, double width1,
                     const std::pair<double, double> &range2, double width2);

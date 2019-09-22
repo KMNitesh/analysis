@@ -96,6 +96,7 @@ namespace mpl = boost::mpl;
 #include "HBondLifeTimeCutoffContinuous.hpp"
 #include "SspResidenceTime.hpp"
 #include "CoordinationStructureClassification.hpp"
+#include "LocalStructureIndex.hpp"
 
 using namespace std;
 namespace {
@@ -161,7 +162,8 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             HBondLifeTimeContinuous,
             HBondLifeTimeCutoffContinuous,
             SspResidenceTime,
-            CoordinationStructureClassification
+            CoordinationStructureClassification,
+            LocalStructureIndex
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));

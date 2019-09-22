@@ -19,6 +19,11 @@ void Histrogram2D::update(double value1, double value2) {
     }
 }
 
+void Histrogram2D::update(std::pair<double, double> value_pair) {
+    auto [value1, value2] = value_pair;
+    update(value1,value2);
+}
+
 std::vector<std::tuple<double, double, double>> Histrogram2D::getDistribution() const {
     std::vector<std::tuple<double, double, double>> distribution;
     for (int ibin1 = 1; ibin1 <= dimension1_bins; ibin1++) {
