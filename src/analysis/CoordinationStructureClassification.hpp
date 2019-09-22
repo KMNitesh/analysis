@@ -53,6 +53,8 @@ protected:
 
     std::unordered_map<int, int> frame_cn_mapping;
 
+    bool output_rms_matrix  = false;
+
 };
 
 

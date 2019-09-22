@@ -57,7 +57,18 @@ void CoordinationStructureClassification::print(std::ostream &os) {
     std::list<Cluster::rmsd_matrix> rmsd_list;
 
     boost::for_each(rmsd_list_map,
-                    [&rmsd_list](auto &element) { rmsd_list.splice(std::end(rmsd_list), element.second); });
+                    [&rmsd_list](auto &element) {
+                        rmsd_list.merge(element.second,
+                                        [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
+                                            return (m1.rms < m2.rms);
+                                        });
+                    });
+
+    if (output_rms_matrix) {
+        for (auto &element : rmsd_list) {
+            os << format("%10d %10d %10.5f\n", element.i, element.j, element.rms);
+        }
+    }
 
     std::vector<Cluster::conf_clust> c = Cluster::do_cluster(rmsd_list, nframe, rmsd_cutoff);
 
@@ -120,19 +131,24 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
         }
 
         void operator()(const tbb::blocked_range<std::size_t> &range) {
+            auto report_amount = total_compute_amount / 10;
+            std::size_t current_com_amount = 0;
             for (std::size_t index1 = range.begin(); index1 != range.end(); ++index1) {
                 for (std::size_t index2 = index1 + 1; index2 < tables.size(); ++index2) {
                     auto &item1 = tables[index1];
                     auto &item2 = tables[index2];
                     local_rms_list.emplace_back(
                             item1.first, item2.first,
-                            CoordinationStructureClassification::calculateRmsdOfTwoStructs(item1.second,
-                                                                                           item2.second));
+                            CoordinationStructureClassification::calculateRmsdOfTwoStructs(
+                                    item1.second, item2.second));
                 }
-                auto total_complete = tables.size() - index1 - 1;
-                current_completed_compute_amount += total_complete;
-                std::cout << "\rTBB parallel block Complete " << std::setw(3)
-                          << (100 * current_completed_compute_amount) / total_compute_amount << " %    " << std::flush;
+                current_com_amount += tables.size() - index1 - 1;
+                if (current_com_amount >= report_amount or (index1 + 1) == range.end()) {
+                    current_completed_compute_amount += current_com_amount;
+                    std::cout << "\rTBB parallel block Complete " << std::setw(3)
+                              << current_completed_compute_amount / total_compute_amount << " %    " << std::flush;
+                    current_com_amount = 0;
+                }
             }
             local_rms_list.sort(
                     [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
@@ -153,12 +169,13 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
         auto b = &bodys.at(element.first);
         taskGroup.run(
                 [b, &element] { tbb::parallel_reduce(tbb::blocked_range<std::size_t>(0, element.second.size()), *b); });
-        total_compute_amount += 0.5 * std::pow(element.second.size(), 2);
+        total_compute_amount += element.second.size() * (element.second.size() - 1) / 2;
     }
+    total_compute_amount /= 100;
     auto start_time = tbb::tick_count::now();
     std::cout << "\rTBB parallel block Complete   0 %    " << std::flush;
     taskGroup.wait();
-    std::cout << "\rTBB parallel block Complete 100 %   elapsed time "
+    std::cout << "\rTBB parallel block Complete 100 %    elapsed time "
               << static_cast<int>((tbb::tick_count::now() - start_time).seconds()) << " seconds" << std::endl;
 
     std::map<int, std::list<Cluster::rmsd_matrix>> rmsd_list_map;
@@ -194,15 +211,14 @@ CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::
             fill_coord(x2, y2, z2, c2_index1, c2_index2, c2);
 
             //superpose with 3 atoms
-            RMSDCal::quatfit(3, x1, y1, z2, 3, x2, y2, z2, c1.size() + 1);
+            RMSDCal::quatfit(c1.size() + 1, x1, y1, z1, c1.size() + 1, x2, y2, z2, 3);
 
             //排列index >=3 之后的原子，使相对应的距离最小
-            permutation(x1, y1, z1, x2, y2, z2, 3, c1.size());
+            permutation(x1, y1, z1, x2, y2, z2, 3, c1.size() + 1);
 
-            RMSDCal::quatfit(c1.size() + 1, x1, y1, z2, c1.size() + 1, x2, y2, z2, c1.size() + 1);
+            RMSDCal::quatfit(c1.size() + 1, x1, y1, z1, c1.size() + 1, x2, y2, z2, c1.size() + 1);
 
-            rmsd_value = std::min(rmsd_value,
-                                  RMSDCal::rmsfit(x1, y1, z1, x2, y2, z2, c1.size() + 1));
+            rmsd_value = std::min(rmsd_value, RMSDCal::rmsfit(x1, y1, z1, x2, y2, z2, c1.size() + 1));
         }
     }
     return rmsd_value;
@@ -244,11 +260,12 @@ void CoordinationStructureClassification::fill_coord(double x[], double y[], dou
 }
 
 void CoordinationStructureClassification::permutation(double x1[], double y1[], double z1[],
-                                                      double x2[], double y2[], double z2[], int start,
-                                                      int end/*not included*/) {
+                                                      double x2[], double y2[], double z2[],
+                                                      int start, int end/*not included*/) {
 
     for (auto i : boost::irange(start, end)) {
         double min_distance2 = std::numeric_limits<double>::max();
+        int min_index;
         for (auto j : boost::irange(i, end)) {
             auto xr = x1[i] - x2[j];
             auto yr = y1[i] - y2[j];
@@ -258,10 +275,13 @@ void CoordinationStructureClassification::permutation(double x1[], double y1[], 
 
             if (distance2 < min_distance2) {
                 min_distance2 = distance2;
+                min_index = j;
             }
-            std::swap(x2[i], x2[j]);
-            std::swap(y2[i], y2[j]);
-            std::swap(z2[i], z2[j]);
+        }
+        if (i != min_index) {
+            std::swap(x2[i], x2[min_index]);
+            std::swap(y2[i], y2[min_index]);
+            std::swap(z2[i], z2[min_index]);
         }
     }
 }
@@ -273,7 +293,9 @@ void CoordinationStructureClassification::readInfo() {
     auto cutoff = choose(0.0, "Enter cutoff for first hydration shell (Ang) [ 3.0 ] > ", Default(3.0));
     cutoff2 = cutoff * cutoff;
 
-    rmsd_cutoff = choose(0.0, "Enter cutoff for RMSD > ");
+    rmsd_cutoff = choose(0.0, "Enter cutoff for RMSD (Ang) > ");
+
+    output_rms_matrix = choose_bool("Output RMS Matrix [ false ] > ", Default(false));
 }
 
 
