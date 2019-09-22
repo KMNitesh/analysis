@@ -295,7 +295,7 @@ void CoordinationStructureClassification::readInfo() {
 
     rmsd_cutoff = choose(0.0, "Enter cutoff for RMSD (Ang) > ");
 
-    output_rms_matrix = choose_bool("Output RMS Matrix [ false ] > ", Default(false));
+    output_rms_matrix = choose_bool("Output RMS Matrix [N] > ", Default(false));
 }
 
 
