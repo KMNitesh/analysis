@@ -30,9 +30,9 @@ void executeScript(const boost::program_options::options_description &desc,
                    int argc, char *argv[]);
 
 std::shared_ptr<Frame>
-getFrame(std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list, int start, int step_size,
-         int total_frames,
-         int &current_frame_num, std::shared_ptr<TrajectoryReader> &reader, int &Clear);
+getFrame(std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list,
+         const int start, const int step_size, const int total_frames,
+         std::shared_ptr<TrajectoryReader> &reader);
 
 int
 executeAnalysis(const std::vector<std::string> &xyzfiles, int argc, char *const *argv, const std::string &scriptContent,

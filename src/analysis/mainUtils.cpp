@@ -568,14 +568,11 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
 
     tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
     if (nthreads > sysconf(_SC_NPROCESSORS_ONLN)) {
-        cout << "WARNING !! nthreads larger than max core of system CPU, will use automatic mode";
+        cout << "WARNING !! nthreads larger than max core of system CPU, will use automatic mode\n";
         nthreads = 0;
     }
 
-
     tbb_init.initialize(nthreads == 0 ? tbb::task_scheduler_init::automatic : nthreads);
-
-    int current_frame_num = 0;
 
     auto reader = make_shared<TrajectoryReader>();
     bool b_added_topology = true;
@@ -584,7 +581,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
         b_added_topology = false;
     } else {
         if (topology) {
-            cerr << "WRANING !!  do not use topolgy file !\bn";
+            cerr << "WRANING !!  do not use topolgy file !\n";
         }
     }
 
@@ -622,6 +619,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
     }
     shared_ptr<Frame> frame;
     int Clear = 0;
+    int current_frame_num = 0;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
         if (total_frames != 0 and current_frame_num > total_frames)
@@ -704,7 +702,6 @@ void processTrajectory(const boost::program_options::options_description &desc,
                                   "How many cores to used in parallel[automatic]:", Default(0));
         tbb_init.initialize(threads == 0 ? tbb::task_scheduler_init::automatic : threads);
     }
-    int current_frame_num = 0;
 
     auto reader = std::make_shared<TrajectoryReader>();
     bool b_added_topology = true;
@@ -754,7 +751,6 @@ void processTrajectory(const boost::program_options::options_description &desc,
     if (enable_outfile) {
         outfile.open(getOutputFilename(vm));
     }
-    int Clear = 0;
 
     std::shared_ptr<BasicAnalysis> parallel_while_task;
     for (auto &task : *task_list) {
@@ -771,11 +767,11 @@ void processTrajectory(const boost::program_options::options_description &desc,
     if (parallel_while_task) {
         task_list->remove(parallel_while_task);
         parallel_while_task->do_parallel_while([&] {
-            return getFrame(task_list, start, step_size, total_frames, current_frame_num, reader, Clear);
+            return getFrame(task_list, start, step_size, total_frames, reader);
         });
         task_list->push_back(parallel_while_task);
     } else {
-        while (getFrame(task_list, start, step_size, total_frames, current_frame_num, reader, Clear));
+        while (getFrame(task_list, start, step_size, total_frames, reader));
     }
     std::cout << '\n';
 
@@ -794,21 +790,16 @@ void processTrajectory(const boost::program_options::options_description &desc,
     std::cout << "Mission Complete" << std::endl;
 }
 
-std::shared_ptr<Frame>
-getFrame(shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list, int start, int step_size, int total_frames,
-         int &current_frame_num, shared_ptr<TrajectoryReader> &reader, int &Clear) {
+std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list,
+                                const int start, const int step_size, const int total_frames,
+                                shared_ptr<TrajectoryReader> &reader) {
+    static int current_frame_num = 0;
     std::shared_ptr<Frame> frame;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
         if (total_frames != 0 and current_frame_num > total_frames)
             break;
-        if (current_frame_num % 10 == 0) {
-            if (Clear) {
-                cout << "\r";
-            }
-            cout << "Processing Coordinate Frame  " << current_frame_num << "   " << flush;
-            Clear = 1;
-        }
+        std::cout << "\rProcessing Coordinate Frame  " << current_frame_num << "   " << std::flush;
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {
                 if (forcefield.isValid()) {
