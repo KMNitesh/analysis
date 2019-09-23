@@ -23,7 +23,9 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Local structure index(LSI) (PCCP 2011,13, 19918-19924)"; }
+    static std::string title() { return "Local Structure Index (LSI) (PCCP 2011,13, 19918-19924)"; }
+
+    static double calculateLSI(std::deque<double> &rs);
 
 protected:
     AmberMask metal_mask;
@@ -33,7 +35,7 @@ protected:
     std::vector<std::shared_ptr<Atom>> Ow_atoms;
     double cutoff2;
 
-    std::deque<std::pair<double,double>> localStructureIndices;
+    std::deque<std::pair<double, double>> localStructureIndices;
 };
 
 

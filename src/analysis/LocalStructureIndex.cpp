@@ -33,17 +33,24 @@ void LocalStructureIndex::process(std::shared_ptr<Frame> &frame) {
             rs.push_back(std::sqrt(r2));
         }
     }
+
+    auto lsi = calculateLSI(rs);
+    localStructureIndices.emplace_back(rs.back(), lsi);
+}
+
+double LocalStructureIndex::calculateLSI(std::deque<double> &rs) {
+    boost::stable_sort(rs);
     std::vector<double> delta_r;
     delta_r.reserve(rs.size() - 1);
+    double sum = 0;
     for (std::size_t i = 0; i < rs.size() - 1; ++i) {
         delta_r.push_back(rs[i + 1] - rs[i]);
     }
-    auto delta_r_ = boost::accumulate(delta_r, 0.0) / delta_r.size();
-    double sum = 0;
+    auto delta_r_avg = boost::accumulate(delta_r, 0.0) / delta_r.size();
     for (auto val : delta_r) {
-        sum += std::pow(val - delta_r_, 2);
+        sum += std::pow(val - delta_r_avg, 2);
     }
-    localStructureIndices.emplace_back(rs.back(), sum / delta_r.size());
+    return sum / delta_r.size();
 }
 
 void LocalStructureIndex::print(std::ostream &os) {
@@ -73,7 +80,7 @@ void LocalStructureIndex::print(std::ostream &os) {
         histrogram2D.update(lsi, rmax);
     }
 
-    os << boost::format("%15s %15s %15s\n") % "RMax(Ang)" % "LSI(Ang^2)" % "Normalized Probability Density";
+    os << boost::format("%15s %15s %15s\n") % "LSI(Ang^2)" % "RMax(Ang)" % "Normalized Probability Density";
     auto distribution = histrogram2D.getDistribution();
     auto max_population = std::get<2>(*boost::max_element(
             distribution, [](auto &lhs, auto &rhs) { return std::get<2>(lhs) < std::get<2>(rhs); }));
