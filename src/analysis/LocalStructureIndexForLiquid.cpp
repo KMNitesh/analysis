@@ -11,6 +11,7 @@
 #include "common.hpp"
 #include "Histrogram2D.hpp"
 #include "molecule.hpp"
+#include "LocalStructureIndex.hpp"
 
 LocalStructureIndexForLiquid::LocalStructureIndexForLiquid() {
     enable_outfile = true;
@@ -19,7 +20,6 @@ LocalStructureIndexForLiquid::LocalStructureIndexForLiquid() {
 
 
 void LocalStructureIndexForLiquid::process(std::shared_ptr<Frame> &frame) {
-    std::vector<std::pair<double, std::vector<double>>> distance_within_cutoff_vector_pair;
     std::vector<double> distance_square_vector;
     std::vector<double> distance_within_cutoff_range;
     for (auto &mol1 : frame->molecule_list) {
@@ -38,37 +38,14 @@ void LocalStructureIndexForLiquid::process(std::shared_ptr<Frame> &frame) {
                 }
             }
         }
-        boost::stable_sort(distance_within_cutoff_range);
-        std::vector<double> distance_differences;
-        distance_differences.reserve(distance_within_cutoff_range.size() - 1);
-
-        for (std::size_t i = 0; i < distance_within_cutoff_range.size() - 1; ++i) {
-            distance_differences.push_back(distance_within_cutoff_range[i + 1] - distance_within_cutoff_range[i]);
-        }
+        auto lsi = LocalStructureIndex::calculateLSI(distance_within_cutoff_range);
         if (distance_square_vector.size() >= r_index) {
             std::nth_element(std::begin(distance_square_vector), std::begin(distance_square_vector) + r_index - 1,
                              std::end(distance_square_vector));
-            distance_within_cutoff_vector_pair.emplace_back(std::sqrt(distance_square_vector[r_index - 1]),
-                                                            std::move(distance_differences));
+            localStructureIndices.emplace_back(std::sqrt(distance_square_vector[r_index - 1]), lsi);
         } else {
             std::cerr << "WARNING !! no r(" << r_index << ") for r distance vector \n";
         }
-    }
-    double distance_difference_average = 0.0;
-    std::size_t total_count = 0;
-    for (auto &elemenet : distance_within_cutoff_vector_pair) {
-        distance_difference_average = boost::accumulate(elemenet.second, distance_difference_average);
-        total_count += elemenet.second.size();
-    }
-
-    distance_difference_average /= total_count;
-
-    for (auto &[ri, distance_differences] : distance_within_cutoff_vector_pair) {
-        double lsi_sum = 0;
-        for (auto val : distance_differences) {
-            lsi_sum += std::pow(val - distance_difference_average, 2);
-        }
-        localStructureIndices.emplace_back(ri, lsi_sum / distance_differences.size());
     }
 }
 
