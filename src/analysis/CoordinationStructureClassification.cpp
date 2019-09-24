@@ -172,11 +172,11 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
         total_compute_amount += element.second.size() * (element.second.size() - 1) / 2;
     }
     total_compute_amount /= 100;
-    auto start_time = tbb::tick_count::now();
+    auto start_time = std::chrono::steady_clock::now();
     std::cout << "\rTBB parallel block Complete   0 %    " << std::flush;
     taskGroup.wait();
     std::cout << "\rTBB parallel block Complete 100 %    elapsed time "
-              << static_cast<int>((tbb::tick_count::now() - start_time).seconds()) << " seconds" << std::endl;
+              << chrono_cast(std::chrono::steady_clock::now() - start_time) << std::endl;
 
     std::map<int, std::list<Cluster::rmsd_matrix>> rmsd_list_map;
 
