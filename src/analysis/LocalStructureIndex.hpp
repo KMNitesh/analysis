@@ -25,7 +25,8 @@ public:
 
     static std::string title() { return "Local Structure Index (LSI) (PCCP 2011,13, 19918-19924)"; }
 
-    static double calculateLSI(std::deque<double> &rs);
+    template<typename RandomAccessRange>
+    static double calculateLSI(RandomAccessRange &distance_within_cutoff_range);
 
 protected:
     AmberMask metal_mask;

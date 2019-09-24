@@ -15,8 +15,6 @@ class LocalStructureIndexForLiquid : public BasicAnalysis {
 public:
     LocalStructureIndexForLiquid();
 
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
-
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
@@ -26,9 +24,6 @@ public:
     static std::string title() { return "Local Structure Index (LSI) for Liquid"; }
 
 protected:
-
-    AmberMask center_atom_mask;
-    std::vector<std::shared_ptr<Atom>> center_atoms;
 
     double cutoff2;
     int r_index;

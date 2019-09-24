@@ -38,20 +38,26 @@ void LocalStructureIndex::process(std::shared_ptr<Frame> &frame) {
     localStructureIndices.emplace_back(rs.back(), lsi);
 }
 
-double LocalStructureIndex::calculateLSI(std::deque<double> &rs) {
-    boost::stable_sort(rs);
-    std::vector<double> delta_r;
-    delta_r.reserve(rs.size() - 1);
+template<typename RandomAccessRange>
+double LocalStructureIndex::calculateLSI(RandomAccessRange &distance_within_cutoff_range) {
+    boost::stable_sort(distance_within_cutoff_range);
+    std::vector<double> distance_differences;
+    distance_differences.reserve(distance_within_cutoff_range.size() - 1);
+
+    for (std::size_t i = 0; i < distance_within_cutoff_range.size() - 1; ++i) {
+        distance_differences.push_back(distance_within_cutoff_range[i + 1] - distance_within_cutoff_range[i]);
+    }
+    auto distance_difference_average = boost::accumulate(distance_differences, 0.0) / distance_differences.size();
     double sum = 0;
-    for (std::size_t i = 0; i < rs.size() - 1; ++i) {
-        delta_r.push_back(rs[i + 1] - rs[i]);
+    for (auto val : distance_differences) {
+        sum += std::pow(val - distance_difference_average, 2);
     }
-    auto delta_r_avg = boost::accumulate(delta_r, 0.0) / delta_r.size();
-    for (auto val : delta_r) {
-        sum += std::pow(val - delta_r_avg, 2);
-    }
-    return sum / delta_r.size();
+    return sum / distance_differences.size();
 }
+
+template double LocalStructureIndex::calculateLSI(std::deque<double> &);
+
+template double LocalStructureIndex::calculateLSI(std::vector<double> &);
 
 void LocalStructureIndex::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';

@@ -9,48 +9,72 @@
 #include "LocalStructureIndexForLiquid.hpp"
 #include "frame.hpp"
 #include "common.hpp"
-#include "LocalStructureIndex.hpp"
 #include "Histrogram2D.hpp"
+#include "molecule.hpp"
 
 LocalStructureIndexForLiquid::LocalStructureIndexForLiquid() {
     enable_outfile = true;
+    enable_forcefield = true;
 }
 
-void LocalStructureIndexForLiquid::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, center_atom_mask)) center_atoms.push_back(atom);
-    });
-}
 
 void LocalStructureIndexForLiquid::process(std::shared_ptr<Frame> &frame) {
-    std::deque<double> rs;
-    std::vector<double> r2_total;
-    for (auto &atom1 : center_atoms) {
-        rs.clear();
-        r2_total.clear();
-        for (auto &atom2 : center_atoms) {
-            if (atom1 != atom2) {
-                auto r2 = atom_distance(atom1, atom2, frame);
-                r2_total.push_back(r2);
+    std::vector<std::pair<double, std::vector<double>>> distance_within_cutoff_vector_pair;
+    std::vector<double> distance_square_vector;
+    std::vector<double> distance_within_cutoff_range;
+    for (auto &mol1 : frame->molecule_list) {
+        distance_square_vector.clear();
+        distance_within_cutoff_range.clear();
+        auto mol1_coord = mol1->calc_weigh_center(frame);
+        for (auto &mol2 : frame->molecule_list) {
+            if (mol1 != mol2) {
+                auto mol2_coord = mol2->calc_weigh_center(frame);
+                auto v = mol2_coord - mol1_coord;
+                frame->image(v);
+                auto r2 = vector_norm2(v);
+                distance_square_vector.push_back(r2);
                 if (r2 < cutoff2) {
-                    rs.push_back(std::sqrt(r2));
+                    distance_within_cutoff_range.push_back(std::sqrt(r2));
                 }
             }
         }
-        auto lsi = LocalStructureIndex::calculateLSI(rs);
-        if (r2_total.size() >= r_index) {
-            std::nth_element(std::begin(r2_total), std::begin(r2_total) + r_index - 1, std::end(r2_total));
-            localStructureIndices.emplace_back(std::sqrt(r2_total[r_index - 1]), lsi);
+        boost::stable_sort(distance_within_cutoff_range);
+        std::vector<double> distance_differences;
+        distance_differences.reserve(distance_within_cutoff_range.size() - 1);
+
+        for (std::size_t i = 0; i < distance_within_cutoff_range.size() - 1; ++i) {
+            distance_differences.push_back(distance_within_cutoff_range[i + 1] - distance_within_cutoff_range[i]);
+        }
+        if (distance_square_vector.size() >= r_index) {
+            std::nth_element(std::begin(distance_square_vector), std::begin(distance_square_vector) + r_index - 1,
+                             std::end(distance_square_vector));
+            distance_within_cutoff_vector_pair.emplace_back(std::sqrt(distance_square_vector[r_index - 1]),
+                                                            std::move(distance_differences));
         } else {
             std::cerr << "WARNING !! no r(" << r_index << ") for r distance vector \n";
         }
+    }
+    double distance_difference_average = 0.0;
+    std::size_t total_count = 0;
+    for (auto &elemenet : distance_within_cutoff_vector_pair) {
+        distance_difference_average = boost::accumulate(elemenet.second, distance_difference_average);
+        total_count += elemenet.second.size();
+    }
+
+    distance_difference_average /= total_count;
+
+    for (auto &[ri, distance_differences] : distance_within_cutoff_vector_pair) {
+        double lsi_sum = 0;
+        for (auto val : distance_differences) {
+            lsi_sum += std::pow(val - distance_difference_average, 2);
+        }
+        localStructureIndices.emplace_back(ri, lsi_sum / distance_differences.size());
     }
 }
 
 void LocalStructureIndexForLiquid::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
     os << "# " << title() << " # \n";
-    os << "# center atom mask > " << center_atom_mask << '\n';
     os << "# distance cutoff(Ang) = " << std::sqrt(cutoff2) << '\n';
     os << "# index for ri = " << r_index << '\n';
     os << std::string(50, '#') << '\n';
@@ -72,8 +96,8 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
 
     os << boost::format("%15s %15s %15s\n")
           % "LSI(Ang^2)"
-          % ("R" + std::to_string(r_index) + "(Ang)") %
-          "Normalized Probability Density";
+          % ("R" + std::to_string(r_index) + "(Ang)")
+          % "Normalized Probability Density";
 
     auto distribution = histrogram2D.getDistribution();
     auto max_population = std::get<2>(*boost::max_element(
@@ -85,7 +109,6 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
 }
 
 void LocalStructureIndexForLiquid::readInfo() {
-    Atom::select1group(center_atom_mask, "Enter mask for center atom > ");
     auto cutoff = choose(0.0, "Enter cutoff for local distance(Ang) [3.7] > ", Default(3.7));
     cutoff2 = cutoff * cutoff;
     r_index = choose(1, "Enter i for ri [5] > ", Default(5));
