@@ -2,15 +2,15 @@
 // Created by xiamr on 7/4/19.
 //
 
-#include "Histrogram.hpp"
+#include "Histogram.hpp"
 
 using namespace std;
 
-Histrogram::Histrogram(pair<double, double> dimension_range, double width) { initialize(dimension_range, width); }
+Histogram::Histogram(pair<double, double> dimension_range, double width) { initialize(dimension_range, width); }
 
-void Histrogram::initialize(double range_max, double width) { initialize({0, range_max}, width); }
+void Histogram::initialize(double range_max, double width) { initialize({0, range_max}, width); }
 
-void Histrogram::initialize(const pair<double, double> &range, double width) {
+void Histogram::initialize(const pair<double, double> &range, double width) {
     dimension_range = range;
     dimension_width = width;
 
@@ -23,7 +23,7 @@ void Histrogram::initialize(const pair<double, double> &range, double width) {
     }
 }
 
-void Histrogram::update(double value) {
+void Histogram::update(double value) {
     int ibin = int((value - dimension_range.first) / dimension_width) + 1;
 
     if (ibin <= dimension_bins) {
@@ -31,7 +31,7 @@ void Histrogram::update(double value) {
     }
 }
 
-std::vector<pair<double, double>> Histrogram::getDistribution() const {
+std::vector<pair<double, double>> Histogram::getDistribution() const {
     double total = 0.0;
 
     for (int ibin = 1; ibin <= dimension_bins; ibin++) {

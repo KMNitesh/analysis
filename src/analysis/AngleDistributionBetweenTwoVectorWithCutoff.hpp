@@ -8,7 +8,7 @@
 #include "std.hpp"
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
-#include "Histrogram.hpp"
+#include "Histogram.hpp"
 #include "VectorSelector.hpp"
 
 class Frame;
@@ -48,8 +48,8 @@ protected:
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 
-    Histrogram angle_hist;
-    Histrogram cos_hist;
+    Histogram angle_hist;
+    Histogram cos_hist;
 
     double cutoff1, cutoff2;
 

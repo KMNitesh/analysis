@@ -9,10 +9,10 @@
 #include "LocalStructureIndexForLiquid.hpp"
 #include "frame.hpp"
 #include "common.hpp"
-#include "Histrogram2D.hpp"
+#include "Histogram2D.hpp"
 #include "molecule.hpp"
 #include "LocalStructureIndex.hpp"
-#include "Histrogram.hpp"
+#include "Histogram.hpp"
 
 LocalStructureIndexForLiquid::LocalStructureIndexForLiquid() {
     enable_outfile = true;
@@ -64,15 +64,15 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
             std::begin(localStructureIndices), std::end(localStructureIndices),
             [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); });
 
-    Histrogram2D histrogram2D(
+    Histogram2D histogram2D(
             {LSI_min_iter->second, LSI_max_iter->second}, (LSI_max_iter->second - LSI_min_iter->second) / 100,
             {Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
 
-    Histrogram histrogram({Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
+    Histogram histogram({Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
 
     for (auto[ri, lsi] : localStructureIndices) {
-        histrogram2D.update(lsi, ri);
-        histrogram.update(ri);
+        histogram2D.update(lsi, ri);
+        histogram.update(ri);
     }
 
     os << boost::format("%15s %15s %15s\n")
@@ -80,7 +80,7 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
           % ("R" + std::to_string(r_index) + "(Ang)")
           % "Normalized Probability Density";
 
-    auto distribution = histrogram2D.getDistribution();
+    auto distribution = histogram2D.getDistribution();
     auto max_population = std::get<2>(*boost::max_element(
             distribution, [](auto &lhs, auto &rhs) { return std::get<2>(lhs) < std::get<2>(rhs); }));
 
@@ -90,7 +90,7 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
 
     os << std::string(50, '#') << '\n';
 
-    auto ri_distribution = histrogram.getDistribution();
+    auto ri_distribution = histogram.getDistribution();
 
     auto ri_max_population = std::get<1>(*boost::max_element(
             ri_distribution, [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); }));

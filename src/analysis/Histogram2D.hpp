@@ -2,20 +2,20 @@
 // Created by xiamr on 7/4/19.
 //
 
-#ifndef TINKER_HISTROGRAM2D_HPP
-#define TINKER_HISTROGRAM2D_HPP
+#ifndef TINKER_HISTOGRAM2D_HPP
+#define TINKER_HISTOGRAM2D_HPP
 
 #include <utility>
 #include <map>
 #include <tuple>
 #include <vector>
 
-class Histrogram2D {
+class Histogram2D {
 public:
-    Histrogram2D(const std::pair<double, double> &range1, double width1,
-                 const std::pair<double, double> &range2, double width2);
+    Histogram2D(const std::pair<double, double> &range1, double width1,
+                const std::pair<double, double> &range2, double width2);
 
-    Histrogram2D() = default;
+    Histogram2D() = default;
 
     void update(double value1, double value2);
     void update(std::pair<double,double> value_pair);
@@ -42,4 +42,4 @@ protected:
 };
 
 
-#endif //TINKER_HISTROGRAM2D_HPP
+#endif //TINKER_HISTOGRAM2D_HPP

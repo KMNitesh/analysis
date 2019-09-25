@@ -8,7 +8,7 @@
 
 #include "CrossCorrelation.hpp"
 #include "common.hpp"
-#include "Histrogram2D.hpp"
+#include "Histogram2D.hpp"
 
 namespace std {
     template<typename T>
@@ -99,14 +99,14 @@ void CrossCorrelation::printCrossCorrelationFunction2(const std::vector<double> 
 
 std::vector<std::tuple<double, double, double>>
 CrossCorrelation::getDistribution(const std::deque<std::tuple<double, double, double>> &series) {
-    Histrogram2D histrogram;
-    histrogram.initialize(180, 5, 180, 5);
+    Histogram2D histogram;
+    histogram.initialize(180, 5, 180, 5);
 
     for (auto[time, x, y] : series) {
-        histrogram.update(x, y);
+        histogram.update(x, y);
     }
 
-    return histrogram.getDistribution();
+    return histogram.getDistribution();
 }
 
 std::deque<std::tuple<double, double, double>> CrossCorrelation::readAngleSeries() {

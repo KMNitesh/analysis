@@ -12,7 +12,7 @@
 #include "BasicAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
-#include "Histrogram.hpp"
+#include "Histogram.hpp"
 
 class Frame;
 
@@ -40,7 +40,7 @@ protected:
 
     std::unordered_set<std::shared_ptr<Molecule>> group;
 
-    Histrogram hist;
+    Histogram hist;
 
     void printData(std::ostream &os) const;
 

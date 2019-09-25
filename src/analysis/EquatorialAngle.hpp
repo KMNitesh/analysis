@@ -11,7 +11,7 @@
 #include "BasicAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
-#include "Histrogram.hpp"
+#include "Histogram.hpp"
 
 
 class Frame;
@@ -38,7 +38,7 @@ protected:
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
 
-    Histrogram hist;
+    Histogram hist;
 
     double cutoff1, cutoff2;
 

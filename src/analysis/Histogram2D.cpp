@@ -2,15 +2,15 @@
 // Created by xiamr on 7/4/19.
 //
 
-#include "Histrogram2D.hpp"
+#include "Histogram2D.hpp"
 
-Histrogram2D::Histrogram2D(const std::pair<double, double> &range1, double width1,
-                           const std::pair<double, double> &range2, double width2) {
+Histogram2D::Histogram2D(const std::pair<double, double> &range1, double width1,
+                         const std::pair<double, double> &range2, double width2) {
     initialize(range1, width1, range2, width2);
 
 }
 
-void Histrogram2D::update(double value1, double value2) {
+void Histogram2D::update(double value1, double value2) {
     int ibin1 = int((value1 - dimension1_range.first) / dimension1_width) + 1;
     int ibin2 = int((value2 - dimension2_range.first) / dimension2_width) + 1;
 
@@ -19,12 +19,12 @@ void Histrogram2D::update(double value1, double value2) {
     }
 }
 
-void Histrogram2D::update(std::pair<double, double> value_pair) {
+void Histogram2D::update(std::pair<double, double> value_pair) {
     auto [value1, value2] = value_pair;
     update(value1,value2);
 }
 
-std::vector<std::tuple<double, double, double>> Histrogram2D::getDistribution() const {
+std::vector<std::tuple<double, double, double>> Histogram2D::getDistribution() const {
     std::vector<std::tuple<double, double, double>> distribution;
     for (int ibin1 = 1; ibin1 <= dimension1_bins; ibin1++) {
         for (int ibin2 = 1; ibin2 <= dimension2_bins; ibin2++) {
@@ -37,8 +37,8 @@ std::vector<std::tuple<double, double, double>> Histrogram2D::getDistribution() 
     return distribution;
 }
 
-void Histrogram2D::initialize(const std::pair<double, double> &range1, double width1,
-                              const std::pair<double, double> &range2, double width2) {
+void Histogram2D::initialize(const std::pair<double, double> &range1, double width1,
+                             const std::pair<double, double> &range2, double width2) {
     dimension1_range = range1;
     dimension1_width = width1;
 
@@ -59,6 +59,6 @@ void Histrogram2D::initialize(const std::pair<double, double> &range1, double wi
     }
 }
 
-void Histrogram2D::initialize(double range1_max, double width1, double range2_max, double width2) {
+void Histogram2D::initialize(double range1_max, double width1, double range2_max, double width2) {
     initialize({0.0, range1_max}, width1, {0.0, range2_max}, width2);
 }

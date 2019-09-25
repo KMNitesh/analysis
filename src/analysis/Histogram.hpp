@@ -2,18 +2,18 @@
 // Created by xiamr on 7/4/19.
 //
 
-#ifndef TINKER_HISTROGRAM_HPP
-#define TINKER_HISTROGRAM_HPP
+#ifndef TINKER_HISTOGRAM_HPP
+#define TINKER_HISTOGRAM_HPP
 
 #include <utility>
 #include <vector>
 #include <map>
 
-class Histrogram {
+class Histogram {
 public:
-    Histrogram(std::pair<double, double> dimension_range, double width);
+    Histogram(std::pair<double, double> dimension_range, double width);
 
-    Histrogram() = default;
+    Histogram() = default;
 
     void update(double value);
 
@@ -35,4 +35,4 @@ public:
 };
 
 
-#endif //TINKER_HISTROGRAM_HPP
+#endif //TINKER_HISTOGRAM_HPP

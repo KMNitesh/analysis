@@ -9,7 +9,7 @@
 #include "LocalStructureIndex.hpp"
 #include "frame.hpp"
 #include "common.hpp"
-#include "Histrogram2D.hpp"
+#include "Histogram2D.hpp"
 
 LocalStructureIndex::LocalStructureIndex() {
     enable_outfile = true;
@@ -78,7 +78,7 @@ void LocalStructureIndex::print(std::ostream &os) {
             std::begin(localStructureIndices), std::end(localStructureIndices),
             [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); });
 
-    Histrogram2D histrogram2D(
+    Histogram2D histrogram2D(
             {LSI_min_iter->second, LSI_max_iter->second}, (LSI_max_iter->second - LSI_min_iter->second) / 100,
             {RMax_min_iter->first, RMax_max_iter->first}, (RMax_max_iter->first - RMax_min_iter->first) / 100);
 
