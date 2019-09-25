@@ -220,7 +220,7 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             ConvertVelocityToVelocityCharge
     >;
 
-    using noeMenu = mpl::vector<NMRRange>;
+    using nmrMenu = mpl::vector<NMRRange>;
 
     using otherUtilsMenu = mpl::vector<
             DynFrameFind,
@@ -237,7 +237,7 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             hydrogenBondMenu,
             biphaseSystemMenu,
             spectraMenu,
-            noeMenu,
+            nmrMenu,
             otherUtilsMenu
     >;
 
@@ -253,14 +253,14 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             "Other Utils"
     };
 
-    std::vector<std::function<std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>>()>> task_vec;
+    std::vector<std::function<std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>>()>> menu_functions;
     std::vector<string> item_menu;
 
-    mpl::for_each<mainMenu, boost::type<mpl::_>>([&task_vec, &item_menu, &menuString](auto t) {
+    mpl::for_each<mainMenu, boost::type<mpl::_>>([&menu_functions, &item_menu, &menuString](auto t) {
         using T = typename decltype(boost_type(t))::type;
-        auto title = menuString[task_vec.size()];
-        task_vec.emplace_back([title] { return subMenu<T>(title); });
-        item_menu.emplace_back((boost::format("(%d) %s") % task_vec.size() % title).str());
+        auto title = menuString[menu_functions.size()];
+        menu_functions.emplace_back([title] { return subMenu<T>(title); });
+        item_menu.emplace_back((boost::format("(%d) %s") % menu_functions.size() % title).str());
     });
 
     auto menu1 = [&item_menu]() {
@@ -273,7 +273,7 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
     while (true) {
         int num = menu1();
         if (num == 0) return task_list;
-        auto tasks = task_vec[num - 1]();
+        auto tasks = menu_functions[num - 1]();
         task_list->splice(task_list->end(), *tasks);
     }
 }
