@@ -764,6 +764,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
     }
 
+    auto time_before_process = std::chrono::steady_clock::now();
     if (parallel_while_task) {
         task_list->remove(parallel_while_task);
         parallel_while_task->do_parallel_while([&] {
@@ -773,9 +774,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
     } else {
         while (getFrame(task_list, start, step_size, total_frames, reader));
     }
+    auto time_after_process = std::chrono::steady_clock::now();
+
     std::cout << '\n';
-
-
     if (outfile.is_open()) {
         outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
@@ -787,7 +788,12 @@ void processTrajectory(const boost::program_options::options_description &desc,
     for (auto &task : *task_list) {
         task->print(outfile);
     }
-    std::cout << "Mission Complete" << std::endl;
+
+    auto time_after_print = std::chrono::steady_clock::now();
+    std::cout << "(:  Mission Complete  :)\n";
+    std::cout << "Frame process time = " << chrono_cast(time_after_process - time_before_process) << '\n';
+    std::cout << "  Postprocess time = " << chrono_cast(time_after_print - time_after_process) << '\n';
+    std::cout << "        Total time = " << chrono_cast(time_after_print - time_before_process) << '\n';
 }
 
 std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list,
