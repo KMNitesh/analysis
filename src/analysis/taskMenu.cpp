@@ -107,95 +107,173 @@ namespace {
 
         boost_type(boost::type<T>) {};
     };
+
+    template<typename components>
+    std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> subMenu(const std::string &title) {
+
+        auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
+
+        BOOST_MPL_ASSERT((mpl::equal<typename mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
+
+        std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
+        std::vector<string> item_menu;
+
+        mpl::for_each<components, boost::type<mpl::_>>([&task_vec, &item_menu](auto t) {
+            using T = typename decltype(boost_type(t))::type;
+            task_vec.emplace_back(bind(make_shared<T>));
+            item_menu.emplace_back((boost::format("(%d) %s") % task_vec.size() % T::title()).str());
+        });
+
+        auto menu1 = [&item_menu, &title]() {
+            std::cout << title << std::endl;
+            std::cout << "(0) Return to Main Menu\n";
+            for_each(item_menu.cbegin(), item_menu.cend(), std::cout << boost::phoenix::placeholders::_1 << '\n');
+            return choose<int>(0, mpl::size<components>::value, "select : ");
+        };
+        while (true) {
+            int num = menu1();
+            if (num == 0) return task_list;
+            shared_ptr<BasicAnalysis> task = task_vec[num - 1]();
+
+            string line(item_menu[num - 1].size() + 6, '-');
+
+            std::cout << line << "\n";
+            std::cout << "<- " << item_menu[num - 1] << " ->\n";
+            std::cout << line << "\n";
+            task->readInfo();
+            task_list->push_back(task);
+        }
+    }
 }
+
 
 std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
     auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
 
-    using components = mpl::vector<
-            Trajconv,
-            Distance,
-            CoordinateNumPerFrame,
-            RadicalDistribtuionFunction,
-            ResidenceTime,
-            GreenKubo,
-            HBond,
-            RMSDCal,
-            RMSFCal,
-            Cluster,
-            NMRRange,
-            Diffuse,
-            DiffuseCutoff,
-            FirstCoordExchangeSearch,
-            RotAcfCutoff,
+    using angleDistributionMenu = mpl::vector<
             DipoleAngle,
             DipoleAngle2Gibbs,
             DipoleAngleSingleDistanceNormal,
             DipoleAngleVolumeNormal,
-            ShellDensity,
-            SearchInteractionResidue,
-            FindMinBetweenTwoGroups,
-            DemixIndexOfTwoGroup,
             DipoleAngleWithDistanceRange,
             DipoleAxisDistribution,
             EquatorialAngle,
             PlaneAngle,
             AngleWat,
-            RotAcf,
             DistanceAngle,
             DipoleAngleAxis3D,
-            DynFrameFind,
             SpatialOrientationDistribution,
-            AngleDistributionBetweenTwoVectorWithCutoff,
-            HBondLifeTime,
-            HBondLifeTimeCutoff,
-            HBondSpread,
-            IRSpectrum,
-            VelocityAutocorrelationFunction,
-            IRSpectrumElectricalFlux,
-            DensityOfStates,
-            ConvertVelocityToVelocityCharge,
-            IRSpectrumDeltaDipole,
-            ClusterVolume,
+            AngleDistributionBetweenTwoVectorWithCutoff
+    >;
+
+    using structurePropertyMenu = mpl::vector<
+            Distance,
+            CoordinateNumPerFrame,
+            RadicalDistribtuionFunction,
+            RMSDCal,
+            RMSFCal,
+            Cluster,
+            ShellDensity,
             OrientationResolvedRadialDistributionFunction,
-            ConditionalTimeCorrelationFunction,
             RadiusOfGyration,
-            HBondLifeTimeContinuous,
-            HBondLifeTimeCutoffContinuous,
-            SspResidenceTime,
             CoordinationStructureClassification,
             LocalStructureIndex,
             LocalStructureIndexForLiquid
     >;
 
-    BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
+    using hydrogenBondMenu  = mpl::vector<
+            HBond,
+            HBondLifeTime,
+            HBondLifeTimeContinuous,
+            HBondLifeTimeCutoff,
+            HBondLifeTimeCutoffContinuous,
+            HBondSpread
+    >;
 
-    std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
+    using dynamicsPropertyMenu = mpl::vector<
+            ResidenceTime,
+            SspResidenceTime,
+            Diffuse,
+            GreenKubo,
+            DiffuseCutoff,
+            VelocityAutocorrelationFunction,
+            RotAcf,
+            RotAcfCutoff,
+            ConditionalTimeCorrelationFunction
+    >;
+
+    using biphaseSystemMenu = mpl::vector<
+            DemixIndexOfTwoGroup,
+            ClusterVolume
+    >;
+
+
+    using spectraMenu = mpl::vector<
+            IRSpectrum,
+            IRSpectrumElectricalFlux,
+            IRSpectrumDeltaDipole,
+            DensityOfStates
+    >;
+
+    using trajectoryTransformationMenu = mpl::vector<
+            Trajconv,
+            ConvertVelocityToVelocityCharge
+    >;
+
+    using noeMenu = mpl::vector<NMRRange>;
+
+    using otherUtilsMenu = mpl::vector<
+            DynFrameFind,
+            SearchInteractionResidue,
+            FindMinBetweenTwoGroups,
+            FirstCoordExchangeSearch
+    >;
+
+    using mainMenu = mpl::vector<
+            trajectoryTransformationMenu,
+            structurePropertyMenu,
+            dynamicsPropertyMenu,
+            angleDistributionMenu,
+            hydrogenBondMenu,
+            biphaseSystemMenu,
+            spectraMenu,
+            noeMenu,
+            otherUtilsMenu
+    >;
+
+    std::vector<std::string> menuString{
+            "Trajectory Transformation",
+            "Structure Properties",
+            "Dynamic Properties",
+            "Various Angle Distribution",
+            "Hydrogen Bond",
+            "Biphase System",
+            "Spetra",
+            "NMR",
+            "Other Utils"
+    };
+
+    std::vector<std::function<std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>>()>> task_vec;
     std::vector<string> item_menu;
 
-    mpl::for_each<components, boost::type<mpl::_>>([&task_vec, &item_menu](auto t) {
+    mpl::for_each<mainMenu, boost::type<mpl::_>>([&task_vec, &item_menu, &menuString](auto t) {
         using T = typename decltype(boost_type(t))::type;
-        task_vec.emplace_back(bind(make_shared<T>));
-        item_menu.emplace_back((boost::format("(%d) %s") % task_vec.size() % T::title()).str());
+        auto title = menuString[task_vec.size()];
+        task_vec.emplace_back([title] { return subMenu<T>(title); });
+        item_menu.emplace_back((boost::format("(%d) %s") % task_vec.size() % title).str());
     });
 
     auto menu1 = [&item_menu]() {
-        std::cout << "Please select the desired operation (Trajectory Analysis)" << std::endl;
-        std::cout << "(0) Start\n";
+        std::cout << "--- Trajectory Analysis ---" << std::endl;
+        std::cout << "(0) Start...\n";
         for_each(item_menu.cbegin(), item_menu.cend(), std::cout << boost::phoenix::placeholders::_1 << '\n');
-        return choose<int>(0, mpl::size<components>::value, "select : ");
+        return choose<int>(0, mpl::size<mainMenu>::value, "select : ");
     };
+
     while (true) {
         int num = menu1();
         if (num == 0) return task_list;
-        shared_ptr<BasicAnalysis> task = task_vec[num - 1]();
-
-        string line(item_menu[num - 1].size() + 6, '-');
-
-        std::cout << line << "\n";
-        std::cout << "<- " << item_menu[num - 1] << " ->\n";
-        std::cout << line << "\n";
-        task->readInfo();
-        task_list->push_back(task);
+        auto tasks = task_vec[num - 1]();
+        task_list->splice(task_list->end(), *tasks);
     }
 }
