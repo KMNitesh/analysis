@@ -88,8 +88,8 @@ public:
     };
 
 
-    static std::vector<Cluster::conf_clust>
-    do_cluster(const std::list<rmsd_matrix> &rmsd_list, int conf_size, double cutoff);
+    template<typename ForwardRange>
+    static std::vector<Cluster::conf_clust> do_cluster(const ForwardRange &rmsd_list, int conf_size, double cutoff);
 
     static int do_sort_and_renumber_parallel(std::vector<conf_clust> &conf_clust_vector);
 

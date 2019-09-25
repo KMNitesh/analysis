@@ -12,6 +12,7 @@
 #include "Histrogram2D.hpp"
 #include "molecule.hpp"
 #include "LocalStructureIndex.hpp"
+#include "Histrogram.hpp"
 
 LocalStructureIndexForLiquid::LocalStructureIndexForLiquid() {
     enable_outfile = true;
@@ -67,8 +68,11 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
             {LSI_min_iter->second, LSI_max_iter->second}, (LSI_max_iter->second - LSI_min_iter->second) / 100,
             {Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
 
+    Histrogram histrogram({Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
+
     for (auto[ri, lsi] : localStructureIndices) {
         histrogram2D.update(lsi, ri);
+        histrogram.update(ri);
     }
 
     os << boost::format("%15s %15s %15s\n")
@@ -81,7 +85,21 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
             distribution, [](auto &lhs, auto &rhs) { return std::get<2>(lhs) < std::get<2>(rhs); }));
 
     for (auto[ri, lsi, population] : distribution) {
-        os << boost::format("%15.6d %15.6f %15.6f\n") % ri % lsi % (population / max_population);
+        os << boost::format("%15.6f %15.6f %15.6f\n") % ri % lsi % (population / max_population);
+    }
+
+    os << std::string(50, '#') << '\n';
+
+    auto ri_distribution = histrogram.getDistribution();
+
+    auto ri_max_population = std::get<1>(*boost::max_element(
+            ri_distribution, [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); }));
+
+    os << boost::format("%15s %15s\n")
+          % ("R" + std::to_string(r_index) + "(Ang)")
+          % "Normalized Probability Density";
+    for (auto[ri, population] : ri_distribution) {
+        os << boost::format("%15.6f %15.6f\n") % ri % (population / ri_max_population);
     }
 }
 

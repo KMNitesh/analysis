@@ -227,7 +227,8 @@ void Cluster::do_sort_clust_parallel(vector<Cluster::conf_clust> &conf_clust_vec
  *
  */
 
-vector<Cluster::conf_clust> Cluster::do_cluster(const list<rmsd_matrix> &rmsd_list, int conf_size, double cutoff) {
+template<typename ForwardRange>
+vector<Cluster::conf_clust> Cluster::do_cluster(const ForwardRange &rmsd_list, int conf_size, double cutoff) {
     vector<Cluster::conf_clust> c = initialize_conf_clust_vector(conf_size);
 
     // The algorithm of below code block comes from gromacs
@@ -250,6 +251,8 @@ vector<Cluster::conf_clust> Cluster::do_cluster(const list<rmsd_matrix> &rmsd_li
     /////////////////////////////////////////
     return c;
 }
+
+template vector<Cluster::conf_clust> Cluster::do_cluster(const list<rmsd_matrix> &, int, double);
 
 vector<Cluster::conf_clust> Cluster::initialize_conf_clust_vector(int conf_size) {
     vector<conf_clust> c;
