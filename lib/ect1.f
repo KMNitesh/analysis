@@ -55,6 +55,14 @@ c
          write(*,*) "Charge Tranfer Terms :",nct
       end if
 
+c
+c     set OpenMP directives for the major loop structure
+c
+!$OMP PARALLEL default(private) shared(nct,ia_ct,ib_ct,mut,use,
+!$OMP& x,y,z,ct_miu,ct_eta,ct_qct,ct_r1,ct_r2)
+!$OMP& shared(ect,dect,vir)
+!$OMP DO reduction(+:ect,dect,vir) schedule(guided)
+
       do i = 1, nct
          ia = ia_ct(i)
          ib = ib_ct(i)
@@ -143,6 +151,11 @@ c
             end if
          end if
       end do
+c
+c     end OpenMP directives for the major loop structure
+c
+!$OMP END DO
+!$OMP END PARALLEL
 
       return
       end
