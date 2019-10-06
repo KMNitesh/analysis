@@ -1,5 +1,9 @@
 ## Molecular dynamics trajectory analysis package for Tinker & Gromacs software
 
+#### Archtecture
+<img src="doc/Architecture.png" alt="Software Architecture" title="Software Architecture" width="700" height="503" />
+
+
 #### Function enhancement to MD Engine
 
 1. add discrete charge transfer term to AMOEBA polarizable force field
@@ -35,6 +39,10 @@
                            GROMACS library ( for reading and writting Gromacs topology and trajectory file ),
                            Google Test ( for unit test ),
                            Eigen 3.3 ( C++ template library for linear algebra )
+                           
+#### ExecutionFlow
+<img src="doc/ExecutionFlow.png" alt="Software Execution Flow" title="Software Execution Flow" width="700" height="285" />
+
 
                            
 
