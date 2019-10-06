@@ -54,7 +54,8 @@ protected:
 
     void normalize();
 
-    void write(std::ostream &os) const;
+    double temperature;  // unit: K
+
 };
 
 

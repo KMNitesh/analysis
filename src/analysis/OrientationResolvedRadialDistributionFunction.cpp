@@ -60,19 +60,20 @@ void OrientationResolvedRadialDistributionFunction::print(std::ostream &os) {
     os << "# distance_width(Ang) > " << distance_width << '\n';
     os << "# angle_width(deg) > " << angle_width * 180 / M_PI << '\n';
     os << "# max_distance(Ang) > " << max_distance << '\n';
+    os << "# Temperature(K) > " << temperature << '\n';
     os << std::string(50, '#') << '\n';
-    os << format("#%15s %15s %15s\n", "Distance(Ang)", "Angle(degree)", "g(r,theta)");
-    write(os);
-}
 
-void OrientationResolvedRadialDistributionFunction::write(std::ostream &os) const {
-    // write r bin centers
-    for (int i = 0; i < this->distance_bins; ++i) {
-        for (int j = 0; j < this->angle_bins; ++j) {
-            os << boost::format("%15.6f %15.6f %15.6f\n")
-                  % ((i + 0.5) * this->distance_width)
-                  % ((j + 0.5) * 180.0 * this->angle_width / M_PI)
-                  % hist[j][i];
+    const double factor = -kb * temperature * avogadro_constant / 4184.0;
+    double max_value = *std::max_element(hist.origin(), hist.origin() + hist.num_elements());
+    os << format("#%15s %15s %15s %15s\n", "Distance(Ang)", "Angle(degree)", "g(r,theta)", "Energy(kcal/mol)");
+    for (int i = 0; i < distance_bins; ++i) {
+        for (int j = 0; j < angle_bins; ++j) {
+            double pop = hist[j][i] / max_value;
+            os << boost::format("%15.6f %15.6f %15.6f %15.6f\n")
+                  % ((i + 0.5) * distance_width)
+                  % ((j + 0.5) * 180.0 * angle_width / M_PI)
+                  % hist[j][i]
+                  % (pop == 0.0 ? 100.0 : factor * log(pop));
         }
     }
 }
@@ -126,4 +127,6 @@ void OrientationResolvedRadialDistributionFunction::readInfo() {
 
     hist.resize(boost::extents[angle_bins][distance_bins]);
     std::fill_n(hist.data(), hist.num_elements(), 0);
+
+    temperature = choose(0.0, 10000.0, "Temperature [298] (K):", Default(298.0));
 }
