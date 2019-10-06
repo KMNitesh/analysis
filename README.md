@@ -1,6 +1,6 @@
 ## Molecular dynamics trajectory analysis package for Tinker & Gromacs software
 
-#### Archtecture
+#### Architecture
 <img src="doc/Architecture.png" alt="Software Architecture" title="Software Architecture" width="700" height="503" />
 
 
