@@ -40,7 +40,7 @@
                            Google Test ( for unit test ),
                            Eigen 3.3 ( C++ template library for linear algebra )
                            
-#### ExecutionFlow
+#### Execution Flow
 <img src="doc/ExecutionFlow.png" alt="Software Execution Flow" title="Software Execution Flow" width="700" height="285" />
 
 
