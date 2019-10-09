@@ -50,6 +50,9 @@ public:
     static double rmsfit(double x1[], double y1[], double z1[],
                          double x2[], double y2[], double z2[], int n_rms_calc);
 
+    static double rms_max(double x1[], double y1[], double z1[],
+                          double x2[], double y2[], double z2[], int n_rms_calc);
+
     static void jacobi(int n, double a[4][4], double d[], double v[4][4]);
 
     static void quatfit(int n1, double x1[], double y1[], double z1[],

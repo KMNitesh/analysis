@@ -218,7 +218,7 @@ CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::
 
             RMSDCal::quatfit(c1.size() + 1, x1, y1, z1, c1.size() + 1, x2, y2, z2, c1.size() + 1);
 
-            rmsd_value = std::min(rmsd_value, RMSDCal::rmsfit(x1, y1, z1, x2, y2, z2, c1.size() + 1));
+            rmsd_value = std::min(rmsd_value, RMSDCal::rms_max(x1, y1, z1, x2, y2, z2, c1.size() + 1));
         }
     }
     return rmsd_value;

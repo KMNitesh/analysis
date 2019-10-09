@@ -215,6 +215,22 @@ double RMSDCal::rmsfit(double x1[], double y1[], double z1[],
     return sqrt(fit / norm);
 }
 
+
+double RMSDCal::rms_max(double x1[], double y1[], double z1[],
+                        double x2[], double y2[], double z2[], int n_rms_calc) {
+
+    double xr, yr, zr, dist2;
+    double rms2 = 0.0;
+    for (int i = 0; i < n_rms_calc; ++i) {
+        xr = x1[i] - x2[i];
+        yr = y1[i] - y2[i];
+        zr = z1[i] - z2[i];
+        dist2 = xr * xr + yr * yr + zr * zr;
+        rms2 = std::max(rms2, dist2);
+    }
+    return std::sqrt(rms2);
+}
+
 void RMSDCal::jacobi(int n, double a[4][4], double d[], double v[4][4]) {
     // taken from tinker
 
