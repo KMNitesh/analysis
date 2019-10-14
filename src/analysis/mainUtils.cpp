@@ -777,20 +777,28 @@ void processTrajectory(const boost::program_options::options_description &desc,
     auto time_after_process = std::chrono::steady_clock::now();
 
     std::cout << '\n';
+
+    std::stringstream ss;
+    for (auto &task : *task_list) {
+        task->print(ss);
+    }
+
+    auto time_after_print = std::chrono::steady_clock::now();
+    auto finish_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    auto finish_time_format = std::put_time(std::localtime(&finish_time), "%F %T");
+
     if (outfile.is_open()) {
+        outfile << "#  Finish Time  > " << finish_time_format << '\n';
         outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
         outfile << "#  start frame  > " << start << '\n';
         outfile << "#  step (frame) > " << step_size << '\n';
         outfile << "#  end   frame  > " << (total_frames == 0 ? "all" : std::to_string(total_frames)) << '\n';
+        std::copy(std::istreambuf_iterator<char>(ss), std::istreambuf_iterator<char>(),
+                  std::ostreambuf_iterator<char>(outfile));
     }
 
-    for (auto &task : *task_list) {
-        task->print(outfile);
-    }
-
-    auto time_after_print = std::chrono::steady_clock::now();
-    std::cout << "(:  Mission Complete  :)\n";
+    std::cout << "(:  Mission Complete  :)   Finish Time  >>> " << finish_time_format << " <<<\n";
     std::cout << "Frame process time = " << chrono_cast(time_after_process - time_before_process) << '\n';
     std::cout << "  Postprocess time = " << chrono_cast(time_after_print - time_after_process) << '\n';
     std::cout << "        Total time = " << chrono_cast(time_after_print - time_before_process) << '\n';
@@ -798,7 +806,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
 
 std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list,
                                 const int start, const int step_size, const int total_frames,
-                                shared_ptr<TrajectoryReader> &reader) {
+                                std::shared_ptr<TrajectoryReader> &reader) {
     static int current_frame_num = 0;
     std::shared_ptr<Frame> frame;
     while ((frame = reader->readOneFrame())) {
