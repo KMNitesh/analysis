@@ -13,6 +13,7 @@
 #include <boost/program_options.hpp>
 #include <boost/type_index.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <boost/range/join.hpp>
 
 namespace po = boost::program_options;
 
@@ -515,52 +516,52 @@ auto combine_seq(std::initializer_list<T> &&iter) {
 
 
 template<typename T>
-T dot_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+auto dot_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     return std::get<0>(lhs) * std::get<0>(rhs) +
            std::get<1>(lhs) * std::get<1>(rhs) +
            std::get<2>(lhs) * std::get<2>(rhs);
 }
 
 template<typename T>
-T dot_multiplication(const T &lhs, const T &rhs) {
+auto dot_multiplication(const T &lhs, const T &rhs) {
     return lhs * rhs;
 }
 
 
 template<typename T>
-std::tuple<T, T, T> cross_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+auto cross_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     auto[u1, u2, u3] = lhs;
     auto[v1, v2, v3] = rhs;
-    return {u2 * v3 - u3 * v2, u1 * v3 - u3 * v1, u1 * v2 - u2 * v1};
+    return std::make_tuple(u2 * v3 - u3 * v2, u1 * v3 - u3 * v1, u1 * v2 - u2 * v1);
 }
 
 template<typename T>
-T vector_norm2(const std::tuple<T, T, T> &vector1) {
+auto vector_norm2(const std::tuple<T, T, T> &vector1) {
     auto[u1, u2, u3] = vector1;
     return u1 * u1 + u2 * u2 + u3 * u3;
 }
 
 template<typename T>
-T vector_norm(const std::tuple<T, T, T> &vector1) {
+auto vector_norm(const std::tuple<T, T, T> &vector1) {
     return std::sqrt(vector_norm2(vector1));
 }
 
 template<typename T>
-std::tuple<T, T, T> operator-(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
-    return {std::get<0>(lhs) - std::get<0>(rhs),
-            std::get<1>(lhs) - std::get<1>(rhs),
-            std::get<2>(lhs) - std::get<2>(rhs)};
+auto operator-(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+    return std::make_tuple(std::get<0>(lhs) - std::get<0>(rhs),
+                           std::get<1>(lhs) - std::get<1>(rhs),
+                           std::get<2>(lhs) - std::get<2>(rhs));
 }
 
 template<typename T>
-std::tuple<T, T, T> operator+(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
-    return {std::get<0>(lhs) + std::get<0>(rhs),
-            std::get<1>(lhs) + std::get<1>(rhs),
-            std::get<2>(lhs) + std::get<2>(rhs)};
+auto operator+(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+    return std::make_tuple(std::get<0>(lhs) + std::get<0>(rhs),
+                           std::get<1>(lhs) + std::get<1>(rhs),
+                           std::get<2>(lhs) + std::get<2>(rhs));
 }
 
 template<typename T>
-std::tuple<T, T, T> &operator+=(std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+auto &operator+=(std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     std::get<0>(lhs) += std::get<0>(rhs);
     std::get<1>(lhs) += std::get<1>(rhs);
     std::get<2>(lhs) += std::get<2>(rhs);
@@ -568,42 +569,42 @@ std::tuple<T, T, T> &operator+=(std::tuple<T, T, T> &lhs, const std::tuple<T, T,
 }
 
 template<typename T>
-std::tuple<T, T, T> &operator-=(std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+auto &operator-=(std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     std::get<0>(lhs) -= std::get<0>(rhs);
     std::get<1>(lhs) -= std::get<1>(rhs);
     std::get<2>(lhs) -= std::get<2>(rhs);
     return lhs;
 }
 
-template<typename T>
-std::tuple<T, T, T> operator/(const std::tuple<T, T, T> &vector1, T norm) {
-    return {std::get<0>(vector1) / norm,
-            std::get<1>(vector1) / norm,
-            std::get<2>(vector1) / norm};
+template<typename T1, typename T2>
+auto operator/(const std::tuple<T1, T1, T1> &vector1, T2 norm) {
+    return std::make_tuple(std::get<0>(vector1) / norm,
+                           std::get<1>(vector1) / norm,
+                           std::get<2>(vector1) / norm);
 }
 
-template<typename T>
-std::tuple<T, T, T> &operator/=(std::tuple<T, T, T> &vector1, T norm) {
+template<typename T1, typename T2>
+auto &operator/=(std::tuple<T1, T1, T1> &vector1, T2 norm) {
     std::get<0>(vector1) /= norm;
     std::get<1>(vector1) /= norm;
     std::get<2>(vector1) /= norm;
     return vector1;
 }
 
-template<typename T>
-std::tuple<T, T, T> operator*(T norm, const std::tuple<T, T, T> &vector1) {
-    return {std::get<0>(vector1) * norm,
-            std::get<1>(vector1) * norm,
-            std::get<2>(vector1) * norm};
+template<typename T1, typename T2>
+auto operator*(T1 norm, const std::tuple<T2, T2, T2> &vector1) {
+    return std::make_tuple(std::get<0>(vector1) * norm,
+                           std::get<1>(vector1) * norm,
+                           std::get<2>(vector1) * norm);
 }
 
-template<typename T>
-std::tuple<T, T, T> operator*(const std::tuple<T, T, T> &vector1, T norm) {
+template<typename T1, typename T2>
+auto operator*(const std::tuple<T1, T1, T1> &vector1, T2 norm) {
     return norm * vector1;
 }
 
-template<typename T>
-std::tuple<T, T, T> &operator*=(std::tuple<T, T, T> &vector1, T norm) {
+template<typename T1, typename T2>
+auto &operator*=(std::tuple<T1, T1, T1> &vector1, T2 norm) {
     std::get<0>(vector1) *= norm;
     std::get<1>(vector1) *= norm;
     std::get<2>(vector1) *= norm;
@@ -648,5 +649,25 @@ std::string getTrajectoryFilename(const po::variables_map &vm);
 std::string getPrmFilename(const po::variables_map &vm);
 
 std::size_t getDefaultVectorReserve();
+
+
+struct join_type {
+    template<class C>
+    auto operator()(C &&c) const {
+        return boost::make_iterator_range(std::begin(c), std::end(c));
+    }
+
+    template<typename First, typename Second, typename... Rest>
+    auto operator()(First &&first, Second &&second, Rest &&... rest) const {
+        return (*this)(boost::range::join(boost::make_iterator_range(std::begin(first), std::end(first)),
+                                          boost::make_iterator_range(std::begin(second), std::end(second))),
+                       std::forward<Rest>(rest)...);
+    }
+};
+
+template<typename... Args>
+auto join(Args &&... args) {
+    return join_type()(std::forward<Args>(args)...);
+}
 
 #endif //TINKER_COMMON_HPP

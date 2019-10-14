@@ -38,34 +38,14 @@ public:
 private:
 
     Atom::AmberMask ids;
-    std::unordered_set<std::shared_ptr<Atom>> group;
+    std::vector<std::shared_ptr<Atom>> group;
 
 
     double cutoff = 0.0;
     int steps = 0; // current frame number
     std::map<std::pair<int, int>, double> rmsd_map;
 
-    double rmsfit(double x1[], double y1[], double z1[],
-                  double x2[], double y2[], double z2[], int nfit) {
-        return RMSDCal::rmsfit(x1, y1, z1, x2, y2, z2, nfit);
-    }
-
-    void jacobi(int n, double a[4][4], double d[], double v[4][4]) {
-        RMSDCal::jacobi(n, a, d, v);
-    }
-
-    void quatfit(int n1, double x1[], double y1[], double z1[],
-                 int n2, double x2[], double y2[], double z2[], int nfit) {
-        RMSDCal::quatfit(n1, x1, y1, z1, n2, x2, y2, z2, nfit);
-    }
-
-    void center(int n1, double x1[], double y1[], double z1[],
-                int n2, double x2[], double y2[], double z2[],
-                double mid[], int nfit) {
-        RMSDCal::center(n1, x1, y1, z1, n2, x2, y2, z2, mid, nfit);
-    }
-
-    std::map<int, std::map<int, double>> x, y, z;
+    std::vector<std::vector<std::tuple<double, double, double>>> coords;
 
     double rmsvalue(int index1, int index2);
 

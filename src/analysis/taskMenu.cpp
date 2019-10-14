@@ -98,6 +98,7 @@ namespace mpl = boost::mpl;
 #include "CoordinationStructureClassification.hpp"
 #include "LocalStructureIndex.hpp"
 #include "LocalStructureIndexForLiquid.hpp"
+#include "CoordinationStructureMatch.hpp"
 
 using namespace std;
 namespace {
@@ -177,6 +178,7 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             OrientationResolvedRadialDistributionFunction,
             RadiusOfGyration,
             CoordinationStructureClassification,
+            CoordinationStructureMatch,
             LocalStructureIndex,
             LocalStructureIndexForLiquid
     >;
