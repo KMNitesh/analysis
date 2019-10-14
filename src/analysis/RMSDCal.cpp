@@ -8,25 +8,35 @@
 #include "RMSDCal.hpp"
 #include "frame.hpp"
 
+RMSDCal::RMSDCal() {
+    enable_outfile = true;
+}
+
 void RMSDCal::process(std::shared_ptr<Frame> &frame) {
     rmsds.push_back(rmsvalue(frame));
 }
 
 void RMSDCal::print(std::ostream &os) {
-    os << "***************************\n";
-    os << "****** RMSD Calculator ****\n";
+    if (writer) writer->close();
+    os << std::string(50, '#') << '\n';
+    os << "# " << title() << " # \n";
     os << "# AmberMask for superpose : " << mask_for_superpose << '\n';
     os << "# AmberMask for rms calc  : " << mask_for_rmscalc << '\n';
-    os << "***************************\n";
-    for (const auto &ele : rmsds | boost::adaptors::indexed(1)) {
-        os << ele.index() << "     " << ele.value() << '\n';
+    os << std::string(50, '#') << '\n';
+    os << boost::format("#%15s %15s\n") % "Frame" % "RMSD(Ang)";
+    for (const auto &element : rmsds | boost::adaptors::indexed(1)) {
+        os << boost::format(" %15d %15.8f\n") % element.index() % element.value();
     }
-    os << "***************************\n";
 }
 
 void RMSDCal::readInfo() {
     Atom::select1group(mask_for_superpose, "Please enter atoms for superpose > ");
     Atom::select1group(mask_for_rmscalc, "Please enter atoms for rms calc  > ");
+    if (choose_bool("Output suprposed structure [N] >", Default(false))) {
+        writer = std::make_unique<XTCWriter>();
+        writer->open(choose_file("Enter xtc filename for output superposed structures > ").extension("xtc"));
+    }
+
 }
 
 
@@ -38,74 +48,47 @@ double RMSDCal::rmsvalue(std::shared_ptr<Frame> &frame) {
     if (first_frame) {
         first_frame = false;
         save_frame_coord(x1, y1, z1, frame);
+        double mid[3];
+        center(n_rms_calc, x1, y1, z1, mid, nfit);
         return 0.0;
     }
 
     save_frame_coord(x2, y2, z2, frame);
 
     double mid[3];
-    center(nfit, x1, y1, z1, nfit, x2, y2, z2, mid, nfit);
+    center(n_rms_calc, x2, y2, z2, mid, nfit);
 
     quatfit(n_rms_calc, x1, y1, z1, n_rms_calc, x2, y2, z2, nfit);
 
+    if (rmsds.size() == 1) save_superposed_frame(x1, y1, z1, frame);
+
+    save_superposed_frame(x2, y2, z2, frame);
     return rmsfit(x1, y1, z1, x2, y2, z2, n_rms_calc);
 }
 
 void RMSDCal::save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame) const {
-    int index = 0;
-    bool first_atom = true;
-    double first_x, first_y, first_z;
-    for (auto &atom : atoms_for_superpose) {
-        if (first_atom) {
-            first_atom = false;
-            first_x = x[index] = atom->x;
-            first_y = y[index] = atom->y;
-            first_z = z[index] = atom->z;
+    for (const auto &element : join(atoms_for_superpose, atoms_for_rmscalc) | boost::adaptors::indexed()) {
+        if (element.index() == 0) {
+            x[element.index()] = element.value()->x;
+            y[element.index()] = element.value()->y;
+            z[element.index()] = element.value()->z;
         } else {
-            double xr = atom->x - first_x;
-            double yr = atom->y - first_y;
-            double zr = atom->z - first_z;
+            double xr = element.value()->x - x[0];
+            double yr = element.value()->y - y[0];
+            double zr = element.value()->z - z[0];
             frame->image(xr, yr, zr);
-            x[index] = first_x + xr;
-            y[index] = first_y + yr;
-            z[index] = first_z + zr;
+            x[element.index()] = x[0] + xr;
+            y[element.index()] = y[0] + yr;
+            z[element.index()] = z[0] + zr;
         }
-        index++;
-    }
-    for (auto &atom : atoms_for_rmscalc) {
-        double xr = atom->x - first_x;
-        double yr = atom->y - first_y;
-        double zr = atom->z - first_z;
-        frame->image(xr, yr, zr);
-        x[index] = first_x + xr;
-        y[index] = first_y + yr;
-        z[index] = first_z + zr;
-        index++;
     }
 }
 
 void RMSDCal::center(int n1, double x1[], double y1[], double z1[],
-                     int n2, double x2[], double y2[], double z2[],
                      double mid[], int nfit) {
-    mid[0] = mid[1] = mid[2] = 0.0;
-    double norm = 0.0;
-    for (int i = 0; i < nfit; ++i) {
-        mid[0] += x2[i];
-        mid[1] += y2[i];
-        mid[2] += z2[i];
-        norm += 1.0;
-    }
-    mid[0] /= norm;
-    mid[1] /= norm;
-    mid[2] /= norm;
-    for (int i = 0; i < n2; ++i) {
-        x2[i] -= mid[0];
-        y2[i] -= mid[1];
-        z2[i] -= mid[2];
-    }
 
     mid[0] = mid[1] = mid[2] = 0.0;
-    norm = 0.0;
+    double norm = 0.0;
     for (int i = 0; i < nfit; ++i) {
         mid[0] += x1[i];
         mid[1] += y1[i];
@@ -395,3 +378,14 @@ RMSDCal::~RMSDCal() {
     boost::checked_array_delete(y2);
     boost::checked_array_delete(z2);
 }
+
+void RMSDCal::save_superposed_frame(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame) {
+    if (!writer) return;
+    for (const auto &element : join(atoms_for_superpose, atoms_for_rmscalc) | boost::adaptors::indexed()) {
+        element.value()->x = x[element.index()];
+        element.value()->y = y[element.index()];
+        element.value()->z = z[element.index()];
+    }
+    writer->write(frame);
+}
+

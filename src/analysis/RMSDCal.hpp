@@ -11,6 +11,7 @@
 #include "common.hpp"
 #include "BasicAnalysis.hpp"
 #include "atom.hpp"
+#include "xtc_writer.hpp"
 
 class RMSDCal : public BasicAnalysis {
 
@@ -27,13 +28,15 @@ class RMSDCal : public BasicAnalysis {
     AmberMask mask_for_superpose;
     AmberMask mask_for_rmscalc;
 
-    std::unordered_set<std::shared_ptr<Atom>> atoms_for_superpose;
-    std::unordered_set<std::shared_ptr<Atom>> atoms_for_rmscalc;
+    std::set<std::shared_ptr<Atom>> atoms_for_superpose;
+    std::set<std::shared_ptr<Atom>> atoms_for_rmscalc;
+
+    std::unique_ptr<XTCWriter> writer;
+
+    void save_superposed_frame(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
 
 public:
-    RMSDCal() {
-        enable_outfile = true;
-    }
+    RMSDCal();
 
     ~RMSDCal() override;
 
@@ -59,7 +62,6 @@ public:
                         int n_rms_calc, double x2[], double y2[], double z2[], int nfit);
 
     static void center(int n1, double x1[], double y1[], double z1[],
-                       int n2, double x2[], double y2[], double z2[],
                        double mid[], int nfit);
 };
 
