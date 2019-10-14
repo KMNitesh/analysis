@@ -187,6 +187,27 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
     return rmsd_list_map;
 }
 
+namespace {
+    int rms_max_index(double x1[], double y1[], double z1[],
+                      double x2[], double y2[], double z2[], int n_rms_calc) {
+
+        double xr, yr, zr, dist2;
+        double rms2 = 0.0;
+        int index = 0;
+        for (int i = 0; i < n_rms_calc; ++i) {
+            xr = x1[i] - x2[i];
+            yr = y1[i] - y2[i];
+            zr = z1[i] - z2[i];
+            dist2 = xr * xr + yr * yr + zr * zr;
+            if (dist2 > rms2) {
+                index = i;
+                rms2 = dist2;
+            }
+        }
+        return index;
+    }
+}
+
 double
 CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::tuple<double, double, double>> &c1,
                                                                std::vector<std::tuple<double, double, double>> &c2) {
@@ -199,7 +220,7 @@ CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::
 
     auto[c1_index1, c1_index2] = find_min_distance_pair(c1);
 
-    double rmsd_value = std::numeric_limits<double>::max();
+    double rmsd_value2 = std::numeric_limits<double>::max();
 
     for (auto c2_index1 : boost::irange<int>(0, c2.size())) {
         for (auto c2_index2 : boost::irange<int>(0, c2.size())) {
@@ -218,10 +239,25 @@ CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::
 
             RMSDCal::quatfit(c1.size() + 1, x1, y1, z1, c1.size() + 1, x2, y2, z2, c1.size() + 1);
 
-            rmsd_value = std::min(rmsd_value, RMSDCal::rms_max(x1, y1, z1, x2, y2, z2, c1.size() + 1));
+            auto rmax_index = rms_max_index(x1, y1, z1, x2, y2, z2, c1.size() + 1);
+
+            std::swap(x1[rmax_index], x1[c1.size()]);
+            std::swap(y1[rmax_index], y1[c1.size()]);
+            std::swap(z1[rmax_index], z1[c1.size()]);
+
+            std::swap(x2[rmax_index], x2[c1.size()]);
+            std::swap(y2[rmax_index], y2[c1.size()]);
+            std::swap(z2[rmax_index], z2[c1.size()]);
+
+            RMSDCal::quatfit(c1.size() + 1, x1, y1, z1, c1.size() + 1, x2, y2, z2, c1.size());
+            auto xr = x1[c1.size()] - x2[c1.size()];
+            auto yr = y1[c1.size()] - y2[c1.size()];
+            auto zr = z1[c1.size()] - z2[c1.size()];
+
+            rmsd_value2 = std::min(rmsd_value2, xr * xr + yr * yr + zr * zr);
         }
     }
-    return rmsd_value;
+    return std::sqrt(rmsd_value2);
 }
 
 std::pair<int, int>
