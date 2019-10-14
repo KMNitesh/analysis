@@ -1,3 +1,4 @@
+#include "config.h"
 #include <iostream>
 #include <vector>
 #include <list>
@@ -37,6 +38,8 @@ int mainMenu() {
 };
 
 void printDSLDetails() {
+
+    std::cout << "Author : " << CACANA_AUTHOR << "\n\n";
 
     cout <<
          "\n"

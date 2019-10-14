@@ -10,6 +10,10 @@ set(CMAKE_CXX_STANDARD 17)
 option(ENABLE_UNITTEST "Enable unit test cases" ON)
 option(ENABLE_NATIVE "Enable native cpu instruction support" ON)
 
+file(STRINGS "AUTHOR" CACANA_AUTHOR)
+
+include_directories(${PROJECT_BINARY_DIR})
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -pipe -ggdb3 -Wall -Wextra")
     set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -DBOOST_DISABLE_ASSERTS -pipe -O3 -ggdb3 -ffast-math  -fopenmp")
@@ -155,7 +159,10 @@ enable_testing()
 
 file(REMOVE_RECURSE ${PROJECT_BINARY_DIR}/*.gcda)
 
+configure_file(config.h.in config.h)
+
 include_directories(include)
+
 
 add_subdirectory(lib)
 add_subdirectory(src)
