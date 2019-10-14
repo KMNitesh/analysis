@@ -18,17 +18,36 @@
 class Frame;
 
 class RMSFCal : public BasicAnalysis {
+public:
+    RMSFCal();
 
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
-    Atom::AmberMask ids;
+    void process(std::shared_ptr<Frame> &frame) override;
 
-    std::unordered_set<std::shared_ptr<Atom>> group;
+    void print(std::ostream &os) override;
 
+    void readInfo() override;
 
-    void find_matched_atoms(std::shared_ptr<Frame> &frame);
+    static std::string title() { return "RMSF Calculator"; }
+
+    ~RMSFCal() override;
+
+protected:
+
+    std::unique_ptr<std::ostream> pdb_ostream;
+
+    AmberMask mask_for_superpose;
+    AmberMask mask_for_rmsfcalc;
+
+    std::vector<std::shared_ptr<Atom>> atoms_for_superpose;
+    std::vector<std::shared_ptr<Atom>> atoms_for_superpose_and_rmsfcalc;
+    std::vector<std::shared_ptr<Atom>> atoms_for_rmsfcalc;
+
+    AmberMask mask_for_first_frame_output;
+    std::vector<std::shared_ptr<Atom>> atoms_for_first_frame_output;
 
     int steps = 0; // current frame number
-    bool first_frame = true;
 
     static double rmsfit(double x1[], double y1[], double z1[],
                          double x2[], double y2[], double z2[], int nfit) {
@@ -44,48 +63,26 @@ class RMSFCal : public BasicAnalysis {
         RMSDCal::quatfit(n1, x1, y1, z1, n2, x2, y2, z2, nfit);
     }
 
-    static void center(int n, double x[], double y[], double z[], double mid[], int nfit) {
-        mid[0] = mid[1] = mid[2] = 0.0;
-        double norm = 0.0;
-        for (int i = 0; i < nfit; ++i) {
-            mid[0] += x[i];
-            mid[1] += y[i];
-            mid[2] += z[i];
-            norm += 1.0;
-        }
-        mid[0] /= norm;
-        mid[1] /= norm;
-        mid[2] /= norm;
+    static void center(int n_for_center, double x[], double y[], double z[], double mid[], int nfit);
 
-        for (int i = 0; i < n; ++i) {
-            x[i] -= mid[0];
-            y[i] -= mid[1];
-            z[i] -= mid[2];
-        }
-    }
-
-    double x_avg[ATOM_MAX], y_avg[ATOM_MAX], z_avg[ATOM_MAX];
-    double x1[ATOM_MAX], y1[ATOM_MAX], z1[ATOM_MAX];
-    double x2[ATOM_MAX], y2[ATOM_MAX], z2[ATOM_MAX];
+    double *x_avg = nullptr, *y_avg = nullptr, *z_avg = nullptr;
+    double *x1 = nullptr, *y1 = nullptr, *z1 = nullptr;
+    double *x2 = nullptr, *y2 = nullptr, *z2 = nullptr;
 
     double rmsvalue(int index);
 
-    std::map<int, std::map<int, double>> x, y, z;
+    std::vector<std::vector<std::tuple<double, double, double>>> coords;
 
-public:
-    RMSFCal() {
-        enable_outfile = true;
-    }
+    void append_pdb(const std::vector<std::tuple<double, double, double>> &f_coord);
 
-    void process(std::shared_ptr<Frame> &frame) override;
+    std::tuple<double, double, double> save_coord(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
 
-    void print(std::ostream &os) override;
+    std::vector<std::tuple<double, double, double>>
+    append_coord(double x[], double y[], double z[], int nfit1, int nfit2, int n);
 
-    void readInfo() override;
+    void calculate_average_structure();
 
-    static const std::string title() {
-        return "RMSF Calculator";
-    }
+    void allocate_array_memory();
 };
 
 #endif //TINKER_RMSFCAL_HPP
