@@ -11,7 +11,6 @@
 
 class Frame;
 
-// Distance
 class Distance : public AbstractAnalysis {
 
 public:
@@ -30,7 +29,7 @@ public:
 protected:
 
     template<typename SinglePassRange>
-    std::tuple<double, double, double> calculate_mass_center(SinglePassRange &&atoms_group);
+    static std::tuple<double, double, double> calculate_mass_center(const SinglePassRange &atoms_group);
 
     std::deque<double> distances;
 

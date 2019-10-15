@@ -13,7 +13,7 @@ Distance::Distance() {
 }
 
 template<typename SinglePassRange>
-std::tuple<double, double, double> Distance::calculate_mass_center(SinglePassRange &&atoms_group) {
+std::tuple<double, double, double> Distance::calculate_mass_center(const SinglePassRange &atoms_group) {
     std::tuple<double, double, double> coord{};
     double weigh{};
 
