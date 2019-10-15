@@ -14,8 +14,6 @@
 class Frame;
 
 class AbstractAnalysis {
-protected:
-    std::string outfilename;
 public:
     virtual void processFirstFrame(std::shared_ptr<Frame> &frame) {};
 
@@ -45,6 +43,8 @@ protected:
     virtual void do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) {};
 
     virtual bool enable_paralel_while_impl() { return false; }
+
+    std::string outfilename;
 };
 
 
