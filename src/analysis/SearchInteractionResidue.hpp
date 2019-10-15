@@ -13,12 +13,12 @@
 #include <utility>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class SearchInteractionResidue : public BasicAnalysis {
+class SearchInteractionResidue : public AbstractAnalysis {
 public:
     SearchInteractionResidue() { enable_outfile = true; }
 

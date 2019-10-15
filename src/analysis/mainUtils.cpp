@@ -16,7 +16,7 @@
 
 #include "PrintTopolgy.hpp"
 #include "taskMenu.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "forcefield.hpp"
 
 #include "trajectoryreader.hpp"
@@ -43,14 +43,14 @@
 using namespace std;
 
 void processOneFrame(shared_ptr<Frame> &frame,
-                     shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
+                     shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list) {
     for (auto &task : *task_list) {
         task->process(frame);
     }
 }
 
 void processFirstFrame(shared_ptr<Frame> &frame,
-                       shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list) {
+                       shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list) {
     for (auto &task : *task_list) {
         task->processFirstFrame(frame);
     }
@@ -187,7 +187,7 @@ void executeScript(const boost::program_options::options_description &desc,
 
     Interpreter interpreter;
 
-    auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
+    auto task_list = make_shared<list<shared_ptr<AbstractAnalysis>>>();
 
     interpreter.registerFunction(
                     "rdf", [&task_list](auto &args) -> boost::any {
@@ -205,7 +205,7 @@ void executeScript(const boost::program_options::options_description &desc,
                             exit(EXIT_FAILURE);
                         }
                         task_list->emplace_back(task);
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<Atom::Node>("M")
             .addArgument<Atom::Node>("L")
@@ -231,7 +231,7 @@ void executeScript(const boost::program_options::options_description &desc,
                         }
                         task_list->emplace_back(task);
                         cout << task->description();
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<shared_ptr<VectorSelector>>("vector")
             .addArgument<int>("P")
@@ -259,7 +259,7 @@ void executeScript(const boost::program_options::options_description &desc,
                         }
                         task_list->emplace_back(task);
                         cout << task->description();
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<Atom::Node>("M")
             .addArgument<Atom::Node>("L")
@@ -285,7 +285,7 @@ void executeScript(const boost::program_options::options_description &desc,
                             exit(EXIT_FAILURE);
                         }
                         task_list->emplace_back(task);
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<Atom::Node>("component1")
             .addArgument<Atom::Node>("component2")
@@ -307,7 +307,7 @@ void executeScript(const boost::program_options::options_description &desc,
                             exit(EXIT_FAILURE);
                         }
                         task_list->emplace_back(task);
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<Atom::Node>("M")
             .addArgument<Atom::Node>("L")
@@ -331,7 +331,7 @@ void executeScript(const boost::program_options::options_description &desc,
                         }
                         task_list->emplace_back(task);
                         cout << task->description();
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<Atom::Node>("mask")
             .addArgument<double, int>("time_increment_ps", 0.1)
@@ -354,7 +354,7 @@ void executeScript(const boost::program_options::options_description &desc,
                         }
                         task_list->emplace_back(task);
                         cout << task->description();
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<Atom::Node>("M")
             .addArgument<Atom::Node>("L")
@@ -385,7 +385,7 @@ void executeScript(const boost::program_options::options_description &desc,
                         }
                         task_list->emplace_back(task);
                         cout << task->description();
-                        return shared_ptr<BasicAnalysis>(task);
+                        return shared_ptr<AbstractAnalysis>(task);
                     })
             .addArgument<Atom::Node>("M")
             .addArgument<Atom::Node>("L")
@@ -521,7 +521,8 @@ void executeScript(const boost::program_options::options_description &desc,
 int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv, const string &scriptContent,
                     boost::optional<string> &script_file, boost::optional<string> &topology,
                     boost::optional<string> &forcefield_file, const boost::optional<string> &output_file,
-                    shared_ptr<list<shared_ptr<BasicAnalysis>>> &task_list, int start, int total_frames, int step_size,
+                    shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list, int start, int total_frames,
+                    int step_size,
                     int nthreads) {
     if (task_list->empty()) {
         cerr << "Empty task in the pending list, skip go function ...\n";
@@ -752,7 +753,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         outfile.open(getOutputFilename(vm));
     }
 
-    std::shared_ptr<BasicAnalysis> parallel_while_task;
+    std::shared_ptr<AbstractAnalysis> parallel_while_task;
     for (auto &task : *task_list) {
         if (task->enable_parralle_while()) {
             if (parallel_while_task) {
@@ -804,7 +805,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
     std::cout << "        Total time = " << chrono_cast(time_after_print - time_before_process) << '\n';
 }
 
-std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list,
+std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> &task_list,
                                 const int start, const int step_size, const int total_frames,
                                 std::shared_ptr<TrajectoryReader> &reader) {
     static int current_frame_num = 0;

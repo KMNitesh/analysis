@@ -32,7 +32,7 @@ TEST(TypeCheckTest, IsIntOrDouble) {
 
 TEST(TypePrettyNameTest, ALLAccept) {
     TypePrettyNames<int, double, string, bool, Atom::Node, Grid,
-            shared_ptr<BasicAnalysis>, shared_ptr<VectorSelector>> check{};
+            shared_ptr<AbstractAnalysis>, shared_ptr<VectorSelector>> check{};
     ASSERT_THAT(check(), ContainerEq(vector<string>{
             "int", "double", "string", "bool", "AmberMask", "Grid", "BasicAnalysis", "VectorSelector"}));
 }
@@ -40,7 +40,7 @@ TEST(TypePrettyNameTest, ALLAccept) {
 TEST(getPrettyNameTest, BoostAny) {
     boost::any v = Atom::Node();
     ASSERT_THAT(getPrettyName(v), Eq("AmberMask"));
-    v = shared_ptr<BasicAnalysis>();
+    v = shared_ptr<AbstractAnalysis>();
     ASSERT_THAT(getPrettyName(v), Eq("BasicAnalysis"));
     v = shared_ptr<VectorSelector>();
     ASSERT_THAT(getPrettyName(v), Eq("VectorSelector"));

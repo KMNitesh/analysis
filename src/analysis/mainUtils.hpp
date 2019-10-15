@@ -8,7 +8,7 @@
 #include "std.hpp"
 #include <boost/optional.hpp>
 
-class BasicAnalysis;
+class AbstractAnalysis;
 
 class TrajectoryReader;
 
@@ -30,7 +30,7 @@ void executeScript(const boost::program_options::options_description &desc,
                    int argc, char *argv[]);
 
 std::shared_ptr<Frame>
-getFrame(std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list,
+getFrame(std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> &task_list,
          const int start, const int step_size, const int total_frames,
          std::shared_ptr<TrajectoryReader> &reader);
 
@@ -38,7 +38,7 @@ int
 executeAnalysis(const std::vector<std::string> &xyzfiles, int argc, char *const *argv, const std::string &scriptContent,
                 boost::optional<std::string> &script_file, boost::optional<std::string> &topology,
                 boost::optional<std::string> &forcefield_file, const boost::optional<std::string> &output_file,
-                std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> &task_list,
+                std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> &task_list,
                 int start,
                 int total_frames,
                 int step_size,

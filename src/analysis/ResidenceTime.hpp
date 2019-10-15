@@ -13,12 +13,12 @@
 #include <tbb/tbb.h>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class ResidenceTime : public BasicAnalysis {
+class ResidenceTime : public AbstractAnalysis {
 
 public:
 

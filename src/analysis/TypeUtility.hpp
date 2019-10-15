@@ -11,7 +11,7 @@
 
 #include "atom.hpp"
 #include "VectorSelector.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "common.hpp"
 
 template<typename... Ts>
@@ -56,7 +56,7 @@ inline std::string pretty_name<std::shared_ptr<VectorSelector>>() {
 }
 
 template<>
-inline std::string pretty_name<std::shared_ptr<BasicAnalysis>>() {
+inline std::string pretty_name<std::shared_ptr<AbstractAnalysis>>() {
     return "BasicAnalysis";
 }
 
@@ -130,8 +130,8 @@ public:
         return boost::any_cast<std::shared_ptr<VectorSelector>>(v);
     }
 
-    operator std::shared_ptr<BasicAnalysis>() const {
-        return boost::any_cast<std::shared_ptr<BasicAnalysis>>(v);
+    operator std::shared_ptr<AbstractAnalysis>() const {
+        return boost::any_cast<std::shared_ptr<AbstractAnalysis>>(v);
     }
 
 };

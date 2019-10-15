@@ -6,12 +6,12 @@
 #define TINKER_LOCALSTRUCTUREINDEXFORLIQUID_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class LocalStructureIndexForLiquid : public BasicAnalysis {
+class LocalStructureIndexForLiquid : public AbstractAnalysis {
 public:
     LocalStructureIndexForLiquid();
 

@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "TrajectoryWriterFactoryImpl.hpp"
 #include "TrajectoryFormatWriter.hpp"
 
@@ -16,7 +16,7 @@ class PBCUtils;
 
 class Frame;
 
-class Trajconv : public BasicAnalysis {
+class Trajconv : public AbstractAnalysis {
 public:
 
     void processFirstFrame(std::shared_ptr<Frame> &) override;

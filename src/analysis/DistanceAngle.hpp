@@ -15,11 +15,11 @@
 #include <vector>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 
-class DistanceAngle : public BasicAnalysis {
+class DistanceAngle : public AbstractAnalysis {
 public:
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;

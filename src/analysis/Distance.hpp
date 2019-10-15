@@ -11,13 +11,13 @@
 #include <string>
 #include <unordered_set>
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 // Distance
-class Distance : public BasicAnalysis {
+class Distance : public AbstractAnalysis {
     std::list<double> group_dist_list;
 
     Atom::AmberMask ids1;

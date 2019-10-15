@@ -9,13 +9,13 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/multi_array.hpp>
 #include "atom.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 
 class Frame;
 
 class VectorSelector;
 
-class ConditionalTimeCorrelationFunction : public BasicAnalysis {
+class ConditionalTimeCorrelationFunction : public AbstractAnalysis {
 public:
     ConditionalTimeCorrelationFunction();
 

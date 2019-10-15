@@ -9,14 +9,14 @@
 #include <unordered_set>
 #include <memory>
 #include <list>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
 #include "Histogram.hpp"
 
 class Frame;
 
-class DipoleAxisDistribution : public BasicAnalysis {
+class DipoleAxisDistribution : public AbstractAnalysis {
 
 public:
     DipoleAxisDistribution() {

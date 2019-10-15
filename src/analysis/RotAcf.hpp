@@ -15,7 +15,7 @@
 #include <functional>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
 
@@ -23,7 +23,7 @@ class Frame;
 
 class Molecule;
 
-class RotAcf : public BasicAnalysis {
+class RotAcf : public AbstractAnalysis {
 public:
 
     explicit RotAcf() {

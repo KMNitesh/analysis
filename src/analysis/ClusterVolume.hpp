@@ -9,12 +9,12 @@
 #include <boost/multi_array.hpp>
 #include <utility>
 #include <tbb/tbb.h>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "HBond.hpp"
 #include "frame.hpp"
 
-class ClusterVolume : public BasicAnalysis {
+class ClusterVolume : public AbstractAnalysis {
 public:
     ClusterVolume();
 

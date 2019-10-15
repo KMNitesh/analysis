@@ -9,7 +9,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/depth_first_search.hpp>
 
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 
@@ -34,7 +34,7 @@ private:
     std::unordered_set<int> &all_connected_atoms;
 };
 
-class HBondSpread : public BasicAnalysis {
+class HBondSpread : public AbstractAnalysis {
 public:
     HBondSpread();
 

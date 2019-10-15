@@ -8,13 +8,13 @@
 #include <unordered_set>
 #include <memory>
 #include <list>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class DipoleAngleAxis3D : public BasicAnalysis {
+class DipoleAngleAxis3D : public AbstractAnalysis {
 public:
     DipoleAngleAxis3D() {
         enable_forcefield = true;

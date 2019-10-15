@@ -13,13 +13,13 @@
 #include <utility>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "AminoTop.hpp"
 
 class Frame;
 
-class NMRRange : public BasicAnalysis {
+class NMRRange : public AbstractAnalysis {
 
 
     void recognize_amino_acid(std::shared_ptr<Frame> &frame);

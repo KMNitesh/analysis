@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
 #include "Histogram.hpp"
@@ -16,7 +16,7 @@
 
 class Frame;
 
-class EquatorialAngle : public BasicAnalysis {
+class EquatorialAngle : public AbstractAnalysis {
 public:
 
     EquatorialAngle() {

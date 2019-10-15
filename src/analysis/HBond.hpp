@@ -11,7 +11,7 @@
 #include <map>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
@@ -43,7 +43,7 @@ enum class HBondType {
     GMXVersion
 };
 
-class HBond : public BasicAnalysis {
+class HBond : public AbstractAnalysis {
 
 public:
     HBond() {

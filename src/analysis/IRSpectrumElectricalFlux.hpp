@@ -6,12 +6,12 @@
 #define TINKER_IRSPECTRUMELECTRICALFLUX_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class IRSpectrumElectricalFlux : public BasicAnalysis {
+class IRSpectrumElectricalFlux : public AbstractAnalysis {
 public:
     IRSpectrumElectricalFlux();
 

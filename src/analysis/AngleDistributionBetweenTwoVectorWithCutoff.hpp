@@ -6,14 +6,14 @@
 #define TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "Histogram.hpp"
 #include "VectorSelector.hpp"
 
 class Frame;
 
-class AngleDistributionBetweenTwoVectorWithCutoff : public BasicAnalysis {
+class AngleDistributionBetweenTwoVectorWithCutoff : public AbstractAnalysis {
 public:
 
     AngleDistributionBetweenTwoVectorWithCutoff();

@@ -6,13 +6,13 @@
 #define TINKER_COORDINATIONSTRUCTURECLASSIFICATION_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "Cluster.hpp"
 
 class Frame;
 
-class CoordinationStructureClassification : public BasicAnalysis {
+class CoordinationStructureClassification : public AbstractAnalysis {
 public:
     CoordinationStructureClassification();
 

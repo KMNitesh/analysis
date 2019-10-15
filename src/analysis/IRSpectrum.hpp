@@ -6,12 +6,12 @@
 #define TINKER_IRSPECTRUM_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class IRSpectrum : public BasicAnalysis {
+class IRSpectrum : public AbstractAnalysis {
 public:
     IRSpectrum();
 

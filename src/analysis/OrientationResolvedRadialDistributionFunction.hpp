@@ -7,13 +7,13 @@
 
 #include "std.hpp"
 #include <boost/multi_array.hpp>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
 
 class Frame;
 
-class OrientationResolvedRadialDistributionFunction : public BasicAnalysis {
+class OrientationResolvedRadialDistributionFunction : public AbstractAnalysis {
 public:
     OrientationResolvedRadialDistributionFunction();
 

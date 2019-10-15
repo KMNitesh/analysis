@@ -6,12 +6,12 @@
 #define TINKER_VELOCITYAUTOCORRELATIONFUNCTION_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class VelocityAutocorrelationFunction : public BasicAnalysis {
+class VelocityAutocorrelationFunction : public AbstractAnalysis {
 public:
     VelocityAutocorrelationFunction();
 

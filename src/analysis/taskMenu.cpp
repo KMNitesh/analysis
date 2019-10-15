@@ -110,13 +110,13 @@ namespace {
     };
 
     template<typename components>
-    std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> subMenu(const std::string &title) {
+    std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> subMenu(const std::string &title) {
 
-        auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
+        auto task_list = make_shared<list<shared_ptr<AbstractAnalysis>>>();
 
         BOOST_MPL_ASSERT((mpl::equal<typename mpl::unique<components, is_same<mpl::_1, mpl::_2> >::type, components>));
 
-        std::vector<std::function<shared_ptr<BasicAnalysis>()>> task_vec;
+        std::vector<std::function<shared_ptr<AbstractAnalysis>()>> task_vec;
         std::vector<string> item_menu;
 
         mpl::for_each<components, boost::type<mpl::_>>([&task_vec, &item_menu](auto t) {
@@ -134,7 +134,7 @@ namespace {
         while (true) {
             int num = menu1();
             if (num == 0) return task_list;
-            shared_ptr<BasicAnalysis> task = task_vec[num - 1]();
+            shared_ptr<AbstractAnalysis> task = task_vec[num - 1]();
 
             string line(item_menu[num - 1].size() + 6, '-');
 
@@ -148,8 +148,8 @@ namespace {
 }
 
 
-std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
-    auto task_list = make_shared<list<shared_ptr<BasicAnalysis>>>();
+std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
+    auto task_list = make_shared<list<shared_ptr<AbstractAnalysis>>>();
 
     using angleDistributionMenu = mpl::vector<
             DipoleAngle,
@@ -255,7 +255,7 @@ std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>> getTasks() {
             "Other Utils"
     };
 
-    std::vector<std::function<std::shared_ptr<std::list<std::shared_ptr<BasicAnalysis>>>()>> menu_functions;
+    std::vector<std::function<std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>>()>> menu_functions;
     std::vector<string> item_menu;
 
     mpl::for_each<mainMenu, boost::type<mpl::_>>([&menu_functions, &item_menu, &menuString](auto t) {

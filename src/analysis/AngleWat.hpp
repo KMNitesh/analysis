@@ -6,14 +6,14 @@
 #define TINKER_ANGLEWAT_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
 
 
 class Frame;
 
-class AngleWat : public BasicAnalysis {
+class AngleWat : public AbstractAnalysis {
 public:
 
     AngleWat() {

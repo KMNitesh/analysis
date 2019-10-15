@@ -9,11 +9,11 @@
 #include <unordered_set>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "xtc_writer.hpp"
 
-class RMSDCal : public BasicAnalysis {
+class RMSDCal : public AbstractAnalysis {
 
     std::deque<double> rmsds;
     bool first_frame = true;

@@ -6,12 +6,12 @@
 #define TINKER_HBONDLIFETIME_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class HBondLifeTime : public BasicAnalysis {
+class HBondLifeTime : public AbstractAnalysis {
 public:
     HBondLifeTime();
 

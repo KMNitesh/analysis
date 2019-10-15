@@ -14,12 +14,12 @@
 #include <utility>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class DemixIndexOfTwoGroup : public BasicAnalysis {
+class DemixIndexOfTwoGroup : public AbstractAnalysis {
 public:
     DemixIndexOfTwoGroup() { enable_outfile = true; }
 

@@ -7,7 +7,7 @@
 
 #include <unordered_set>
 #include <deque>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
 
@@ -15,7 +15,7 @@ class Frame;
 
 class Molecule;
 
-class SpatialOrientationDistribution : public BasicAnalysis {
+class SpatialOrientationDistribution : public AbstractAnalysis {
 public:
     SpatialOrientationDistribution();
 

@@ -6,12 +6,12 @@
 #define TINKER_COORDINATIONSTRUCTUREMATCH_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class CoordinationStructureMatch : public BasicAnalysis {
+class CoordinationStructureMatch : public AbstractAnalysis {
 public:
     CoordinationStructureMatch();
 

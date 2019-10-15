@@ -6,13 +6,13 @@
 #define TINKER_CONVERTVELOCITYTOVELOCITYCHARGE_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "trr_writer.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class ConvertVelocityToVelocityCharge : public BasicAnalysis {
+class ConvertVelocityToVelocityCharge : public AbstractAnalysis {
 public:
     ConvertVelocityToVelocityCharge(std::unique_ptr<TRRWriter> writer = std::make_unique<TRRWriter>());
 

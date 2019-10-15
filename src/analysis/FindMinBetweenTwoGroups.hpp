@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
@@ -21,7 +21,7 @@ class Frame;
 class Molecule;
 
 
-class FindMinBetweenTwoGroups : public BasicAnalysis {
+class FindMinBetweenTwoGroups : public AbstractAnalysis {
 public:
     FindMinBetweenTwoGroups() { enable_outfile = true; }
 

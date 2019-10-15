@@ -14,12 +14,12 @@
 #include <utility>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class DipoleAngle : public BasicAnalysis {
+class DipoleAngle : public AbstractAnalysis {
 public:
     DipoleAngle() {
         enable_forcefield = true;

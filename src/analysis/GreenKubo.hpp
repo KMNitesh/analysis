@@ -11,14 +11,14 @@
 #include <map>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 
 // Use Green-Kubo equation to calculate self-diffuse coefficients
-class GreenKubo : public BasicAnalysis {
+class GreenKubo : public AbstractAnalysis {
 
 public:
     GreenKubo() {

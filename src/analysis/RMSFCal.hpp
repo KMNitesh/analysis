@@ -11,13 +11,13 @@
 #include <unordered_set>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "RMSDCal.hpp"
 
 class Frame;
 
-class RMSFCal : public BasicAnalysis {
+class RMSFCal : public AbstractAnalysis {
 public:
     RMSFCal();
 

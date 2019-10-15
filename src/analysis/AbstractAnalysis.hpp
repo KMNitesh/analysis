@@ -4,8 +4,8 @@
 
 //  This Pure Virtrial Class is the interface for All trajectory analysis method
 
-#ifndef TINKER_BASICANALYSIS_HPP
-#define TINKER_BASICANALYSIS_HPP
+#ifndef TINKER_ABSTRACTANALYSIS_HPP
+#define TINKER_ABSTRACTANALYSIS_HPP
 
 #include <utility>
 
@@ -13,7 +13,7 @@
 
 class Frame;
 
-class BasicAnalysis {
+class AbstractAnalysis {
 protected:
     std::string outfilename;
 public:
@@ -27,9 +27,9 @@ public:
 
     virtual std::string getOutfileName() { return outfilename; }
 
-    virtual std::string description() { return "Base Class"; }
+    virtual std::string description() { return "Abstract Class"; }
 
-    static const std::string title() { return "Base Class"; }
+    static std::string title() { return "Abstract Class"; }
 
     void do_parallel_while(std::function<std::shared_ptr<Frame>()> func) {
         do_parallel_while_impl(std::move(func));
@@ -39,7 +39,7 @@ public:
         return enable_paralel_while_impl();
     }
 
-    virtual ~BasicAnalysis() = default;
+    virtual ~AbstractAnalysis() = default;
 
 protected:
     virtual void do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) {};
@@ -48,4 +48,4 @@ protected:
 };
 
 
-#endif //TINKER_BASICANALYSIS_HPP
+#endif //TINKER_ABSTRACTANALYSIS_HPP

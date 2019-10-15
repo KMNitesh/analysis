@@ -13,13 +13,13 @@
 #include <utility>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 
-class ShellDensity : public BasicAnalysis {
+class ShellDensity : public AbstractAnalysis {
 public:
     ShellDensity() { enable_outfile = true; }
 

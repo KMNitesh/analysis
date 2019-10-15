@@ -10,12 +10,12 @@
 #include <memory>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class RadicalDistribtuionFunction : public BasicAnalysis {
+class RadicalDistribtuionFunction : public AbstractAnalysis {
 
     double rmax;
     double width;

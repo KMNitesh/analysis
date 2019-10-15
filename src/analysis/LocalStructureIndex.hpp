@@ -6,12 +6,12 @@
 #define TINKER_LOCALSTRUCTUREINDEX_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class LocalStructureIndex : public BasicAnalysis {
+class LocalStructureIndex : public AbstractAnalysis {
 public:
     LocalStructureIndex();
 

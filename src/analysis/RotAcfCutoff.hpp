@@ -15,7 +15,7 @@
 #include <boost/container_hash/hash.hpp>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
 
@@ -23,7 +23,7 @@ class Frame;
 
 class Molecule;
 
-class RotAcfCutoff : public BasicAnalysis {
+class RotAcfCutoff : public AbstractAnalysis {
 
 public:
 

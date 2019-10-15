@@ -7,13 +7,13 @@
 
 #include "std.hpp"
 #include <boost/container_hash/hash.hpp>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 
-class HBondLifeTimeCutoff : public BasicAnalysis {
+class HBondLifeTimeCutoff : public AbstractAnalysis {
 public:
     HBondLifeTimeCutoff();
 

@@ -13,13 +13,13 @@
 #include <list>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "frame.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class FirstCoordExchangeSearch : public BasicAnalysis {
+class FirstCoordExchangeSearch : public AbstractAnalysis {
 
 public:
     FirstCoordExchangeSearch() {

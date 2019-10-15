@@ -10,13 +10,13 @@
 #include <Eigen/Eigen>
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 
-class Diffuse : public BasicAnalysis {
+class Diffuse : public AbstractAnalysis {
 
 public:
     Diffuse() {

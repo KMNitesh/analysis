@@ -9,13 +9,13 @@
 #include "std.hpp"
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "RMSDCal.hpp"
 
 class Frame;
 
-class Cluster : public BasicAnalysis {
+class Cluster : public AbstractAnalysis {
 
 public:
     Cluster() {

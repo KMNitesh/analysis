@@ -8,13 +8,13 @@
 #include "std.hpp"
 #include <boost/container_hash/hash.hpp>
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 
 class Frame;
 
-class DiffuseCutoff : public BasicAnalysis {
+class DiffuseCutoff : public AbstractAnalysis {
 
 public:
 

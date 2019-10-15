@@ -38,7 +38,7 @@ std::string getPrettyName(const boost::any &v) {
             Grid,
             Atom::Node,
             std::shared_ptr<VectorSelector>,
-            std::shared_ptr<BasicAnalysis>
+            std::shared_ptr<AbstractAnalysis>
     >;
 
     BOOST_MPL_ASSERT((mpl::equal<mpl::unique<components, std::is_same<mpl::_1, mpl::_2> >::type, components>));

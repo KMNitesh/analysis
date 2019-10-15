@@ -6,10 +6,10 @@
 #define TINKER_DYNFRAMEFIND_HPP
 
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "TinkerDynReader.hpp"
 
-class DynFrameFind : public BasicAnalysis {
+class DynFrameFind : public AbstractAnalysis {
 public:
     void process(std::shared_ptr<Frame> &frame) override;
 

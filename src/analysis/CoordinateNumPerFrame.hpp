@@ -10,12 +10,12 @@
 #include <string>
 #include <list>
 #include "common.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class CoordinateNumPerFrame : public BasicAnalysis {
+class CoordinateNumPerFrame : public AbstractAnalysis {
 
     Atom::AmberMask ids1;
     Atom::AmberMask ids2;

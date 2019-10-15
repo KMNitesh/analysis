@@ -8,14 +8,14 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "common.hpp"
 #include "atom.hpp"
 
 
 class Frame;
 
-class DipoleAngleWithDistanceRange : public BasicAnalysis {
+class DipoleAngleWithDistanceRange : public AbstractAnalysis {
 public:
     DipoleAngleWithDistanceRange() {
         enable_forcefield = true;

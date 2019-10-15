@@ -6,12 +6,12 @@
 #define TINKER_RADIUSOFGYRATION_HPP
 
 #include "std.hpp"
-#include "BasicAnalysis.hpp"
+#include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
-class RadiusOfGyration : public BasicAnalysis {
+class RadiusOfGyration : public AbstractAnalysis {
 public:
     RadiusOfGyration();
 
