@@ -47,7 +47,7 @@ void Distance::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
     os << boost::format("#%15s %15s\n") % "Frame" % "Distance(Ang)";
     for (const auto &element : distances | boost::adaptors::indexed(1)) {
-        os << boost::format("%15d %15.8f\n") % element.index() % element.value();
+        os << boost::format(" %15d %15.8f\n") % element.index() % element.value();
     }
 }
 
