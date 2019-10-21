@@ -17,6 +17,7 @@ namespace po = boost::program_options;
 #include "RamanSpectrum.hpp"
 #include "CrossCorrelation.hpp"
 #include "GmxTopologyPrinter.hpp"
+#include "GQuadruplexPdb2gmx.hpp"
 
 using namespace std;
 
@@ -34,7 +35,9 @@ int mainMenu() {
     std::cout << "(4) " << RamanSpectrum::title() << '\n';
     std::cout << "(5) " << CrossCorrelation::title() << '\n';
     std::cout << "(6) " << GmxTopologyPrinter::title() << '\n';
-    return choose<int>(0, 6, "select :");
+    std::cout << "(7) " << GQuadruplexPdb2gmx::title() << '\n';
+    std::cout << "(8) " << "Superpose and move for Residues" << '\n';
+    return choose<int>(0, 8, "select :");
 };
 
 void printDSLDetails() {
@@ -235,6 +238,15 @@ int main(int argc, char *argv[]) {
         case 6:
             GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm));
             break;
+        case 7:
+            GQuadruplexPdb2gmx::convert();
+            break;
+        case 8:
+            GQuadruplexPdb2gmx::superpose_and_move();
+            break;
+        default:
+            std::cerr << "Unexcepted block\n";
+            exit(EXIT_FAILURE);
     }
 
     return EXIT_SUCCESS;
