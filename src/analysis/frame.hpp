@@ -12,6 +12,7 @@
 #include <memory>
 #include <tuple>
 #include <cassert>
+#include <Eigen/Eigen>
 
 class Atom;
 
@@ -51,6 +52,8 @@ public:
     bool enable_bound = false;
 
     void image(double &xr, double &yr, double &zr) const;
+
+    void image(Eigen::Array3d &r) const;
 
     void image(std::tuple<double, double, double> &r) const;
 

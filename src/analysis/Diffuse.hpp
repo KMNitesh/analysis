@@ -19,10 +19,7 @@ class Frame;
 class Diffuse : public AbstractAnalysis {
 
 public:
-    Diffuse() {
-        enable_forcefield = true;
-        enable_outfile = true;
-    }
+    Diffuse();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -45,22 +42,13 @@ private:
 
     Atom::AmberMask ids;
 
-    std::unordered_set<std::shared_ptr<Atom>> group;
+    std::set<std::shared_ptr<Molecule>> mols;
     bool first_round = true;
-
-    bool first_frame = true;
     int total_frame_number;
     int steps = 0;
     double time_increment_ps = 0.1;
-    int total_mol = 0;
 
-
-    bool bSerial = true;
-    bool bTradition = true;
-
-    Eigen::MatrixXd xcm;
-    Eigen::MatrixXd ycm;
-    Eigen::MatrixXd zcm;
+    Eigen::Matrix<Eigen::Array3d, Eigen::Dynamic, Eigen::Dynamic> xyzcm;
 
 };
 

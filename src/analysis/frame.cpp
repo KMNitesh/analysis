@@ -15,6 +15,10 @@ void Frame::image(double &xr, double &yr, double &zr) const {
     while (std::abs(zr) > c_axis_half) zr -= sign(c_axis, zr);
 }
 
+void Frame::image(Eigen::Array3d &r) const {
+    image(r[0], r[1], r[2]);
+}
+
 void Frame::image(std::tuple<double, double, double> &r) const {
     auto &[xr, yr, zr] = r;
     image(xr, yr, zr);
