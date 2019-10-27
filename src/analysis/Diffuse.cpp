@@ -16,29 +16,19 @@ Diffuse::Diffuse() {
     enable_tbb = true;
 }
 
-namespace {
-    class wrap {
-        const std::tuple<double, double, double> &rhs;
-    public:
-        explicit wrap(const std::tuple<double, double, double> &rhs) : rhs(rhs) {}
-
-        operator Eigen::Array3d() { return {std::get<0>(rhs), std::get<1>(rhs), std::get<2>(rhs)}; }
-    };
-}
-
 void Diffuse::process(std::shared_ptr<Frame> &frame) {
     int mol_index = 0;
     if (steps == 0) {
         xyzcm.resize(total_frame_number, mols.size());
         for (auto &mol : mols) {
-            xyzcm(steps, mol_index) = wrap(mol->calc_weigh_center(frame));
+            xyzcm(steps, mol_index) = mol->calc_weigh_center(frame);
             mol_index++;
         }
     } else {
         for (auto &mol : mols) {
-            Eigen::Array3d coord = wrap(mol->calc_weigh_center(frame));
+            auto coord = mol->calc_weigh_center(frame);
             auto &xyzold = xyzcm(steps - 1, mol_index);
-            Eigen::Array3d r = coord - xyzold;
+            auto r = coord - xyzold;
             frame->image(r);
             xyzcm(steps, mol_index) = r + xyzold;
             mol_index++;
@@ -52,13 +42,13 @@ void Diffuse::print(std::ostream &os) {
     class Body {
     public:
         int total_frame_number;
-        std::vector<Eigen::Array3d, tbb::tbb_allocator<Eigen::Array3d>> msd;
+        std::vector<std::tuple<double, double, double>, tbb::tbb_allocator<std::tuple<double, double, double>>> msd;
 
         int total_mol;
-        Eigen::Matrix<Eigen::Array3d, Eigen::Dynamic, Eigen::Dynamic> &xyzcm;
+        Eigen::Matrix<std::tuple<double, double, double>, Eigen::Dynamic, Eigen::Dynamic> &xyzcm;
 
         Body(int total_frame_number, int total_mol,
-             Eigen::Matrix<Eigen::Array3d, Eigen::Dynamic, Eigen::Dynamic> &xyzcm) :
+             Eigen::Matrix<std::tuple<double, double, double>, Eigen::Dynamic, Eigen::Dynamic> &xyzcm) :
                 total_frame_number(total_frame_number),
                 msd(total_frame_number - 1),
                 total_mol(total_mol), xyzcm(xyzcm) {}
@@ -79,15 +69,15 @@ void Diffuse::print(std::ostream &os) {
                 for (int j = i + 1; j < total_frame_number; j++) {
                     int m = j - i - 1;
                     for (int k = 0; k < total_mol; k++) {
-                        Eigen::Array3d diff = xyzcm(j, k) - xyzcm(i, k);
-                        msd[m] += diff.square();
+                        auto[xr, yr, zr] = xyzcm(j, k) - xyzcm(i, k);
+                        msd[m] += std::make_tuple(xr * xr, yr * yr, zr * zr);
                     }
                 }
             }
         }
     } body(total_frame_number, mols.size(), xyzcm);
 
-    tbb::parallel_reduce(tbb::blocked_range<int>(0, total_frame_number - 1), body, tbb::auto_partitioner());
+    tbb::parallel_reduce(tbb::blocked_range<int>(0, total_frame_number - 1), body);
 
 
     constexpr double dunits = 10.0;
@@ -105,9 +95,7 @@ void Diffuse::print(std::ostream &os) {
 
     for (int i = 0; i < total_frame_number - 1; i++) {
         double delta = time_increment_ps * (i + 1);
-        double xvalue = body.msd[i][0];
-        double yvalue = body.msd[i][1];
-        double zvalue = body.msd[i][2];
+        auto[xvalue, yvalue, zvalue] = body.msd[i];
         double rvalue = xvalue + yvalue + zvalue;
         double dvalue = dunits * rvalue / delta / 6.0;
         os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %

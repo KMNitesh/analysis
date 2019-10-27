@@ -48,7 +48,7 @@ private:
     int steps = 0;
     double time_increment_ps = 0.1;
 
-    Eigen::Matrix<Eigen::Array3d, Eigen::Dynamic, Eigen::Dynamic> xyzcm;
+    Eigen::Matrix<std::tuple<double, double, double>, Eigen::Dynamic, Eigen::Dynamic> xyzcm;
 
 };
 

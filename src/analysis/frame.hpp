@@ -53,7 +53,7 @@ public:
 
     void image(double &xr, double &yr, double &zr) const;
 
-    void image(Eigen::Array3d &r) const;
+    void image(std::array<double, 3> &r) const;
 
     void image(std::tuple<double, double, double> &r) const;
 
