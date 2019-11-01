@@ -18,6 +18,7 @@ namespace po = boost::program_options;
 #include "CrossCorrelation.hpp"
 #include "GmxTopologyPrinter.hpp"
 #include "GQuadruplexPdb2gmx.hpp"
+#include "NBOSpin.hpp"
 
 using namespace std;
 
@@ -37,7 +38,8 @@ int mainMenu() {
     std::cout << "(6) " << GmxTopologyPrinter::title() << '\n';
     std::cout << "(7) " << GQuadruplexPdb2gmx::title() << '\n';
     std::cout << "(8) " << "Superpose and move for Residues" << '\n';
-    return choose<int>(0, 8, "select :");
+    std::cout << "(9) " << NBOSpin::title() << '\n';
+    return choose<int>(0, 9, "select :");
 };
 
 void printDSLDetails() {
@@ -243,6 +245,9 @@ int main(int argc, char *argv[]) {
             break;
         case 8:
             GQuadruplexPdb2gmx::superpose_and_move();
+            break;
+        case 9:
+            NBOSpin::process();
             break;
         default:
             std::cerr << "Unexcepted block\n";

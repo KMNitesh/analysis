@@ -152,8 +152,30 @@ endif ()
 
 # Eigen3
 find_package(Eigen3 3.3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 link_libraries(Eigen3::Eigen)
-message(STATUS "FOUND Eigen3: ${EIGEN3_INCLUDE_DIR}")
+
+# Blitz
+find_package(blitz REQUIRED)
+include_directories(${BLITZ_INCLUDES})
+link_libraries(${BLITZ_LIBRARIES})
+
+# Armadillo
+find_package(Armadillo REQUIRED)
+include_directories(${ARMADILLO_INCLUDE_DIRS})
+link_libraries(${ARMADILLO_LIBRARIES})
+
+# readline
+find_path(READLINE_INCLUDES "readline/readline.h" PATHS ${INCLUES_PATH})
+if (NOT READLINE_INCLUDES)
+    message(FATAL_ERROR "readline header not found")
+endif ()
+include_directories(${READLINE_INCLUDES})
+find_library(READLINE_LIBS readline PATHS ${LIBRARY_DIRS})
+if (NOT READLINE_LIBS)
+    message(FATAL_ERROR "readline library not found")
+endif ()
+link_libraries(${READLINE_LIBS})
 
 enable_testing()
 

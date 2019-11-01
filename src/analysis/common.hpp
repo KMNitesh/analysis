@@ -19,6 +19,12 @@ namespace po = boost::program_options;
 
 #include <boost/format.hpp>
 
+namespace readline {
+
+#include <readline/readline.h>
+#include <readline/history.h>
+
+}
 class Atom;
 
 class Frame;
@@ -137,7 +143,10 @@ public:
     operator std::string() {
 
         while (true) {
-            std::string input_line = input(prompt, in, out);
+//            std::string input_line = input(prompt, in, out);
+            char *buf = readline::readline(prompt.c_str());
+            std::string input_line = buf;
+            free(buf);
             boost::trim(input_line);
             if (!input_line.empty()) {
                 if (ext.length()) {
