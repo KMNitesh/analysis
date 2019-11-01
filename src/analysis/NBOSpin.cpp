@@ -55,12 +55,12 @@ std::map<int, std::pair<std::string, std::array<double, 3>>> NBOSpin::getElectro
                 std::getline(ifs, line);
                 boost::trim(line);
                 if (line.empty()) {
-                    ++current_pos;
+                    if (++current_pos == 3) return table;
                     break;
                 }
                 auto field = split(line);
                 auto &item = table[std::stoi(field[1])];
-                item.first = field[0];
+                if (current_pos == 0) item.first = field[0];
                 item.second[current_pos] = total_spin(line);
             }
         }
