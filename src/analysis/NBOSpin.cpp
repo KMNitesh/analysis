@@ -10,7 +10,7 @@
 double NBOSpin::total_spin(std::string line) {
     using namespace boost::xpressive;
 
-    static sregex rex = +~(set = '(') >> '(' >> _s >> (s1 = digit >> '.' >> digit >> digit) >> ')';
+    static sregex rex = +~(set = '(') >> '(' >> space >> (s1 = digit >> '.' >> digit >> digit) >> ')';
     smatch what;
     double total = 0.0;
     while (regex_search(line, what, rex)) {
