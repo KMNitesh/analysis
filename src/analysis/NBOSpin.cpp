@@ -10,7 +10,7 @@
 double NBOSpin::total_spin(std::string line) {
     using namespace boost::xpressive;
 
-    static sregex rex = +~(set = '(') >> '(' >> space >> (s1 = digit >> '.' >> digit >> digit) >> ')';
+    static sregex rex = '(' >> (s1 = +~(set = ')')) >> ')';
     smatch what;
     double total = 0.0;
     while (regex_search(line, what, rex)) {
@@ -31,9 +31,11 @@ void NBOSpin::do_process(const std::string &filename) {
 
     std::cout << boost::format("%6s %4s %6s %6s %6s %6s\n")
                  % "Atom" % "No" % "Total" % "Alpha" % "Beta" % "Alpha-Beta";
+
+    const auto fmt = boost::format("%6s %4d %6.2f %6.2f %6.2f %6.2f  %s\n");
     for (auto &item : table) {
         auto diff = item.second.second[1] - item.second.second[2];
-        std::cout << boost::format("%6s %4d %6.2f %6.2f %6.2f %6.2f  %s\n")
+        std::cout << boost::format(fmt)
                      % item.second.first
                      % item.first
                      % item.second.second[0]
