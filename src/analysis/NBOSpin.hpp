@@ -15,7 +15,7 @@ public:
 
     static void do_process(const std::string &filename);
 
-    static double total_spin(std::string line);
+    static double total_spin(std::string_view line);
 
     static std::map<int, std::pair<std::string, std::array<double, 3>>> getElectronSpin(std::istream &ifs);
 };

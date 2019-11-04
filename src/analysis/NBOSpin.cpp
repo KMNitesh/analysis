@@ -7,15 +7,13 @@
 #include <boost/xpressive/xpressive.hpp>
 #include <boost/algorithm/string.hpp>
 
-double NBOSpin::total_spin(std::string line) {
+double NBOSpin::total_spin(std::string_view line) {
     using namespace boost::xpressive;
 
-    static sregex rex = '(' >> (s1 = +~(set = ')')) >> ')';
-    smatch what;
+    static cregex rex = '(' >> (s1 = +~(set = ')')) >> ')';
     double total = 0.0;
-    while (regex_search(line, what, rex)) {
-        total += std::stod(what[1]);
-        line = what.suffix().str();
+    for (cregex_iterator pos(std::begin(line), std::end(line), rex), end; pos != end; ++pos) {
+        total += std::stod((*pos)[1]);
     }
     return total;
 }
@@ -71,6 +69,6 @@ std::map<int, std::pair<std::string, std::array<double, 3>>> NBOSpin::getElectro
 }
 
 void NBOSpin::process() {
-    std::string filename = choose_file("Enter NBO file : ");
+    std::string filename = choose_file("Enter NBO file : ").isExist(true);
     do_process(filename);
 }
