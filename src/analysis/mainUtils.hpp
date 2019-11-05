@@ -31,7 +31,7 @@ void executeScript(const boost::program_options::options_description &desc,
 
 std::shared_ptr<Frame>
 getFrame(std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> &task_list,
-         const int start, const int step_size, const int total_frames,
+         const int start, const int step_size, const int total_frames, int &current_frame_num,
          std::shared_ptr<TrajectoryReader> &reader);
 
 int

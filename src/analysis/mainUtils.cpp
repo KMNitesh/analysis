@@ -13,6 +13,7 @@
 #include <chrono>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/cxx11/one_of.hpp>
+#include <boost/iostreams/copy.hpp>
 
 #include "PrintTopolgy.hpp"
 #include "taskMenu.hpp"
@@ -766,14 +767,15 @@ void processTrajectory(const boost::program_options::options_description &desc,
     }
 
     auto time_before_process = std::chrono::steady_clock::now();
+    int current_frame_num = 0;
     if (parallel_while_task) {
         task_list->remove(parallel_while_task);
         parallel_while_task->do_parallel_while([&] {
-            return getFrame(task_list, start, step_size, total_frames, reader);
+            return getFrame(task_list, start, step_size, total_frames, current_frame_num, reader);
         });
         task_list->push_back(parallel_while_task);
     } else {
-        while (getFrame(task_list, start, step_size, total_frames, reader));
+        while (getFrame(task_list, start, step_size, total_frames, current_frame_num, reader));
     }
     auto time_after_process = std::chrono::steady_clock::now();
 
@@ -794,9 +796,10 @@ void processTrajectory(const boost::program_options::options_description &desc,
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
         outfile << "#  start frame  > " << start << '\n';
         outfile << "#  step (frame) > " << step_size << '\n';
-        outfile << "#  end   frame  > " << (total_frames == 0 ? "all" : std::to_string(total_frames)) << '\n';
-        std::copy(std::istreambuf_iterator<char>(ss), std::istreambuf_iterator<char>(),
-                  std::ostreambuf_iterator<char>(outfile));
+        outfile << "#  end   frame  > " <<
+                (total_frames == 0 ?
+                 ("all(" + std::to_string(current_frame_num) + ')') : std::to_string(total_frames)) << '\n';
+        boost::iostreams::copy(ss, outfile);
     }
 
     std::cout << "(:  Mission Complete  :)   Finish Time  >>> " << finish_time_format << " <<<\n";
@@ -806,9 +809,8 @@ void processTrajectory(const boost::program_options::options_description &desc,
 }
 
 std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> &task_list,
-                                const int start, const int step_size, const int total_frames,
+                                const int start, const int step_size, const int total_frames, int &current_frame_num,
                                 std::shared_ptr<TrajectoryReader> &reader) {
-    static int current_frame_num = 0;
     std::shared_ptr<Frame> frame;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
