@@ -12,7 +12,7 @@
 
 using namespace testing;
 
-TEST(DISABLED_TestNonlinearLestSquares, ThreeCircles) {
+TEST(TestNonlinearLestSquaresLearn, ThreeCircles) {
 
     Eigen::Vector2d x0 = {0, 0};
 
@@ -89,14 +89,6 @@ protected:
 
     };
 };
-
-double testTCTP(std::vector<std::tuple<double, double, double>> &coord) {
-
-}
-
-double testCASP(std::vector<std::tuple<double, double, double>> &coord) {
-
-}
 
 TEST_F(TestNonlinearLestSquares, TCTP) {
     ASSERT_THAT(CoordinationStructureMatch::testTCTP(tctp_coord), Lt(CoordinationStructureMatch::testCASP(tctp_coord)));

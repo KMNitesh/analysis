@@ -7,15 +7,14 @@
 #ifndef TINKER_ABSTRACTANALYSIS_HPP
 #define TINKER_ABSTRACTANALYSIS_HPP
 
-#include <utility>
-
 #include "std.hpp"
+#include <boost/core/ignore_unused.hpp>
 
 class Frame;
 
 class AbstractAnalysis {
 public:
-    virtual void processFirstFrame(std::shared_ptr<Frame> &frame) {};
+    virtual void processFirstFrame(std::shared_ptr<Frame> &frame) { boost::ignore_unused(frame); };
 
     virtual void process(std::shared_ptr<Frame> &frame) = 0;
 
@@ -40,7 +39,7 @@ public:
     virtual ~AbstractAnalysis() = default;
 
 protected:
-    virtual void do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) {};
+    virtual void do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) { boost::ignore_unused(func); };
 
     virtual bool enable_paralel_while_impl() { return false; }
 

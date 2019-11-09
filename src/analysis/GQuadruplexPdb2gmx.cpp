@@ -82,9 +82,9 @@ namespace {
             if (line.empty()) continue;
             if (boost::starts_with(line, ";")) continue;
             if (boost::starts_with(line, "[") and boost::ends_with(line, "]")) {
-                auto fields = split(line);
-                assert(fields.size() == 3);
-                auto key = fields[1];
+                line.erase(line.length() - 1);
+                line.erase(0);
+                auto &key = line;
                 auto it = mode_mapping.find(key);
                 mode = MODE::RESIDUE;
                 if (it != mode_mapping.end()) {

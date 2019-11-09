@@ -7,6 +7,7 @@
 
 #include <random>
 #include "CoordinationStructureClassification.hpp"
+#include <boost/range/algorithm.hpp>
 
 using namespace testing;
 
@@ -85,9 +86,11 @@ TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithAll
     for (auto &coord : c2) {
         std::get<0>(coord) += 1;
     }
+    boost::sort(c2);
     do {
-        ASSERT_THAT(CoordinationStructureClassification::calculateRmsdOfTwoStructs(c1, c2), DoubleNear(1, 0.01));
-    } while (std::next_permutation(c2.begin(), c2.end()));
+        ASSERT_THAT(CoordinationStructureClassification::calculateRmsdOfTwoStructs(c1, c2),
+                    DoubleNear(1.40435, 0.00001));
+    } while (boost::next_permutation(c2));
 }
 
 TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithAllPermutationOfSmallShift2) {
@@ -102,9 +105,10 @@ TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithAll
             {1.09,  1.65,  0.54},
             {0.96,  1.08,  -2.16}
     };
+    boost::sort(c2);
     do {
         ASSERT_THAT(CoordinationStructureClassification::calculateRmsdOfTwoStructs(c1, c2),
-                    DoubleNear(0.440274, 0.000001));
-    } while (std::next_permutation(c2.begin(), c2.end()));
+                    DoubleNear(0.758613, 0.000001));
+    } while (boost::next_permutation(c2));
 }
 

@@ -52,6 +52,7 @@ void ConvertVelocityToVelocityCharge::process(std::shared_ptr<Frame> &frame) {
 }
 
 void ConvertVelocityToVelocityCharge::print(std::ostream &os) {
+    boost::ignore_unused(os);
     writer->close();
 }
 
