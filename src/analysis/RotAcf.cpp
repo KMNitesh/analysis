@@ -8,12 +8,18 @@
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/irange.hpp>
 
+#include "common.hpp"
 #include "RotAcf.hpp"
 #include "frame.hpp"
 #include "molecule.hpp"
 #include "ThrowAssert.hpp"
 #include "VectorSelectorFactory.hpp"
 #include "LegendrePolynomial.hpp"
+
+RotAcf::RotAcf() {
+    enable_outfile = true;
+    enable_tbb = true;
+}
 
 void RotAcf::processFirstFrame(std::shared_ptr<Frame> &frame) {
     rots.resize(vectorSelector->initialize(frame));
@@ -55,53 +61,55 @@ std::vector<double> RotAcf::integrate(const std::vector<double> &acf) const {
     return integrate;
 }
 
-template<typename Function>
-class RotAcfParallelBody {
-public:
-    const std::vector<std::vector<std::tuple<double, double, double>>> &rots;
-    std::vector<double, tbb::tbb_allocator<double>> acf;
+namespace {
+    template<typename Function>
+    class RotAcfParallelBody {
+    public:
+        const std::vector<std::vector<std::tuple<double, double, double>>> &rots;
+        std::vector<double, tbb::tbb_allocator<double>> acf;
 
-    size_t array_length;
-    size_t max_time_grap_step;
-    Function f;
+        size_t array_length;
+        size_t max_time_grap_step;
+        Function f;
 
-    explicit RotAcfParallelBody(const std::vector<std::vector<std::tuple<double, double, double>>> &rots,
-                                size_t max_time_grap_step, size_t array_length, Function f)
-            : rots(rots), acf(array_length),
-              array_length(array_length),
-              max_time_grap_step(max_time_grap_step), f(f) {}
+        explicit RotAcfParallelBody(const std::vector<std::vector<std::tuple<double, double, double>>> &rots,
+                                    size_t max_time_grap_step, size_t array_length, Function f)
+                : rots(rots), acf(array_length),
+                  array_length(array_length),
+                  max_time_grap_step(max_time_grap_step), f(f) {}
 
-    RotAcfParallelBody(const RotAcfParallelBody &rhs, tbb::split)
-            : rots(rhs.rots), acf(rhs.array_length),
-              array_length(rhs.array_length),
-              max_time_grap_step(rhs.max_time_grap_step), f(rhs.f) {}
+        RotAcfParallelBody(const RotAcfParallelBody &rhs, tbb::split)
+                : rots(rhs.rots), acf(rhs.array_length),
+                  array_length(rhs.array_length),
+                  max_time_grap_step(rhs.max_time_grap_step), f(rhs.f) {}
 
-    void join(const RotAcfParallelBody &rhs) {
-        for (size_t i = 1; i < array_length; i++) {
-            acf[i] += rhs.acf[i];
+        void join(const RotAcfParallelBody &rhs) {
+            for (size_t i = 1; i < array_length; i++) {
+                acf[i] += rhs.acf[i];
+            }
         }
-    }
 
-    void operator()(const tbb::blocked_range<std::size_t> &range) {
-        for (auto index = range.begin(); index != range.end(); index++) {
-            auto &_vector = rots[index];
-            auto total_size = _vector.size();
+        void operator()(const tbb::blocked_range<std::size_t> &range) {
+            for (auto index = range.begin(); index != range.end(); index++) {
+                auto &_vector = rots[index];
+                auto total_size = _vector.size();
 
-            for (size_t i = 0; i < total_size - 1; i++) {
-                for (size_t j = i + 1; j < std::min(total_size, max_time_grap_step + i); j++) {
-                    auto m = j - i;
+                for (size_t i = 0; i < total_size - 1; i++) {
+                    for (size_t j = i + 1; j < std::min(total_size, max_time_grap_step + i); j++) {
+                        auto m = j - i;
 
-                    assert(i < _vector.size());
-                    assert(j < _vector.size());
+                        assert(i < _vector.size());
+                        assert(j < _vector.size());
 
-                    double cos = dot_multiplication(_vector[i], _vector[j]);
+                        double cos = dot_multiplication(_vector[i], _vector[j]);
 
-                    acf[m] += f(cos);
+                        acf[m] += f(cos);
+                    }
                 }
             }
         }
-    }
-};
+    };
+}
 
 template<typename Function>
 std::vector<double> RotAcf::calculate(Function f) const {

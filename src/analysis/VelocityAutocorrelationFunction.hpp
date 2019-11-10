@@ -23,9 +23,9 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Velocity Autocorrelation Function"; }
+    [[nodiscard]] static std::string title() { return "Velocity Autocorrelation Function"; }
 
-    [[nodiscard]]  static std::vector<double>
+    [[nodiscard]] static std::vector<double>
     calculateAcf(const std::vector<std::deque<std::tuple<double, double, double>>> &velocities,
                  int max_time_grap_frame);
 
