@@ -25,10 +25,10 @@ public:
 
     static std::string title() { return "Infrared radiation (IR) Spectrum"; }
 
-    static std::vector<double> calculateIntense(const std::vector<long double> &acf, double time_increment_ps);
+    [[nodiscard]] static std::vector<double> calculateIntense(const std::vector<double> &acf, double time_increment_ps);
 
     template<typename Container>
-    static std::vector<long double> calculateAcf(const Container &evolution);
+    [[nodiscard]] static std::vector<double> calculateAcf(const Container &evolution);
 
     static void calculateSpectrum(const std::string &out);
 
@@ -39,7 +39,7 @@ public:
 
 protected:
 
-    std::tuple<double, double, double> getDipole(std::shared_ptr<Frame> &frame);
+    [[nodiscard]] std::tuple<double, double, double> getDipole(std::shared_ptr<Frame> &frame);
 
     double time_increment_ps;
 

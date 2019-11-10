@@ -54,7 +54,7 @@ void IRSpectrum::printData(std::ostream &os,
     os << std::string(50, '#') << '\n';
 }
 
-std::vector<double> IRSpectrum::calculateIntense(const std::vector<long double> &acf, double time_increment_ps) {
+std::vector<double> IRSpectrum::calculateIntense(const std::vector<double> &acf, double time_increment_ps) {
     constexpr double lightSpeed = 2.99792458E-2;
 
     const double factor = 2.0 * pi * lightSpeed;
@@ -75,13 +75,13 @@ std::vector<double> IRSpectrum::calculateIntense(const std::vector<long double> 
 
 
 template<typename Container>
-std::vector<long double> IRSpectrum::calculateAcf(const Container &evolution) {
+std::vector<double> IRSpectrum::calculateAcf(const Container &evolution) {
 
     auto max_calc_length = evolution.size() / 3;
 
     auto[acf, ntime] = tbb::parallel_reduce(
             tbb::blocked_range(std::size_t(0), evolution.size()),
-            std::make_pair(std::vector<long double>(max_calc_length), std::vector<long>(max_calc_length)),
+            std::make_pair(std::vector<double>(max_calc_length), std::vector<long>(max_calc_length)),
             [&evolution, max_calc_length](const tbb::blocked_range<size_t> &range, auto init) {
                 auto &[acf, ntime] = init;
                 for (size_t i = range.begin(); i != range.end(); ++i) {
@@ -96,7 +96,7 @@ std::vector<long double> IRSpectrum::calculateAcf(const Container &evolution) {
             [](const auto &lhs, const auto &rhs) {
                 auto &[lhs_acf, lhs_ntime] = lhs;
                 auto &[rhs_acf, rhs_ntime] = rhs;
-                std::vector<long double> acf(lhs_acf.size());
+                std::vector<double> acf(lhs_acf.size());
                 std::vector<long> ntime(lhs_ntime.size());
                 boost::transform(lhs_acf, rhs_acf, acf.begin(), std::plus<>());
                 boost::transform(lhs_ntime, rhs_ntime, ntime.begin(), std::plus<>());
@@ -113,7 +113,7 @@ std::vector<long double> IRSpectrum::calculateAcf(const Container &evolution) {
     return acf;
 }
 
-template std::vector<long double> IRSpectrum::calculateAcf(const std::deque<double> &);
+template std::vector<double> IRSpectrum::calculateAcf(const std::deque<double> &);
 
 void IRSpectrum::readInfo() {
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));

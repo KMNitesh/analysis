@@ -47,7 +47,7 @@ void RamanSpectrum::calculateSpectrum(const std::string &out) {
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
     os << std::string(50, '#') << '\n';
-    std::array<std::vector<long double>, 3> acf;
+    std::array<std::vector<double>, 3> acf;
 
     tbb::parallel_invoke([&acf, &polarTensor] { acf[0] = IRSpectrum::calculateAcf(polarTensor[0]); },
                          [&acf, &polarTensor] { acf[1] = IRSpectrum::calculateAcf(polarTensor[1]); },

@@ -25,7 +25,7 @@ public:
 
     static std::string title() { return "Velocity Autocorrelation Function"; }
 
-    [[nodiscard]]  static std::vector<long double>
+    [[nodiscard]]  static std::vector<double>
     calculateAcf(const std::vector<std::deque<std::tuple<double, double, double>>> &velocities,
                  int max_time_grap_frame);
 
@@ -36,7 +36,7 @@ protected:
 
     std::vector<std::deque<std::tuple<double, double, double>>> velocities;
 
-    std::vector<long double> acf;
+    std::vector<double> acf;
 
 };
 
