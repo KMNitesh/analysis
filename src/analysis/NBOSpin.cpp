@@ -59,9 +59,9 @@ std::map<int, std::pair<std::string, std::array<double, 3>>> NBOSpin::getElectro
                     break;
                 }
                 auto field = split(line);
-                auto &item = table[std::stoi(field[1])];
-                if (current_pos == 0) item.first = field[0];
-                item.second[current_pos] = total_spin(line);
+                auto &[name, spins] = table[std::stoi(field[1])];
+                if (current_pos == 0) name = field[0];
+                spins[current_pos] = total_spin(line);
             }
         }
     }
