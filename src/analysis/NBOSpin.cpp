@@ -31,16 +31,11 @@ void NBOSpin::do_process(const std::string &filename) {
                  % "Atom" % "No" % "Total" % "Alpha" % "Beta" % "Alpha-Beta";
 
     const auto fmt = boost::format("%6s %4d %6.2f %6.2f %6.2f %6.2f  %s\n");
-    for (auto &item : table) {
-        auto diff = item.second.second[1] - item.second.second[2];
+    for (auto &[atomNo, content] : table) {
+        auto &[name, spins] = content;
+        auto diff = spins[1] - spins[2];
         std::cout << boost::format(fmt)
-                     % item.second.first
-                     % item.first
-                     % item.second.second[0]
-                     % item.second.second[1]
-                     % item.second.second[2]
-                     % diff
-                     % (std::abs(diff) >= 0.1 ? '*' : ' ');
+                     % name % atomNo % spins[0] % spins[1] % spins[2] % diff % (std::abs(diff) >= 0.1 ? '*' : ' ');
     }
 }
 
