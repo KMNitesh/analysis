@@ -23,6 +23,8 @@ namespace {
 
     class Residue {
     public:
+        Residue(std::string resName, int residueNum) : res_name(std::move(resName)), residue_num(residueNum) {}
+
         std::string res_name;
         int residue_num;
         std::vector<PDBAtom> atoms;

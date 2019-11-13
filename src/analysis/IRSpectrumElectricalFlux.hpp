@@ -23,7 +23,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Infrared radiation (IR) Spectrum from Electrical Flux"; }
+    [[nodiscard]] static std::string title() { return "Infrared radiation (IR) Spectrum from Electrical Flux"; }
 
 protected:
 

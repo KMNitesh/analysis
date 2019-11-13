@@ -17,7 +17,7 @@ IRSpectrumElectricalFlux::IRSpectrumElectricalFlux() {
     enable_tbb = true;
 }
 
-void IRSpectrumElectricalFlux::process(std::shared_ptr<Frame> &frame) {
+void IRSpectrumElectricalFlux::process([[maybe_unused]] std::shared_ptr<Frame> &frame) {
 
     std::tuple<double, double, double> flux{};
 

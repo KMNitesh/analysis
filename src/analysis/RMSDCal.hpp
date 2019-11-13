@@ -48,7 +48,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "RMSD Calculator"; }
+    [[nodiscard]] static std::string title() { return "RMSD Calculator"; }
 
     static double rmsfit(double x1[], double y1[], double z1[],
                          double x2[], double y2[], double z2[], int n_rms_calc);
