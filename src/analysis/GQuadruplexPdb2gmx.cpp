@@ -6,6 +6,7 @@
 #include "common.hpp"
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm.hpp>
+#include <boost/range/adaptors.hpp>
 #include <boost/range/irange.hpp>
 #include <boost/range/numeric.hpp>
 #include "RMSDCal.hpp"
@@ -28,12 +29,19 @@ namespace {
         std::string res_name;
         int residue_num;
         std::vector<PDBAtom> atoms;
+
+        std::optional<int> min_num;
+
+        [[nodiscard]] int get_min_atom() const {
+            return min_num.has_value() ?
+                   min_num.value() : boost::min_element(atoms, [](auto &lhs, auto &rhs) {
+                        return lhs.atom_num < rhs.atom_num;
+                    })->atom_num;
+        }
     };
 
     std::ostream &operator<<(std::ostream &os, const Residue &residue) {
-        int min = boost::min_element(residue.atoms, [](auto &lhs, auto &rhs) {
-            return lhs.atom_num < rhs.atom_num;
-        })->atom_num;
+        int min = residue.get_min_atom();
         for (auto i : boost::irange(std::size_t(0), residue.atoms.size())) {
             os << boost::format("ATOM  %5d %-4s %+3s  %4d    %8.3f%8.3f%8.3f  1.00  0.00\n")
                   % (i + min)
@@ -146,7 +154,10 @@ namespace {
                 auto y = std::stod(line.substr(38, 8));
                 auto z = std::stod(line.substr(46, 8));
 
-                if (residues.empty() || residues.back().residue_num != res_num) {
+                if (residues.empty()
+                    || residues.back().residue_num != res_num
+                    || residues.back().res_name != res_name) {
+
                     residues.emplace_back(Residue{res_name, res_num});
                 }
                 residues.back().atoms.emplace_back(atom_num, atom_name, x, y, z);
@@ -250,5 +261,25 @@ void GQuadruplexPdb2gmx::superpose_and_move() {
     std::ofstream ofs(output_pdb);
 
     boost::copy(residues, std::ostream_iterator<Residue>(ofs));
+}
+
+void GQuadruplexPdb2gmx::renumberAtomAndResidueNum() {
+    std::string input_pdb = choose_file("Input PDB : ").extension("pdb").isExist(true);
+    std::ifstream pdb_ifs(input_pdb);
+    auto residues = readPDB(pdb_ifs);
+
+    std::string output_pdb = choose_file("Output PDB : ").extension("pdb").isExist(false);
+
+    std::ofstream ofs(output_pdb);
+    int current_atom_num_min = 1;
+    for (auto &&element : residues | boost::adaptors::indexed(1)) {
+        auto &residue = element.value();
+        residue.residue_num = element.index();
+        residue.min_num = current_atom_num_min;
+        current_atom_num_min += residue.atoms.size();
+
+        ofs << residue;
+    }
+
 }
 

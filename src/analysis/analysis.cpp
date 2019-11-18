@@ -39,7 +39,8 @@ int mainMenu() {
     std::cout << "(7) " << GQuadruplexPdb2gmx::title() << '\n';
     std::cout << "(8) " << "Superpose and move for Residues" << '\n';
     std::cout << "(9) " << NBOSpin::title() << '\n';
-    return choose<int>(0, 9, "select :");
+    std::cout << "(10) Renumber atom and residue num\n";
+    return choose<int>(0, 10, "select : ");
 };
 
 void printDSLDetails() {
@@ -248,6 +249,9 @@ int main(int argc, char *argv[]) {
             break;
         case 9:
             NBOSpin::process();
+            break;
+        case 10:
+            GQuadruplexPdb2gmx::renumberAtomAndResidueNum();
             break;
         default:
             std::cerr << "Unexcepted block\n";

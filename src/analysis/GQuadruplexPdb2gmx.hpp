@@ -16,6 +16,8 @@ public:
     static void convert();
 
     static void superpose_and_move();
+
+    static void renumberAtomAndResidueNum();
 };
 
 
