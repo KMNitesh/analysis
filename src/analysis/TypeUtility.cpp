@@ -13,7 +13,7 @@ namespace mpl = boost::mpl;
 
 #include "TypeUtility.hpp"
 
-namespace TypeUtiltyInternal {
+namespace {
     template<typename T1>
     class AddItem {
     public:
@@ -45,7 +45,7 @@ std::string getPrettyName(const boost::any &v) {
 
     std::unordered_map<std::type_index, std::string> mapping;
 
-    mpl::for_each<components, boost::type<mpl::_>>(TypeUtiltyInternal::AddItem(mapping));
+    mpl::for_each<components, boost::type<mpl::_>>(AddItem(mapping));
 
     auto it = mapping.find(v.type());
     return it != mapping.end() ? it->second : v.type().name();
