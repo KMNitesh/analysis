@@ -160,11 +160,6 @@ find_package(blitz REQUIRED)
 include_directories(${BLITZ_INCLUDES})
 link_libraries(${BLITZ_LIBRARIES})
 
-# Armadillo
-find_package(Armadillo REQUIRED)
-include_directories(${ARMADILLO_INCLUDE_DIRS})
-link_libraries(${ARMADILLO_LIBRARIES})
-
 # readline
 find_path(READLINE_INCLUDES "readline/readline.h" PATHS ${INCLUES_PATH})
 if (NOT READLINE_INCLUDES)
