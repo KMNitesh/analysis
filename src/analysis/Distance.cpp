@@ -34,7 +34,10 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
     auto r = coord2 - coord1;
     frame->image(r);
 
-    distances.push_back(vector_norm(r));
+    auto dist = vector_norm(r);
+    acc(dist);
+
+    distances.push_back(dist);
 }
 
 
@@ -44,6 +47,9 @@ void Distance::print(std::ostream &os) {
     os << "# " << title() << " # \n";
     os << "# mask for group1 > " << mask_for_group1 << '\n';
     os << "# mask for group2 > " << mask_for_group2 << '\n';
+    os << std::string(50, '#') << '\n';
+    os << "mean : " << boost::accumulators::mean(acc) << '\n';
+    os << "standard deviation : " << std::sqrt(boost::accumulators::variance(acc)) << '\n';
     os << std::string(50, '#') << '\n';
     os << boost::format("#%15s %15s\n") % "Frame" % "Distance(Ang)";
     for (const auto &element : distances | boost::adaptors::indexed(1)) {

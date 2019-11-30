@@ -6,6 +6,8 @@
 #define TINKER_DISTANCE_HPP
 
 #include "std.hpp"
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -38,6 +40,14 @@ protected:
 
     std::unordered_set<std::shared_ptr<Atom>> atoms_for_group1;
     std::unordered_set<std::shared_ptr<Atom>> atoms_for_group2;
+
+    boost::accumulators::accumulator_set<
+            double,
+            boost::accumulators::features<
+                    boost::accumulators::tag::mean,
+                    boost::accumulators::tag::variance
+            >
+    > acc;
 };
 
 #endif //TINKER_DISTANCE_HPP
