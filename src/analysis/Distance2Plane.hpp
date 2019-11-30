@@ -3,6 +3,8 @@
 #ifndef TINKER_DISTANCE2PLANE_HPP
 #define TINKER_DISTANCE2PLANE_HPP
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -42,6 +44,14 @@ private:
     static double dis_pt2panel(Point pt, std::tuple<double, double, double, double> parameter);
 
     std::deque<double> distances;
+
+    boost::accumulators::accumulator_set<
+            double,
+            boost::accumulators::features<
+                    boost::accumulators::tag::mean,
+                    boost::accumulators::tag::variance
+            >
+    > acc;
 
 };
 

@@ -43,6 +43,7 @@ void Distance2Plane::process([[maybe_unused]] std::shared_ptr<Frame> &frame) {
     middle /= outplane_atoms.size();
 
     auto dist = dis_pt2panel(middle, parameter);
+    acc(dist);
 
     distances.push_back(dist);
 
@@ -62,7 +63,8 @@ void Distance2Plane::print(std::ostream &os) {
         os << "#  atom [" << item.index() << "] = " << item.value() << '\n';
     }
     os << '\n';
-
+    os << "mean : " << boost::accumulators::mean(acc) << '\n';
+    os << "standard deviation : " << std::sqrt(boost::accumulators::variance(acc)) << '\n';
     os << std::string(50, '#') << '\n';
     os << boost::format("%15s %15s\n") % "Frame" % "Distance(Ang)";
 
