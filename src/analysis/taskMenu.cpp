@@ -100,6 +100,7 @@ namespace mpl = boost::mpl;
 #include "LocalStructureIndexForLiquid.hpp"
 #include "CoordinationStructureMatch.hpp"
 #include "CoplaneIndex.hpp"
+#include "Distance2Plane.hpp"
 
 using namespace std;
 namespace {
@@ -171,6 +172,7 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
 
     using structurePropertyMenu = mpl::vector<
             Distance,
+            Distance2Plane,
             CoordinateNumPerFrame,
             RadicalDistribtuionFunction,
             RMSDCal,
