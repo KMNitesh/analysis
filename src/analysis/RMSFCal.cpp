@@ -129,7 +129,7 @@ void RMSFCal::calculate_average_structure() {
 void RMSFCal::readInfo() {
     Atom::select1group(mask_for_superpose, "Please enter atoms for superpose > ");
     Atom::select1group(mask_for_rmsfcalc, "Please enter atoms for rmsf calc > ");
-    if (choose_bool("Output superposed strcuture [N]"), Default(false)) {
+    if (choose_bool("Output superposed strcuture [N] > ", Default(false))) {
         Atom::select1group(mask_for_first_frame_output, "Please enter atoms for first frame output > ");
         std::string filename = choose_file("Enter pdb filename for output > ").extension("pdb");
         pdb_ostream = std::make_unique<std::ofstream>(filename);
