@@ -99,6 +99,7 @@ namespace mpl = boost::mpl;
 #include "LocalStructureIndex.hpp"
 #include "LocalStructureIndexForLiquid.hpp"
 #include "CoordinationStructureMatch.hpp"
+#include "CoplaneIndex.hpp"
 
 using namespace std;
 namespace {
@@ -164,7 +165,8 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
             DistanceAngle,
             DipoleAngleAxis3D,
             SpatialOrientationDistribution,
-            AngleDistributionBetweenTwoVectorWithCutoff
+            AngleDistributionBetweenTwoVectorWithCutoff,
+            CoplaneIndex
     >;
 
     using structurePropertyMenu = mpl::vector<
