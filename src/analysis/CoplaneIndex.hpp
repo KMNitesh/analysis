@@ -19,7 +19,7 @@ public:
 
     void readInfo() override;
 
-    static std::string_view title() { return "Coplane index"; }
+    [[nodiscard]] static std::string_view title() { return "Coplane index"; }
 
 private:
 
@@ -27,7 +27,7 @@ private:
 
     std::vector<std::array<std::shared_ptr<Atom>, 3>> atom_array;
 
-    std::deque<double> coplaneIndex;
+    std::deque<std::pair<double, double>> coplaneIndex; // mean and std
 };
 
 

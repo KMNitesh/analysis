@@ -2,6 +2,8 @@
 #include "std.hpp"
 #include <boost/range/algorithm.hpp>
 #include <boost/range/adaptors.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 #include "CoplaneIndex.hpp"
 #include "frame.hpp"
 #include "common.hpp"
@@ -24,9 +26,8 @@ void CoplaneIndex::processFirstFrame(std::shared_ptr<Frame> &frame) {
 }
 
 void CoplaneIndex::process(std::shared_ptr<Frame> &frame) {
-    const auto n = atom_array.size();
-    std::vector<std::tuple<double, double, double>> plane_normal_vectors;
-    plane_normal_vectors.reserve(n);
+    static std::vector<std::tuple<double, double, double>> plane_normal_vectors;
+    plane_normal_vectors.clear();
 
     for (const auto &plane : atom_array) {
         auto atom1_coord = plane[0]->getCoordinate();
@@ -44,16 +45,16 @@ void CoplaneIndex::process(std::shared_ptr<Frame> &frame) {
         plane_normal_vectors.push_back(v);
     }
 
-    double coplane_index{};
+    using namespace boost::accumulators;
+    accumulator_set<double, features<tag::mean, tag::variance>> acc;
+
     for (auto it1 = begin(plane_normal_vectors); it1 != end(plane_normal_vectors) - 1; ++it1) {
         for (auto it2 = it1 + 1; it2 != end(plane_normal_vectors); ++it2) {
-            coplane_index += dot_multiplication(*it1, *it2);
+            acc(std::abs(dot_multiplication(*it1, *it2)));
         }
     }
 
-    coplane_index /= n * (n - 1) / 2;
-
-    coplaneIndex.push_back(coplane_index);
+    coplaneIndex.emplace_back(mean(acc), std::sqrt(variance(acc)));
 }
 
 void CoplaneIndex::print(std::ostream &os) {
@@ -69,11 +70,11 @@ void CoplaneIndex::print(std::ostream &os) {
     }
 
     os << std::string(50, '#') << '\n';
-    os << boost::format("%15s %15s\n") % "Frame" % "CoplaneIndex";
+    os << boost::format("%15s %15s %15s\n") % "Frame" % "CoplaneIndex" % "STD";
 
-    const auto fmt = boost::format("%15.3f %15.3f\n");
+    const auto fmt = boost::format("%15.3f %15.3f %15.3f\n");
     for (const auto &element : coplaneIndex | boost::adaptors::indexed(1)) {
-        os << boost::format(fmt) % element.index() % element.value();
+        os << boost::format(fmt) % element.index() % element.value().first % element.value().second;
     }
 
     os << std::string(50, '#') << '\n';
