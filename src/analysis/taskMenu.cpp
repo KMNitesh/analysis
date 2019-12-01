@@ -133,19 +133,18 @@ namespace {
             for_each(item_menu.cbegin(), item_menu.cend(), std::cout << boost::phoenix::placeholders::_1 << '\n');
             return choose<int>(0, mpl::size<components>::value, "select : ");
         };
-        while (true) {
-            int num = menu1();
-            if (num == 0) return task_list;
-            shared_ptr<AbstractAnalysis> task = task_vec[num - 1]();
+        int num = menu1();
+        if (num == 0) return task_list;
+        shared_ptr<AbstractAnalysis> task = task_vec[num - 1]();
 
-            string line(item_menu[num - 1].size() + 6, '-');
+        string line(item_menu[num - 1].size() + 6, '-');
 
-            std::cout << line << "\n";
-            std::cout << "<- " << item_menu[num - 1] << " ->\n";
-            std::cout << line << "\n";
-            task->readInfo();
-            task_list->push_back(task);
-        }
+        std::cout << line << "\n";
+        std::cout << "<- " << item_menu[num - 1] << " ->\n";
+        std::cout << line << "\n";
+        task->readInfo();
+        task_list->push_back(task);
+        return task_list;
     }
 }
 

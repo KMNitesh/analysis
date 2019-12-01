@@ -19,6 +19,7 @@ namespace po = boost::program_options;
 #include "GmxTopologyPrinter.hpp"
 #include "GQuadruplexPdb2gmx.hpp"
 #include "NBOSpin.hpp"
+#include "Averager.hpp"
 
 using namespace std;
 
@@ -40,7 +41,8 @@ int mainMenu() {
     std::cout << "(8) " << "Superpose and move for Residues" << '\n';
     std::cout << "(9) " << NBOSpin::title() << '\n';
     std::cout << "(10) Renumber atom and residue num\n";
-    return choose<int>(0, 10, "select : ");
+    std::cout << "(11) " << Averager::title() << '\n';
+    return choose<int>(0, 11, "select : ");
 };
 
 void printDSLDetails() {
@@ -252,6 +254,9 @@ int main(int argc, char *argv[]) {
             break;
         case 10:
             GQuadruplexPdb2gmx::renumberAtomAndResidueNum();
+            break;
+        case 11:
+            Averager::process();
             break;
         default:
             std::cerr << "Unexcepted block\n";
