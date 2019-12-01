@@ -14,10 +14,10 @@ CoplaneIndex::CoplaneIndex() {
 
 void CoplaneIndex::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        for (std::size_t i = 0; i < mark_array.size(); ++i) {
-            for (std::size_t j = 0; j < mark_array[i].size(); ++j) {
-                if (Atom::is_match(atom, mark_array[i][j])) {
-                    atom_array[i][j] = atom;
+        for (std::size_t i = 0; i < mask_arrays.size(); ++i) {
+            for (std::size_t j = 0; j < mask_arrays[i].size(); ++j) {
+                if (Atom::is_match(atom, mask_arrays[i][j])) {
+                    atom_arrays[i][j] = atom;
                     return;
                 }
             }
@@ -29,7 +29,7 @@ void CoplaneIndex::process(std::shared_ptr<Frame> &frame) {
     static std::vector<std::tuple<double, double, double>> plane_normal_vectors;
     plane_normal_vectors.clear();
 
-    for (const auto &plane : atom_array) {
+    for (const auto &plane : atom_arrays) {
         auto atom1_coord = plane[0]->getCoordinate();
         auto atom2_coord = plane[1]->getCoordinate();
         auto atom3_coord = plane[2]->getCoordinate();
@@ -61,7 +61,7 @@ void CoplaneIndex::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
 
-    for (const auto &plane : mark_array | boost::adaptors::indexed(1)) {
+    for (const auto &plane : mask_arrays | boost::adaptors::indexed(1)) {
         os << "# plane <" << plane.index() << ">\n";
         for (const auto &item : plane.value() | boost::adaptors::indexed(0)) {
             os << "#  atom [" << item.index() << "] = " << item.value() << '\n';
@@ -82,13 +82,13 @@ void CoplaneIndex::print(std::ostream &os) {
 
 void CoplaneIndex::readInfo() {
     std::size_t num = choose(2, "Enter the number of plane > ");
-    mark_array.resize(num);
-    atom_array.resize(num);
+    mask_arrays.resize(num);
+    atom_arrays.resize(num);
 
     for (std::size_t i = 0; i < num; ++i) {
         for (std::size_t j = 0; j < 3; ++j) {
-            Atom::select1group(mark_array[i][j], "Enter mark for atom (" + std::to_string(j + 1)
-                                                 + ") of plane (" + std::to_string(i + 1) + ") > ");
+            Atom::select1group(mask_arrays[i][j], "Enter mark for atom (" + std::to_string(j + 1)
+                                                  + ") of plane (" + std::to_string(i + 1) + ") > ");
         }
     }
 }

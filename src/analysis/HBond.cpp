@@ -6,9 +6,14 @@
 #include "frame.hpp"
 #include "atom.hpp"
 #include "forcefield.hpp"
-
+#include "common.hpp"
 
 using namespace std;
+
+HBond::HBond() {
+    enable_outfile = true;
+    enable_forcefield = true;
+}
 
 Symbol which(const std::shared_ptr<Atom> &atom) {
     double mass = forcefield.find_mass(atom);

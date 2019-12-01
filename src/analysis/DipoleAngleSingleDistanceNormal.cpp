@@ -3,6 +3,7 @@
 //
 
 #include "DipoleAngleSingleDistanceNormal.hpp"
+#include "common.hpp"
 
 using namespace std;
 

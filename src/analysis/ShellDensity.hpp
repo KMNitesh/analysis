@@ -11,8 +11,6 @@
 #include <map>
 #include <list>
 #include <utility>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -21,7 +19,8 @@ class Frame;
 
 class ShellDensity : public AbstractAnalysis {
 public:
-    ShellDensity() { enable_outfile = true; }
+
+    ShellDensity();
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -31,11 +30,10 @@ public:
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
-    static const std::string title() {
-        return "Shell Density function";
-    }
+    [[nodiscard]] static std::string_view title() { return "Shell Density function"; }
 
 protected:
+
     Atom::AmberMask ids1;
     Atom::AmberMask ids2;
 

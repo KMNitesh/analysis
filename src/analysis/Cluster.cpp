@@ -13,6 +13,10 @@
 #include "frame.hpp"
 #include "common.hpp"
 
+Cluster::Cluster() {
+    enable_tbb = true;
+    enable_outfile = true;
+}
 
 void Cluster::process(std::shared_ptr<Frame> &frame) {
 

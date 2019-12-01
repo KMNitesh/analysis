@@ -5,8 +5,14 @@
 #include "DipoleAxisDistribution.hpp"
 #include "frame.hpp"
 #include "molecule.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+DipoleAxisDistribution::DipoleAxisDistribution() {
+    enable_forcefield = true;
+    enable_outfile = true;
+}
 
 void DipoleAxisDistribution::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),

@@ -12,8 +12,6 @@
 #include <map>
 #include <list>
 #include <utility>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -21,12 +19,8 @@ class Frame;
 
 class DipoleAngle : public AbstractAnalysis {
 public:
-    DipoleAngle() {
-        enable_forcefield = true;
-        enable_outfile = true;
-    }
 
-    virtual ~DipoleAngle() = default;
+    DipoleAngle();
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -36,9 +30,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "Dipole Angle";
-    }
+    [[nodiscard]] static std::string_view title() { return "Dipole Angle"; }
 
 protected:
 

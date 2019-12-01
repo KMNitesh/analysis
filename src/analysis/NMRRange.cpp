@@ -3,10 +3,12 @@
 //
 
 #include "NMRRange.hpp"
-
 #include "frame.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+NMRRange::NMRRange() { enable_outfile = true; }
 
 void NMRRange::process(std::shared_ptr<Frame> &frame) {
     if (first_frame) {

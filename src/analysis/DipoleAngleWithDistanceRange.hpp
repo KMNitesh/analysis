@@ -9,7 +9,6 @@
 #include <unordered_set>
 #include <memory>
 #include "AbstractAnalysis.hpp"
-#include "common.hpp"
 #include "atom.hpp"
 
 
@@ -17,10 +16,8 @@ class Frame;
 
 class DipoleAngleWithDistanceRange : public AbstractAnalysis {
 public:
-    DipoleAngleWithDistanceRange() {
-        enable_forcefield = true;
-        enable_outfile = true;
-    }
+
+    DipoleAngleWithDistanceRange();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -30,10 +27,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Dipole Angle Distribution with cutoff"; }
-
-    ~DipoleAngleWithDistanceRange() override = default;
-
+    [[nodiscard]] static std::string_view title() { return "Dipole Angle Distribution with cutoff"; }
 
 protected:
 

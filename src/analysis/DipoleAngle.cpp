@@ -8,8 +8,14 @@
 #include "atom.hpp"
 #include "molecule.hpp"
 #include "ThrowAssert.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+DipoleAngle::DipoleAngle() {
+    enable_forcefield = true;
+    enable_outfile = true;
+}
 
 void DipoleAngle::process(std::shared_ptr<Frame> &frame) {
 

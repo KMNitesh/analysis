@@ -11,19 +11,16 @@
 #include <map>
 #include <list>
 #include <utility>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
-
 class Molecule;
-
 
 class FindMinBetweenTwoGroups : public AbstractAnalysis {
 public:
-    FindMinBetweenTwoGroups() { enable_outfile = true; }
+
+    FindMinBetweenTwoGroups();
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -33,10 +30,11 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Find Min distance between two groups"; }
+    [[nodiscard]] static std::string_view title() { return "Find Min distance between two groups"; }
 
 private:
-    Atom::AmberMask ids;
+
+    Atom::AmberMask amberMask;
 
     int total_frames = 0;
 

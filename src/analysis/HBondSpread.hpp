@@ -20,8 +20,8 @@ struct VertexNode {
 };
 
 class MyVisitor : public boost::default_dfs_visitor {
-
 public:
+
     explicit MyVisitor(std::unordered_set<int> &all_connected_atoms) : all_connected_atoms(all_connected_atoms) {};
 
     template<typename Vertex, typename Graph>
@@ -36,6 +36,7 @@ private:
 
 class HBondSpread : public AbstractAnalysis {
 public:
+
     HBondSpread();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -46,7 +47,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Hydrogen Bond Spread Analysis"; }
+    [[nodiscard]] static std::string_view title() { return "Hydrogen Bond Spread Analysis"; }
 
 protected:
 

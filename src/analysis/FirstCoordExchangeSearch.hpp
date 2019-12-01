@@ -11,8 +11,6 @@
 #include <set>
 #include <unordered_set>
 #include <list>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "frame.hpp"
 #include "atom.hpp"
@@ -20,11 +18,9 @@
 class Frame;
 
 class FirstCoordExchangeSearch : public AbstractAnalysis {
-
 public:
-    FirstCoordExchangeSearch() {
-        enable_outfile = true;
-    }
+
+    FirstCoordExchangeSearch();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -34,10 +30,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "Water exchange analysis";
-    }
-
+    [[nodiscard]] static std::string_view title() { return "Water exchange analysis"; }
 
 private:
 

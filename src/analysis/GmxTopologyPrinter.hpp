@@ -11,7 +11,8 @@ class Frame;
 
 class GmxTopologyPrinter {
 public:
-    static std::string title() { return "Convert Tinker xyz to gromacs topolgy file"; }
+
+    [[nodiscard]] static std::string_view title() { return "Convert Tinker xyz to gromacs topolgy file"; }
 
     static void print(const std::string &topolgy, const std::string &prm, const std::string &out);
 

@@ -12,6 +12,7 @@ class Frame;
 
 class TrajectoryFormatWriter {
 public:
+
     virtual void open(const std::string &filename) = 0;
 
     virtual void close() = 0;

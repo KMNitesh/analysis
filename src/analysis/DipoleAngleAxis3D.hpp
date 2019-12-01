@@ -9,17 +9,14 @@
 #include <memory>
 #include <list>
 #include "AbstractAnalysis.hpp"
-#include "common.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 class DipoleAngleAxis3D : public AbstractAnalysis {
 public:
-    DipoleAngleAxis3D() {
-        enable_forcefield = true;
-        enable_outfile = true;
-    }
+
+    DipoleAngleAxis3D();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -29,11 +26,11 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Dipole Angle 3 Dimension Distribution with Axis"; }
+    [[nodiscard]] static std::string_view title() { return "Dipole Angle 3 Dimension Distribution with Axis"; }
 
 protected:
 
-    Atom::AmberMask ids;
+    Atom::AmberMask amberMask;
 
     std::unordered_set<std::shared_ptr<Molecule>> group;
 

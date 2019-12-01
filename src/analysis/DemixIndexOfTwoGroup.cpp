@@ -9,6 +9,8 @@
 
 using namespace std;
 
+DemixIndexOfTwoGroup::DemixIndexOfTwoGroup() { enable_outfile = true; }
+
 auto
 DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame) {
 

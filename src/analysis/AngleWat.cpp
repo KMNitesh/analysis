@@ -5,8 +5,14 @@
 #include "AngleWat.hpp"
 #include "frame.hpp"
 #include "ThrowAssert.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+AngleWat::AngleWat() {
+    enable_outfile = true;
+}
+
 
 void AngleWat::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),

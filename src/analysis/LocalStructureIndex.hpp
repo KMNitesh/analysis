@@ -13,6 +13,7 @@ class Frame;
 
 class LocalStructureIndex : public AbstractAnalysis {
 public:
+
     LocalStructureIndex();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -23,10 +24,10 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Local Structure Index (LSI) (PCCP 2011,13, 19918-19924)"; }
+    [[nodiscard]] static std::string_view title() { return "Local Structure Index (LSI) (PCCP 2011,13, 19918-19924)"; }
 
     template<typename RandomAccessRange>
-    static double calculateLSI(RandomAccessRange &distance_within_cutoff_range);
+    [[nodiscard]] static double calculateLSI(RandomAccessRange &distance_within_cutoff_range);
 
 protected:
     AmberMask metal_mask;

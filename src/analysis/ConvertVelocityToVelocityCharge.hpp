@@ -14,6 +14,7 @@ class Frame;
 
 class ConvertVelocityToVelocityCharge : public AbstractAnalysis {
 public:
+
     ConvertVelocityToVelocityCharge(std::unique_ptr<TRRWriter> writer = std::make_unique<TRRWriter>());
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -24,7 +25,9 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Convert velocities to velocities * charge in order to use velacc of gmx"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Convert velocities to velocities * charge in order to use velacc of gmx";
+    }
 
 protected:
 

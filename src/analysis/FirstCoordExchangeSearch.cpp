@@ -3,9 +3,12 @@
 //
 
 #include "FirstCoordExchangeSearch.hpp"
-
 #include "frame.hpp"
+#include "common.hpp"
 
+FirstCoordExchangeSearch::FirstCoordExchangeSearch() {
+    enable_outfile = true;
+}
 
 void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
 

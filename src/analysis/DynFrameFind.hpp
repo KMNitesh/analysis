@@ -11,13 +11,14 @@
 
 class DynFrameFind : public AbstractAnalysis {
 public:
+
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
 
     void readInfo() override;
 
-    static const std::string title() { return "Find Frame Index base on Atomic Position of dyn file"; }
+    [[nodiscard]] static std::string_view title() { return "Find Frame Index base on Atomic Position of dyn file"; }
 
 protected:
 

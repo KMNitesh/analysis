@@ -6,8 +6,11 @@
 #include "frame.hpp"
 #include "atom.hpp"
 #include "molecule.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+FindMinBetweenTwoGroups::FindMinBetweenTwoGroups() { enable_outfile = true; }
 
 void FindMinBetweenTwoGroups::process(std::shared_ptr<Frame> &frame) {
 
@@ -27,7 +30,7 @@ void FindMinBetweenTwoGroups::process(std::shared_ptr<Frame> &frame) {
 void FindMinBetweenTwoGroups::print(std::ostream &os) {
     os << "************************************************\n";
     os << "*****" << FindMinBetweenTwoGroups::title() << " ****\n";
-    os << "Group  " << ids << '\n';
+    os << "Group  " << amberMask << '\n';
     os << "************************************************\n";
 
 
@@ -57,13 +60,13 @@ void FindMinBetweenTwoGroups::print(std::ostream &os) {
 
 
 void FindMinBetweenTwoGroups::readInfo() {
-    Atom::select1group(ids, "Input Residue Name Mask: ");
+    Atom::select1group(amberMask, "Input Residue Name Mask: ");
 }
 
 void FindMinBetweenTwoGroups::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, this->ids)) {
+            if (Atom::is_match(atom, this->amberMask)) {
                 mol_list.push_back(mol);
                 break;
             }

@@ -17,8 +17,8 @@ class Frame;
 
 
 class Diffuse : public AbstractAnalysis {
-
 public:
+
     Diffuse();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -29,12 +29,12 @@ public:
 
     void readInfo() override;
 
-    std::string description() override;
+    [[nodiscard]] std::string description() override;
 
     void
     setParameters(const Atom::Node &mask, double time_increment_ps, int total_frames, const std::string &outfilename);
 
-    static const std::string title() {
+    [[nodiscard]] static std::string_view title() {
         return "Self-Diffusion Coefficient Calculation based on Einstein Equation";
     }
 

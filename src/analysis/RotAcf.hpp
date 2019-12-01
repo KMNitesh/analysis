@@ -10,11 +10,11 @@
 #include "VectorSelector.hpp"
 
 class Frame;
-
 class Molecule;
 
 class RotAcf : public AbstractAnalysis {
 public:
+
     explicit RotAcf();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -30,7 +30,7 @@ public:
     void setParameters(const std::shared_ptr<VectorSelector> &vector, int LegendrePolynomial,
                        double time_increment_ps, double max_time_grap_ps, const std::string &outfilename);
 
-    [[nodiscard]] static std::string title() { return "Rotational Autocorrelation Function"; }
+    [[nodiscard]] static std::string_view title() { return "Rotational Autocorrelation Function"; }
 
 protected:
 

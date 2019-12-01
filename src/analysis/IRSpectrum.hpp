@@ -13,6 +13,7 @@ class Frame;
 
 class IRSpectrum : public AbstractAnalysis {
 public:
+
     IRSpectrum();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -23,7 +24,7 @@ public:
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
-    static std::string title() { return "Infrared radiation (IR) Spectrum"; }
+    [[nodiscard]] static std::string_view title() { return "Infrared radiation (IR) Spectrum"; }
 
     [[nodiscard]] static std::vector<double> calculateIntense(const std::vector<double> &acf, double time_increment_ps);
 

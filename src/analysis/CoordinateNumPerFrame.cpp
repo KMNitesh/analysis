@@ -6,6 +6,9 @@
 #include "CoordinateNumPerFrame.hpp"
 #include "frame.hpp"
 
+CoordinateNumPerFrame::CoordinateNumPerFrame() {
+    enable_outfile = true;
+}
 
 void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
 

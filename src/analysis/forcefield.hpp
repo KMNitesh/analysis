@@ -47,6 +47,7 @@ public:
     bool isValid() { return isvalid; }
 
 private:
+
     std::unordered_map<int, AtomItem> mapping;
 
     bool isvalid = false;

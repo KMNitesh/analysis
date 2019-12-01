@@ -3,6 +3,7 @@
 //
 
 #include "DipoleAngle2Gibbs.hpp"
+#include "common.hpp"
 
 using namespace std;
 

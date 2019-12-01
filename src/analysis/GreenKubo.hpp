@@ -9,8 +9,6 @@
 #include <unordered_set>
 #include <string>
 #include <map>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -19,27 +17,22 @@ class Frame;
 
 // Use Green-Kubo equation to calculate self-diffuse coefficients
 class GreenKubo : public AbstractAnalysis {
-
 public:
-    GreenKubo() {
-        enable_read_velocity = true;
-        enable_tbb = true;
-        enable_outfile = true;
-    }
+
+    GreenKubo();
+
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &) override;
 
     void print(std::ostream &os) override;
 
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
-
     void readInfo() override;
 
-    static const std::string title() {
-        return "Green-Kubo";
-    }
+    [[nodiscard]] static std::string_view title() { return "Green-Kubo"; }
 
 private:
+
     Atom::AmberMask ids;
     std::unordered_set<std::shared_ptr<Atom>> group;
 

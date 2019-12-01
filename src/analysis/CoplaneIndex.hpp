@@ -23,9 +23,9 @@ public:
 
 private:
 
-    std::vector<std::array<AmberMask, 3>> mark_array;
+    std::vector<std::array<AmberMask, 3>> mask_arrays;
 
-    std::vector<std::array<std::shared_ptr<Atom>, 3>> atom_array;
+    std::vector<std::array<std::shared_ptr<Atom>, 3>> atom_arrays;
 
     std::deque<std::pair<double, double>> coplaneIndex; // mean and std
 };

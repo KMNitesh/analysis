@@ -19,6 +19,7 @@ class Frame;
 
 class RMSFCal : public AbstractAnalysis {
 public:
+
     RMSFCal();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -29,7 +30,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "RMSF Calculator"; }
+    [[nodiscard]] static std::string_view title() { return "RMSF Calculator"; }
 
     ~RMSFCal() override;
 

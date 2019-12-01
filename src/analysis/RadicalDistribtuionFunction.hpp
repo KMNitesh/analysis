@@ -8,14 +8,30 @@
 #include <unordered_set>
 #include <map>
 #include <memory>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 class RadicalDistribtuionFunction : public AbstractAnalysis {
+public:
+
+    RadicalDistribtuionFunction();
+
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print(std::ostream &os) override;
+
+    void readInfo() override;
+
+    void setParameters(const Atom::Node &id1, const Atom::Node &id2, double max_dist,
+                       double width, bool intramol, const std::string outfilename);
+
+    [[nodiscard]] static std::string_view title() { return "Radical Distribution Function"; }
+
+private:
 
     double rmax;
     double width;
@@ -36,25 +52,6 @@ class RadicalDistribtuionFunction : public AbstractAnalysis {
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 
-public:
-    RadicalDistribtuionFunction() {
-        enable_outfile = true;
-    }
-
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
-
-    void process(std::shared_ptr<Frame> &frame) override;
-
-    void print(std::ostream &os) override;
-
-    void readInfo() override;
-
-    void setParameters(const Atom::Node &id1, const Atom::Node &id2, double max_dist,
-                       double width, bool intramol, const std::string outfilename);
-
-    static const std::string title() {
-        return "Radical Distribution Function";
-    }
 };
 
 

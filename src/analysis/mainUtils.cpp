@@ -93,7 +93,6 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
     }
 
     shared_ptr<Frame> frame;
-    int current_frame_num = 0;
 
     Trajconv writer;
     try {
@@ -104,6 +103,8 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
     }
 
     cout << "Fast Trajectory Convert...\n";
+
+    int current_frame_num = 0;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
         if (current_frame_num == 1) {
@@ -139,7 +140,7 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
     printer.action(choose_file("input topology file : ").isExist(true));
 }
 
-void executeScript(const boost::program_options::options_description &desc,
+void executeScript([[maybe_unused]] const boost::program_options::options_description &desc,
                    const boost::program_options::variables_map &vm, std::vector<std::string> &xyzfiles,
                    int argc, char *argv[]) {
     string scriptContent;

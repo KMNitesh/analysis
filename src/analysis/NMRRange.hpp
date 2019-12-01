@@ -11,8 +11,6 @@
 #include <map>
 #include <list>
 #include <utility>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "AminoTop.hpp"
@@ -20,7 +18,19 @@
 class Frame;
 
 class NMRRange : public AbstractAnalysis {
+public:
 
+    NMRRange();
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print(std::ostream &os) override;
+
+    void readInfo() override;
+
+    [[nodiscard]] static std::string_view title() { return "NMRRange Analysis"; }
+
+private:
 
     void recognize_amino_acid(std::shared_ptr<Frame> &frame);
 
@@ -50,21 +60,6 @@ class NMRRange : public AbstractAnalysis {
     std::map<std::pair<int, int>, std::list<double>> dist_range_map;
 
     std::map<int, std::string> name_map;
-
-public:
-    NMRRange() {
-        enable_outfile = true;
-    }
-
-    void process(std::shared_ptr<Frame> &frame) override;
-
-    void print(std::ostream &os) override;
-
-    void readInfo() override;
-
-    static const std::string title() {
-        return "NMRRange Analysis";
-    }
 };
 
 

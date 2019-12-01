@@ -9,31 +9,35 @@
 #include "VectorSelector.hpp"
 #include "atom.hpp"
 #include "molecule.hpp"
-#include "common.hpp"
 
 class DipoleVectorSelector : public VectorSelector {
 public:
-    DipoleVectorSelector() { enable_forcefield = true; }
+
+    DipoleVectorSelector();
 
     int initialize(const std::shared_ptr<Frame> &frame) override;
 
-    std::vector<std::tuple<double, double, double>> calculateVectors(const std::shared_ptr<Frame> &frame) override;
+    [[nodiscard]] std::vector<std::tuple<double, double, double>>
+    calculateVectors(const std::shared_ptr<Frame> &frame) override;
 
     void readInfo() override;
 
-    std::string description() override;
+    [[nodiscard]] std::string description() override;
 
     void setParameters(const Atom::Node &id);
 
-    std::tuple<double, double, double>
+    [[nodiscard]] std::tuple<double, double, double>
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
 
-    static const std::string title() { return "Dipole vector (define by molecule that has selected atom) selector"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Dipole vector (define by molecule that has selected atom) selector";
+    }
 
 protected:
-    Atom::AmberMask id;
+
+    Atom::AmberMask amberMask;
 
     std::set<std::shared_ptr<Molecule>> selected_mols;
 };

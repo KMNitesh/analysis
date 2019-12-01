@@ -5,13 +5,19 @@
 #include "DipoleAngleAxis3D.hpp"
 #include "frame.hpp"
 #include "molecule.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+DipoleAngleAxis3D::DipoleAngleAxis3D() {
+    enable_forcefield = true;
+    enable_outfile = true;
+}
 
 void DipoleAngleAxis3D::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
                   [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
+                      if (Atom::is_match(atom, this->amberMask)) this->group.insert(atom->molecule.lock());
                   });
 }
 
@@ -32,7 +38,7 @@ void DipoleAngleAxis3D::process(std::shared_ptr<Frame> &frame) {
 void DipoleAngleAxis3D::print(std::ostream &os) {
     os << string(50, '#') << '\n';
     os << "# " << title() << '\n';
-    os << "# Group > " << ids << '\n';
+    os << "# Group > " << amberMask << '\n';
     os << string(50, '#') << '\n';
     os << format("#%15s %15s %15s\n", "Angle_X(degree)", "Angle_Y(degree)", "Angle_Z(degree)");
 
@@ -42,7 +48,7 @@ void DipoleAngleAxis3D::print(std::ostream &os) {
 }
 
 void DipoleAngleAxis3D::readInfo() {
-    Atom::select1group(ids);
+    Atom::select1group(amberMask);
 }
 
 void DipoleAngleAxis3D::printData(std::ostream &os) const {

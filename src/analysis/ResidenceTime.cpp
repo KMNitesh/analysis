@@ -7,8 +7,14 @@
 #include <boost/range/algorithm.hpp>
 #include "ResidenceTime.hpp"
 #include "frame.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+ResidenceTime::ResidenceTime() : timeStarMode(TimeStarMode::Loose) {
+    enable_tbb = true;
+    enable_outfile = true;
+}
 
 void ResidenceTime::calculate() {
 
@@ -199,5 +205,4 @@ void ResidenceTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
                     });
 }
 
-ResidenceTime::~ResidenceTime() = default;
 

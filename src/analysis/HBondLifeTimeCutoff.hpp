@@ -15,6 +15,7 @@ class Frame;
 
 class HBondLifeTimeCutoff : public AbstractAnalysis {
 public:
+
     HBondLifeTimeCutoff();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -25,8 +26,9 @@ public:
 
     void readInfo() override;
 
-    static std::string
-    title() { return "Hydrogen Bond LifeTime for Water in Solvation Shell(Ci, history independent)"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Hydrogen Bond LifeTime for Water in Solvation Shell(Ci, history independent)";
+    }
 
     struct InnerAtom {
         int index;

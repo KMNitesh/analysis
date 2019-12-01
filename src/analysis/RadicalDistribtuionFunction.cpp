@@ -4,6 +4,11 @@
 
 #include "RadicalDistribtuionFunction.hpp"
 #include "frame.hpp"
+#include "common.hpp"
+
+RadicalDistribtuionFunction::RadicalDistribtuionFunction() {
+    enable_outfile = true;
+}
 
 void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 

@@ -6,9 +6,14 @@
 #include "frame.hpp"
 #include "ThrowAssert.hpp"
 #include "molecule.hpp"
+#include "common.hpp"
 
 using namespace std;
 
+DipoleAngleWithDistanceRange::DipoleAngleWithDistanceRange() {
+    enable_forcefield = true;
+    enable_outfile = true;
+}
 
 void DipoleAngleWithDistanceRange::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),

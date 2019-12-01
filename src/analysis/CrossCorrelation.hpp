@@ -9,22 +9,24 @@
 
 class CrossCorrelation {
 public:
-    static std::string title() { return "Cross-correlation Analysis"; }
+    [[nodiscard]] static std::string_view title() { return "Cross-correlation Analysis"; }
 
     static void calculate(const std::string &out);
 
-    static double calCovariance(const std::deque<std::tuple<double, double, double>> &series);
+    [[nodiscard]] static double calCovariance(const std::deque<std::tuple<double, double, double>> &series);
 
-    static std::vector<double> calculateCrossCorrelation(std::deque<std::tuple<double, double, double>> &series);
+    [[nodiscard]] static std::vector<double>
+    calculateCrossCorrelation(std::deque<std::tuple<double, double, double>> &series);
 
-    static std::vector<double> calculateCrossCorrelation2(std::deque<std::tuple<double, double, double>> &series);
+    [[nodiscard]] static std::vector<double>
+    calculateCrossCorrelation2(std::deque<std::tuple<double, double, double>> &series);
 
-    static std::vector<double>
+    [[nodiscard]] static std::vector<double>
     calculateConvolutionFunction(const std::deque<std::tuple<double, double, double>> &series);
 
-    static std::deque<std::tuple<double, double, double>> readAngleSeries();
+    [[nodiscard]] static std::deque<std::tuple<double, double, double>> readAngleSeries();
 
-    static std::vector<std::tuple<double, double, double>>
+    [[nodiscard]] static std::vector<std::tuple<double, double, double>>
     getDistribution(const std::deque<std::tuple<double, double, double>> &series);
 
     static void printCrossCorrelationFunction(const std::vector<double> &cross_correlation_function,
@@ -41,11 +43,12 @@ public:
     static void
     printHistrogramDistribution(const std::vector<std::tuple<double, double, double>> &distribution, std::ofstream &os);
 
-    static std::pair<double, double> calcSeriesAverage(const std::deque<std::tuple<double, double, double>> &series);
+    [[nodiscard]] static std::pair<double, double>
+    calcSeriesAverage(const std::deque<std::tuple<double, double, double>> &series);
 
-    static double calculateCrossCorrelationDWang(std::deque<std::tuple<double, double, double>> &series);
+    [[nodiscard]] static double calculateCrossCorrelationDWang(std::deque<std::tuple<double, double, double>> &series);
 
-    static double calculateCrossCorrelationDWang2(std::deque<std::tuple<double, double, double>> &series);
+    [[nodiscard]] static double calculateCrossCorrelationDWang2(std::deque<std::tuple<double, double, double>> &series);
 
 };
 

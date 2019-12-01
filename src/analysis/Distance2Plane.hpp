@@ -12,6 +12,7 @@ class Frame;
 
 class Distance2Plane : public AbstractAnalysis {
 public:
+
     Distance2Plane();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -22,7 +23,7 @@ public:
 
     void readInfo() override;
 
-    static std::string_view title() { return "Distance to plane"; }
+    [[nodiscard]] static std::string_view title() { return "Distance to plane"; }
 
 private:
 

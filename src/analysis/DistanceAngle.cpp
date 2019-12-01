@@ -6,9 +6,13 @@
 #include "frame.hpp"
 #include "molecule.hpp"
 #include "ThrowAssert.hpp"
-
+#include "common.hpp"
 
 using namespace std;
+
+DistanceAngle::DistanceAngle() {
+    enable_outfile = true;
+}
 
 void DistanceAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {

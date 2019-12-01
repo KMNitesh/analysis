@@ -13,6 +13,7 @@ class Frame;
 
 class VelocityAutocorrelationFunction : public AbstractAnalysis {
 public:
+
     VelocityAutocorrelationFunction();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -23,7 +24,7 @@ public:
 
     void readInfo() override;
 
-    [[nodiscard]] static std::string title() { return "Velocity Autocorrelation Function"; }
+    [[nodiscard]] static std::string_view title() { return "Velocity Autocorrelation Function"; }
 
     [[nodiscard]] static std::vector<double>
     calculateAcf(const std::vector<std::deque<std::tuple<double, double, double>>> &velocities,

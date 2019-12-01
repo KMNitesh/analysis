@@ -13,8 +13,6 @@
 #include <list>
 #include <tuple>
 #include <vector>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -22,11 +20,9 @@
 class DistanceAngle : public AbstractAnalysis {
 public:
 
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+    DistanceAngle();
 
-    explicit DistanceAngle() {
-        enable_outfile = true;
-    }
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -34,8 +30,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Gibbs Free Energy of Distance Angle for AnO2"; }
-
+    [[nodiscard]] static std::string_view title() { return "Gibbs Free Energy of Distance Angle for AnO2"; }
 
 protected:
 

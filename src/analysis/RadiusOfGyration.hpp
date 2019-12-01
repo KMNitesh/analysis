@@ -13,6 +13,7 @@ class Frame;
 
 class RadiusOfGyration : public AbstractAnalysis {
 public:
+
     RadiusOfGyration();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -23,7 +24,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Radius of gyration (mass-weighted)"; }
+    [[nodiscard]] static std::string_view title() { return "Radius of gyration (mass-weighted)"; }
 
 protected:
 

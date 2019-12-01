@@ -13,6 +13,7 @@ class Frame;
 
 class IRSpectrumElectricalFlux : public AbstractAnalysis {
 public:
+
     IRSpectrumElectricalFlux();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -23,7 +24,7 @@ public:
 
     void readInfo() override;
 
-    [[nodiscard]] static std::string title() { return "Infrared radiation (IR) Spectrum from Electrical Flux"; }
+    [[nodiscard]] static std::string_view title() { return "Infrared radiation (IR) Spectrum from Electrical Flux"; }
 
 protected:
 

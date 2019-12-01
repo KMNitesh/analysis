@@ -14,6 +14,37 @@
 #include "xtc_writer.hpp"
 
 class RMSDCal : public AbstractAnalysis {
+public:
+
+    RMSDCal();
+
+    ~RMSDCal() override;
+
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print(std::ostream &os) override;
+
+    void readInfo() override;
+
+    [[nodiscard]] static std::string_view title() { return "RMSD Calculator"; }
+
+    static double rmsfit(double x1[], double y1[], double z1[],
+                         double x2[], double y2[], double z2[], int n_rms_calc);
+
+    static double rms_max(double x1[], double y1[], double z1[],
+                          double x2[], double y2[], double z2[], int n_rms_calc);
+
+    static void jacobi(int n, double a[4][4], double d[], double v[4][4]);
+
+    static void quatfit(int n1, double x1[], double y1[], double z1[],
+                        int n_rms_calc, double x2[], double y2[], double z2[], int nfit);
+
+    static void center(int n1, double x1[], double y1[], double z1[],
+                       double mid[], int nfit);
+
+private:
 
     std::deque<double> rmsds;
     bool first_frame = true;
@@ -35,34 +66,6 @@ class RMSDCal : public AbstractAnalysis {
 
     void save_superposed_frame(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
 
-public:
-    RMSDCal();
-
-    ~RMSDCal() override;
-
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
-
-    void process(std::shared_ptr<Frame> &frame) override;
-
-    void print(std::ostream &os) override;
-
-    void readInfo() override;
-
-    [[nodiscard]] static std::string title() { return "RMSD Calculator"; }
-
-    static double rmsfit(double x1[], double y1[], double z1[],
-                         double x2[], double y2[], double z2[], int n_rms_calc);
-
-    static double rms_max(double x1[], double y1[], double z1[],
-                          double x2[], double y2[], double z2[], int n_rms_calc);
-
-    static void jacobi(int n, double a[4][4], double d[], double v[4][4]);
-
-    static void quatfit(int n1, double x1[], double y1[], double z1[],
-                        int n_rms_calc, double x2[], double y2[], double z2[], int nfit);
-
-    static void center(int n1, double x1[], double y1[], double z1[],
-                       double mid[], int nfit);
 };
 
 #endif //TINKER_RMSDCAL_HPP

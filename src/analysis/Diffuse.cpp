@@ -143,7 +143,7 @@ void Diffuse::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 string Diffuse::description() {
     stringstream ss;
-    string title_line = "------ " + title() + " ------";
+    string title_line = "------ " + std::string(title()) + " ------";
     ss << title_line << "\n";
     ss << " mask              = [ " << ids << " ]\n";
     ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";

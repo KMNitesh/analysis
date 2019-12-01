@@ -7,7 +7,6 @@
 
 #include "std.hpp"
 #include <boost/container_hash/hash.hpp>
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -15,28 +14,24 @@
 class Frame;
 
 class DiffuseCutoff : public AbstractAnalysis {
-
 public:
 
-    DiffuseCutoff() {
-        enable_outfile = true;
-        enable_forcefield = true;
-    }
+    DiffuseCutoff();
 
-    std::string description() override;
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
 
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
-
     void readInfo() override;
+
+    [[nodiscard]] std::string description() override;
 
     void setParameters(const Atom::Node &M, const Atom::Node &L,
                        double cutoff, double time_increment_ps, const std::string &outfilename);
 
-    static const std::string title() {
+    [[nodiscard]] static std::string_view title() {
         return "Self-Diffusion Coefficient Calculation based on Einstein Equation within Solvation Shell";
     }
 
@@ -61,6 +56,7 @@ public:
     };
 
     virtual ~DiffuseCutoff();
+
 private:
 
     double time_increment_ps = 0.1;

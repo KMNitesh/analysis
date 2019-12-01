@@ -14,25 +14,19 @@
 
 #include <boost/container_hash/hash.hpp>
 
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "VectorSelector.hpp"
 
 class Frame;
-
 class Molecule;
 
 class RotAcfCutoff : public AbstractAnalysis {
-
 public:
 
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+    RotAcfCutoff();
 
-    explicit RotAcfCutoff() {
-        enable_outfile = true;
-        enable_forcefield = true;
-    }
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -40,13 +34,13 @@ public:
 
     void readInfo() override;
 
-    std::string description() override;
+    [[nodiscard]] std::string description() override;
 
     void setParameters(const Atom::Node &M, const Atom::Node &L, std::shared_ptr<VectorSelector> vector,
                        int LegendrePolynomial, double cutoff, double time_increment_ps,
                        double max_time_grap_ps, const std::string &outfilename);
 
-    static const std::string title() {
+    [[nodiscard]] static std::string_view title() {
         return "Rotational Autocorrelation Function within Solvation Shell";
     }
 
@@ -71,6 +65,7 @@ public:
     };
 
     virtual ~RotAcfCutoff();
+
 private:
 
     double time_increment_ps = 0.1;
@@ -86,9 +81,10 @@ private:
 
     std::list<std::list<std::tuple<double, double, double>> *> rots;
 
-    auto find_in(int seq);
+    [[nodiscard]] auto find_in(int seq);
 
-    std::tuple<double, double, double> calVector(std::shared_ptr<Molecule> &mol, std::shared_ptr<Frame> &frame);
+    [[nodiscard]] std::tuple<double, double, double>
+    calVector(std::shared_ptr<Molecule> &mol, std::shared_ptr<Frame> &frame);
 
     std::shared_ptr<VectorSelector> vectorSelector;
 

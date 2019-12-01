@@ -15,6 +15,7 @@ class Frame;
 
 class OrientationResolvedRadialDistributionFunction : public AbstractAnalysis {
 public:
+
     OrientationResolvedRadialDistributionFunction();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -25,7 +26,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() {
+    [[nodiscard]] static std::string_view title() {
         return "Orientation-Resolved Radial Distribution Function (JCTC 2019, 15, 803−812)";
     }
 

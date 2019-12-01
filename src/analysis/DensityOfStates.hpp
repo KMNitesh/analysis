@@ -8,11 +8,11 @@
 #include "VelocityAutocorrelationFunction.hpp"
 
 class DensityOfStates : public VelocityAutocorrelationFunction {
-
 public:
+
     void print(std::ostream &os) override;
 
-    static std::string title() { return "Density of States (DOS)"; }
+    [[nodiscard]] static std::string_view title() { return "Density of States (DOS)"; }
 };
 
 

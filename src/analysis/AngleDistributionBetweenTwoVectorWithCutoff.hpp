@@ -26,9 +26,9 @@ public:
 
     void readInfo() override;
 
-    std::string description() override;
+    [[nodiscard]] std::string description() override;
 
-    static const std::string title() { return "Angle Distribution Between Two Vector with Cutoff"; }
+    [[nodiscard]] static std::string_view title() { return "Angle Distribution Between Two Vector with Cutoff"; }
 
     void setParameters(const Atom::Node &M,
                        const Atom::Node &L,
@@ -58,6 +58,7 @@ protected:
     std::multimap<int, std::pair<int, double>> angle_evolution;
 
     int nframe = 0;
+
     void init_cos_hist(double angle_max, double angle_width);
 };
 

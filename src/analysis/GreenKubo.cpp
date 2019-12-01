@@ -2,12 +2,17 @@
 // Created by xiamr on 6/14/19.
 //
 #include <tbb/tbb.h>
-
 #include "GreenKubo.hpp"
 #include "frame.hpp"
-
+#include "common.hpp"
 
 using namespace std;
+
+GreenKubo::GreenKubo() {
+    enable_read_velocity = true;
+    enable_tbb = true;
+    enable_outfile = true;
+}
 
 void GreenKubo::print(std::ostream &os) {
 

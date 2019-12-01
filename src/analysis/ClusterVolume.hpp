@@ -16,6 +16,7 @@
 
 class ClusterVolume : public AbstractAnalysis {
 public:
+
     ClusterVolume();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -26,7 +27,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "vdW Volume"; }
+    [[nodiscard]] static std::string_view title() { return "vdW Volume"; }
 
     enum class ATOM_Category : uint8_t {
         EMPTY, DEST, OTHER
@@ -46,6 +47,7 @@ public:
                    double grid_z_step, double total_volume, int nframe);
 
 protected:
+
     bool enable_paralel_while_impl() override;
 
     void do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) override;

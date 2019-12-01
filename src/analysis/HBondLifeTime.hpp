@@ -13,6 +13,7 @@ class Frame;
 
 class HBondLifeTime : public AbstractAnalysis {
 public:
+
     HBondLifeTime();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -23,7 +24,9 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Hydrogen Bond LifeTime for Water(Ci, history independent)"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Hydrogen Bond LifeTime for Water(Ci, history independent)";
+    }
 
 protected:
 

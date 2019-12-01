@@ -17,6 +17,7 @@ class VectorSelector;
 
 class ConditionalTimeCorrelationFunction : public AbstractAnalysis {
 public:
+
     ConditionalTimeCorrelationFunction();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -27,7 +28,9 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Conditional Time Correlation Function (JCTC 2019, 15, 803−812)"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Conditional Time Correlation Function (JCTC 2019, 15, 803−812)";
+    }
 
 protected:
 

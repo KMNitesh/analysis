@@ -4,6 +4,7 @@
 
 #include "DipoleAngleVolumeNormal.hpp"
 #include "frame.hpp"
+#include "common.hpp"
 
 using namespace std;
 

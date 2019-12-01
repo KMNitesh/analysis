@@ -9,18 +9,14 @@
 #include <unordered_set>
 #include <memory>
 #include "AbstractAnalysis.hpp"
-#include "common.hpp"
 #include "atom.hpp"
-
 
 class Frame;
 
 class PlaneAngle : public AbstractAnalysis {
 public:
 
-    PlaneAngle() {
-        enable_outfile = true;
-    }
+    PlaneAngle();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -30,9 +26,10 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Plane Angle Distribution with cutoff"; }
+    [[nodiscard]] static std::string_view title() { return "Plane Angle Distribution with cutoff"; }
 
 protected:
+
     Atom::AmberMask ids1, ids2, ids3, ids4;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3, group4;

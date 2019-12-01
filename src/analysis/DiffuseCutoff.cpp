@@ -5,8 +5,14 @@
 #include "DiffuseCutoff.hpp"
 #include "frame.hpp"
 #include "molecule.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+DiffuseCutoff::DiffuseCutoff() {
+    enable_outfile = true;
+    enable_forcefield = true;
+}
 
 bool operator==(const DiffuseCutoff::InnerAtom &i1, const DiffuseCutoff::InnerAtom &i2) {
     return i1.index == i2.index and i1.list_ptr == i2.list_ptr;
@@ -157,7 +163,7 @@ void DiffuseCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 string DiffuseCutoff::description() {
     stringstream ss;
-    string title_line = "------ " + title() + " ------";
+    string title_line = "------ " + std::string(title()) + " ------";
     ss << title_line << "\n";
     ss << " M                 = [ " << ids1 << " ]\n";
     ss << " L                 = [ " << ids2 << " ]\n";

@@ -13,6 +13,7 @@ class Frame;
 
 class CoordinationStructureMatch : public AbstractAnalysis {
 public:
+
     CoordinationStructureMatch();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -23,12 +24,13 @@ public:
 
     void readInfo() override;
 
-    static std::string
-    title() { return "Coordination Structure Match based on Nonlinear Least Squares Pattern Recognition"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Coordination Structure Match based on Nonlinear Least Squares Pattern Recognition";
+    }
 
-    static double testCASP(std::vector<std::tuple<double, double, double>> &coord);
+    [[nodiscard]] static double testCASP(std::vector<std::tuple<double, double, double>> &coord);
 
-    static double testTCTP(std::vector<std::tuple<double, double, double>> &coord);
+    [[nodiscard]] static double testTCTP(std::vector<std::tuple<double, double, double>> &coord);
 
 protected:
     AmberMask metal_mask;

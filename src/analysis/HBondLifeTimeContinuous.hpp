@@ -9,11 +9,13 @@
 
 class HBondLifeTimeContinuous : public HBondLifeTime {
 public:
+
     void print(std::ostream &os) override;
 
-    static std::string title() { return "Hydrogen Bond LifeTime for Water(Si, history dependent)"; }
+    [[nodiscard]] static std::string_view title() { return "Hydrogen Bond LifeTime for Water(Si, history dependent)"; }
 
 protected:
+
     [[nodiscard]] std::vector<double> calculateAcf() const override;
 };
 

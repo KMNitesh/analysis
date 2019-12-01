@@ -9,8 +9,6 @@
 #include <unordered_set>
 #include <string>
 #include <map>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -44,12 +42,11 @@ enum class HBondType {
 };
 
 class HBond : public AbstractAnalysis {
-
 public:
-    HBond() {
-        enable_outfile = true;
-        enable_forcefield = true;
-    }
+
+    HBond();
+
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -57,13 +54,10 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "Hydrogen Bond";
-    }
-
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+    [[nodiscard]] static std::string_view title() { return "Hydrogen Bond"; }
 
 private:
+
     std::map<int, int> hbonds;
 
     HBondType hbond_type = HBondType::VMDVerion;

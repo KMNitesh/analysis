@@ -10,11 +10,12 @@
 
 class PrintTopolgy {
 public:
+
     PrintTopolgy() {}
 
     void action(const std::string &topology_filename);
 
-    static const std::string title() { return "Print Selected Atoms in Topolgoy File"; }
+    [[nodiscard]] static std::string_view title() { return "Print Selected Atoms in Topolgoy File"; }
 };
 
 #endif //TINKER_PRINTTOPOLGY_HPP

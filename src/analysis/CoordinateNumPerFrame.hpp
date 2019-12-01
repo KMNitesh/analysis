@@ -16,6 +16,21 @@
 class Frame;
 
 class CoordinateNumPerFrame : public AbstractAnalysis {
+public:
+
+    CoordinateNumPerFrame();
+
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+
+    void process(std::shared_ptr<Frame> &frame) override;
+
+    void print(std::ostream &os) override;
+
+    void readInfo() override;
+
+    [[nodiscard]] static std::string_view title() { return "Coordinate Number per Frame"; }
+
+private:
 
     Atom::AmberMask ids1;
     Atom::AmberMask ids2;
@@ -26,23 +41,6 @@ class CoordinateNumPerFrame : public AbstractAnalysis {
 
     double dist_cutoff;
     std::list<int> cn_list;
-public:
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
-
-
-    CoordinateNumPerFrame() {
-        enable_outfile = true;
-    }
-
-    void process(std::shared_ptr<Frame> &frame) override;
-
-    void print(std::ostream &os) override;
-
-    void readInfo() override;
-
-    static const std::string title() {
-        return "Coordinate Number per Frame";
-    }
 };
 
 

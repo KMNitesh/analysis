@@ -13,9 +13,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "Dipole Angle to Gibbs Free Energy";
-    };
+    [[nodiscard]] static std::string_view title() { return "Dipole Angle to Gibbs Free Energy"; };
 
 protected:
 

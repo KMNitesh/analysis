@@ -8,15 +8,14 @@
 #include <unordered_set>
 #include <deque>
 #include "AbstractAnalysis.hpp"
-#include "common.hpp"
 #include "atom.hpp"
 
 class Frame;
-
 class Molecule;
 
 class SpatialOrientationDistribution : public AbstractAnalysis {
 public:
+
     SpatialOrientationDistribution();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -27,13 +26,13 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Spatial Orientation Distribution Analysis"; }
+    [[nodiscard]] static std::string_view title() { return "Spatial Orientation Distribution Analysis"; }
 
     // throw AssertionFailureException
-    static double calculatePhiAngle(const std::tuple<double, double, double> &vector);
+    [[nodiscard]] static double calculatePhiAngle(const std::tuple<double, double, double> &vector);
 
     // throw AssertionFailureException
-    static double calculateThetaAngle(const std::tuple<double, double, double> &vector);
+    [[nodiscard]] static double calculateThetaAngle(const std::tuple<double, double, double> &vector);
 
 protected:
 

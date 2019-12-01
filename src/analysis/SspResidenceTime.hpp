@@ -9,12 +9,14 @@
 
 class SspResidenceTime : public ResidenceTime {
 public:
+
     void print(std::ostream &os) override;
 
     void readInfo() override;
 
-    static std::string
-    title() { return "Residence Time based on SSP approach (J. Phys. Chem. B, Vol. 112, No. 26, 2008)"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Residence Time based on SSP approach (J. Phys. Chem. B, Vol. 112, No. 26, 2008)";
+    }
 
 protected:
 

@@ -142,7 +142,7 @@ void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
 
 string AngleDistributionBetweenTwoVectorWithCutoff::description() {
     stringstream ss;
-    string title_line = "------ " + title() + " ------";
+    string title_line = "------ " + std::string(title()) + " ------";
     ss << title_line << "\n";
     ss << " M                 = [ " << ids1 << " ]\n";
     ss << " L                 = [ " << ids2 << " ]\n";

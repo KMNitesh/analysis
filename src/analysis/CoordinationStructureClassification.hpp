@@ -14,6 +14,7 @@ class Frame;
 
 class CoordinationStructureClassification : public AbstractAnalysis {
 public:
+
     CoordinationStructureClassification();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -24,10 +25,10 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Coordination Structure Classification based on RMSD"; }
+    [[nodiscard]] static std::string_view title() { return "Coordination Structure Classification based on RMSD"; }
 
-    static double calculateRmsdOfTwoStructs(std::vector<std::tuple<double, double, double>> &c1,
-                                            std::vector<std::tuple<double, double, double>> &c2);
+    [[nodiscard]] static double calculateRmsdOfTwoStructs(std::vector<std::tuple<double, double, double>> &c1,
+                                                          std::vector<std::tuple<double, double, double>> &c2);
 
 protected:
 
@@ -53,7 +54,7 @@ protected:
 
     std::unordered_map<int, int> frame_cn_mapping;
 
-    bool output_rms_matrix  = false;
+    bool output_rms_matrix = false;
 
 };
 

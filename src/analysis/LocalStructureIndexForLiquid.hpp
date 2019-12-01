@@ -13,6 +13,7 @@ class Frame;
 
 class LocalStructureIndexForLiquid : public AbstractAnalysis {
 public:
+
     LocalStructureIndexForLiquid();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -21,7 +22,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "Local Structure Index (LSI) for Liquid"; }
+    [[nodiscard]] static std::string_view title() { return "Local Structure Index (LSI) for Liquid"; }
 
 protected:
 

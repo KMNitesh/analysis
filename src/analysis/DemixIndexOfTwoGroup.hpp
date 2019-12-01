@@ -21,7 +21,10 @@ class Frame;
 
 class DemixIndexOfTwoGroup : public AbstractAnalysis {
 public:
-    DemixIndexOfTwoGroup() { enable_outfile = true; }
+
+    DemixIndexOfTwoGroup();
+
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -31,13 +34,12 @@ public:
 
     void setParameters(const Atom::Node &id1, const Atom::Node &id2, const Grid &grid, const std::string &outfilename);
 
-    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
-    static const std::string title() { return "Calculate demix index of two groups"; }
+    [[nodiscard]] static std::string_view title() { return "Calculate demix index of two groups"; }
 
 private:
 
-    auto calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame);
+    [[nodiscard]] auto calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame);
 
     Atom::AmberMask ids1;
     Atom::AmberMask ids2;

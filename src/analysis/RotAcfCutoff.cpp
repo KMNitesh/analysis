@@ -2,14 +2,21 @@
 // Created by xiamr on 6/14/19.
 //
 
+#include <boost/range/algorithm.hpp>
 #include "RotAcfCutoff.hpp"
 #include "frame.hpp"
 #include "atom.hpp"
 #include "VectorSelectorFactory.hpp"
 #include "molecule.hpp"
 #include "LegendrePolynomial.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+RotAcfCutoff::RotAcfCutoff() {
+    enable_outfile = true;
+    enable_forcefield = true;
+}
 
 bool operator==(const RotAcfCutoff::InnerAtom &i1, const RotAcfCutoff::InnerAtom &i2) {
     return i1.index == i2.index and i1.list_ptr == i2.list_ptr;
@@ -193,11 +200,11 @@ void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long lon
 }
 
 void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                  });
+    boost::for_each(frame->atom_list,
+                    [this](shared_ptr<Atom> &atom) {
+                        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                    });
     if (group1.size() > 1) {
         cerr << "the reference(metal cation) atom for RotAcfCutoff function can only have one\n";
         exit(EXIT_FAILURE);
@@ -206,7 +213,7 @@ void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 string RotAcfCutoff::description() {
     stringstream ss;
-    string title_line = "------ " + title() + " ------";
+    string title_line = "------ " + std::string(title()) + " ------";
     ss << title_line << "\n";
     ss << " M                 = [ " << ids1 << " ]\n";
     ss << " L                 = [ " << ids2 << " ]\n";
@@ -221,6 +228,6 @@ string RotAcfCutoff::description() {
 }
 
 RotAcfCutoff::~RotAcfCutoff() {
-    std::for_each(rots.begin(), rots.end(), std::default_delete<std::list<std::tuple<double, double, double>>>());
+    boost::for_each(rots, std::default_delete<std::list<std::tuple<double, double, double>>>());
 }
 

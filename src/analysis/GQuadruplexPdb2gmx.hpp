@@ -11,7 +11,8 @@ class Frame;
 
 class GQuadruplexPdb2gmx {
 public:
-    static std::string title() { return "Convert 3dnus G-Quadruplex pdb for gmx pdb2gmx"; }
+
+    [[nodiscard]] static std::string_view title() { return "Convert 3dnus G-Quadruplex pdb for gmx pdb2gmx"; }
 
     static void convert();
 

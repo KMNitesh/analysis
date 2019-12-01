@@ -179,7 +179,7 @@ void RotAcf::setParameters(const std::shared_ptr<VectorSelector> &vector, int Le
 
 std::string RotAcf::description() {
     std::stringstream ss;
-    std::string title_line = "------ " + title() + " ------";
+    std::string title_line = "------ " + std::string(title()) + " ------";
     ss << title_line << "\n";
     ss << " vector            = " << vectorSelector->description() << "\n";
     ss << " P                 = " << LegendrePolynomial << "  [ " << LegendreStr.at(LegendrePolynomial) << " ] \n";

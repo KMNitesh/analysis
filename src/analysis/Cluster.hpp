@@ -7,8 +7,6 @@
 
 
 #include "std.hpp"
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 #include "RMSDCal.hpp"
@@ -16,12 +14,9 @@
 class Frame;
 
 class Cluster : public AbstractAnalysis {
-
 public:
-    Cluster() {
-        enable_tbb = true;
-        enable_outfile = true;
-    }
+
+    Cluster();
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -31,9 +26,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "Cluster Analysis(linkage)";
-    }
+    [[nodiscard]] static std::string_view title() { return "Cluster Analysis(linkage)"; }
 
 private:
 

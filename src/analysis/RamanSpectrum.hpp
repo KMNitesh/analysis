@@ -9,9 +9,10 @@
 
 class RamanSpectrum {
 public:
+
     RamanSpectrum();
 
-    static std::string title() { return "Raman radiation (IR) Spectrum"; }
+    [[nodiscard]] static std::string_view title() { return "Raman radiation (IR) Spectrum"; }
 
     static void calculateSpectrum(const std::string &out);
 };

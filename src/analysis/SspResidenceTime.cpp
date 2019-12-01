@@ -5,6 +5,7 @@
 #include <boost/range/algorithm.hpp>
 #include <tbb/tbb.h>
 #include "SspResidenceTime.hpp"
+#include "common.hpp"
 
 void SspResidenceTime::print(std::ostream &os) {
     calculateSSP();

@@ -11,8 +11,6 @@
 #include <map>
 #include <list>
 #include <utility>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
@@ -20,7 +18,8 @@ class Frame;
 
 class SearchInteractionResidue : public AbstractAnalysis {
 public:
-    SearchInteractionResidue() { enable_outfile = true; }
+
+    SearchInteractionResidue();
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -30,9 +29,10 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Search Interaction Residue between two groups"; }
+    [[nodiscard]] static std::string_view title() { return "Search Interaction Residue between two groups"; }
 
 private:
+
     Atom::AmberMask ids1;
     Atom::AmberMask ids2;
 

@@ -3,10 +3,12 @@
 //
 
 #include "SearchInteractionResidue.hpp"
-
 #include "frame.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+SearchInteractionResidue::SearchInteractionResidue() { enable_outfile = true; }
 
 void SearchInteractionResidue::process(std::shared_ptr<Frame> &frame) {
 

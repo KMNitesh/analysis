@@ -7,7 +7,6 @@
 
 #include "std.hpp"
 #include "AbstractAnalysis.hpp"
-#include "common.hpp"
 #include "atom.hpp"
 
 
@@ -16,9 +15,7 @@ class Frame;
 class AngleWat : public AbstractAnalysis {
 public:
 
-    AngleWat() {
-        enable_outfile = true;
-    }
+    AngleWat();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -28,7 +25,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Angle (Ow-Hw) Distribution with cutoff"; }
+    [[nodiscard]] static std::string_view title() { return "Angle (Ow-Hw) Distribution with cutoff"; }
 
 protected:
     Atom::AmberMask ids1, ids2, ids3;
@@ -37,13 +34,13 @@ protected:
 
     std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
-    double angle_width;
+    double angle_width{};
 
-    int angle_bins;
+    int angle_bins{};
 
     std::unordered_map<int, std::size_t> hist;
 
-    double cutoff1, cutoff2;
+    double cutoff1{}, cutoff2{};
 
     void printData(std::ostream &os) const;
 };

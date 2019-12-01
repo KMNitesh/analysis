@@ -10,19 +10,15 @@
 #include <memory>
 #include <list>
 #include "AbstractAnalysis.hpp"
-#include "common.hpp"
 #include "atom.hpp"
 #include "Histogram.hpp"
 
 class Frame;
 
 class DipoleAxisDistribution : public AbstractAnalysis {
-
 public:
-    DipoleAxisDistribution() {
-        enable_forcefield = true;
-        enable_outfile = true;
-    }
+
+    DipoleAxisDistribution();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -32,7 +28,7 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() { return "Dipole Angle Distribution with Axis"; }
+    [[nodiscard]] static std::string_view title() { return "Dipole Angle Distribution with Axis"; }
 
 protected:
 

@@ -3,10 +3,12 @@
 //
 
 #include "ShellDensity.hpp"
-
 #include "frame.hpp"
+#include "common.hpp"
 
 using namespace std;
+
+ShellDensity::ShellDensity() { enable_outfile = true; }
 
 void ShellDensity::process(std::shared_ptr<Frame> &frame) {
     nframe++;

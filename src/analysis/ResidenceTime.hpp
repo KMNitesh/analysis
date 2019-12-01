@@ -11,23 +11,15 @@
 #include <map>
 #include <Eigen/Eigen>
 #include <tbb/tbb.h>
-
-#include "common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "atom.hpp"
 
 class Frame;
 
 class ResidenceTime : public AbstractAnalysis {
-
 public:
 
-    ResidenceTime() : timeStarMode(TimeStarMode::Loose) {
-        enable_tbb = true;
-        enable_outfile = true;
-    }
-
-    ~ResidenceTime() override;
+    ResidenceTime();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -40,7 +32,7 @@ public:
 
     void readInfo() override;
 
-    static std::string title() { return "ResidenceTime"; }
+    [[nodiscard]] static std::string_view title() { return "ResidenceTime"; }
 
 protected:
 
