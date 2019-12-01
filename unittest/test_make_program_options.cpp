@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 #include <type_traits>
 #include <string>
-#include "common.hpp"
+#include "utils/common.hpp"
 
 using namespace testing;
 

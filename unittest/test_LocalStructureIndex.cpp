@@ -2,9 +2,9 @@
 // Created by xiamr on 9/23/19.
 //
 
-#include "std.hpp"
+#include "utils/std.hpp"
 #include <gmock/gmock.h>
-#include "LocalStructureIndex.hpp"
+#include "ana_module/LocalStructureIndex.hpp"
 
 using namespace testing;
 

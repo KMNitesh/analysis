@@ -4,12 +4,12 @@
 #include <cmath>
 #include <gmock/gmock.h>
 
-#include "GromacsInterface.hpp"
-#include "ThrowAssert.hpp"
-#include "atom.hpp"
-#include "frame.hpp"
+#include "utils/GromacsInterface.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 #include "gtest_utility.hpp"
-#include "trr_writer.hpp"
+#include "utils/trr_writer.hpp"
 #include "GromacsInterfaceMock.hpp"
 
 using namespace testing;

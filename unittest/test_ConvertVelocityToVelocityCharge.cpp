@@ -3,11 +3,11 @@
 //
 
 #include <gmock/gmock.h>
-#include "ConvertVelocityToVelocityCharge.hpp"
-#include "common.hpp"
-#include "atom.hpp"
-#include "frame.hpp"
-#include "molecule.hpp"
+#include "ana_module/ConvertVelocityToVelocityCharge.hpp"
+#include "utils/common.hpp"
+#include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
+#include "data_structure/molecule.hpp"
 
 using namespace testing;
 

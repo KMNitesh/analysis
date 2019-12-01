@@ -3,11 +3,11 @@
 //
 
 #include <gmock/gmock.h>
-#include "AmberNetcdf.h"
-#include "NetcdfInterface.hpp"
-#include "netcdf_writer.hpp"
-#include "atom.hpp"
-#include "frame.hpp"
+#include "utils/AmberNetcdf.h"
+#include "utils/NetcdfInterface.hpp"
+#include "utils/netcdf_writer.hpp"
+#include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 #include "gtest_utility.hpp"
 
 using namespace std;

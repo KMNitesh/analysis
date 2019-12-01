@@ -10,26 +10,26 @@
 
 #include <boost/test/included/unit_test.hpp>
 
-#include "trajectoryreader.hpp"
-#include "frame.hpp"
-#include "atom.hpp"
+#include "trajectory_reader/trajectoryreader.hpp"
+#include "data_structure/frame.hpp"
+#include "data_structure/atom.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_trajectoryreader_tpr)
 
-BOOST_AUTO_TEST_CASE(test_md_10ns_tpr) {
+    BOOST_AUTO_TEST_CASE(test_md_10ns_tpr) {
 
-    TrajectoryReader reader;
-    reader.add_topology("md-10ns.tpr");
+        TrajectoryReader reader;
+        reader.add_topology("md-10ns.tpr");
 
-    auto frame = reader.readTopology();
+        auto frame = reader.readTopology();
 
-    BOOST_CHECK(frame->atom_list.size() == 7590);
-    BOOST_CHECK(frame->molecule_list.size() == 2030 );
+        BOOST_CHECK(frame->atom_list.size() == 7590);
+        BOOST_CHECK(frame->molecule_list.size() == 2030);
 
-    auto atom1 = frame->atom_list.front();
-    BOOST_TEST(atom1->charge.get() == -8.10476e-01, boost::test_tools::tolerance(0.01));
+        auto atom1 = frame->atom_list.front();
+        BOOST_TEST(atom1->charge.get() == -8.10476e-01, boost::test_tools::tolerance(0.01));
 
-    BOOST_TEST(atom1->atom_name == "O1");
+        BOOST_TEST(atom1->atom_name == "O1");
     BOOST_TEST(atom1->type_name == "o");
 
     BOOST_TEST(atom1->residue_name.get() == "C27");

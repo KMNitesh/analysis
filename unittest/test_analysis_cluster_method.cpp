@@ -2,8 +2,8 @@
 // Created by xiamr on 6/20/19.
 //
 
-#include "Cluster.hpp"
-#include "ThrowAssert.hpp"
+#include "ana_module/Cluster.hpp"
+#include "utils/ThrowAssert.hpp"
 #include <gmock/gmock.h>
 #include <unordered_map>
 #include <utility>

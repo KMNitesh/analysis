@@ -9,7 +9,7 @@
 
 #include <boost/test/included/unit_test.hpp>
 
-#include "center_selection_grammar.hpp"
+#include "dsl/center_selection_grammar.hpp"
 
 BOOST_AUTO_TEST_SUITE(test_center_selection_grammer)
 

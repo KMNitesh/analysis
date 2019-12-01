@@ -4,22 +4,22 @@
 #include <iostream>
 
 #include "gmxtrr.h"
-#include "../src/analysis/common.hpp"
-#include "../src/analysis/ThrowAssert.hpp"
+#include "../src/analysis/utils/common.hpp"
+#include "../src/analysis/utils/ThrowAssert.hpp"
 
 using namespace std;
 
 extern "C" {
 
-void trr_close_(gmx::t_fileio **handle){
+void trr_close_(gmx::t_fileio **handle) {
     gmx::t_fileio *fio = *handle;
     gmx::close_trn(fio);
 }
-void trr_open_(const char *fn, int *leng, gmx::t_fileio **handle){
+void trr_open_(const char *fn, int *leng, gmx::t_fileio **handle) {
     char filename[256];
-    strncpy(filename,fn,*leng);
-    filename[*leng]='\0';
-    gmx::t_fileio *fio = gmx::open_trn(filename,"r");
+    strncpy(filename, fn, *leng);
+    filename[*leng] = '\0';
+    gmx::t_fileio *fio = gmx::open_trn(filename, "r");
     *handle = fio;
 }
 

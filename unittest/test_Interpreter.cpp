@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-#include "Interpreter.hpp"
+#include "dsl/Interpreter.hpp"
 
 using namespace std;
 using namespace testing;

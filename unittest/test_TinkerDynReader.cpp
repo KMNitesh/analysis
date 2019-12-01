@@ -3,7 +3,7 @@
 //
 
 #include <gmock/gmock.h>
-#include "TinkerDynReader.hpp"
+#include "ana_module/TinkerDynReader.hpp"
 
 using namespace std;
 using namespace testing;

@@ -2,9 +2,9 @@
 // Created by xiamr on 8/30/19.
 //
 
-#include "std.hpp"
+#include "utils/std.hpp"
 #include <gmock/gmock.h>
-#include "CrossCorrelation.hpp"
+#include "others/CrossCorrelation.hpp"
 
 using namespace testing;
 

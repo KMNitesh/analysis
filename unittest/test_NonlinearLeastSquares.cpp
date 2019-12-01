@@ -2,13 +2,13 @@
 // Created by xiamr on 10/11/19.
 //
 
-#include "std.hpp"
+#include "utils/std.hpp"
 #include <gmock/gmock.h>
 #include <Eigen/Eigen>
 #include <boost/format.hpp>
 #include <boost/range/algorithm.hpp>
-#include "common.hpp"
-#include "CoordinationStructureMatch.hpp"
+#include "utils/common.hpp"
+#include "ana_module/CoordinationStructureMatch.hpp"
 
 using namespace testing;
 

@@ -3,9 +3,9 @@
 //
 
 #include <gmock/gmock.h>
-#include "DynFrameFind.hpp"
-#include "frame.hpp"
-#include "atom.hpp"
+#include "ana_module/DynFrameFind.hpp"
+#include "data_structure/frame.hpp"
+#include "data_structure/atom.hpp"
 
 using namespace std;
 using namespace testing;

@@ -2,10 +2,10 @@
 // Created by xiamr on 10/14/19.
 //
 
-#include "std.hpp"
+#include "utils/std.hpp"
 #include <gmock/gmock.h>
-#include "RMSFCal.hpp"
-#include "frame.hpp"
+#include "ana_module/RMSFCal.hpp"
+#include "data_structure/frame.hpp"
 
 using namespace testing;
 

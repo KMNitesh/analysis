@@ -5,7 +5,7 @@
 #include <string>
 #include <gmock/gmock.h>
 #include <boost/range/adaptors.hpp>
-#include "common.hpp"
+#include "utils/common.hpp"
 
 using namespace testing;
 using namespace std;

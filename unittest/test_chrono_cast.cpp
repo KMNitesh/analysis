@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 #include <chrono>
-#include "common.hpp"
+#include "utils/common.hpp"
 
 using namespace std;
 using namespace testing;

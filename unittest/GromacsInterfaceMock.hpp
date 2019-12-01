@@ -6,7 +6,7 @@
 #define TINKER_GROMACSINTERFACEMOCK_HPP
 
 #include <gmock/gmock.h>
-#include "GromacsInterface.hpp"
+#include "utils/GromacsInterface.hpp"
 
 using namespace testing;
 

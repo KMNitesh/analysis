@@ -1,3 +1,5 @@
+link_libraries(libtinker_shared)
+
 add_executable(dynamic dynamic.f)
 add_executable(analyze analyze.f)
 add_executable(archive archive.f)

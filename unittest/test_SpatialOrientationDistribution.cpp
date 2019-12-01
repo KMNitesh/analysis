@@ -3,8 +3,9 @@
 //
 
 #include <gmock/gmock.h>
-#include "SpatialOrientationDistribution.hpp"
-#include "ThrowAssert.hpp"
+#include "ana_module/SpatialOrientationDistribution.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/common.hpp"
 
 using namespace std;
 using namespace testing;

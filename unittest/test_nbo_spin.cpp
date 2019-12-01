@@ -2,9 +2,9 @@
 // Created by xiamr on 11/1/19.
 //
 
-#include "std.hpp"
+#include "utils/std.hpp"
 #include <gmock/gmock.h>
-#include "NBOSpin.hpp"
+#include "others/NBOSpin.hpp"
 
 using namespace testing;
 

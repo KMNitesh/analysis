@@ -3,12 +3,12 @@
 //
 
 #include <gmock/gmock.h>
-#include "gro_writer.hpp"
-#include "FileInterface.hpp"
-#include "atom.hpp"
-#include "frame.hpp"
-#include "common.hpp"
-#include "molecule.hpp"
+#include "utils/gro_writer.hpp"
+#include "utils/FileInterface.hpp"
+#include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
+#include "utils/common.hpp"
+#include "data_structure/molecule.hpp"
 
 using namespace std;
 using namespace testing;

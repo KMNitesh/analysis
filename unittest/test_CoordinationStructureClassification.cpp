@@ -2,11 +2,11 @@
 // Created by xiamr on 9/22/19.
 //
 
-#include "std.hpp"
+#include "utils/std.hpp"
 #include <gmock/gmock.h>
 
 #include <random>
-#include "CoordinationStructureClassification.hpp"
+#include "ana_module/CoordinationStructureClassification.hpp"
 #include <boost/range/algorithm.hpp>
 
 using namespace testing;

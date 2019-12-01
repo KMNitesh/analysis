@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-#include "GeneratorGrammar.hpp"
+#include "dsl/GeneratorGrammar.hpp"
 
 using namespace std;
 using namespace testing;

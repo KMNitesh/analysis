@@ -3,11 +3,11 @@
 //
 
 #include <gmock/gmock.h>
-#include "TrajectoryWriterFactoryImpl.hpp"
-#include "netcdf_writer.hpp"
-#include "trr_writer.hpp"
-#include "xtc_writer.hpp"
-#include "gro_writer.hpp"
+#include "utils/TrajectoryWriterFactoryImpl.hpp"
+#include "utils/netcdf_writer.hpp"
+#include "utils/trr_writer.hpp"
+#include "utils/xtc_writer.hpp"
+#include "utils/gro_writer.hpp"
 
 using namespace std;
 using namespace testing;

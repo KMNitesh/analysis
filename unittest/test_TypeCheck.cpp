@@ -4,8 +4,8 @@
 
 #include <gmock/gmock.h>
 #include <boost/any.hpp>
-#include "common.hpp"
-#include "TypeUtility.hpp"
+#include "utils/common.hpp"
+#include "utils/TypeUtility.hpp"
 
 using namespace std;
 using namespace testing;
