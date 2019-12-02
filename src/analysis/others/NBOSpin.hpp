@@ -9,15 +9,16 @@
 
 class NBOSpin {
 public:
-    static std::string title() { return "NBO Spin"; }
+    [[nodiscard]] static std::string_view title() { return "NBO Spin"; }
 
     static void process();
 
     static void do_process(const std::string &filename);
 
-    static double total_spin(std::string_view line);
+    [[nodiscard]] static double total_spin(std::string_view line);
 
-    static std::map<int, std::pair<std::string, std::array<double, 3>>> getElectronSpin(std::istream &ifs);
+    [[nodiscard]] static std::map<int, std::pair<std::string, std::array<double, 3>>>
+    getElectronSpin(std::istream &ifs);
 };
 
 
