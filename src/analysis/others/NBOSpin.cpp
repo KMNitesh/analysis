@@ -5,16 +5,16 @@
 #include "NBOSpin.hpp"
 #include "utils/common.hpp"
 #include <boost/xpressive/xpressive.hpp>
+#include <boost/xpressive/regex_actions.hpp>
 #include <boost/algorithm/string.hpp>
+
 
 double NBOSpin::total_spin(std::string_view line) {
     using namespace boost::xpressive;
-
-    static cregex rex = '(' >> (s1 = +~(set = ')')) >> ')';
     double total = 0.0;
-    for (cregex_iterator pos(std::begin(line), std::end(line), rex), end; pos != end; ++pos) {
-        total += std::stod((*pos)[1]);
-    }
+    cregex rex = bos >> +(*~(set = '(') >> '(' >> *blank >> (+~(set = ')'))[ref(total) += as<double>(_)] >> ')') >> eos;
+    if (!regex_match(line, rex))
+        throw std::runtime_error("Regex not match");
     return total;
 }
 

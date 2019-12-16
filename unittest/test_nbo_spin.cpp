@@ -4,6 +4,7 @@
 
 #include "utils/std.hpp"
 #include <gmock/gmock.h>
+#include <boost/core/ignore_unused.hpp>
 #include "others/NBOSpin.hpp"
 
 using namespace testing;
@@ -13,6 +14,20 @@ TEST(NBOSpinTest, OneLine) {
     std::string line = "      B  1      [core]2s( 0.44)2p( 1.32)3p( 0.01)3d( 0.01)";
 
     ASSERT_THAT(NBOSpin::total_spin(line), DoubleEq(1.78));
+}
+
+TEST(NBOSpinTest, ThrowExceptionWhenWithoutRightParentheses) {
+
+    std::string line = "      B  1      [core]2s( 0.44)2p( 1.32)3p( 0.01)3d( 0.01";
+
+    ASSERT_THROW(boost::ignore_unused(NBOSpin::total_spin(line)), std::runtime_error);
+}
+
+TEST(NBOSpinTest, ThrowExceptionWhenWithoutMiddleParentheses) {
+
+    std::string line = "      B  1      [core]2s( 0.442p( 1.32)3p( 0.01)3d( 0.01)";
+
+    ASSERT_ANY_THROW(boost::ignore_unused(NBOSpin::total_spin(line)));
 }
 
 TEST(NBOSpinTest, WholeTable) {
