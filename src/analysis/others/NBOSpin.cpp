@@ -11,9 +11,14 @@
 
 double NBOSpin::total_spin(std::string_view line) {
     using namespace boost::xpressive;
+    placeholder<double> _result;
     double total = 0.0;
-    cregex rex = bos >> +(*~(set = '(') >> '(' >> *blank >> (+~(set = ')'))[ref(total) += as<double>(_)] >> ')') >> eos;
-    if (!regex_match(line, rex))
+    static cregex rex =
+            bos >> +(*~(set = '(') >> '(' >> *blank >> (+~(set = ')'))[_result += as<double>(_)] >> ')') >> eos;
+    cmatch what;
+    what.let(_result = total);
+
+    if (!regex_match(line, what, rex))
         throw std::runtime_error("Regex not match");
     return total;
 }
