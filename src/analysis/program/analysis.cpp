@@ -20,6 +20,7 @@ namespace po = boost::program_options;
 #include "others/GQuadruplexPdb2gmx.hpp"
 #include "others/NBOSpin.hpp"
 #include "others/Averager.hpp"
+#include "others/ITS_PostProcess.hpp"
 
 using namespace std;
 
@@ -42,7 +43,8 @@ int mainMenu() {
     std::cout << "(9) " << NBOSpin::title() << '\n';
     std::cout << "(10) Renumber atom and residue num\n";
     std::cout << "(11) " << Averager::title() << '\n';
-    return choose<int>(0, 11, "select : ");
+    std::cout << "(12) " << ITS_PostProcess::title() << '\n';
+    return choose<int>(0, 12, "select : ");
 };
 
 void printDSLDetails() {
@@ -257,6 +259,9 @@ int main(int argc, char *argv[]) {
             break;
         case 11:
             Averager::process();
+            break;
+        case 12:
+            ITS_PostProcess::process();
             break;
         default:
             std::cerr << "Unexcepted block\n";
