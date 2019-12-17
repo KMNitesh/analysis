@@ -21,6 +21,7 @@ namespace po = boost::program_options;
 #include "others/NBOSpin.hpp"
 #include "others/Averager.hpp"
 #include "others/ITS_PostProcess.hpp"
+#include "others/ITS_Reweight.hpp"
 
 using namespace std;
 
@@ -44,7 +45,8 @@ int mainMenu() {
     std::cout << "(10) Renumber atom and residue num\n";
     std::cout << "(11) " << Averager::title() << '\n';
     std::cout << "(12) " << ITS_PostProcess::title() << '\n';
-    return choose<int>(0, 12, "select : ");
+    std::cout << "(13) " << ITS_Reweight::title() << '\n';
+    return choose<int>(0, 13, "select : ");
 };
 
 void printDSLDetails() {
@@ -262,6 +264,9 @@ int main(int argc, char *argv[]) {
             break;
         case 12:
             ITS_PostProcess::process();
+            break;
+        case 13:
+            ITS_Reweight::process();
             break;
         default:
             std::cerr << "Unexcepted block\n";
