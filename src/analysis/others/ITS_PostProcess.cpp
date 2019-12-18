@@ -33,7 +33,7 @@ void ITS_PostProcess::process() {
         std::getline(ifs, line);
         if (line.empty()) continue;
         auto it = begin(line);
-        if (!phrase_parse(it, end(line), parser, ascii::space) || it != end(line)) {
+        if (!(phrase_parse(it, end(line), parser, ascii::space) && it == end(line))) {
             std::cerr << "Input file content is ill-formed\n";
             exit(EXIT_FAILURE);
         }
