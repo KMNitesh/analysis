@@ -22,32 +22,10 @@ namespace po = boost::program_options;
 #include "others/Averager.hpp"
 #include "others/ITS_PostProcess.hpp"
 #include "others/ITS_Reweight.hpp"
+#include "others/GromosReader.hpp"
 
 using namespace std;
 
-/*
- *  This is the main menu the user select when the program starts
- *  evergy function of option may has its own submenu, by using different handling models
- */
-
-int mainMenu() {
-    std::cout << "Main Menu\n";
-    std::cout << "(0) Trajectory Analysis\n";
-    std::cout << "(1) Print Topology\n";
-    std::cout << "(2) Infrared radiation (IR) Spectrum\n";
-    std::cout << "(3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
-    std::cout << "(4) " << RamanSpectrum::title() << '\n';
-    std::cout << "(5) " << CrossCorrelation::title() << '\n';
-    std::cout << "(6) " << GmxTopologyPrinter::title() << '\n';
-    std::cout << "(7) " << GQuadruplexPdb2gmx::title() << '\n';
-    std::cout << "(8) " << "Superpose and move for Residues" << '\n';
-    std::cout << "(9) " << NBOSpin::title() << '\n';
-    std::cout << "(10) Renumber atom and residue num\n";
-    std::cout << "(11) " << Averager::title() << '\n';
-    std::cout << "(12) " << ITS_PostProcess::title() << '\n';
-    std::cout << "(13) " << ITS_Reweight::title() << '\n';
-    return choose<int>(0, 13, "select : ");
-};
 
 void printDSLDetails() {
 
@@ -223,58 +201,51 @@ int main(int argc, char *argv[]) {
         return EXIT_SUCCESS;
     }
 
+    /*
+     *  This is the main menu the user select when the program starts
+     *  evergy function of option may has its own submenu, by using different handling models
+     */
+    auto mainMenu = [] {
+        std::cout << "Main Menu\n";
+        std::cout << "(0) Trajectory Analysis\n";
+        std::cout << "(1) Print Topology\n";
+        std::cout << "(2) Infrared radiation (IR) Spectrum\n";
+        std::cout << "(3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
+        std::cout << "(4) " << RamanSpectrum::title() << '\n';
+        std::cout << "(5) " << CrossCorrelation::title() << '\n';
+        std::cout << "(6) " << GmxTopologyPrinter::title() << '\n';
+        std::cout << "(7) " << GQuadruplexPdb2gmx::title() << '\n';
+        std::cout << "(8) " << "Superpose and move for Residues" << '\n';
+        std::cout << "(9) " << NBOSpin::title() << '\n';
+        std::cout << "(10) Renumber atom and residue num\n";
+        std::cout << "(11) " << Averager::title() << '\n';
+        std::cout << "(12) " << ITS_PostProcess::title() << '\n';
+        std::cout << "(13) " << ITS_Reweight::title() << '\n';
+        std::cout << "(14) " << GromosReader::title() << '\n';
+        return choose<int>(0, 14, "select : ");
+    };
 
-    switch (mainMenu()) {
-        case 0:
-            // handle normal trajctories
-            processTrajectory(desc, vm, xyzfiles, argc, argv);
-            break;
-        case 1:
-            printTopolgy(vm);
-            break;
-        case 2:
-            IRSpectrum::calculateSpectrum(getOutputFilename(vm));
-            break;
-        case 3:
-            IRSpectrumDeltaDipole::calculateSpectrum(getOutputFilename(vm));
-            break;
-        case 4:
-            RamanSpectrum::calculateSpectrum(getOutputFilename(vm));
-            break;
-        case 5:
-            CrossCorrelation::calculate(getOutputFilename(vm));
-            break;
-        case 6:
-            GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm));
-            break;
-        case 7:
-            GQuadruplexPdb2gmx::convert();
-            break;
-        case 8:
-            GQuadruplexPdb2gmx::superpose_and_move();
-            break;
-        case 9:
-            NBOSpin::process();
-            break;
-        case 10:
-            GQuadruplexPdb2gmx::renumberAtomAndResidueNum();
-            break;
-        case 11:
-            Averager::process();
-            break;
-        case 12:
-            ITS_PostProcess::process();
-            break;
-        case 13:
-            ITS_Reweight::process();
-            break;
-        default:
-            std::cerr << "Unexcepted block\n";
-            exit(EXIT_FAILURE);
-    }
+    std::vector<std::function<void()>> actions{
+            [&] { processTrajectory(desc, vm, xyzfiles, argc, argv); },
+            [&] { printTopolgy(vm); },
+            [&] { IRSpectrum::calculateSpectrum(getOutputFilename(vm)); },
+            [&] { IRSpectrumDeltaDipole::calculateSpectrum(getOutputFilename(vm)); },
+            [&] { RamanSpectrum::calculateSpectrum(getOutputFilename(vm)); },
+            [&] { CrossCorrelation::calculate(getOutputFilename(vm)); },
+            [&] { GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm)); },
+            [&] { GQuadruplexPdb2gmx::convert(); },
+            [&] { GQuadruplexPdb2gmx::superpose_and_move(); },
+            [&] { NBOSpin::process(); },
+            [&] { GQuadruplexPdb2gmx::renumberAtomAndResidueNum(); },
+            [&] { Averager::process(); },
+            [&] { ITS_PostProcess::process(); },
+            [&] { ITS_Reweight::process(); },
+            [&] { GromosReader::process(); }
+    };
+
+    actions.at(mainMenu())();
 
     return EXIT_SUCCESS;
-
 }
 
 

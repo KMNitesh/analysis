@@ -134,7 +134,7 @@ link_libraries(rt)
 # Boost
 set(BOOST_INCLUDEDIR ${INCLUES_PATH})
 set(BOOST_LIBRARYDIR ${LIBRARY_DIRS})
-find_package(Boost 1.67 REQUIRED COMPONENTS regex program_options filesystem container)
+find_package(Boost 1.67 REQUIRED COMPONENTS regex program_options filesystem container iostreams)
 include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
