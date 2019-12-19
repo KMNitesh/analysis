@@ -22,7 +22,8 @@ public:
     static void save2Xml(const std::vector<Energy> &energies,
                          const std::vector<std::string> &menuStrings,
                          const std::array<std::string, 3> &energy_names,
-                         const std::vector<std::string> &group_names);
+                         const std::vector<std::string> &group_names,
+                         std::ostream &os = std::cout);
 };
 
 
