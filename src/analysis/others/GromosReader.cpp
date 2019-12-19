@@ -139,7 +139,7 @@ void GromosReader::process() {
                   it == (*pos)[1].second)) {
             std::cerr << "omd file is ill-formed !\n";
             std::exit(EXIT_FAILURE);
-        };
+        }
 
         std::vector<bp::vector<std::string, std::vector<std::string>, std::vector<double>>> energy_group_attribute;
         if (auto it = (*pos)[3].first;
@@ -147,7 +147,7 @@ void GromosReader::process() {
                                energy_group_attribute) && it == (*pos)[3].second)) {
             std::cerr << "omd file is ill-formed !\n";
             std::exit(EXIT_FAILURE);
-        };
+        }
 
         Energy e;
         e.step = bp::at_c<0>(attribute);
@@ -216,7 +216,7 @@ void GromosReader::process() {
 
     for (;;) {
 
-        std::cout << "Seleect Items > ";
+        std::cout << "Select Items > ";
         std::string line;
         std::getline(std::cin, line);
 
