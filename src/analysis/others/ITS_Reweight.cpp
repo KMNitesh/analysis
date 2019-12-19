@@ -116,7 +116,7 @@ std::pair<bool, std::vector<std::pair<double, double>>> ITS_Reweight::read_pot(s
     using namespace boost::phoenix;
 
 
-    qi::rule<boost::spirit::istream_iterator, std::pair<double, double>,
+    qi::rule<boost::spirit::istream_iterator, std::pair<double, double>(),
             decltype(SkipperGrammar<boost::spirit::istream_iterator>() - eol)>
             item = (double_ >> double_)[_val = construct<std::pair<double, double>>(_1, _2)];
 
