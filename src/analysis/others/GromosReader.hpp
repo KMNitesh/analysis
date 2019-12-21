@@ -9,7 +9,7 @@ public:
 
     static void process();
 
-    static void printMenu(std::vector<std::string> &menuStrings, std::size_t width);
+    static void printMenu(const std::vector<std::string> &menuStrings, std::size_t width);
 
     struct Energy {
         uint step;
@@ -24,6 +24,24 @@ public:
                          const std::array<std::string, 3> &energy_names,
                          const std::vector<std::string> &group_names,
                          std::ostream &os = std::cout);
+
+    struct Bundle {
+        std::vector<Energy> energies;
+        std::vector<std::string> menuStrings;
+        std::array<std::string, 3> energy_names;
+        std::vector<std::string> group_names;
+    };
+
+    static void printEnergies(const std::vector<Energy> &energies,
+                              const std::vector<std::string> &menuStrings,
+                              const std::array<std::string, 3> &energy_names,
+                              const std::vector<std::string> &group_names);
+
+    [[nodiscard]] static Bundle readOmd(const std::string &filename);
+
+    [[nodiscard]] static Bundle readXml(std::istream &is);
+
+    [[nodiscard]] static Bundle readXml(const std::string &filename);
 };
 
 
