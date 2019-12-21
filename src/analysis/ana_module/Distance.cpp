@@ -6,6 +6,7 @@
 #include "Distance.hpp"
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
+#include "json.hpp"
 
 Distance::Distance() {
     enable_outfile = true;
@@ -55,6 +56,10 @@ void Distance::print(std::ostream &os) {
     for (const auto &element : distances | boost::adaptors::indexed(1)) {
         os << boost::format(" %15d %15.8f\n") % element.index() % element.value();
     }
+
+    os << ">>>JSON<<<\n";
+    saveJson(os);
+    os << "<<<JSON>>>\n";
 }
 
 void Distance::readInfo() {
@@ -67,5 +72,20 @@ void Distance::processFirstFrame(std::shared_ptr<Frame> &frame) {
                         if (Atom::is_match(atom, mask_for_group1)) atoms_for_group1.insert(atom);
                         if (Atom::is_match(atom, mask_for_group2)) atoms_for_group2.insert(atom);
                     });
+}
+
+void Distance::saveJson(std::ostream &os) const {
+
+    nlohmann::json json;
+
+    json["title"] = title();
+    json["group1"] = to_string(mask_for_group1);
+    json["group2"] = to_string(mask_for_group2);
+    json["mean"] = boost::accumulators::mean(acc);
+    json["std"] = std::sqrt(boost::accumulators::variance(acc));
+    json["unit"] = "Ang";
+    json["distances"] = distances;
+
+    os << json;
 }
 

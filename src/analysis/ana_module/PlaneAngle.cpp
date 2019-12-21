@@ -6,6 +6,7 @@
 #include "data_structure/frame.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
+#include "json.hpp"
 
 using namespace std;
 
@@ -99,6 +100,10 @@ void PlaneAngle::print(std::ostream &os) {
     printData(os);
 
     os << string(50, '#') << '\n';
+
+    os << ">>>JSON<<<\n";
+    saveJson(os);
+    os << "<<<JSON>>>\n";
 }
 
 void PlaneAngle::readInfo() {
@@ -132,4 +137,42 @@ void PlaneAngle::printData(std::ostream &os) const {
     for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
         os << format("%15.3f %15.3f\n", (i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width);
     }
+}
+
+void PlaneAngle::saveJson(std::ostream &os) const {
+
+    nlohmann::json json;
+
+    json["title"] = title();
+    json["group1"] = to_string(ids1);
+    json["group2"] = to_string(ids2);
+    json["group3"] = to_string(ids3);
+    json["group4"] = to_string(ids4);
+    json["angle_width"] = {{"value", angle_width},
+                           {"unit",  "degree"}};
+
+    json["cutoff1"] = {{"value", cutoff1},
+                       {"unit",  "Ang"}};
+
+    json["cutoff2"] = {{"value", cutoff2},
+                       {"unit",  "Ang"}};
+
+    json["Probability Density"] = {
+            {"meta", {
+                             {"X", "Angle(degree)"},
+                             {"Y", "Probability Density(degree-1)"}
+                     }}
+    };
+
+    double total = 0.0;
+    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+        total += hist.at(i_angle);
+    }
+
+    for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
+        json["Probability Density"]["values"].push_back(
+                {(i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width});
+    }
+
+    os << json;
 }

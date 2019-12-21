@@ -19,13 +19,10 @@ namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 
-std::ostream &operator<<(std::ostream &out, const Atom::AmberMask &ids) {
-    std::string generated;
-    throw_assert(format_node(ids, generated), "amberMask format error");
-    out << generated;
-    return out;
+std::ostream &operator<<(std::ostream &os, const AmberMask &mask) {
+    os << to_string(mask);
+    return os;
 }
-
 
 void print::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const {
     indent(space_num);
@@ -370,9 +367,14 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::Operator> &op) const {
             }
                 break;
             default:
-                throw std::runtime_error("invlid Operator");
+                throw std::runtime_error("invalid Operator");
         }
     }
     return false;
 }
 
+std::string to_string(const AmberMask &mask) {
+    std::string generated;
+    throw_assert(format_node(mask, generated), "amberMask format error");
+    return generated;
+}

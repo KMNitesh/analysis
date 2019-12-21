@@ -45,6 +45,8 @@ protected:
     double cutoff1, cutoff2;
 
     void printData(std::ostream &os) const;
+
+    void saveJson(std::ostream &os) const;
 };
 
 

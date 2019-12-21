@@ -8,6 +8,7 @@
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 #include "utils/VectorSelectorFactory.hpp"
+#include "json.hpp"
 
 using namespace std;
 
@@ -113,6 +114,10 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
 
+    os << ">>>JSON<<<\n";
+    saveJson(os);
+    os << "<<<JSON>>>\n";
+
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
@@ -216,4 +221,43 @@ void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(
 void AngleDistributionBetweenTwoVectorWithCutoff::init_cos_hist(double angle_max,
                                                                 double angle_width) {
     cos_hist.initialize({cos(angle_max / radian), 1}, abs(1 - cos(angle_max / radian)) / (angle_max / angle_width));
+}
+
+void AngleDistributionBetweenTwoVectorWithCutoff::saveJson(std::ostream &os) const {
+    nlohmann::json json;
+
+    json["title"] = title();
+    json["L"] = to_string(ids2);
+    json["vector1"] = vector1->description();
+    json["vector2"] = vector2->description();
+    json["angle_max"] = {{"value", angle_hist.dimension_range.second},
+                         {"unit",  "degree"}};
+
+    json["angle_width"] = {{"value", angle_hist.getWidth()},
+                           {"unit",  "degree"}};
+
+    json["cutoff1"] = {{"value", cutoff1},
+                       {"unit",  "Ang"}};
+
+
+    json["cutoff2"] = {{"value", cutoff2},
+                       {"unit",  "Ang"}};
+
+    json["Probability Density"] = {
+            {"meta",   {
+                               {"X", "Angle(degree)"},
+                               {"Y", "Probability Density(degree-1)"}
+                       }},
+            {"values", angle_hist.getDistribution()}
+    };
+
+    json["Probability Density by cosine"] = {
+            {"meta",   {
+                               {"X", "cos(theta)"},
+                               {"Y", "Probability Density"}
+                       }},
+            {"values", cos_hist.getDistribution()}
+    };
+
+    os << json;
 }

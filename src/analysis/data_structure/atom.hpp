@@ -146,6 +146,7 @@ public:
 
 };
 
+using AmberMask = Atom::AmberMask;
 
 struct print : boost::static_visitor<> {
     int space_num;
@@ -184,7 +185,7 @@ private:
 };
 
 
-std::ostream &operator<<(std::ostream &out, const Atom::AmberMask &ids);
+std::ostream &operator<<(std::ostream &os, const Atom::AmberMask &mask);
 
 inline bool operator==(const std::shared_ptr<Atom::residue_name_nums> &residues1,
                        const std::shared_ptr<Atom::residue_name_nums> &residues2) {
@@ -232,8 +233,6 @@ inline bool operator==(const std::shared_ptr<Atom::Operator> &op1,
     return false;
 }
 
-
-using AmberMask = Atom::AmberMask;
-
+std::string to_string(const AmberMask &mask);
 
 #endif //TINKER_ATOM_HPP

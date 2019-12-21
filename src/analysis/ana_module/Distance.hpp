@@ -33,6 +33,8 @@ protected:
     template<typename SinglePassRange>
     [[nodiscard]] static std::tuple<double, double, double> calculate_mass_center(const SinglePassRange &atoms_group);
 
+    void saveJson(std::ostream &os) const;
+
     std::deque<double> distances;
 
     Atom::AmberMask mask_for_group1;

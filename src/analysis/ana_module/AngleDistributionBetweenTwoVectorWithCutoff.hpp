@@ -60,6 +60,8 @@ protected:
     int nframe = 0;
 
     void init_cos_hist(double angle_max, double angle_width);
+
+    void saveJson(std::ostream &os) const;
 };
 
 
