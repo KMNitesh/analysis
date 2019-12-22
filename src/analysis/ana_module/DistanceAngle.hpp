@@ -34,7 +34,7 @@ public:
 
 protected:
 
-    Atom::AmberMask id1, id2, id3;
+    Atom::AmberMask mask1, mask2, mask3;
 
     std::list<std::pair<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 

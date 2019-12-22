@@ -8,7 +8,6 @@
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
-using namespace std;
 
 DistanceAngle::DistanceAngle() {
     enable_outfile = true;
@@ -16,13 +15,13 @@ DistanceAngle::DistanceAngle() {
 
 void DistanceAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
-        shared_ptr<Atom> atom1, atom2;
+        std::shared_ptr<Atom> atom1, atom2;
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, id1)) {
+            if (Atom::is_match(atom, mask1)) {
                 atom1 = atom;
-            } else if (Atom::is_match(atom, id2)) {
+            } else if (Atom::is_match(atom, mask2)) {
                 atom2 = atom;
-            } else if (Atom::is_match(atom, id3)) {
+            } else if (Atom::is_match(atom, mask3)) {
                 group3.insert(atom);
             }
         }
@@ -69,37 +68,38 @@ void DistanceAngle::process(std::shared_ptr<Frame> &frame) {
 }
 
 void DistanceAngle::print(std::ostream &os) {
-    os << string(50, '#') << '\n';
-    os << "# " << DistanceAngle::title() << '\n';
-    os << "# Group1 > " << id1 << '\n';
-    os << "# Group2 > " << id2 << '\n';
-    os << "# Group3 > " << id3 << '\n';
+    os << std::string(50, '#') << '\n';
+    os << "# " << title() << '\n';
+    os << "# Group1 > " << mask1 << '\n';
+    os << "# Group2 > " << mask2 << '\n';
+    os << "# Group3 > " << mask3 << '\n';
     os << "# distance_width(Ang) > " << distance_width << '\n';
     os << "# angle_width(degree) > " << angle_width << '\n';
     os << "# Temperature(K) > " << temperature << '\n';
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
     os << format("#%15s %15s %15s\n", "Distance(Ang)", "Angle(degree)", "Energy(kcal/mol)");
 
     printData(os);
 
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
 }
 
-void DistanceAngle::printData(ostream &os) const {
+void DistanceAngle::printData(std::ostream &os) const {
     const double factor = -kb * temperature * avogadro_constant / 4184.0;
     double max_value = 0.0;
 
     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
         double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-            max_value = max(max_value, hist.at(make_pair(i_distance, i_angle)) / (dv));
+            max_value = std::max(max_value, hist.at(std::make_pair(i_distance, i_angle)) / (dv));
         }
     }
+    const boost::format fmt("%15.3f %15.3f %15.6f\n");
     for (int i_distance = 1; i_distance < distance_bins; i_distance++) {
         double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-            double pop = double(hist.at(make_pair(i_distance, i_angle))) / (max_value * dv);
-            os << boost::format("%15.3f %15.3f %15.6f\n")
+            double pop = double(hist.at(std::make_pair(i_distance, i_angle))) / (max_value * dv);
+            os << boost::format(fmt)
                   % ((i_distance - 0.5) * distance_width)
                   % ((i_angle - 0.5) * angle_width)
                   % (pop == 0.0 ? 100.0 : factor * log(pop));
@@ -108,9 +108,9 @@ void DistanceAngle::printData(ostream &os) const {
 }
 
 void DistanceAngle::readInfo() {
-    Atom::select1group(id1, "Please Enter mask for Atom1(An) > ");
-    Atom::select1group(id2, "Please Enter mask for Atom2(OAn) > ");
-    Atom::select1group(id3, "Please Enter mask for Atom3(Ow) > ");
+    Atom::select1group(mask1, "Please Enter mask for Atom1(An) > ");
+    Atom::select1group(mask2, "Please Enter mask for Atom2(OAn) > ");
+    Atom::select1group(mask3, "Please Enter mask for Atom3(Ow) > ");
 
     double rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:",
                          Default(10.0));
@@ -125,7 +125,7 @@ void DistanceAngle::readInfo() {
 
     for (int i_distance = 1; i_distance <= distance_bins; i_distance++) {
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-            hist[make_pair(i_distance, i_angle)] = 0;
+            hist[std::make_pair(i_distance, i_angle)] = 0;
         }
     }
 }

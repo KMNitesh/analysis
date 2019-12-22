@@ -1,26 +1,21 @@
-//
-// Created by xiamr on 6/30/19.
-//
 
+#include <boost/range/algorithm.hpp>
 #include "AngleWat.hpp"
 #include "data_structure/frame.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
-using namespace std;
-
 AngleWat::AngleWat() {
     enable_outfile = true;
 }
 
-
 void AngleWat::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                      if (Atom::is_match(atom, this->ids3)) this->group3.insert(atom);
-                  });
+    boost::for_each(frame->atom_list,
+                    [this](std::shared_ptr<Atom> &atom) {
+                        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
+                        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+                        if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
+                    });
     for (auto &vec1_atom1 : group2) {
         for (auto &vec1_atom2: group3) {
             if (vec1_atom1->molecule.lock() == vec1_atom2->molecule.lock()) {
@@ -29,7 +24,6 @@ void AngleWat::processFirstFrame(std::shared_ptr<Frame> &frame) {
         }
     }
 }
-
 
 void AngleWat::process(std::shared_ptr<Frame> &frame) {
 
@@ -70,26 +64,26 @@ void AngleWat::process(std::shared_ptr<Frame> &frame) {
 }
 
 void AngleWat::print(std::ostream &os) {
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
     os << "# " << AngleWat::title() << '\n';
-    os << "# Group1 > " << ids1 << '\n';
-    os << "# Group2 > " << ids2 << '\n';
-    os << "# Group3 > " << ids3 << '\n';
+    os << "# Group1 > " << mask1 << '\n';
+    os << "# Group2 > " << mask2 << '\n';
+    os << "# Group3 > " << mask3 << '\n';
     os << "# angle_width(degree) > " << angle_width << '\n';
     os << "# Cutoff1(Ang) > " << cutoff1 << '\n';
     os << "# Cutoff2(Ang) > " << cutoff2 << '\n';
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
 
     printData(os);
 
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
 }
 
 void AngleWat::readInfo() {
-    Atom::select1group(ids1, "Enter mask for atom1(Metal) : ");
-    Atom::select1group(ids2, "Enter mask for atom2(Ow) : ");
-    Atom::select1group(ids3, "Enter mask for atom3(Oh) : ");
+    Atom::select1group(mask1, "Enter mask for atom1(Metal) : ");
+    Atom::select1group(mask2, "Enter mask for atom2(Ow) : ");
+    Atom::select1group(mask3, "Enter mask for atom3(Oh) : ");
 
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));

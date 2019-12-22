@@ -53,18 +53,18 @@ void Distance2Plane::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
 
-    os << "plane atoms : \n";
+    os << "# plane atoms : \n";
     for (const auto &item : plane_marks | boost::adaptors::indexed(0)) {
         os << "#  atom [" << item.index() << "] = " << item.value() << '\n';
     }
 
-    os << "\noutplane atoms : \n";
+    os << "\n# outplane atoms : \n";
     for (const auto &item : outplane_marks | boost::adaptors::indexed(0)) {
         os << "#  atom [" << item.index() << "] = " << item.value() << '\n';
     }
     os << '\n';
-    os << "mean : " << boost::accumulators::mean(acc) << '\n';
-    os << "standard deviation : " << std::sqrt(boost::accumulators::variance(acc)) << '\n';
+    os << "# mean : " << boost::accumulators::mean(acc) << '\n';
+    os << "# standard deviation : " << std::sqrt(boost::accumulators::variance(acc)) << '\n';
     os << std::string(50, '#') << '\n';
     os << boost::format("%15s %15s\n") % "Frame" % "Distance(Ang)";
 

@@ -28,22 +28,6 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Cluster Analysis(linkage)"; }
 
-private:
-
-    Atom::AmberMask ids;
-    std::vector<std::shared_ptr<Atom>> group;
-
-
-    double cutoff = 0.0;
-    int steps = 0; // current frame number
-    std::map<std::pair<int, int>, double> rmsd_map;
-
-    std::vector<std::vector<std::tuple<double, double, double>>> coords;
-
-    double rmsvalue(int index1, int index2);
-
-public:
-
     class rmsd_matrix {
     public:
         rmsd_matrix(int i, int j, double rms) : i(i), j(j), rms(rms) {}
@@ -67,6 +51,18 @@ public:
     static int do_sort_and_renumber_parallel(std::vector<conf_clust> &conf_clust_vector);
 
 protected:
+
+    AmberMask ids;
+    std::vector<std::shared_ptr<Atom>> group;
+
+
+    double cutoff = 0.0;
+    int steps = 0; // current frame number
+    std::map<std::pair<int, int>, double> rmsd_map;
+
+    std::vector<std::vector<std::tuple<double, double, double>>> coords;
+
+    double rmsvalue(int index1, int index2);
 
     static void do_sort_clust_parallel(std::vector<conf_clust> &conf_clust_vector);
 

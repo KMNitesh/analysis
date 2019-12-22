@@ -6,9 +6,9 @@
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
-using namespace std;
-
-DipoleVectorSelector::DipoleVectorSelector() { enable_forcefield = true; }
+DipoleVectorSelector::DipoleVectorSelector() {
+    enable_forcefield = true;
+}
 
 int DipoleVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
     if (!selected_mols.empty()) return selected_mols.size();
@@ -41,19 +41,17 @@ void DipoleVectorSelector::print(std::ostream &os) {
     os << "# Group1 > " << amberMask << '\n';
 }
 
-tuple<double, double, double>
+std::tuple<double, double, double>
 DipoleVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) {
     auto r = mol->calc_dipole(frame);
     r /= vector_norm(r);
     return r;
 }
 
-void DipoleVectorSelector::setParameters(const Atom::Node &id) {
+void DipoleVectorSelector::setParameters(const AmberMask &id) {
     this->amberMask = id;
 }
 
-string DipoleVectorSelector::description() {
-    stringstream ss;
-    ss << "DipoleVector ( [" << amberMask << "] )";
-    return ss.str();
+std::string DipoleVectorSelector::description() {
+    return "DipoleVector ( [" + to_string(amberMask) + "] )";
 }

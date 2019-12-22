@@ -42,8 +42,8 @@ public:
 
 protected:
 
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
+    Atom::AmberMask metal_mask;
+    Atom::AmberMask ligand_mask;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;

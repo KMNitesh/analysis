@@ -4,12 +4,12 @@
 
 #include <boost/range/adaptors.hpp>
 #include "DemixIndexOfTwoGroup.hpp"
-
 #include "data_structure/frame.hpp"
+#include "nlohmann/json.hpp"
 
-using namespace std;
-
-DemixIndexOfTwoGroup::DemixIndexOfTwoGroup() { enable_outfile = true; }
+DemixIndexOfTwoGroup::DemixIndexOfTwoGroup() {
+    enable_outfile = true;
+}
 
 auto
 DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame) {
@@ -21,7 +21,6 @@ DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, co
     auto box_index_z = int(atom->z / (frame->c_axis / grid_z)) % grid_z;
     while (box_index_z < 0) box_index_z += grid_z;
 
-
     if (!atom->mass) {
         std::cerr << "ERROR !!  Atom mass not available !\n";
         exit(EXIT_FAILURE);
@@ -30,11 +29,10 @@ DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, co
     assert(box_index_x >= 0 && box_index_x < grid_x);
     assert(box_index_y >= 0 && box_index_y < grid_y);
     assert(box_index_z >= 0 && box_index_z < grid_z);
-    return make_tuple(box_index_x, box_index_y, box_index_z);
+    return std::make_tuple(box_index_x, box_index_y, box_index_z);
 }
 
 void DemixIndexOfTwoGroup::process(std::shared_ptr<Frame> &frame) {
-
 
     double group1_dens[grid_x][grid_y][grid_z];
     double group2_dens[grid_x][grid_y][grid_z];
@@ -77,7 +75,7 @@ void DemixIndexOfTwoGroup::process(std::shared_ptr<Frame> &frame) {
 }
 
 void DemixIndexOfTwoGroup::readInfo() {
-    Atom::select2group(ids1, ids2, "Please select group1 > ", "Please select group2 > ");
+    Atom::select2group(mask1, mask2, "Please select group1 > ", "Please select group2 > ");
     grid_x = choose<int>(0, 1000, "Grid in X dememsion  :  ");
     grid_y = choose<int>(0, 1000, "Grid in Y dememsion  :  ");
     grid_z = choose<int>(0, 1000, "Grid in Z dememsion  :  ");
@@ -85,17 +83,12 @@ void DemixIndexOfTwoGroup::readInfo() {
 
 void DemixIndexOfTwoGroup::print(std::ostream &os) {
 
-//    constexpr double AvogadroConstant =  6.02214076E23;
-//    constexpr double AngstromToCentimeter = 1E-8;
-//
-//    const double Unit = 1 / (pow(AngstromToCentimeter, 3) * AvogadroConstant);
-
-    os << "#####################################\n";
+    os << std::string(50, '#') << '\n';
     os << "#    Demix Rate (normalization)\n";
-    os << "#    Group1  " << ids1 << '\n';
-    os << "#    Group2  " << ids2 << '\n';
+    os << "#    Group1  " << mask1 << '\n';
+    os << "#    Group2  " << mask2 << '\n';
     os << "#    Grid    X = " << grid_x << "  Y = " << grid_y << "  Z = " << grid_z << '\n';
-    os << "#####################################\n";
+    os << std::string(50, '#') << '\n';
 
     os << "@   title \"Demix Rate\"\n";
     os << "@    xaxis  label \"Frame Number\"\n";
@@ -104,40 +97,56 @@ void DemixIndexOfTwoGroup::print(std::ostream &os) {
     os << "@ legend on\n";
     os << "@ legend length 1\n";
     os << "@ s0 legend \"Demix Rate\"\n";
-//    outfile << "@ s1 legend \"Demix:Ideal\"\n";
+
     os << "# Frame      Demix Rate \n";
-
     for (const auto &element: demix_index_list | boost::adaptors::indexed(1)) {
-        os << element.index() << "        " << get<0>(element.value()) / get<1>(element.value()) << '\n';
+        os << element.index() << "        " << std::get<0>(element.value()) / std::get<1>(element.value()) << '\n';
     }
+    os << std::string(50, '#') << '\n';
 
+    nlohmann::json json;
 
+    json["title"] = "Demix Rate (normalization)";
+    json["group1"] = to_string(mask1);
+    json["group2"] = to_string(mask2);
+
+    json["grid"] = {
+            {"X", grid_x},
+            {"Y", grid_y},
+            {"Z", grid_z}
+    };
+
+    json["DemixRate"] = demix_index_list;
+
+    os << ">>>JSON<<<\n";
+    os << json;
+    os << "<<<JSON>>>\n";
 }
 
 void DemixIndexOfTwoGroup::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+                  [this](std::shared_ptr<Atom> &atom) {
+                      if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
+                      if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
                   });
 }
 
-void DemixIndexOfTwoGroup::setParameters(const Atom::Node &id1, const Atom::Node &id2, const Grid &grid,
+void DemixIndexOfTwoGroup::setParameters(const AmberMask &id1, const AmberMask &id2, const Grid &grid,
                                          const std::string &outfilename) {
-    this->ids1 = id1;
-    this->ids2 = id2;
+    this->mask1 = id1;
+    this->mask2 = id2;
 
     this->grid_x = grid.x;
     this->grid_y = grid.y;
     this->grid_z = grid.z;
 
     if (grid.x < 1 or grid.y < 1 or grid.z < 1) {
-        throw runtime_error("grid component must large than one");
+        throw std::runtime_error("grid component must large than one");
     }
 
     this->outfilename = outfilename;
     boost::trim(this->outfilename);
     if (this->outfilename.empty()) {
-        throw runtime_error("outfilename cannot empty");
+        throw std::runtime_error("outfilename cannot empty");
     }
 }

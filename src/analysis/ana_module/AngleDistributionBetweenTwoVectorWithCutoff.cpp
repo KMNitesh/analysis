@@ -1,7 +1,5 @@
-//
-// Created by xiamr on 8/6/19.
-//
 
+#include <boost/range/algorithm.hpp>
 #include <boost/range/adaptors.hpp>
 #include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 #include "data_structure/frame.hpp"
@@ -10,20 +8,17 @@
 #include "utils/VectorSelectorFactory.hpp"
 #include "nlohmann/json.hpp"
 
-using namespace std;
-
-
 AngleDistributionBetweenTwoVectorWithCutoff::AngleDistributionBetweenTwoVectorWithCutoff() {
     enable_outfile = true;
 }
 
 
 void AngleDistributionBetweenTwoVectorWithCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                  });
+    boost::for_each(frame->atom_list,
+                    [this](std::shared_ptr<Atom> &atom) {
+                        if (Atom::is_match(atom, this->metal_mask)) this->group1.insert(atom);
+                        if (Atom::is_match(atom, this->ligand_mask)) this->group2.insert(atom);
+                    });
     throw_assert(this->group1.size() == 1, "Group1 must has only one atom");
     throw_assert(!this->group1.empty(), "Group2 must has at least one atom");
 }
@@ -54,10 +49,10 @@ void AngleDistributionBetweenTwoVectorWithCutoff::process(std::shared_ptr<Frame>
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
-    os << "# Group1 > " << ids1 << '\n';
-    os << "# Group2 > " << ids2 << '\n';
+    os << "# Group1 > " << metal_mask << '\n';
+    os << "# Group2 > " << ligand_mask << '\n';
 
     os << "# vector1 > ";
     os << vector1;
@@ -77,7 +72,7 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
         appeared_atoms.insert(it.second.first);
     }
 
-    os << string(25, '#') << "Angle(degree)" << string(25, '#') << '\n';
+    os << std::string(25, '#') << "Angle(degree)" << std::string(25, '#') << '\n';
     os << format("#%15s", "Frame");
     for (auto i : appeared_atoms) {
         os << format(" [ %10d ]", i);
@@ -95,25 +90,25 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
             if (it != mapping.end()) {
                 os << format(" %15.3f", it->second);
             } else {
-                os << string(16, ' ');
+                os << std::string(16, ' ');
             }
         }
         os << '\n';
     }
 
 
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
     for (auto[grid, value] : angle_hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
 
     os << format("#%15s %15s\n", "cos(theta)", "Probability Density(%)");
     for (auto[grid, value] : cos_hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
 
     os << ">>>JSON<<<\n";
     saveJson(os);
@@ -122,7 +117,7 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
-    Atom::select2group(ids1, ids2);
+    Atom::select2group(metal_mask, ligand_mask);
 
     std::cout << "For first Vector\n";
     vector1 = VectorSelectorFactory::getVectorSelector();
@@ -146,12 +141,12 @@ void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
 }
 
 
-string AngleDistributionBetweenTwoVectorWithCutoff::description() {
-    stringstream ss;
-    string title_line = "------ " + std::string(title()) + " ------";
+std::string AngleDistributionBetweenTwoVectorWithCutoff::description() {
+    std::stringstream ss;
+    std::string title_line = "------ " + std::string(title()) + " ------";
     ss << title_line << "\n";
-    ss << " M                 = [ " << ids1 << " ]\n";
-    ss << " L                 = [ " << ids2 << " ]\n";
+    ss << " M                 = [ " << metal_mask << " ]\n";
+    ss << " L                 = [ " << ligand_mask << " ]\n";
     ss << " vector1           = " << vector1->description() << "\n";
     ss << " vector2           = " << vector2->description() << "\n";
     ss << " angle_max         = " << angle_hist.dimension_range.second << " (degree)\n";
@@ -159,7 +154,7 @@ string AngleDistributionBetweenTwoVectorWithCutoff::description() {
     ss << " cutoff1           = " << cutoff1 << " (Ang)\n";
     ss << " cutoff2           = " << cutoff2 << " (Ang)\n";
     ss << " outfilename       = " << outfilename << "\n";
-    ss << string(title_line.size(), '-') << '\n';
+    ss << std::string(title_line.size(), '-') << '\n';
     return ss.str();
 }
 
@@ -174,36 +169,36 @@ void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(
         double cutoff2,
         const std::string &outfilename) {
 
-    this->ids1 = M;
-    this->ids2 = L;
+    this->metal_mask = M;
+    this->ligand_mask = L;
 
     if (!vector1) {
-        throw runtime_error("vector1 not vaild");
+        throw std::runtime_error("vector1 not vaild");
     } else {
         this->vector1 = vector1;
     }
 
     if (!vector2) {
-        throw runtime_error("vector2 not vaild");
+        throw std::runtime_error("vector2 not vaild");
     } else {
         this->vector2 = vector2;
     }
 
     if (angle_max < 0) {
-        throw runtime_error("`angle_max` must not be negative");
+        throw std::runtime_error("`angle_max` must not be negative");
     }
     if (angle_width < 0) {
-        throw runtime_error("`cutoff1` must not be negative");
+        throw std::runtime_error("`cutoff1` must not be negative");
     }
 
     if (cutoff1 < 0) {
-        throw runtime_error("`cutoff1` must not be negative");
+        throw std::runtime_error("`cutoff1` must not be negative");
     } else {
         this->cutoff1 = cutoff1;
     }
 
     if (cutoff2 <= 0) {
-        throw runtime_error("`cutoff2` must be postive");
+        throw std::runtime_error("`cutoff2` must be postive");
     } else {
         this->cutoff2 = cutoff2;
     }
@@ -211,7 +206,7 @@ void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(
     this->outfilename = outfilename;
     boost::trim(this->outfilename);
     if (this->outfilename.empty()) {
-        throw runtime_error("outfilename cannot empty");
+        throw std::runtime_error("outfilename cannot empty");
     }
 
     angle_hist.initialize(angle_max, angle_width);
@@ -228,7 +223,8 @@ void AngleDistributionBetweenTwoVectorWithCutoff::saveJson(std::ostream &os) con
     nlohmann::json json;
 
     json["title"] = title();
-    json["L"] = to_string(ids2);
+    json["M"] = to_string(metal_mask);
+    json["L"] = to_string(ligand_mask);
     json["vector1"] = vector1->description();
     json["vector2"] = vector2->description();
     json["angle_max"] = {{"value", angle_hist.dimension_range.second},

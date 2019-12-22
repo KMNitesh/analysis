@@ -28,7 +28,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Angle (Ow-Hw) Distribution with cutoff"; }
 
 protected:
-    Atom::AmberMask ids1, ids2, ids3;
+    Atom::AmberMask mask1, mask2, mask3;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
 

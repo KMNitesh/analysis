@@ -24,7 +24,7 @@ public:
 
     [[nodiscard]] std::string description() override;
 
-    void setParameters(const Atom::Node &id);
+    void setParameters(const AmberMask &id);
 
     [[nodiscard]] std::tuple<double, double, double>
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
@@ -37,7 +37,7 @@ public:
 
 protected:
 
-    Atom::AmberMask amberMask;
+    AmberMask amberMask;
 
     std::set<std::shared_ptr<Molecule>> selected_mols;
 };

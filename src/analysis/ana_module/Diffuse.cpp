@@ -8,8 +8,6 @@
 #include "data_structure/molecule.hpp"
 #include <boost/range/algorithm.hpp>
 
-using namespace std;
-
 Diffuse::Diffuse() {
     enable_forcefield = true;
     enable_outfile = true;
@@ -105,51 +103,51 @@ void Diffuse::print(std::ostream &os) {
 
 }
 
-void Diffuse::setParameters(const Atom::Node &mask, double time_increment_ps, int total_frames,
+void Diffuse::setParameters(const AmberMask &mask, double time_increment_ps, int total_frames,
                             const std::string &outfilename) {
 
-    this->ids = mask;
+    this->mask = mask;
 
     if (time_increment_ps <= 0) {
-        throw runtime_error("`time_increment_ps' must great than zero");
+        throw std::runtime_error("`time_increment_ps' must great than zero");
     }
     this->time_increment_ps = time_increment_ps;
 
 
     if (total_frames <= 0) {
-        throw runtime_error("`total_frames' must great than zero");
+        throw std::runtime_error("`total_frames' must great than zero");
     }
     this->total_frame_number = total_frames;
 
     this->outfilename = outfilename;
     boost::trim(this->outfilename);
     if (this->outfilename.empty()) {
-        throw runtime_error("outfilename cannot empty");
+        throw std::runtime_error("outfilename cannot empty");
     }
 }
 
 void Diffuse::readInfo() {
     time_increment_ps = choose(0.0, "Enter the Time Increment in Picoseconds [0.1]: ", Default(0.1));
     total_frame_number = choose(1, "Enter the Total Frame Number: ");
-    Atom::select1group(ids, "select group :");
+    Atom::select1group(mask, "select group :");
 }
 
 void Diffuse::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list,
-                    [this](shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, ids)) mols.insert(atom->molecule.lock());
+                    [this](std::shared_ptr<Atom> &atom) {
+                        if (Atom::is_match(atom, mask)) mols.insert(atom->molecule.lock());
                     });
 }
 
-string Diffuse::description() {
-    stringstream ss;
-    string title_line = "------ " + std::string(title()) + " ------";
+std::string Diffuse::description() {
+    std::stringstream ss;
+    std::string title_line = "------ " + std::string(title()) + " ------";
     ss << title_line << "\n";
-    ss << " mask              = [ " << ids << " ]\n";
+    ss << " mask              = [ " << mask << " ]\n";
     ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
     ss << " total_frames      = " << total_frame_number << " (frames)\n";
     ss << " outfilename       = " << outfilename << "\n";
-    ss << string(title_line.size(), '-') << '\n';
+    ss << std::string(title_line.size(), '-') << '\n';
     return ss.str();
 }
 

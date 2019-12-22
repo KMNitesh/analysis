@@ -1,14 +1,10 @@
-//
-// Created by xiamr on 6/30/19.
-//
 
+#include <boost/range/algorithm.hpp>
 #include "DipoleAngleWithDistanceRange.hpp"
 #include "data_structure/frame.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/common.hpp"
-
-using namespace std;
 
 DipoleAngleWithDistanceRange::DipoleAngleWithDistanceRange() {
     enable_forcefield = true;
@@ -17,7 +13,7 @@ DipoleAngleWithDistanceRange::DipoleAngleWithDistanceRange() {
 
 void DipoleAngleWithDistanceRange::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
+                  [this](std::shared_ptr<Atom> &atom) {
                       if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
                       if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
                   });
@@ -58,22 +54,22 @@ void DipoleAngleWithDistanceRange::process(std::shared_ptr<Frame> &frame) {
 
 void DipoleAngleWithDistanceRange::print(std::ostream &os) {
 
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
     os << "# " << DipoleAngleWithDistanceRange::title() << '\n';
     os << "# Group1 > " << ids1 << '\n';
     os << "# Group2 > " << ids2 << '\n';
     os << "# angle_width(degree) > " << angle_width << '\n';
     os << "# Cutoff1(Ang) > " << cutoff1 << '\n';
     os << "# Cutoff2(Ang) > " << cutoff2 << '\n';
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
 
     printData(os);
 
-    os << string(50, '#') << '\n';
+    os << std::string(50, '#') << '\n';
 }
 
-void DipoleAngleWithDistanceRange::printData(ostream &os) const {
+void DipoleAngleWithDistanceRange::printData(std::ostream &os) const {
     double total = 0.0;
 
     for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {

@@ -34,12 +34,11 @@ public:
 
 protected:
 
-    Atom::AmberMask ids1;
+    Atom::AmberMask mask1;
     Atom::AmberMask ids2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
-
 
     double distance_width;
     double angle_width;

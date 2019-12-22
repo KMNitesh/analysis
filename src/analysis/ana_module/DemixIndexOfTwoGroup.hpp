@@ -32,8 +32,7 @@ public:
 
     void readInfo() override;
 
-    void setParameters(const Atom::Node &id1, const Atom::Node &id2, const Grid &grid, const std::string &outfilename);
-
+    void setParameters(const AmberMask &id1, const AmberMask &id2, const Grid &grid, const std::string &outfilename);
 
     [[nodiscard]] static std::string_view title() { return "Calculate demix index of two groups"; }
 
@@ -41,8 +40,8 @@ private:
 
     [[nodiscard]] auto calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame);
 
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
+    AmberMask mask1;
+    AmberMask mask2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
@@ -51,7 +50,7 @@ private:
     int grid_y;
     int grid_z;
 
-    std::list<std::tuple<double, double>> demix_index_list;
+    std::deque<std::tuple<double, double>> demix_index_list;
 
 };
 

@@ -15,7 +15,6 @@
 
 class Frame;
 
-
 class Diffuse : public AbstractAnalysis {
 public:
 
@@ -32,7 +31,7 @@ public:
     [[nodiscard]] std::string description() override;
 
     void
-    setParameters(const Atom::Node &mask, double time_increment_ps, int total_frames, const std::string &outfilename);
+    setParameters(const AmberMask &mask, double time_increment_ps, int total_frames, const std::string &outfilename);
 
     [[nodiscard]] static std::string_view title() {
         return "Self-Diffusion Coefficient Calculation based on Einstein Equation";
@@ -40,7 +39,7 @@ public:
 
 private:
 
-    Atom::AmberMask ids;
+    AmberMask mask;
 
     std::set<std::shared_ptr<Molecule>> mols;
     bool first_round = true;

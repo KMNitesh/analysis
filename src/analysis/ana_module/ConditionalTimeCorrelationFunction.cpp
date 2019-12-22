@@ -95,9 +95,10 @@ void ConditionalTimeCorrelationFunction::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
 
     os << format("#%15s %15s %15s\n", "Time(ps)", "Distance(Ang)", "C(r,t)");
+    const boost::format fmt("%15.5f %15.5f %15.5f\n");
     for (int t = 0; t < max_time_gap_frame; ++t) {
         for (int rbin = 0; rbin < distance_bins; ++rbin) {
-            os << boost::format("%15.5f %15.5f %15.5f\n")
+            os << boost::format(fmt)
                   % (t * time_increment_ps)
                   % ((rbin + 0.5) * distance_width)
                   % ctcf[rbin][t];

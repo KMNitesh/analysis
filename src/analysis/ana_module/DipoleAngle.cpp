@@ -68,7 +68,7 @@ void DipoleAngle::print(std::ostream &os) {
 }
 
 void DipoleAngle::readInfo() {
-    Atom::select2group(ids1, ids2);
+    Atom::select2group(mask1, ids2);
     double rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:",
                          Default(10.0));
     distance_width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:",
@@ -89,7 +89,7 @@ void DipoleAngle::readInfo() {
 void DipoleAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
                   [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+                      if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
                       if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
                   });
 }
