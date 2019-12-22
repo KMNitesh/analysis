@@ -30,8 +30,8 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Angle Distribution Between Two Vector with Cutoff"; }
 
-    void setParameters(const Atom::Node &M,
-                       const Atom::Node &L,
+    void setParameters(const AmberMask &M,
+                       const AmberMask &L,
                        std::shared_ptr<VectorSelector> vector1,
                        std::shared_ptr<VectorSelector> vector2,
                        double angle_max,

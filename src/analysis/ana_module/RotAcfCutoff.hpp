@@ -37,7 +37,7 @@ public:
 
     [[nodiscard]] std::string description() override;
 
-    void setParameters(const Atom::Node &M, const Atom::Node &L, std::shared_ptr<VectorSelector> vector,
+    void setParameters(const AmberMask &M, const AmberMask &L, std::shared_ptr<VectorSelector> vector,
                        int LegendrePolynomial, double cutoff, double time_increment_ps,
                        double max_time_grap_ps, const std::string &outfilename);
 

@@ -8,7 +8,7 @@
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 #include "utils/VectorSelectorFactory.hpp"
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 using namespace std;
 
@@ -60,9 +60,9 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
     os << "# Group2 > " << ids2 << '\n';
 
     os << "# vector1 > ";
-    vector1->print(os);
+    os << vector1;
     os << "# vector2 > ";
-    vector2->print(os);
+    os << vector2;
 
     os << "# angle max   > " << angle_hist.dimension_range.second << '\n';
     os << "# angle width > " << angle_hist.getWidth() << '\n';
@@ -113,6 +113,7 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
     for (auto[grid, value] : cos_hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
+    os << string(50, '#') << '\n';
 
     os << ">>>JSON<<<\n";
     saveJson(os);
@@ -163,8 +164,8 @@ string AngleDistributionBetweenTwoVectorWithCutoff::description() {
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(
-        const Atom::Node &M,
-        const Atom::Node &L,
+        const AmberMask &M,
+        const AmberMask &L,
         std::shared_ptr<VectorSelector> vector1,
         std::shared_ptr<VectorSelector> vector2,
         double angle_max,

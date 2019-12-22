@@ -50,7 +50,7 @@ void NormalVectorSelector::readInfo() {
 
 void NormalVectorSelector::print(std::ostream &os) {
     os << "# " << title() << "#\n";
-    os << " Group1 > " << ids1 << "\n Group2 > " << ids2 << "\n Group3 > " << ids3 << '\n';
+    os << "# Group1 > " << ids1 << "\n Group2 > " << ids2 << "\n Group3 > " << ids3 << '\n';
 }
 
 int NormalVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {

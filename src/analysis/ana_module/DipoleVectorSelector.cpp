@@ -38,7 +38,7 @@ void DipoleVectorSelector::readInfo() {
 
 void DipoleVectorSelector::print(std::ostream &os) {
     os << "# " << title() << "#\n";
-    os << " Group1 > " << amberMask << '\n';
+    os << "# Group1 > " << amberMask << '\n';
 }
 
 tuple<double, double, double>

@@ -21,7 +21,8 @@ public:
 
     void print(std::ostream &os) override;
 
-    static const std::string title() { return "Two Atom vector (define by two atoms in same molecule) selector"; }
+    [[nodiscard]] static std::string_view
+    title() { return "Two Atom vector (define by two atoms in same molecule) selector"; }
 
     std::string description() override;
 
@@ -29,13 +30,14 @@ public:
     calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
 
 protected:
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
 
-    std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
+    AmberMask mask1;
+    AmberMask mask2;
+
+    std::vector<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
 
-    std::tuple<double, double, double> calVector(
+    static std::tuple<double, double, double> calVector(
             const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
             const std::shared_ptr<Frame> &frame);
 };

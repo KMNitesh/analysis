@@ -34,8 +34,8 @@ public:
 
 protected:
 
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
+    AmberMask mask1;
+    AmberMask mask2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
@@ -47,6 +47,8 @@ protected:
     std::map<int, std::size_t> hist;
 
     std::size_t nframe = 0;
+
+    void saveJson(std::ostream &os) const;
 
 };
 

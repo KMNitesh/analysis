@@ -74,7 +74,7 @@ void RotAcfCutoff::readInfo() {
 
 }
 
-void RotAcfCutoff::setParameters(const Atom::Node &M, const Atom::Node &L, std::shared_ptr<VectorSelector> vector,
+void RotAcfCutoff::setParameters(const AmberMask &M, const AmberMask &L, std::shared_ptr<VectorSelector> vector,
                                  int LegendrePolynomial, double cutoff, double time_increment_ps,
                                  double max_time_grap_ps, const std::string &outfilename) {
     this->ids1 = M;
@@ -150,7 +150,7 @@ void RotAcfCutoff::print(std::ostream &os) {
     }
 
     os << "*********************************************************" << endl;
-    vectorSelector->print(os);
+    os << vectorSelector;
     os << "cutoff : " << std::sqrt(cutoff2) << std::endl;
     os << "First Type : " << ids1 << " Second Type : " << ids2 << endl;
 

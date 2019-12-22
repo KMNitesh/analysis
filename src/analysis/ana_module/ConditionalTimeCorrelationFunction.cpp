@@ -86,7 +86,7 @@ void ConditionalTimeCorrelationFunction::print(std::ostream &os) {
     os << "# " << title() << '\n';
     os << "# reference atom > " << reference_atom_mask << '\n';
     os << "# water Ow atoms > " << water_Ow_atoms_mask << '\n';
-    vectorSelector->print(os);
+    os << vectorSelector;
     os << "# LegendrePolynomial = " << LegendrePolynomial << "  [ " << LegendreStr.at(LegendrePolynomial) << " ] \n";
     os << "# distance_width(Ang) > " << distance_width << '\n';
     os << "# max_distance(Ang) > " << max_distance << '\n';

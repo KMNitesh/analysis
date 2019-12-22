@@ -66,6 +66,8 @@ private:
 
     void save_superposed_frame(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
 
+    void saveJson(std::ostream &os) const;
+
 };
 
 #endif //TINKER_RMSDCAL_HPP

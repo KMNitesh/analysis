@@ -7,6 +7,7 @@
 #include "RMSFCal.hpp"
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
+#include "nlohmann/json.hpp"
 
 RMSFCal::RMSFCal() {
     enable_outfile = true;
@@ -60,7 +61,7 @@ std::vector<std::tuple<double, double, double>>
 RMSFCal::append_coord(double x[], double y[], double z[], int nfit1, int nfit2, int n) {
     std::vector<std::tuple<double, double, double>> f_coord;
     f_coord.reserve(nfit2 + n);
-    for (std::size_t index = 0; index < nfit2 + n; index++) {
+    for (int index = 0; index < nfit2 + n; index++) {
         x_avg[index] += x[index + nfit1];
         y_avg[index] += y[index + nfit1];
         z_avg[index] += z[index + nfit1];
@@ -116,6 +117,27 @@ void RMSFCal::print(std::ostream &os) {
                                boost::adaptors::indexed()) {
         os << boost::format(" %15d %15.8f\n") % element.value()->seq % rmsvalue(element.index());
     }
+    os << std::string(50, '#') << '\n';
+    os << ">>>JSON<<<\n";
+    saveJson(os);
+    os << "<<<JSON>>>\n";
+}
+
+void RMSFCal::saveJson(std::ostream &os) const {
+    nlohmann::json json;
+    json["title"] = title();
+    json["mask_fro_superpose"] = to_string(mask_for_superpose);
+    json["mask_for_rmsfcalc"] = to_string(mask_for_rmsfcalc);
+    if (pdb_ostream) json["mask_for_first_frame_output"] = to_string(mask_for_first_frame_output);
+    for (const auto &element : join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) |
+                               boost::adaptors::indexed()) {
+        json["RMSF"] = {
+                {"X", "AtomSeq"},
+                {"Y", {{"name", "RMSF"}, {"unit", "Ang"}}},
+        };
+        json["RMSF"]["values"].push_back({element.value()->seq, rmsvalue(element.index())});
+    }
+    os << json;
 }
 
 void RMSFCal::calculate_average_structure() {
@@ -140,10 +162,10 @@ void RMSFCal::readInfo() {
     }
 }
 
-double RMSFCal::rmsvalue(int index) {
+double RMSFCal::rmsvalue(int index) const {
 
     double dx2_y2_z2 = 0.0;
-    for (std::size_t frame = 0; frame < steps; frame++) {
+    for (int frame = 0; frame < steps; frame++) {
         auto dx = std::get<0>(coords[frame][index]) - x_avg[index];
         auto dy = std::get<1>(coords[frame][index]) - y_avg[index];
         auto dz = std::get<2>(coords[frame][index]) - z_avg[index];

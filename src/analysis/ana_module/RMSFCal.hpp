@@ -70,7 +70,7 @@ protected:
     double *x1 = nullptr, *y1 = nullptr, *z1 = nullptr;
     double *x2 = nullptr, *y2 = nullptr, *z2 = nullptr;
 
-    double rmsvalue(int index);
+    [[nodiscard]] double rmsvalue(int index) const;
 
     std::vector<std::vector<std::tuple<double, double, double>>> coords;
 
@@ -84,6 +84,8 @@ protected:
     void calculate_average_structure();
 
     void allocate_array_memory();
+
+    void saveJson(std::ostream &os) const;
 };
 
 #endif //TINKER_RMSFCAL_HPP

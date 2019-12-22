@@ -7,6 +7,7 @@
 #include <boost/checked_delete.hpp>
 #include "RMSDCal.hpp"
 #include "data_structure/frame.hpp"
+#include "nlohmann/json.hpp"
 
 RMSDCal::RMSDCal() {
     enable_outfile = true;
@@ -27,6 +28,22 @@ void RMSDCal::print(std::ostream &os) {
     for (const auto &element : rmsds | boost::adaptors::indexed(1)) {
         os << boost::format(" %15d %15.8f\n") % element.index() % element.value();
     }
+    os << std::string(50, '#') << '\n';
+    os << ">>>JSON<<<\n";
+    saveJson(os);
+    os << "<<<JSON>>>\n";
+}
+
+void RMSDCal::saveJson(std::ostream &os) const {
+    nlohmann::json json;
+    json["title"] = title();
+    json["AmberMask for superpose"] = to_string(mask_for_superpose);
+    json["AmberMask for rms calc"] = to_string(mask_for_rmscalc);
+    json["RMSD"] = {
+            {"unit",   "Ang"},
+            {"values", rmsds}
+    };
+    os << json;
 }
 
 void RMSDCal::readInfo() {

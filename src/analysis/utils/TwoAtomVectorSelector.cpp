@@ -16,9 +16,9 @@ int TwoAtomVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         shared_ptr<Atom> atom1, atom2;
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, ids1)) {
+            if (Atom::is_match(atom, mask1)) {
                 atom1 = atom;
-            } else if (Atom::is_match(atom, ids2)) {
+            } else if (Atom::is_match(atom, mask2)) {
                 atom2 = atom;
             }
         }
@@ -44,13 +44,13 @@ TwoAtomVectorSelector::calculateVectors(const std::shared_ptr<Frame> &frame) {
 
 void TwoAtomVectorSelector::readInfo() {
     std::cout << "# " << title() << " #\n";
-    Atom::select1group(ids1, "Please Enter for Atom1(start) > ");
-    Atom::select1group(ids2, "Please Enter for Atom2(end)   > ");
+    Atom::select1group(mask1, "Please Enter for Atom1(start) > ");
+    Atom::select1group(mask2, "Please Enter for Atom2(end)   > ");
 }
 
 void TwoAtomVectorSelector::print(std::ostream &os) {
     os << "# " << title() << "#\n";
-    os << " Group1 > " << ids1 << "\n Group2 > " << ids2 << '\n';
+    os << "# Group1 > " << mask1 << "\n Group2 > " << mask2 << '\n';
 }
 
 std::tuple<double, double, double>
@@ -67,9 +67,9 @@ tuple<double, double, double>
 TwoAtomVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) {
     shared_ptr<Atom> atom1, atom2;
     for (auto &atom : mol->atom_list) {
-        if (Atom::is_match(atom, ids1)) {
+        if (Atom::is_match(atom, mask1)) {
             atom1 = atom;
-        } else if (Atom::is_match(atom, ids2)) {
+        } else if (Atom::is_match(atom, mask2)) {
             atom2 = atom;
         }
     }
@@ -79,12 +79,12 @@ TwoAtomVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, con
 }
 
 void TwoAtomVectorSelector::setParameters(const Atom::Node &id1, const Atom::Node &id2) {
-    this->ids1 = id1;
-    this->ids2 = id2;
+    this->mask1 = id1;
+    this->mask2 = id2;
 }
 
 string TwoAtomVectorSelector::description() {
     stringstream ss;
-    ss << "TwoAtomVector ( [" << ids1 << "] , [" << ids2 << "] )";
+    ss << "TwoAtomVector ( [" << mask1 << "] , [" << mask2 << "] )";
     return ss.str();
 }
