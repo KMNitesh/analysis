@@ -17,10 +17,10 @@ PlaneAngle::PlaneAngle() {
 void PlaneAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
                   [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                      if (Atom::is_match(atom, this->ids3)) this->group3.insert(atom);
-                      if (Atom::is_match(atom, this->ids4)) this->group4.insert(atom);
+                      if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
+                      if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+                      if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
+                      if (Atom::is_match(atom, this->mask4)) this->group4.insert(atom);
                   });
 
     for (auto &vec1_atom1 : group1) {
@@ -87,10 +87,10 @@ void PlaneAngle::process(std::shared_ptr<Frame> &frame) {
 void PlaneAngle::print(std::ostream &os) {
     os << string(50, '#') << '\n';
     os << "# " << PlaneAngle::title() << '\n';
-    os << "# Group1 > " << ids1 << '\n';
-    os << "# Group2 > " << ids2 << '\n';
-    os << "# Group3 > " << ids3 << '\n';
-    os << "# Group4 > " << ids4 << '\n';
+    os << "# Group1 > " << mask1 << '\n';
+    os << "# Group2 > " << mask2 << '\n';
+    os << "# Group3 > " << mask3 << '\n';
+    os << "# Group4 > " << mask4 << '\n';
     os << "# angle_width(degree) > " << angle_width << '\n';
     os << "# Cutoff1(Ang) > " << cutoff1 << '\n';
     os << "# Cutoff2(Ang) > " << cutoff2 << '\n';
@@ -107,10 +107,10 @@ void PlaneAngle::print(std::ostream &os) {
 }
 
 void PlaneAngle::readInfo() {
-    Atom::select1group(ids1, "Enter mask for atom1 (Ow) : ");
-    Atom::select1group(ids2, "Enter mask for atom2 (Hw) : ");
-    Atom::select1group(ids3, "Enter mask for atom3 (Hw) : ");
-    Atom::select1group(ids4, "Enter mask for atom4 (Metal) : ");
+    Atom::select1group(mask1, "Enter mask for atom1 (Ow) : ");
+    Atom::select1group(mask2, "Enter mask for atom2 (Hw) : ");
+    Atom::select1group(mask3, "Enter mask for atom3 (Hw) : ");
+    Atom::select1group(mask4, "Enter mask for atom4 (Metal) : ");
 
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));
@@ -144,10 +144,10 @@ void PlaneAngle::saveJson(std::ostream &os) const {
     nlohmann::json json;
 
     json["title"] = title();
-    json["group1"] = to_string(ids1);
-    json["group2"] = to_string(ids2);
-    json["group3"] = to_string(ids3);
-    json["group4"] = to_string(ids4);
+    json["group1"] = to_string(mask1);
+    json["group2"] = to_string(mask2);
+    json["group3"] = to_string(mask3);
+    json["group4"] = to_string(mask4);
     json["angle_width"] = {{"value", angle_width},
                            {"unit",  "degree"}};
 

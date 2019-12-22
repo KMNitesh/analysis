@@ -30,11 +30,11 @@ public:
 
 protected:
 
-    Atom::AmberMask ids1, ids2, ids3, ids4;
+    AmberMask mask1, mask2, mask3, mask4;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3, group4;
 
-    std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
+    std::vector<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
     double angle_width;
 
