@@ -9,6 +9,7 @@
 #include "ClusterVolume.hpp"
 #include "utils/common.hpp"
 #include "data_structure/frame.hpp"
+#include "nlohmann/json.hpp"
 
 ClusterVolume::ClusterVolume() {
     enable_outfile = true;
@@ -212,11 +213,20 @@ size_t ClusterVolume::countFilledGridPoints(boost::multi_array<ATOM_Category, 3>
 }
 
 void ClusterVolume::print(std::ostream &os) {
-    os << "#####################################\n";
+    os << std::string(50, '#') << '\n';
     os << "#    " << title() << '\n';
     os << "#    Group  " << atom_mask << '\n';
     os << "#    Grid    X = " << grid_x << "  Y = " << grid_y << "  Z = " << grid_z << '\n';
-    os << "#####################################\n";
+    os << std::string(50, '#') << '\n';
+
+    nlohmann::json json;
+    json["title"] = title();
+    json["mask"] = to_string(atom_mask);
+    json["grid"] = {
+            {"X", grid_x},
+            {"Y", grid_y},
+            {"Z", grid_z}
+    };
 
     os << boost::format("%10s %20s %20s %20s %20s\n")
           % "Frame"
@@ -233,8 +243,21 @@ void ClusterVolume::print(std::ostream &os) {
               % std::get<1>(accessor->second)
               % (100 * std::get<2>(accessor->second))
               % std::get<3>(accessor->second);
+
+
+        json["Frame"].push_back(accessor->first);
+        json["vdW Volume Pencentage(%)"].push_back(100 * std::get<0>(accessor->second));
+        json["vdW Volume(Ang^3)"].push_back(std::get<1>(accessor->second));
+        json["Fill Space Volume Pencentage(%)"].push_back(100 * std::get<2>(accessor->second));
+        json["Fill Space Volume(Ang^3)"].push_back(std::get<3>(accessor->second));
         accessor.release();
     }
+    os << std::string(50, '#') << '\n';
+
+    os << ">>>JSON<<<\n";
+    os << json;
+    os << "<<<JSON>>>\n";
+
 }
 
 void ClusterVolume::readInfo() {

@@ -7,6 +7,7 @@
 #include "CoplaneIndex.hpp"
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
+#include "nlohmann/json.hpp"
 
 CoplaneIndex::CoplaneIndex() {
     enable_outfile = true;
@@ -60,13 +61,18 @@ void CoplaneIndex::process(std::shared_ptr<Frame> &frame) {
 void CoplaneIndex::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
+    nlohmann::json json;
+    json["title"] = title();
 
     for (const auto &plane : mask_arrays | boost::adaptors::indexed(1)) {
+        nlohmann::json plane_json;
         os << "# plane <" << plane.index() << ">\n";
         for (const auto &item : plane.value() | boost::adaptors::indexed(0)) {
             os << "#  atom [" << item.index() << "] = " << item.value() << '\n';
+            plane_json.push_back(to_string(item.value()));
         }
         os << '\n';
+        json["plane"].push_back(plane_json);
     }
 
     os << std::string(50, '#') << '\n';
@@ -75,9 +81,16 @@ void CoplaneIndex::print(std::ostream &os) {
     const auto fmt = boost::format("%15.3f %15.3f %15.3f\n");
     for (const auto &element : coplaneIndex | boost::adaptors::indexed(1)) {
         os << boost::format(fmt) % element.index() % element.value().first % element.value().second;
+        json["Frame"].push_back(element.index());
+        json["CoplaneIndex"].push_back(element.value().first);
+        json["STD"].push_back(element.value().second);
     }
 
     os << std::string(50, '#') << '\n';
+
+    os << ">>>JSON<<<\n";
+    os << json;
+    os << "<<<JSON>>>\n";
 }
 
 void CoplaneIndex::readInfo() {
