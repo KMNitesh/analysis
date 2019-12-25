@@ -141,7 +141,8 @@ po::options_description make_program_options() {
             ("prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")
             ("target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")
             ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")
-            ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file");
+            ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")
+            ("aim", "QTAIM analysis based on Multiwfn");
 
     return desc;
 }

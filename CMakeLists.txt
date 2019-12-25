@@ -134,7 +134,7 @@ link_libraries(rt)
 # Boost
 set(BOOST_INCLUDEDIR ${INCLUES_PATH})
 set(BOOST_LIBRARYDIR ${LIBRARY_DIRS})
-find_package(Boost 1.67 REQUIRED COMPONENTS regex program_options filesystem container iostreams)
+find_package(Boost 1.72 REQUIRED COMPONENTS thread regex program_options filesystem container iostreams)
 include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
@@ -142,17 +142,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/sanitizers-cmake/cmake" ${C
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 # pugixml
-find_path(PUGIXML_INCLUDES pugixml.hpp PATHS ${INCLUES_PATH})
-if (NOT PUGIXML_INCLUDES)
-    message(FATAL_ERROR "xml parse library < pugixml header file> not found")
-endif ()
-include_directories(${PUGIXML_INCLUDES})
-
-find_library(LIBPUGIXML pugixml PATHS ${LIBRARY_DIRS})
-if (NOT LIBPUGIXML)
-    message(FATAL_ERROR "xml parse library < pugixml library file> not found")
-endif ()
-link_libraries(${LIBPUGIXML})
+find_package(pugixml REQUIRED)
+link_libraries(pugixml)
 
 # Google Sanitizer
 find_package(Sanitizers)
@@ -184,6 +175,10 @@ if (NOT READLINE_LIBS)
     message(FATAL_ERROR "readline library not found")
 endif ()
 link_libraries(${READLINE_LIBS})
+
+#nlohmann_json
+find_package(nlohmann_json 3.7.3 REQUIRED)
+link_libraries(nlohmann_json::nlohmann_json)
 
 enable_testing()
 

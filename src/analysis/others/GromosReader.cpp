@@ -13,7 +13,7 @@
 #include "GromosReader.hpp"
 #include "utils/common.hpp"
 
-namespace bp = boost::fusion;
+namespace bf = boost::fusion;
 
 namespace {
     BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim, 1)
@@ -22,9 +22,9 @@ namespace {
         Validator(std::size_t maxTotalEnergyGroupNum, std::size_t maxEnergyGroupNum)
                 : max_total_energy_group_num(maxTotalEnergyGroupNum), max_energy_group_num(maxEnergyGroupNum) {}
 
-        bool operator()(const bp::vector<char, std::pair<uint, uint>> &i) const {
-            auto g1 = bp::at_c<1>(i).first;
-            auto g2 = bp::at_c<1>(i).second;
+        bool operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
+            auto g1 = bf::at_c<1>(i).first;
+            auto g2 = bf::at_c<1>(i).second;
 
             return g1 >= 1 and g1 <= max_energy_group_num and g2 >= 1 and g2 <= max_energy_group_num;
         }
@@ -47,11 +47,11 @@ namespace {
                 energy_names(energyNames),
                 group_names(groupNames) {}
 
-        std::string operator()(const bp::vector<char, std::pair<uint, uint>> &i) const {
-            auto g1 = bp::at_c<1>(i).first;
-            auto g2 = bp::at_c<1>(i).second;
+        std::string operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
+            auto g1 = bf::at_c<1>(i).first;
+            auto g2 = bf::at_c<1>(i).second;
 
-            return energy_names[bp::at_c<0>(i) - 'a'] + "(" + group_names[g1 - 1] + "," + group_names[g2 - 1] + ")";
+            return energy_names[bf::at_c<0>(i) - 'a'] + "(" + group_names[g1 - 1] + "," + group_names[g2 - 1] + ")";
         }
 
         std::string operator()(const uint &i) const {
@@ -68,12 +68,12 @@ namespace {
 
         EnergyPrinter(const GromosReader::Energy &e, size_t groupNums) : e(e), group_nums(groupNums) {}
 
-        double operator()(const bp::vector<char, std::pair<uint, uint>> &i) const {
-            auto g1 = bp::at_c<1>(i).first;
-            auto g2 = bp::at_c<1>(i).second;
+        double operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
+            auto g1 = bf::at_c<1>(i).first;
+            auto g2 = bf::at_c<1>(i).second;
 
             auto index = ((group_nums + 1) * group_nums - (group_nums + 2 - g1) * (group_nums + 1 - g1)) / 2 + g2 - 1;
-            return e.intergroups[bp::at_c<0>(i) - 'a'][index];
+            return e.intergroups[bf::at_c<0>(i) - 'a'][index];
         }
 
         double operator()(const uint &i) const {
@@ -310,14 +310,14 @@ GromosReader::Bundle GromosReader::readOmd(const std::string &filename) {
 
     for (cregex_iterator pos(file.begin(), file.end(), rex), end; pos != end; ++pos) {
 
-        bp::vector<uint, double, std::vector<bp::vector<std::string, double>>> attribute;
+        bf::vector<uint, double, std::vector<bf::vector<std::string, double>>> attribute;
         if (auto it = (*pos)[1].first;
                 !(phrase_parse(it, (*pos)[1].second, parser, ascii::space - boost::spirit::eol, attribute) &&
                   it == (*pos)[1].second)) {
             throw std::runtime_error("omd file is ill-formed !");
         }
 
-        std::vector<bp::vector<std::string, std::vector<std::string>, std::vector<double>>> energy_group_attribute;
+        std::vector<bf::vector<std::string, std::vector<std::string>, std::vector<double>>> energy_group_attribute;
         if (auto it = (*pos)[3].first;
                 !(phrase_parse(it, (*pos)[3].second, energy_group_parser, ascii::space - boost::spirit::eol,
                                energy_group_attribute) && it == (*pos)[3].second)) {
@@ -325,21 +325,21 @@ GromosReader::Bundle GromosReader::readOmd(const std::string &filename) {
         }
 
         Energy e;
-        e.step = bp::at_c<0>(attribute);
-        e.time = bp::at_c<1>(attribute);
+        e.step = bf::at_c<0>(attribute);
+        e.time = bf::at_c<1>(attribute);
 
-        for (auto &bpv : bp::at_c<2>(attribute)) {
-            e.energies.push_back(bp::at_c<1>(bpv));
+        for (auto &bpv : bf::at_c<2>(attribute)) {
+            e.energies.push_back(bf::at_c<1>(bpv));
             if (!bFilled) {
-                menuStrings.push_back(bp::at_c<0>(bpv));
+                menuStrings.push_back(bf::at_c<0>(bpv));
             }
         }
         for (const auto &element : energy_group_attribute | boost::adaptors::indexed()) {
             if (!bFilled) {
-                energy_names[element.index()] = bp::at_c<0>(element.value());
-                group_names = bp::at_c<1>(element.value());
+                energy_names[element.index()] = bf::at_c<0>(element.value());
+                group_names = bf::at_c<1>(element.value());
             }
-            e.intergroups[element.index()] = bp::at_c<2>(element.value());
+            e.intergroups[element.index()] = bf::at_c<2>(element.value());
         }
 
         bFilled = true;
@@ -375,15 +375,15 @@ void GromosReader::printEnergies(const std::vector<Energy> &energies,
             pair_parser_ = (uint_ >> ',' >> uint_)[_val = construct<std::pair<uint, uint>>(_1, _2)];
 
     boost::spirit::qi::rule<std::string::iterator,
-            bp::vector<char, std::pair<uint, uint>>(), ascii::space_type>
+            bf::vector<char, std::pair<uint, uint>>(), ascii::space_type>
             sel_paser_ = char_("a-c") >> '(' >> pair_parser_ >> ')';
 
     boost::spirit::qi::rule<std::string::iterator,
-            boost::variant<uint, bp::vector<char, std::pair<uint, uint>>>(), ascii::space_type>
+            boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>(), ascii::space_type>
             item_parser_ = uint_ | sel_paser_;
 
     boost::spirit::qi::rule<std::string::iterator,
-            std::vector<boost::variant<uint, bp::vector<char, std::pair<uint, uint>>>>(), ascii::space_type>
+            std::vector<boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>>(), ascii::space_type>
             input_parser = +item_parser_;
 
     for (;;) {
@@ -392,7 +392,7 @@ void GromosReader::printEnergies(const std::vector<Energy> &energies,
         std::string line;
         std::getline(std::cin, line);
 
-        std::vector<boost::variant<uint, bp::vector<char, std::pair<uint, uint>>>> attribute;
+        std::vector<boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>> attribute;
 
         if (auto it = begin(line);
                 !(phrase_parse(it, end(line), input_parser, ascii::space, attribute) && it == end(line))) {
