@@ -1,6 +1,7 @@
 
 #include <boost/process.hpp>
 #include <boost/range/algorithm.hpp>
+#include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/fusion/include/at_c.hpp>
@@ -72,7 +73,7 @@ void MultiwfnAIMDriver::process_interactive() {
         if (auto it = std::begin(line);
                 qi::phrase_parse(it, end(line), parser, ascii::space, bonds) && it == end(line)) {
 
-            process(file, bonds, parse_options("da,lda,hb,ell"));
+            process(file, bonds, option_menu());
             return;
         }
         std::cerr << "Syntax Error , input again !\n";
@@ -202,3 +203,36 @@ boost::bimap<unordered_set_of<double MultiwfnAIMDriver::BCP_property::*>,
                 (&MultiwfnAIMDriver::BCP_property::Laplacian_of_electron_density, "lda")
                 (&MultiwfnAIMDriver::BCP_property::Hb, "hb")
                 (&MultiwfnAIMDriver::BCP_property::Ellipticity, "ell");
+
+std::vector<double MultiwfnAIMDriver::BCP_property::*> MultiwfnAIMDriver::option_menu() {
+    std::vector<double BCP_property::*> show_options{
+            &BCP_property::Density_of_all_electrons,
+            &BCP_property::Laplacian_of_electron_density,
+            &BCP_property::Hb,
+            &BCP_property::Ellipticity
+    };
+
+    using namespace boost::spirit;
+    struct num_ : qi::symbols<char, double BCP_property::*> {
+    } num__;
+
+    std::cout << ">>>> Property Menu <<<<\n";
+    for (const auto &element : show_options | boost::adaptors::indexed(1)) {
+        std::cout << "(" << element.index() << ") " << property_names.left.find(element.value())->second << '\n';
+        num__.add(std::to_string(element.index()), element.value());
+    }
+
+    for (;;) {
+        std::cout << "Enter > ";
+
+        std::string line;
+        std::getline(std::cin, line);
+
+        std::vector<double BCP_property::*> options;
+        if (auto it = begin(line);
+                qi::phrase_parse(it, end(line), +num__, ascii::space, options) and it == end(line)) {
+            return options;
+        }
+        std::cerr << "Syntax Error !\n";
+    }
+}

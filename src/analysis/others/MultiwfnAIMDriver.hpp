@@ -25,8 +25,7 @@ private:
         double Ellipticity;
     };
 
-    template<typename X> friend
-    struct boost::hash;
+    friend struct boost::hash<double BCP_property::*>;
 
     static boost::bimap<boost::bimaps::unordered_set_of<double BCP_property::*>,
             boost::bimaps::unordered_set_of<std::string>> property_names, property_options;
@@ -56,6 +55,8 @@ private:
                         const std::vector<double BCP_property::*> &output_field);
 
     [[nodiscard]] static std::vector<double BCP_property::*> parse_options(const std::string &option_string);
+
+    [[nodiscard]] static std::vector<double BCP_property::*> option_menu();
 
 };
 
