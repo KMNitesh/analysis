@@ -7,8 +7,18 @@
 #include <boost/format.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
+#include <boost/assign.hpp>
 #include "MultiwfnAIMDriver.hpp"
 #include "utils/common.hpp"
+
+namespace boost {
+    template<>
+    struct hash<double MultiwfnAIMDriver::BCP_property::*> {
+        size_t operator()(double MultiwfnAIMDriver::BCP_property::* __val) const noexcept {
+            return *reinterpret_cast<int *>(&__val); // Cation !!
+        }
+    };
+}
 
 void MultiwfnAIMDriver::readBCP(std::istream &is, std::vector<BCP> &bcp_vector) {
     std::string line;
@@ -48,7 +58,8 @@ void MultiwfnAIMDriver::process_interactive() {
 
     qi::rule<std::string::iterator, std::pair<int, int>(),
             qi::ascii::space_type>
-            bond_parser = ('(' >> qi::int_ >> ',' >> qi::int_ >> ')')[_val = construct<std::pair<int, int>>(_1, _2)];
+            bond_parser = ('(' >> qi::int_ >> ',' >> qi::int_ >> ')')
+    [_val = construct<std::pair<int, int>>(boost::spirit::_1, boost::spirit::_2)];
 
     auto parser = +bond_parser;
     std::vector<std::pair<int, int>> bonds;
@@ -60,14 +71,15 @@ void MultiwfnAIMDriver::process_interactive() {
 
         if (auto it = std::begin(line);
                 qi::phrase_parse(it, end(line), parser, ascii::space, bonds) && it == end(line)) {
-            process(file, bonds);
+
+            process(file, bonds, parse_options("da,lda,hb,ell"));
             return;
         }
         std::cerr << "Syntax Error , input again !\n";
     }
 }
 
-void MultiwfnAIMDriver::process() {
+void MultiwfnAIMDriver::process(const std::string &options) {
 
     auto[file, center_index, ligand_atoms] = inputParameter();
     std::vector<std::pair<int, int>> bonds;
@@ -75,10 +87,25 @@ void MultiwfnAIMDriver::process() {
         bonds.emplace_back(center_index, ligand);
     }
 
-    process(file, bonds);
+    process(file, bonds, parse_options(options));
 }
 
-void MultiwfnAIMDriver::process(const std::string &file, const std::vector<std::pair<int, int>> &bonds) {
+std::vector<double MultiwfnAIMDriver::BCP_property::*>
+MultiwfnAIMDriver::parse_options(const std::string &option_string) {
+    std::vector<double BCP_property::*> output_field;
+    for (auto &s : split(option_string, ",")) {
+        if (auto it = property_options.right.find(s); it != property_options.right.end()) {
+            output_field.push_back(it->second);
+        } else {
+            std::cerr << "ERROR !! unknown noption `" << s << "`\n";
+            std::exit(EXIT_FAILURE);
+        }
+    }
+    return output_field;
+}
+
+void MultiwfnAIMDriver::process(const std::string &file, const std::vector<std::pair<int, int>> &bonds,
+                                const std::vector<double BCP_property::*> &output_field) {
 
     namespace bp = boost::process;
     bp::ipstream is;
@@ -115,23 +142,19 @@ void MultiwfnAIMDriver::process(const std::string &file, const std::vector<std::
     for (auto &bcp : bcp_vector) {
         os << "7" << std::endl;
         os << bcp.index << std::endl;
-        while (c.running() and std::getline(is, line)) {
-            auto fields = split(line);
-            if (boost::contains(line, "Density of all electrons:")) {
-                bcp.property.Density_of_all_electrons = std::stod(fields[fields.size() - 1]);
-            } else if (boost::contains(line, "Energy density E(r) or H(r):")) {
-                bcp.property.Hb = std::stod(fields[fields.size() - 1]);
-            } else if (boost::contains(line, "Laplacian of electron density:")) {
-                bcp.property.Laplacian_of_electron_density = std::stod(fields[fields.size() - 1]);
-            } else if (boost::contains(line, "Ellipticity of electron density:")) {
-                bcp.property.Ellipticity = std::stod(fields[fields.size() - 1]);
-            } else if (boost::contains(line, "================ Topology analysis ===============")) {
-                break;
+        while (c.running() and std::getline(is, line)
+               and !boost::contains(line, "================ Topology analysis ===============")) {
+            for (auto &[property, name] : property_names) {
+                if (boost::contains(line, name)) {
+                    auto fields = split(line);
+                    bcp.property.*property = std::stod(fields[fields.size() - 1]);
+                    break;
+                }
             }
         }
     }
 
-    print(bcp_vector);
+    print(bcp_vector, output_field);
 }
 
 void MultiwfnAIMDriver::printProperty(const boost::format &fmt, const std::vector<BCP> &bcp_vector,
@@ -149,12 +172,33 @@ void MultiwfnAIMDriver::printProperty(const boost::format &fmt, const std::vecto
     std::cout << "           Average    " << boost::accumulators::mean(acc) << '\n';
 }
 
-void MultiwfnAIMDriver::print(const std::vector<BCP> &bcp_vector) {
+
+void MultiwfnAIMDriver::print(const std::vector<BCP> &bcp_vector,
+                              const std::vector<double BCP_property::*> &output_field) {
 
     const boost::format fmt("        %2d  <=>  %2d   %E\n");
-
-    printProperty(fmt, bcp_vector, "Density of all electrons:", &BCP_property::Density_of_all_electrons);
-    printProperty(fmt, bcp_vector, "Laplacian of electron density:", &BCP_property::Laplacian_of_electron_density);
-    printProperty(fmt, bcp_vector, "Energy density E(r) or H(r):", &BCP_property::Hb);
-    printProperty(fmt, bcp_vector, "Ellipticity of electron density:", &BCP_property::Ellipticity);
+    for (auto property : output_field) {
+        printProperty(fmt, bcp_vector, property_names.left.find(property)->second, property);
+    }
 }
+
+
+using boost::bimaps::unordered_set_of;
+using boost::assign::list_of;
+
+boost::bimap<unordered_set_of<double MultiwfnAIMDriver::BCP_property::*>,
+        unordered_set_of<std::string>> MultiwfnAIMDriver::property_names
+        = list_of<decltype(MultiwfnAIMDriver::property_names)::relation>
+                (&MultiwfnAIMDriver::BCP_property::Density_of_all_electrons, "Density of all electrons")
+                (&MultiwfnAIMDriver::BCP_property::Laplacian_of_electron_density, "Laplacian of electron density")
+                (&MultiwfnAIMDriver::BCP_property::Hb, "Energy density E(r) or H(r)")
+                (&MultiwfnAIMDriver::BCP_property::Ellipticity, "Ellipticity of electron density");
+
+
+boost::bimap<unordered_set_of<double MultiwfnAIMDriver::BCP_property::*>,
+        unordered_set_of<std::string>> MultiwfnAIMDriver::property_options
+        = list_of<decltype(MultiwfnAIMDriver::property_options)::relation>
+                (&MultiwfnAIMDriver::BCP_property::Density_of_all_electrons, "da")
+                (&MultiwfnAIMDriver::BCP_property::Laplacian_of_electron_density, "lda")
+                (&MultiwfnAIMDriver::BCP_property::Hb, "hb")
+                (&MultiwfnAIMDriver::BCP_property::Ellipticity, "ell");

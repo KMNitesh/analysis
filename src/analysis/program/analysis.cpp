@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (vm.count("aim")) {
-        MultiwfnAIMDriver::process();
+        MultiwfnAIMDriver::process(vm["aim"].as<std::string>());
         return EXIT_SUCCESS;
     }
     /*
