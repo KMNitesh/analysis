@@ -24,6 +24,7 @@ namespace po = boost::program_options;
 #include "others/ITS_Reweight.hpp"
 #include "others/GromosReader.hpp"
 #include "others/MultiwfnAIMDriver.hpp"
+#include "others/NBOOrbitalComposition.hpp"
 
 using namespace std;
 
@@ -228,7 +229,8 @@ int main(int argc, char *argv[]) {
         std::cout << "(13) " << ITS_Reweight::title() << '\n';
         std::cout << "(14) " << GromosReader::title() << '\n';
         std::cout << "(15) " << MultiwfnAIMDriver::title() << '\n';
-        return choose<int>(0, 15, "select : ");
+        std::cout << "(16) " << NBOOrbitalComposition::title() << '\n';
+        return choose<int>(0, 16, "select : ");
     };
 
     std::vector<std::function<void()>> actions{
@@ -247,7 +249,8 @@ int main(int argc, char *argv[]) {
             [&] { ITS_PostProcess::process(); },
             [&] { ITS_Reweight::process(); },
             [&] { GromosReader::process(); },
-            [&] { MultiwfnAIMDriver::process_interactive(); }
+            [&] { MultiwfnAIMDriver::process_interactive(); },
+            [&] { NBOOrbitalComposition::process(); }
     };
 
     actions.at(mainMenu())();
