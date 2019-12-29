@@ -24,11 +24,17 @@ namespace boost {
 void MultiwfnAIMDriver::readBCP(std::istream &is, std::vector<BCP> &bcp_vector) {
     std::string line;
     auto bcp_it = std::begin(bcp_vector);
+    using namespace boost::spirit;
+    const auto parser = qi::copy(qi::int_ >> qi::repeat(3)[qi::double_] >> "(3,-1)");
     while (std::getline(is, line), !boost::contains(line, "============ Modify or export found CPs ============")) {
-        if (boost::ends_with(line, "(3,-1)")) {
-            auto fields = split(line);
-            bcp_it->index = std::stoi(fields[0]);
-            bcp_it->coord = {std::stoi(fields[1]), std::stoi(fields[2]), std::stoi(fields[3])};
+        namespace bf = boost::fusion;
+        bf::vector<int, std::vector<double>> attribute;
+        if (auto it = std::begin(line);
+                qi::phrase_parse(it, std::end(line), parser, ascii::space, attribute)
+                and it == std::end(line)) {
+            bcp_it->index = bf::at_c<0>(attribute);
+            auto &c = bf::at_c<1>(attribute);
+            bcp_it->coord = {c[0], c[1], c[2]};
             ++bcp_it;
         }
     }
@@ -62,7 +68,7 @@ void MultiwfnAIMDriver::process_interactive() {
             bond_parser = ('(' >> qi::int_ >> ',' >> qi::int_ >> ')')
     [_val = construct<std::pair<int, int>>(boost::spirit::_1, boost::spirit::_2)];
 
-    auto parser = +bond_parser;
+    const auto parser = qi::copy(+bond_parser);
     std::vector<std::pair<int, int>> bonds;
 
     for (;;) {

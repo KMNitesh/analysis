@@ -25,7 +25,7 @@ void ITS_PostProcess::process() {
 
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
-    auto parser = int_[ref(step) = _1] >> ':' >> +(double_[push_back(boost::phoenix::ref(values), _1)] >> ',');
+    auto parser = copy(int_[ref(step) = _1] >> ':' >> +(double_[push_back(boost::phoenix::ref(values), _1)] >> ','));
 
     std::string line;
 

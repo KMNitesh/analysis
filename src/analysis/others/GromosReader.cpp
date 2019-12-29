@@ -278,22 +278,22 @@ GromosReader::Bundle GromosReader::readOmd(const std::string &filename) {
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
 
-    auto timestep_parser = "TIMESTEP" >> eol >>
-                                      uint_ >> double_ >> eol
-                                      >> "END" >> eol;
+    auto timestep_parser = copy("TIMESTEP" >> eol >>
+                                           uint_ >> double_ >> eol
+                                           >> "END" >> eol);
 
-    auto energies_parser = "ENERGIES" >> eol
-                                      >> +(as_string[lexeme[+(char_ - ':')]][trim(_1)]
-                                              >> ':' >> double_ >> eol)
-                                      >> eol;
+    auto energies_parser = copy("ENERGIES" >> eol
+                                           >> +(as_string[lexeme[+(char_ - ':')]][trim(_1)]
+                                                   >> ':' >> double_ >> eol)
+                                           >> eol);
 
-    auto parser = timestep_parser >> energies_parser;
+    auto parser = copy(timestep_parser >> energies_parser);
 
     auto energy_group_parser =
-            repeat(3)[as_string[lexeme[+(char_ - char_("0-9"))]][trim(_1)]
+            copy(repeat(3)[as_string[lexeme[+(char_ - char_("0-9"))]][trim(_1)]
                     >> +as_string[lexeme[+char_("0-9") >> char_('-') >> +char_("0-9")]]
                     >> eol >> +(omit[lexeme[+char_("0-9") >> char_('-') >> +char_("0-9")]] >> +double_ >> eol)
-                    >> eol];
+                    >> eol]);
 
     using namespace boost::xpressive;
     auto rex = (s1 = "TIMESTEP" >> -*_ >> _n >> _n)

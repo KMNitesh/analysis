@@ -4,7 +4,6 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
 #include <boost/process.hpp>
-
 #include "NBOOrbitalComposition.hpp"
 #include "utils/common.hpp"
 
@@ -104,11 +103,12 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
     }
 
     std::cout << "Contributions <" << excepted_atom << "," << excepted_orbital << ">\n";
-    std::cout << boost::format("%5s %15s\n") % "orbital" % "percentage(%)";
+    std::cout << boost::format("%5s %5s %15s\n") % "orbital" % "n" % "percentage(%)";
 
-    const boost::format fmt("%5d %15.6f\n");
+    const boost::format fmt("%5d %5d %15.6f\n");
+    int current_shift{};
     for (auto[orbital, contribution] : contributions) {
-        std::cout << boost::format(fmt) % orbital % contribution;
+        std::cout << boost::format(fmt) % orbital % current_shift-- % contribution;
     }
 }
 
@@ -119,10 +119,10 @@ NBOOrbitalComposition::parseLine(const std::string &line) {
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
 
-    auto line_parser =
-            omit[int_] >> int_ >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')'
-                       >> omit[lexeme[+(char_ - ascii::space)] >> lexeme[+(char_ - '(')]]
-                       >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')' >> double_ >> '%';
+    static const auto line_parser =
+            copy(omit[int_] >> int_ >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')'
+                            >> omit[lexeme[+(char_ - ascii::space)] >> lexeme[+(char_ - '(')]]
+                            >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')' >> double_ >> '%');
 
     boost::fusion::vector<int, std::string, std::string, double> attribute;
     if (auto it = std::begin(line);

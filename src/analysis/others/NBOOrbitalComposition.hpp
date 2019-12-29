@@ -7,7 +7,7 @@
 
 class NBOOrbitalComposition {
 public:
-    [[nodiscard]] static std::string_view title() { return "NBO Oribital Composition Analysis"; }
+    [[nodiscard]] static std::string_view title() { return "NBO Orbital Composition Analysis"; }
 
     static void process();
 

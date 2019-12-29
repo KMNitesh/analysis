@@ -97,7 +97,7 @@ std::pair<bool, std::vector<boost::fusion::vector<int, std::vector<double>>>> IT
 
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
-    auto parser = (int_ >> ':' >> +(double_ >> ',')) % eol >> *eol;
+    auto parser = copy((int_ >> ':' >> +(double_ >> ',')) % eol >> *eol);
 
     boost::spirit::istream_iterator begin(is);
     boost::spirit::istream_iterator end;
@@ -120,7 +120,7 @@ std::pair<bool, std::vector<std::pair<double, double>>> ITS_Reweight::read_pot(s
             decltype(SkipperGrammar<boost::spirit::istream_iterator>() - eol)>
             item = (double_ >> double_)[_val = construct<std::pair<double, double>>(_1, _2)];
 
-    auto parser = (item % eol) >> *eol;
+    auto parser = copy((item % eol) >> *eol);
 
     boost::spirit::istream_iterator begin(is);
     boost::spirit::istream_iterator end;
