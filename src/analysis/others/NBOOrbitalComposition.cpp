@@ -54,31 +54,30 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
 
     bp::child c(bp::search_path("Multiwfn"), file, bp::std_out > is, bp::std_in < os);
 
-    os << 8 << std::endl;
-    os << 7 << std::endl;
+    os << 8 << std::endl; // Orbital composition analysis
+    os << 7 << std::endl; // Orbital composition analysis by natural atomic orbital (NAO) method
 
-    os << 0 << std::endl;
+    os << 0 << std::endl; // Show composition of an orbital
 
     for (int orbital = alpha_orbitals; orbital > 0; --orbital) {
         os << orbital << std::endl;
     }
-    os << 0 << std::endl;
-    os << 3 << std::endl;
-    os << 0 << std::endl;
+    os << 0 << std::endl; // return
+    os << 3 << std::endl; // Switch spin type to Beta
+    os << 0 << std::endl; // Show composition of an orbital
 
     for (int orbital = beta_orbitals; orbital > 0; --orbital) {
         os << orbital << std::endl;
     }
 
     std::string line;
-
-    using namespace boost::spirit::qi;
-    using namespace boost::phoenix;
-
     std::vector<boost::fusion::vector<int, std::string>> attrs;
     for (;;) {
         std::cout << "<atom, orbital> : ";
         std::getline(std::cin, line);
+
+        using namespace boost::spirit::qi;
+        using namespace boost::phoenix;
         if (auto it = std::begin(line);
                 phrase_parse(
                         it, std::end(line),
