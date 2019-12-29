@@ -33,7 +33,7 @@ int NBOOrbitalComposition::findOccupancy(std::istream &is) {
             return occupancy_number;
         }
     }
-    throw std::runtime_error("NBO file sytanx errror");
+    throw std::runtime_error("NBO file syntax errror");
 }
 
 bool NBOOrbitalComposition::match(const std::string &line) {
