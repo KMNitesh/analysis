@@ -12,10 +12,11 @@ void NBOOrbitalComposition::process() {
     std::string file = choose_file("NBO output file > ").isExist(true);
     std::ifstream ifstream(file);
     auto alpha_orbitals = findOccupancy(ifstream);
+    auto beta_orbitals = findOccupancy(ifstream);
     std::cout << "Occupied molecular alpha orbital number : " << alpha_orbitals << '\n';
-    std::cout << "Occupied molecular beta  orbital number : " << findOccupancy(ifstream) << '\n';
+    std::cout << "Occupied molecular beta  orbital number : " << beta_orbitals << '\n';
 
-    driveMultiwfn(file, alpha_orbitals);
+    driveMultiwfn(file, alpha_orbitals, beta_orbitals);
 }
 
 
@@ -42,13 +43,11 @@ bool NBOOrbitalComposition::match(const std::string &line) {
 }
 
 namespace {
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim,
-
-    1)
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim, 1)
 }
 
 
-void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orbitals) {
+void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orbitals, int beta_orbitals) {
     namespace bp = boost::process;
     bp::ipstream is;
     bp::opstream os;
@@ -63,13 +62,20 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
     for (int orbital = alpha_orbitals; orbital > 0; --orbital) {
         os << orbital << std::endl;
     }
+    os << 0 << std::endl;
+    os << 3 << std::endl;
+    os << 0 << std::endl;
+
+    for (int orbital = beta_orbitals; orbital > 0; --orbital) {
+        os << orbital << std::endl;
+    }
 
     std::string line;
 
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
 
-    std::vector <boost::fusion::vector<int, std::string>> attrs;
+    std::vector<boost::fusion::vector<int, std::string>> attrs;
     for (;;) {
         std::cout << "<atom, orbital> : ";
         std::getline(std::cin, line);
@@ -83,30 +89,42 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
         std::cerr << "Syntax Error !\n";
     }
 
-    int current_orbital = alpha_orbitals;
-    std::map < int, std::map < std::pair < int, std::string >, double >, std::greater<>>
-    contributions;
-    namespace bf = boost::fusion;
-    while (c.running() and std::getline(is, line)) {
-        if (boost::contains(line, "Below are composition of")) {
-            while (std::getline(is, line) and !boost::contains(line, "Summing up the compositions listed above:")) {
-                if (auto attribute = parseLine(line); attribute.has_value()) {
-                    for (auto &bf_vector : attrs) {
-                        if (bf::at_c<0>(*attribute) == bf::at_c<0>(bf_vector)
-                            and bf::at_c<2>(*attribute) == bf::at_c<1>(bf_vector)) {
-                            contributions[current_orbital][{bf::at_c<0>(bf_vector),
-                                                            bf::at_c<1>(bf_vector)}] += bf::at_c<3>(*attribute);
-                        }
-                    }
-                }
-            }
-            if (--current_orbital == 0) break;
-        }
-    }
+    auto alpha_contributions = read_contributions(attrs, is, alpha_orbitals);
+    auto beta_contributions = read_contributions(attrs, is, beta_orbitals);
 
-    std::cout << "NAO orbital contributions <percentage(%)> \n";
+    print_contributions("Alpha", alpha_contributions, attrs);
+    print_contributions("Beta", beta_contributions, attrs);
+}
+
+
+std::optional<boost::fusion::vector<int, std::string, std::string, double>>
+NBOOrbitalComposition::parseLine(const std::string &line) {
+
+    using namespace boost::spirit::qi;
+    using namespace boost::phoenix;
+
+    static const auto line_parser =
+            copy(omit[int_] >> int_ >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')'
+                            >> omit[lexeme[+(char_ - ascii::space)] >> lexeme[+(char_ - '(')]]
+                            >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')' >> double_ >> '%');
+
+    boost::fusion::vector<int, std::string, std::string, double> attribute;
+    if (auto it = std::begin(line);
+            phrase_parse(it, std::end(line), line_parser, ascii::space, attribute) and it == std::end(line)) {
+        return attribute;
+    }
+    return {};
+}
+
+void NBOOrbitalComposition::print_contributions(
+        std::string_view descriptions,
+        std::map<int, std::map<std::pair<int, std::string>, double>, std::greater<>> &contributions,
+        const std::vector<boost::fusion::vector<int, std::string>> &attrs) {
+
+    std::cout << "NAO contributions <percentage(%)> for " << descriptions << " orbital\n";
     std::cout << std::setw(10) << "orbital" << std::setw(5) << "n";
 
+    namespace bf = boost::fusion;
     for (auto &bf_vector : attrs) {
         std::cout << std::setw(15)
                   << ("<" + std::to_string(bf::at_c<0>(bf_vector)) + "," + bf::at_c<1>(bf_vector) + ">");
@@ -124,24 +142,31 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
     }
 }
 
+std::map<int, std::map<std::pair<int, std::string>, double>, std::greater<>>
+NBOOrbitalComposition::read_contributions(const std::vector<boost::fusion::vector<int, std::string>> &attrs,
+                                          std::istream &is,
+                                          int orbital_number) {
 
-std::optional <boost::fusion::vector<int, std::string, std::string, double>>
-NBOOrbitalComposition::parseLine(const std::string &line) {
-
-    using namespace boost::spirit::qi;
-    using namespace boost::phoenix;
-
-    static const auto line_parser =
-            copy(omit[int_] >> int_ >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')'
-                            >> omit[lexeme[+(char_ - ascii::space)] >> lexeme[+(char_ - '(')]]
-                            >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')' >> double_ >> '%');
-
-    boost::fusion::vector<int, std::string, std::string, double> attribute;
-    if (auto it = std::begin(line);
-            phrase_parse(it, std::end(line), line_parser, ascii::space, attribute) and it == std::end(line)) {
-        return attribute;
+    std::map<int, std::map<std::pair<int, std::string>, double>, std::greater<>> contributions;
+    namespace bf = boost::fusion;
+    std::string line;
+    while (std::getline(is, line)) {
+        if (boost::contains(line, "Below are composition of")) {
+            while (std::getline(is, line) and !boost::contains(line, "Summing up the compositions listed above:")) {
+                if (auto attribute = parseLine(line); attribute.has_value()) {
+                    for (auto &bf_vector : attrs) {
+                        if (bf::at_c<0>(*attribute) == bf::at_c<0>(bf_vector)
+                            and bf::at_c<2>(*attribute) == bf::at_c<1>(bf_vector)) {
+                            contributions[orbital_number][{bf::at_c<0>(bf_vector),
+                                                           bf::at_c<1>(bf_vector)}] += bf::at_c<3>(*attribute);
+                        }
+                    }
+                }
+            }
+            if (--orbital_number == 0) break;
+        }
     }
-    return {};
+    return contributions;
 }
 
 
