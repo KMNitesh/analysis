@@ -70,9 +70,9 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
         os << orbital << std::endl;
     }
 
-    std::string line;
+
     std::vector<boost::fusion::vector<int, std::string>> attrs;
-    for (;;) {
+    for (std::string line;;) {
         std::cout << "<atom, orbital> : ";
         std::getline(std::cin, line);
 
@@ -135,7 +135,7 @@ void NBOOrbitalComposition::print_contributions(
         std::cout << std::setw(10) << orbital << std::setw(5) << current_shift--;
         for (auto &bf_vector : attrs) {
             std::cout << std::setw(15)
-                      << contributions[orbital][{bf::at_c<0>(bf_vector), bf::at_c<1>(bf_vector)}];
+                      << contribution[{bf::at_c<0>(bf_vector), bf::at_c<1>(bf_vector)}];
         }
         std::cout << '\n';
     }
