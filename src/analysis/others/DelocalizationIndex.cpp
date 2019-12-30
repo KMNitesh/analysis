@@ -40,12 +40,10 @@ void DelocalizationIndex::process(const std::string &file, const std::vector<std
 
     std::string line;
     struct BondOrder {
-        BondOrder(int atom1, const std::string &symbol1, int atom2, const std::string &symbol2, double bondorder)
-                : atom1(atom1), symbol1(symbol1), atom2(atom2), symbol2(symbol2), bondorder(bondorder) {}
+        BondOrder(std::string symbol1, std::string symbol2, double bondorder)
+                : symbol1(std::move(symbol1)), symbol2(std::move(symbol2)), bondorder(bondorder) {}
 
-        int atom1;
         std::string symbol1;
-        int atom2;
         std::string symbol2;
         double bondorder;
     };
@@ -56,10 +54,8 @@ void DelocalizationIndex::process(const std::string &file, const std::vector<std
         if (auto it = std::begin(line);
                 phrase_parse(it, std::end(line), parser, ascii::space, bondorder) and it == std::end(line)) {
             bondorders.insert({{boost::fusion::at_c<0>(bondorder), boost::fusion::at_c<2>(bondorder)}, BondOrder{
-                    boost::fusion::at_c<0>(bondorder),
-                    boost::fusion::at_c<1>(bondorder),
-                    boost::fusion::at_c<2>(bondorder),
-                    boost::fusion::at_c<3>(bondorder),
+                    std::move(boost::fusion::at_c<1>(bondorder)),
+                    std::move(boost::fusion::at_c<3>(bondorder)),
                     boost::fusion::at_c<4>(bondorder)}});
         }
     }
@@ -69,9 +65,9 @@ void DelocalizationIndex::process(const std::string &file, const std::vector<std
     for (auto[atom1, atom2] : bonds) {
         if (atom1 > atom2) std::swap(atom1, atom2);
         const auto &bondorder = bondorders.at({atom1, atom2});
-        std::cout << std::setw(5) << std::right << bondorder.atom1
+        std::cout << std::setw(5) << std::right << atom1
                   << '(' << std::left << std::setw(2) << bondorder.symbol1 << ')'
-                  << std::setw(5) << std::right << bondorder.atom2
+                  << std::setw(5) << std::right << atom2
                   << '(' << std::left << std::setw(2) << bondorder.symbol2 << ')'
                   << std::right << std::setw(15) << bondorder.bondorder << '\n';
         acc(bondorder.bondorder);

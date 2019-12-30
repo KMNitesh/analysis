@@ -208,6 +208,12 @@ int main(int argc, char *argv[]) {
         MultiwfnAIMDriver::process(vm["aim"].as<std::string>());
         return EXIT_SUCCESS;
     }
+
+    if (vm.count("di")) {
+        DelocalizationIndex::process();
+        return EXIT_SUCCESS;
+    }
+
     /*
      *  This is the main menu the user select when the program starts
      *  evergy function of option may has its own submenu, by using different handling models

@@ -142,7 +142,8 @@ po::options_description make_program_options() {
             ("target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")
             ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")
             ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")
-            ("aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn");
+            ("aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")
+            ("di", "Delocalization Index based on Multiwfn");
 
     return desc;
 }
