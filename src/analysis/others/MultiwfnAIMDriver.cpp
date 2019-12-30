@@ -59,31 +59,8 @@ std::tuple<std::string, int, std::vector<int>> MultiwfnAIMDriver::inputParameter
 }
 
 void MultiwfnAIMDriver::process_interactive() {
-    std::string file = choose_file("Fchk file > ").isExist(true).extension("fchk");
-    using namespace boost::spirit;
-    using boost::phoenix::construct;
-
-    qi::rule<std::string::iterator, std::pair<int, int>(),
-            qi::ascii::space_type>
-            bond_parser = ('(' >> qi::int_ >> ',' >> qi::int_ >> ')')
-    [_val = construct<std::pair<int, int>>(boost::spirit::_1, boost::spirit::_2)];
-
-    const auto parser = qi::copy(+bond_parser);
-    std::vector<std::pair<int, int>> bonds;
-
-    for (;;) {
-        std::string line;
-        std::cout << "Bond description [ +(a,b) ] > ";
-        std::getline(std::cin, line);
-
-        if (auto it = std::begin(line);
-                qi::phrase_parse(it, end(line), parser, ascii::space, bonds) && it == end(line)) {
-
-            process(file, bonds, option_menu());
-            return;
-        }
-        std::cerr << "Syntax Error , input again !\n";
-    }
+    auto[file, bonds] = user_input();
+    process(file, bonds, option_menu());
 }
 
 void MultiwfnAIMDriver::process(const std::string &options) {
@@ -119,19 +96,19 @@ void MultiwfnAIMDriver::process(const std::string &file, const std::vector<std::
     bp::opstream os;
 
     bp::child c(bp::search_path("Multiwfn"), file, bp::std_out > is, bp::std_in < os);
-    os << "2" << std::endl;
+    os << 2 << std::endl;
 
     std::vector<BCP> bcp_vector;
     for (auto[i, j] : bonds) {
-        os << "1" << std::endl;
+        os << 1 << std::endl;
         os << i << "," << j << std::endl;
 
         bcp_vector.emplace_back(i, j);
     }
 
-    os << "-4" << std::endl;
-    os << "1" << std::endl;
-    os << "0" << std::endl;
+    os << -4 << std::endl;
+    os << 1 << std::endl;
+    os << 0 << std::endl;
 
     std::string line;
     // Read BCP points
@@ -147,7 +124,7 @@ void MultiwfnAIMDriver::process(const std::string &file, const std::vector<std::
     }
 
     for (auto &bcp : bcp_vector) {
-        os << "7" << std::endl;
+        os << 7 << std::endl;
         os << bcp.index << std::endl;
         while (c.running() and std::getline(is, line)
                and !boost::contains(line, "================ Topology analysis ===============")) {
@@ -240,5 +217,32 @@ std::vector<double MultiwfnAIMDriver::BCP_property::*> MultiwfnAIMDriver::option
             return options;
         }
         std::cerr << "Syntax Error !\n";
+    }
+}
+
+std::pair<std::string, std::vector<std::pair<int, int>>> MultiwfnAIMDriver::user_input() {
+    std::string file = choose_file("Fchk file > ").isExist(true).extension("fchk");
+    using namespace boost::spirit;
+    using boost::phoenix::construct;
+
+    qi::rule<std::string::iterator, std::pair<int, int>(),
+            qi::ascii::space_type>
+            bond_parser = ('(' >> qi::int_ >> ',' >> qi::int_ >> ')')
+    [_val = construct<std::pair<int, int>>(boost::spirit::_1, boost::spirit::_2)];
+
+    const auto parser = qi::copy(+bond_parser);
+    std::vector<std::pair<int, int>> bonds;
+
+    for (;;) {
+        std::string line;
+        std::cout << "Bond description [ +(a,b) ] > ";
+        std::getline(std::cin, line);
+
+        if (auto it = std::begin(line);
+                qi::phrase_parse(it, end(line), parser, ascii::space, bonds) && it == end(line)) {
+
+            return {file, bonds};
+        }
+        std::cerr << "Syntax Error , input again !\n";
     }
 }

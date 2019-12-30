@@ -18,6 +18,8 @@ public:
 
 private:
 
+    friend class DelocalizationIndex;
+
     struct BCP_property {
         double Density_of_all_electrons;
         double Hb;
@@ -58,6 +60,7 @@ private:
 
     [[nodiscard]] static std::vector<double BCP_property::*> option_menu();
 
+    [[nodiscard]] static std::pair<std::string, std::vector<std::pair<int, int>>> user_input();
 };
 
 

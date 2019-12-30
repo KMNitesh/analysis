@@ -25,6 +25,7 @@ namespace po = boost::program_options;
 #include "others/GromosReader.hpp"
 #include "others/MultiwfnAIMDriver.hpp"
 #include "others/NBOOrbitalComposition.hpp"
+#include "others/DelocalizationIndex.hpp"
 
 using namespace std;
 
@@ -211,27 +212,6 @@ int main(int argc, char *argv[]) {
      *  This is the main menu the user select when the program starts
      *  evergy function of option may has its own submenu, by using different handling models
      */
-    auto mainMenu = [] {
-        std::cout << "Main Menu\n";
-        std::cout << " (0) Trajectory Analysis\n";
-        std::cout << " (1) Print Topology\n";
-        std::cout << " (2) Infrared radiation (IR) Spectrum\n";
-        std::cout << " (3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
-        std::cout << " (4) " << RamanSpectrum::title() << '\n';
-        std::cout << " (5) " << CrossCorrelation::title() << '\n';
-        std::cout << " (6) " << GmxTopologyPrinter::title() << '\n';
-        std::cout << " (7) " << GQuadruplexPdb2gmx::title() << '\n';
-        std::cout << " (8) " << "Superpose and move for Residues" << '\n';
-        std::cout << " (9) " << NBOSpin::title() << '\n';
-        std::cout << "(10) Renumber atom and residue num\n";
-        std::cout << "(11) " << Averager::title() << '\n';
-        std::cout << "(12) " << ITS_PostProcess::title() << '\n';
-        std::cout << "(13) " << ITS_Reweight::title() << '\n';
-        std::cout << "(14) " << GromosReader::title() << '\n';
-        std::cout << "(15) " << MultiwfnAIMDriver::title() << '\n';
-        std::cout << "(16) " << NBOOrbitalComposition::title() << '\n';
-        return choose<int>(0, 16, "select : ");
-    };
 
     std::vector<std::function<void()>> actions{
             [&] { processTrajectory(desc, vm, xyzfiles, argc, argv); },
@@ -250,7 +230,31 @@ int main(int argc, char *argv[]) {
             [&] { ITS_Reweight::process(); },
             [&] { GromosReader::process(); },
             [&] { MultiwfnAIMDriver::process_interactive(); },
-            [&] { NBOOrbitalComposition::process(); }
+            [&] { NBOOrbitalComposition::process(); },
+            [&] { DelocalizationIndex::process_interactive(); }
+    };
+
+    auto mainMenu = [&] {
+        std::cout << "Main Menu\n";
+        std::cout << " (0) Trajectory Analysis\n";
+        std::cout << " (1) Print Topology\n";
+        std::cout << " (2) Infrared radiation (IR) Spectrum\n";
+        std::cout << " (3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
+        std::cout << " (4) " << RamanSpectrum::title() << '\n';
+        std::cout << " (5) " << CrossCorrelation::title() << '\n';
+        std::cout << " (6) " << GmxTopologyPrinter::title() << '\n';
+        std::cout << " (7) " << GQuadruplexPdb2gmx::title() << '\n';
+        std::cout << " (8) " << "Superpose and move for Residues" << '\n';
+        std::cout << " (9) " << NBOSpin::title() << '\n';
+        std::cout << "(10) Renumber atom and residue num\n";
+        std::cout << "(11) " << Averager::title() << '\n';
+        std::cout << "(12) " << ITS_PostProcess::title() << '\n';
+        std::cout << "(13) " << ITS_Reweight::title() << '\n';
+        std::cout << "(14) " << GromosReader::title() << '\n';
+        std::cout << "(15) " << MultiwfnAIMDriver::title() << '\n';
+        std::cout << "(16) " << NBOOrbitalComposition::title() << '\n';
+        std::cout << "(17) " << DelocalizationIndex::title() << '\n';
+        return choose<int>(0, actions.size() - 1, "select : ");
     };
 
     actions.at(mainMenu())();
