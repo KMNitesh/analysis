@@ -37,23 +37,3 @@ TEST(Test_ITS_Reweight, read_pot) {
     ASSERT_THAT(pot[1], Pair(DoubleEq(0.5), DoubleEq(-38957.7524)));
 }
 
-TEST(Test_ITS_Reweight, eol) {
-    std::stringstream ss(
-            "0 : 0.00247875,0.00247875,0.00247875,0.00247875,\n100 : -0,0.00587086,0.0113129,0.0163715,\n");
-    ss.unsetf(std::ios::skipws);
-
-    boost::spirit::istream_iterator begin(ss);
-    boost::spirit::istream_iterator end;
-
-    using namespace boost::spirit::qi;
-    using namespace boost::phoenix;
-
-    auto parser = copy(+(omit[int_] >> ':' >> +(double_ >> ',') >> eol));
-
-    ASSERT_TRUE(phrase_parse(begin, end, parser, ascii::space - eol));
-}
-
-
-
-
-
