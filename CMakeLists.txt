@@ -12,6 +12,8 @@ option(ENABLE_NATIVE "Enable native cpu instruction support" ON)
 
 file(STRINGS "AUTHOR" CACANA_AUTHOR)
 
+file(READ "ScriptSyntaxSummary" SCRIPT_SYNTAX_SUMMARY)
+
 include_directories(${PROJECT_BINARY_DIR})
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
