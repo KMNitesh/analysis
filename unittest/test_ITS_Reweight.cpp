@@ -48,7 +48,7 @@ TEST(Test_ITS_Reweight, eol) {
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
 
-    auto parser = +(omit[int_] >> ':' >> +(double_ >> ',') >> eol);
+    auto parser = copy(+(omit[int_] >> ':' >> +(double_ >> ',') >> eol));
 
     ASSERT_TRUE(phrase_parse(begin, end, parser, ascii::space - eol));
 }

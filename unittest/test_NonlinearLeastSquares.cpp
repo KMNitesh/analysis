@@ -90,12 +90,12 @@ protected:
     };
 };
 
-TEST_F(TestNonlinearLestSquares, TCTP) {
+TEST_F(TestNonlinearLestSquares, DISABLED_TCTP) {
     ASSERT_THAT(CoordinationStructureMatch::testTCTP(tctp_coord), Lt(CoordinationStructureMatch::testCASP(tctp_coord)));
 }
 
 
-TEST_F(TestNonlinearLestSquares, CASP) {
+TEST_F(TestNonlinearLestSquares, DISABLED_CASP) {
     ASSERT_THAT(CoordinationStructureMatch::testCASP(casp_coord), Lt(CoordinationStructureMatch::testTCTP(casp_coord)));
 }
 

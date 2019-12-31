@@ -131,7 +131,8 @@ void Cluster::print(std::ostream &os) {
 
         auto &s = mm[i_clust];
         int index = 0;
-        for (const auto &frame : combine_seq(s | boost::adaptors::transformed([](auto i) { return i + 1; }))) {
+        auto seq = s | boost::adaptors::transformed([](auto i) { return i + 1; });
+        for (const auto &frame : combine_seq(seq)) {
             if (index % 10 == 0) {
                 if (index == 0) {
                     os << format("\n%-10d      %-10d ", i_clust, s.size());

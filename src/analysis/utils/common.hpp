@@ -361,7 +361,7 @@ std::string print_cmdline(int argc, const char *const argv[]);
 
 
 template<typename Iterable>
-class PushIterable_object {
+class PushIterable {
 public:
     using value_type = typename Iterable::value_type;
 private:
@@ -373,21 +373,21 @@ private:
     std::stack<value_type> queue;
 
 public:
-    explicit PushIterable_object(Iterable &iter) :
+    explicit PushIterable(Iterable &iter) :
             _iter(iter),
-            _begin(std::begin(iter)),
-            _end(std::end(iter)) {}
+            _begin(std::begin(_iter)),
+            _end(std::end(_iter)) {}
 
-    const PushIterable_object &begin() const { return *this; }
+    const PushIterable &begin() const { return *this; }
 
-    const PushIterable_object &end() const { return *this; }
+    const PushIterable &end() const { return *this; }
 
 
-    bool operator!=(const PushIterable_object &) const {
+    bool operator!=(const PushIterable &) const {
         return _begin != _end || !queue.empty();
     }
 
-    bool operator==(const PushIterable_object &) const {
+    bool operator==(const PushIterable &) const {
         return _begin == _end && queue.empty();
     }
 
@@ -433,27 +433,27 @@ public:
 
 template<typename Iterable, typename = std::enable_if_t<
         std::is_integral_v<typename Iterable::value_type> && !std::is_same_v<typename Iterable::value_type, bool> >>
-class CombineSeq {
+class combine_seq {
 public:
     using value_type = typename Iterable::value_type;
 private:
-    PushIterable_object<Iterable> _iter;
+    PushIterable<Iterable> _iter;
 
     boost::optional<std::string> _curr;
 
 public:
-    explicit CombineSeq(Iterable &iter) :
+    explicit combine_seq(Iterable &iter) :
             _iter(iter) {}
 
-    CombineSeq &begin() { return *this; }
+    combine_seq &begin() { return *this; }
 
-    CombineSeq &end() { return *this; }
+    combine_seq &end() { return *this; }
 
-    CombineSeq(const CombineSeq &other) :
+    combine_seq(const combine_seq &other) :
             _iter(other._iter), _curr(other._curr) {}
 
 
-    bool operator!=(const CombineSeq &) const {
+    bool operator!=(const combine_seq &) const {
         return !_iter.empty() || _curr.has_value();
     }
 
@@ -499,30 +499,6 @@ public:
         return _curr.value();
     }
 };
-
-template<typename Iterable>
-auto PushIterable(Iterable &&iter) {
-    return PushIterable_object(iter);
-}
-
-
-template<typename T>
-auto PushIterable(std::initializer_list<T> &&iter) {
-    return PushIterable_object(iter);
-}
-
-
-template<typename Iterable>
-auto combine_seq(Iterable &&iter) {
-    return CombineSeq(iter);
-}
-
-
-template<typename T>
-auto combine_seq(std::initializer_list<T> &&iter) {
-    return CombineSeq(iter);
-}
-
 
 template<typename T>
 auto dot_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {

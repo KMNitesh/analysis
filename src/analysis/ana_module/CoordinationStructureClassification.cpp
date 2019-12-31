@@ -91,7 +91,8 @@ void CoordinationStructureClassification::print(std::ostream &os) {
         std::size_t string_length = 0;
         os << format("\n %-10d %-5d %-13d %-13d %-13g ", i_clust, frame_cn_mapping[s.front()], s.size(),
                      mm2[i_clust].first + 1, mm2[i_clust].second);
-        for (const auto &frame : combine_seq(s | boost::adaptors::transformed([](auto i) { return i + 1; }))) {
+        auto seq = s | boost::adaptors::transformed([](auto i) { return i + 1; });
+        for (const auto &frame : combine_seq(seq)) {
             if (string_length > 80) {
                 os << '\n' << std::string(60, ' ');
                 string_length = 0;

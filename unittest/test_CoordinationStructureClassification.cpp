@@ -31,7 +31,7 @@ TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithSam
     ASSERT_THAT(CoordinationStructureClassification::calculateRmsdOfTwoStructs(c1, c2), DoubleEq(0));
 }
 
-TEST(CoordinationStructureClassification, calculateRmsdOfTwoStructsWithRandomCoorindation) {
+TEST(CoordinationStructureClassification, DISABLED_calculateRmsdOfTwoStructsWithRandomCoorindation) {
     std::vector<std::tuple<double, double, double>> c2(8);
     std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<double> distribution(-4, 4);
@@ -46,7 +46,7 @@ TEST(CoordinationStructureClassification, calculateRmsdOfTwoStructsWithRandomCoo
     }
 }
 
-TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithRandomShuffle) {
+TEST_F(TestCoordinationStructureClassification, DISABLED_calculateRmsdOfTwoStructsWithRandomShuffle) {
     auto c2 = c1;
     for (int i = 0; i < 100000; ++i) {
         std::shuffle(c2.begin(), c2.end(), std::mt19937(std::random_device()()));
@@ -55,7 +55,7 @@ TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithRan
 }
 
 
-TEST(CoordinationStructureClassification, calculateRmsdOfTwoStructsWithRandomCoorindationWithRandomSuffle) {
+TEST(CoordinationStructureClassification, DISABLED_calculateRmsdOfTwoStructsWithRandomCoorindationWithRandomSuffle) {
     std::vector<std::tuple<double, double, double>> c2(8);
     std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<double> distribution(-4, 4);
@@ -74,14 +74,14 @@ TEST(CoordinationStructureClassification, calculateRmsdOfTwoStructsWithRandomCoo
     }
 }
 
-TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithAllPermutation) {
+TEST_F(TestCoordinationStructureClassification, DISABLED_calculateRmsdOfTwoStructsWithAllPermutation) {
     auto c2 = c1;
     do {
         ASSERT_THAT(CoordinationStructureClassification::calculateRmsdOfTwoStructs(c1, c2), DoubleEq(0));
     } while (std::next_permutation(c2.begin(), c2.end()));
 }
 
-TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithAllPermutationOfSmallShift) {
+TEST_F(TestCoordinationStructureClassification, DISABLED_calculateRmsdOfTwoStructsWithAllPermutationOfSmallShift) {
     auto c2 = c1;
     for (auto &coord : c2) {
         std::get<0>(coord) += 1;
@@ -93,7 +93,7 @@ TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithAll
     } while (boost::next_permutation(c2));
 }
 
-TEST_F(TestCoordinationStructureClassification, calculateRmsdOfTwoStructsWithAllPermutationOfSmallShift2) {
+TEST_F(TestCoordinationStructureClassification, DISABLED_calculateRmsdOfTwoStructsWithAllPermutationOfSmallShift2) {
     std::vector<std::tuple<double, double, double>> c2{
             {-1.91, 0.21,  -1.44},
             {2.92,  -1.35, 0.09},
