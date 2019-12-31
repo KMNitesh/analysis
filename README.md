@@ -26,9 +26,19 @@
 13.  Orientation-Resolved Radial Distribution Functions (JCTC 2019, 15, 803−812)
 14.  Conditional Time Correlation Function (JCTC 2019, 15, 803−812)
 15.  Radius of gyration (mass-weighted)
-16.  Use AmberMask for selecting Residues, Atoms in topology structure
-17.  Use Domain Specific Language(DSL) script to drive analysis process 
-18.  Other practical utilities for using Tinker
+16.  Biphase Mix Index
+17.  Co-plane Index (CPI)
+18.  RMSD & RMSF with outputting superposed structures
+19.  Use AmberMask for selecting Residues, Atoms in topology structure
+20.  Use Domain Specific Language(DSL) script to drive analysis process 
+21.  Other practical utilities for using Tinker
+
+#### Typical QM analysis functions
+
+1.   NBO spin summary
+2.   NAO orbital contribution by driving Multiwfn
+3.   Delocalization Index (DI) by driving Multiwfn
+4.   QTAIM analysis by driving Multiwfn
 
 #### Build Requirements
 - Language : C++17 ( GCC 7.x or above ) and its STL
