@@ -4,6 +4,8 @@
 #include <string_view>
 #include <optional>
 #include <boost/fusion/sequence.hpp>
+#include <boost/optional.hpp>
+#include <boost/variant.hpp>
 
 class NBOOrbitalComposition {
 public:
@@ -15,20 +17,31 @@ public:
 
     [[nodiscard]] static bool match(const std::string &line);
 
+    struct AtomComposition {
+        int atom_no;
+        std::string symbol;
+        std::string orbial_name;
+        double contribution;
+    };
+
     static void driveMultiwfn(const std::string &file, int alpha_orbitals, int beta_orbitals);
 
     [[nodiscard]] static std::optional<boost::fusion::vector<int, std::string, std::string, double>>
     parseLine(const std::string &line);
 
-    [[nodiscard]] static std::map<int, std::map<std::pair<int, std::string>, double>, std::greater<>>
-    read_contributions(const std::vector<boost::fusion::vector<int, std::string>> &attrs, std::istream &is,
-                       int orbital_number);
+    [[nodiscard]] static std::map<int, std::vector<AtomComposition>, std::greater<>>
+    read_contributions(std::istream &is, int orbital_number);
 
-    static void print_contributions(
-            std::string_view descriptions,
-            std::map<int, std::map<std::pair<int, std::string>, double>, std::greater<>> &contributions,
-            const std::vector<boost::fusion::vector<int, std::string>> &attrs);
+    static void print_contributions(std::string_view descriptions,
+                                    std::map<int, std::vector<double>, std::greater<>> &contributions,
+                                    const std::vector<std::string> &column_names);
 
+    [[nodiscard]] static std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::string>>
+    filter(const std::vector<
+            boost::fusion::vector<
+                    std::vector<boost::fusion::vector<int, boost::optional<int>>>,
+                    boost::variant<std::vector<std::string>, std::string>>> &attrs,
+           const std::map<int, std::vector<AtomComposition>, std::greater<>> &contributions);
 };
 
 
