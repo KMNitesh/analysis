@@ -7,8 +7,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-namespace po = boost::program_options;
-
 #include "utils/common.hpp"
 
 #include "mainUtils.hpp"
@@ -55,9 +53,10 @@ int main(int argc, char *argv[]) {
 #endif
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
     try {
-        po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+        boost::program_options::store(
+                boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
     } catch (std::exception &e) {
         std::cerr << e.what() << '\n';
         std::cout << desc;

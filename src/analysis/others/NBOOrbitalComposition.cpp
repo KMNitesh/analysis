@@ -71,9 +71,6 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
         os << orbital << std::endl;
     }
 
-
-    namespace bf = boost::fusion;
-
     std::vector<
             boost::fusion::vector<
                     std::vector<
@@ -115,7 +112,8 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
 
 }
 
-std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::string>> NBOOrbitalComposition::filter(
+std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::string>>
+NBOOrbitalComposition::filter(
         const std::vector<
                 boost::fusion::vector<
                         std::vector<boost::fusion::vector<int, boost::optional<int>>>,
@@ -127,7 +125,7 @@ std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::s
     std::map<int, std::vector<double>, std::greater<>> contr;
     std::vector<std::string> column_names;
 
-    auto atom_no_matcher = [&](auto &atom, auto &bf_vector) -> bool {
+    auto atom_no_matcher = [](const AtomComposition &atom, auto &bf_vector) -> bool {
         for (auto &v : boost::fusion::at_c<0>(bf_vector)) {
             auto &v1 = boost::fusion::at_c<0>(v);
             auto &v2 = boost::fusion::at_c<1>(v);
@@ -140,7 +138,7 @@ std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::s
         return false;
     };
 
-    auto orbital_name_matchaer = [&](auto &atom, auto &bf_vector) -> bool {
+    auto orbital_name_matchaer = [](const AtomComposition &atom, auto &bf_vector) -> bool {
 
         struct name_visitor : boost::static_visitor<bool> {
             bool operator()(const std::vector<std::string> &bv) const {
@@ -168,7 +166,6 @@ std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::s
         std::back_insert_iterator<std::string> sink{generated};
 
         using namespace boost::spirit::karma;
-        using namespace boost::phoenix;
         generate(sink, '<' << ((int_ << -('-' << int_)) % ',') << ':' << ((string % ',') | string) << '>', bf_vector);
         column_names.emplace_back(std::move(generated));
 
@@ -190,8 +187,6 @@ std::optional<boost::fusion::vector<int, std::string, std::string, double>>
 NBOOrbitalComposition::parseLine(const std::string &line) {
 
     using namespace boost::spirit::qi;
-    using namespace boost::phoenix;
-
     static const auto line_parser =
             copy(omit[int_] >> int_ >> '(' >> as_string[lexeme[+alpha]] >> ')'
                             >> omit[lexeme[+(char_ - ascii::space)] >> lexeme[+alpha]]
@@ -213,7 +208,6 @@ void NBOOrbitalComposition::print_contributions(
     std::cout << "NAO contributions <percentage(%)> for " << descriptions << " orbital\n";
     std::cout << std::setw(10) << "orbital" << std::setw(5) << "n";
 
-    namespace bf = boost::fusion;
     for (auto &name : column_names) {
         std::cout << std::setw(15) << name;
     }
@@ -233,17 +227,16 @@ std::map<int, std::vector<NBOOrbitalComposition::AtomComposition>, std::greater<
 NBOOrbitalComposition::read_contributions(std::istream &is, int orbital_number) {
 
     std::map<int, std::vector<AtomComposition>, std::greater<>> contributions;
-    namespace bf = boost::fusion;
     std::string line;
     while (std::getline(is, line)) {
         if (boost::contains(line, "Below are composition of")) {
             while (std::getline(is, line) and !boost::contains(line, "Summing up the compositions listed above:")) {
                 if (auto attribute = parseLine(line); attribute.has_value()) {
                     contributions[orbital_number].emplace_back(
-                            AtomComposition{bf::at_c<0>(*attribute),
-                                            bf::at_c<1>(*attribute),
-                                            bf::at_c<2>(*attribute),
-                                            bf::at_c<3>(*attribute)});
+                            AtomComposition{boost::fusion::at_c<0>(*attribute),
+                                            boost::fusion::at_c<1>(*attribute),
+                                            boost::fusion::at_c<2>(*attribute),
+                                            boost::fusion::at_c<3>(*attribute)});
                 }
             }
             if (--orbital_number == 0) break;

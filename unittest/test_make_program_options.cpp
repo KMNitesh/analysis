@@ -10,7 +10,7 @@
 using namespace testing;
 
 
-TEST(make_program_options,TargetTrajectory) {
+TEST(make_program_options, TargetTrajectory) {
     const char *argv[] = {
             "analysis",
             "-x",
@@ -20,9 +20,10 @@ TEST(make_program_options,TargetTrajectory) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
 
     ASSERT_THAT(vm.count("target"), Eq(1));
 }
@@ -36,9 +37,10 @@ TEST(make_program_options, InvalidOption) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    ASSERT_ANY_THROW(po::store(po::command_line_parser(argc, argv).options(desc).run(), vm));
+    ASSERT_ANY_THROW(boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm));
 
 }
 
@@ -53,9 +55,11 @@ TEST(make_program_options, HelpOption) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
+
     ASSERT_THAT(vm.count("help"), Eq(1));
 }
 
@@ -69,9 +73,10 @@ TEST(make_program_options, TopologyOptionOnly) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
 
     ASSERT_THAT(vm.count("topology"), Eq(1));
     ASSERT_THAT(vm["topology"].as<std::string>(), Eq("a.tpr"));
@@ -93,9 +98,10 @@ TEST(make_program_options, TopologyWithOutpoutOption) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
 
     ASSERT_THAT(vm.count("topology"), Eq(1));
     ASSERT_THAT(vm["topology"].as<std::string>(), Eq("a.tpr"));
@@ -120,9 +126,11 @@ TEST(make_program_options, MultiTrajectoryWithCompose) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
+
     ASSERT_THAT(vm.count("topology"), Eq(1));
     ASSERT_THAT(vm["topology"].as<std::string>(), Eq("a.mol2"));
 
@@ -150,9 +158,11 @@ TEST(make_program_options, MultiTrajectoryWithMultitoken) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
+
     ASSERT_THAT(vm.count("topology"), Eq(1));
     ASSERT_THAT(vm["topology"].as<std::string>(), Eq("a.mol2"));
 
@@ -185,9 +195,11 @@ TEST(make_program_options, MultiTrajectoryWithMultitokenWithScript) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
+
     ASSERT_THAT(vm.count("topology"), Eq(1));
     ASSERT_THAT(vm["topology"].as<std::string>(), Eq("a.mol2"));
 
@@ -224,9 +236,11 @@ TEST(make_program_options, ScriptFile) {
     int argc = std::extent_v<decltype(argv)>;
 
     auto desc = make_program_options();
-    po::variables_map vm;
+    boost::program_options::variables_map vm;
 
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    boost::program_options::store(
+            boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
+
     ASSERT_THAT(vm.count("topology"), Eq(1));
     ASSERT_THAT(vm["topology"].as<std::string>(), Eq("a.mol2"));
 

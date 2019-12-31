@@ -130,7 +130,8 @@ atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &
     return xr * xr + yr * yr + zr * zr;
 }
 
-po::options_description make_program_options() {
+boost::program_options::options_description make_program_options() {
+    namespace po = boost::program_options;
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help,h", "show this help message")
@@ -163,19 +164,19 @@ std::string print_cmdline(int argc, const char *const argv[]) {
     return cmdline;
 }
 
-std::string getOutputFilename(const po::variables_map &vm) {
+std::string getOutputFilename(const boost::program_options::variables_map &vm) {
     return vm.count("output") ? vm["output"].as<std::string>() : choose_file("output file :").isExist(false);
 }
 
-std::string getTopologyFilename(const po::variables_map &vm) {
+std::string getTopologyFilename(const boost::program_options::variables_map &vm) {
     return vm.count("topology") ? vm["topology"].as<std::string>() : choose_file("topology file :").isExist(true);
 }
 
-std::string getTrajectoryFilename(const po::variables_map &vm) {
+std::string getTrajectoryFilename(const boost::program_options::variables_map &vm) {
     return vm.count("file") ? vm["file"].as<std::string>() : choose_file("trajectory file :").isExist(true);
 }
 
-std::string getPrmFilename(const po::variables_map &vm) {
+std::string getPrmFilename(const boost::program_options::variables_map &vm) {
     return vm.count("prm") ? vm["prm"].as<std::string>() : choose_file("Tinker prm file :").isExist(true);
 }
 

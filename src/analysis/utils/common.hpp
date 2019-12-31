@@ -14,9 +14,6 @@
 #include <boost/type_index.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/range/join.hpp>
-
-namespace po = boost::program_options;
-
 #include <boost/format.hpp>
 
 namespace readline {
@@ -213,7 +210,7 @@ inline auto make_shared_(_Args &&... __args) {
 }
 
 
-po::options_description make_program_options();
+boost::program_options::options_description make_program_options();
 
 
 class range_object {
@@ -625,13 +622,13 @@ std::string chrono_cast(const T &dur) {
     return format_string;
 }
 
-std::string getOutputFilename(const po::variables_map &vm);
+std::string getOutputFilename(const boost::program_options::variables_map &vm);
 
-std::string getTopologyFilename(const po::variables_map &vm);
+std::string getTopologyFilename(const boost::program_options::variables_map &vm);
 
-std::string getTrajectoryFilename(const po::variables_map &vm);
+std::string getTrajectoryFilename(const boost::program_options::variables_map &vm);
 
-std::string getPrmFilename(const po::variables_map &vm);
+std::string getPrmFilename(const boost::program_options::variables_map &vm);
 
 std::size_t getDefaultVectorReserve();
 
