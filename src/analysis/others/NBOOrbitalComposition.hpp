@@ -20,13 +20,14 @@ public:
     struct AtomComposition {
         int atom_no;
         std::string symbol;
+        std::string type_name;
         std::string orbial_name;
         double contribution;
     };
 
     static void driveMultiwfn(const std::string &file, int alpha_orbitals, int beta_orbitals);
 
-    [[nodiscard]] static std::optional<boost::fusion::vector<int, std::string, std::string, double>>
+    [[nodiscard]] static std::optional<boost::fusion::vector<int, std::string, std::string, std::string, double>>
     parseLine(const std::string &line);
 
     [[nodiscard]] static std::map<int, std::vector<AtomComposition>, std::greater<>>
@@ -40,6 +41,7 @@ public:
     filter(const std::vector<
             boost::fusion::vector<
                     std::vector<boost::fusion::vector<int, boost::optional<int>>>,
+                    boost::optional<std::string>,
                     boost::variant<std::vector<std::string>, std::string>>> &attrs,
            const std::map<int, std::vector<AtomComposition>, std::greater<>> &contributions);
 };

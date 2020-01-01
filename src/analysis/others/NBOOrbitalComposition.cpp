@@ -76,6 +76,7 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
                     std::vector<
                             boost::fusion::vector<int, boost::optional<int>>
                     >,
+                    boost::optional<std::string>,
                     boost::variant<
                             std::vector<std::string>,
                             std::string
@@ -92,7 +93,7 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
         if (auto it = std::begin(line);
                 phrase_parse(
                         it, std::end(line),
-                        +('<' >> ((int_ >> -('-' >> int_)) % ',') >> ':'
+                        +('<' >> ((int_ >> -('-' >> int_)) % ',') >> ':' >> -(as_string[lexeme[+alpha]]) >> ':'
                               >> ((as_string[lexeme[+alnum]] % ',') | string("*")) >> '>'),
                         ascii::space, attrs) and it == std::end(line)) {
             break;
@@ -117,6 +118,7 @@ NBOOrbitalComposition::filter(
         const std::vector<
                 boost::fusion::vector<
                         std::vector<boost::fusion::vector<int, boost::optional<int>>>,
+                        boost::optional<std::string>,
                         boost::variant<std::vector<std::string>, std::string>
                 >
         > &attrs,
@@ -136,6 +138,11 @@ NBOOrbitalComposition::filter(
             }
         }
         return false;
+    };
+
+    auto type_matcher = [](const AtomComposition &atom, auto &bf_vector) -> bool {
+        auto &t = boost::fusion::at_c<1>(bf_vector);
+        return t ? *t == atom.type_name : true;
     };
 
     auto orbital_name_matchaer = [](const AtomComposition &atom, auto &bf_vector) -> bool {
@@ -158,7 +165,13 @@ NBOOrbitalComposition::filter(
             explicit name_visitor(const AtomComposition &atom) : atom(atom) {}
         } matcher(atom);
 
-        return boost::apply_visitor(matcher, boost::fusion::at_c<1>(bf_vector));
+        return boost::apply_visitor(matcher, boost::fusion::at_c<2>(bf_vector));
+    };
+
+    auto matcher = [&](const AtomComposition &atom, auto &bf_vector) -> bool {
+
+        return orbital_name_matchaer(atom, bf_vector) and type_matcher(atom, bf_vector) and
+               atom_no_matcher(atom, bf_vector);
     };
 
     for (auto &bf_vector : attrs) {
@@ -166,13 +179,14 @@ NBOOrbitalComposition::filter(
         std::back_insert_iterator<std::string> sink{generated};
 
         using namespace boost::spirit::karma;
-        generate(sink, '<' << ((int_ << -('-' << int_)) % ',') << ':' << ((string % ',') | string) << '>', bf_vector);
+        generate(sink, '<' << ((int_ << -('-' << int_)) % ',')
+                           << ':' << -string << ':' << ((string % ',') | string) << '>', bf_vector);
         column_names.emplace_back(std::move(generated));
 
         for (auto &[orbital, comp] : contributions) {
             double sum{};
             for (auto &atom : comp) {
-                if (orbital_name_matchaer(atom, bf_vector) and atom_no_matcher(atom, bf_vector)) {
+                if (matcher(atom, bf_vector)) {
                     sum += atom.contribution;
                 }
             }
@@ -183,16 +197,16 @@ NBOOrbitalComposition::filter(
 }
 
 
-std::optional<boost::fusion::vector<int, std::string, std::string, double>>
+std::optional<boost::fusion::vector<int, std::string, std::string, std::string, double>>
 NBOOrbitalComposition::parseLine(const std::string &line) {
 
     using namespace boost::spirit::qi;
     static const auto line_parser =
             copy(omit[int_] >> int_ >> '(' >> as_string[lexeme[+alpha]] >> ')'
-                            >> omit[lexeme[+(char_ - ascii::space)] >> lexeme[+alpha]]
+                            >> omit[lexeme[+(char_ - ascii::space)]] >> lexeme[+alpha]
                             >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')' >> double_ >> '%');
 
-    boost::fusion::vector<int, std::string, std::string, double> attribute;
+    boost::fusion::vector<int, std::string, std::string, std::string, double> attribute;
     if (auto it = std::begin(line);
             phrase_parse(it, std::end(line), line_parser, ascii::space, attribute) and it == std::end(line)) {
         return attribute;
@@ -236,7 +250,8 @@ NBOOrbitalComposition::read_contributions(std::istream &is, int orbital_number) 
                             AtomComposition{boost::fusion::at_c<0>(*attribute),
                                             boost::fusion::at_c<1>(*attribute),
                                             boost::fusion::at_c<2>(*attribute),
-                                            boost::fusion::at_c<3>(*attribute)});
+                                            boost::fusion::at_c<3>(*attribute),
+                                            boost::fusion::at_c<4>(*attribute)});
                 }
             }
             if (--orbital_number == 0) break;
