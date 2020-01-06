@@ -153,7 +153,10 @@ int main(int argc, char *argv[]) {
             [&] { MultiwfnAIMDriver::process_interactive(); },
             [&] { NBOOrbitalComposition::process(); },
             [&] { DelocalizationIndex::process_interactive(); },
-            [&] { ADCHCharge::process_interactive(); }
+            [&] {
+                ADCHCharge::process_interactive(
+                        vm.count("fchk") ? vm["fchk"].as<std::string>() : boost::optional<std::string>{});
+            }
     };
 
     auto mainMenu = [&] {

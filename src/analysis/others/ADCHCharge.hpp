@@ -9,7 +9,7 @@ public:
     [[nodiscard]] static std::string_view
     title() { return "Atomic dipole corrected Hirshfeld population (ADCH) Charge"; }
 
-    static void process_interactive();
+    static void process_interactive(boost::optional<std::string> file);
 
     static void process();
 

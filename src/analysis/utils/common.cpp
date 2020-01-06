@@ -145,7 +145,8 @@ boost::program_options::options_description make_program_options() {
             ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")
             ("aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")
             ("di", "Delocalization Index based on Multiwfn")
-            ("adch", "Atomic dipole corrected Hirshfeld population (ADCH) Charge");
+            ("adch", "Atomic dipole corrected Hirshfeld population (ADCH) Charge")
+            ("fchk", po::value<std::string>()->value_name("file-name"), "Gaussian Fchk File");
 
     return desc;
 }

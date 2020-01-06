@@ -32,6 +32,7 @@ namespace {
                 break;
             }
             std::cerr << "Syntax Error\n";
+            atoms.clear();
         }
         return atoms;
     }
@@ -46,10 +47,10 @@ void ADCHCharge::process() {
     process(file, atoms);
 }
 
-void ADCHCharge::process_interactive() {
-    std::string file = choose_file("Enter fchk > ").isExist(true).extension("fchk");
+void ADCHCharge::process_interactive(boost::optional<std::string> file) {
+    std::string filename = file.has_value() ? *file : choose_file("Enter fchk > ").isExist(true).extension("fchk");
     auto atoms = read_atoms("Atom Numbers > ");
-    process(file, atoms);
+    process(filename, atoms);
 }
 
 void ADCHCharge::process(const std::string &file, const std::vector<int> &atoms) {
@@ -68,7 +69,9 @@ void ADCHCharge::process(const std::string &file, const std::vector<int> &atoms)
     while (c.running() and std::getline(is, line)) {
         if (boost::contains(line, "======= Summary of atomic dipole moment corrected (ADC) charges =======")) {
             while (std::getline(is, line) and !boost::contains(line, "Note:")) {
-                charges.push_back(read_charge(line).value());
+                if (auto charge = read_charge(line); charge.has_value()) {
+                    charges.push_back(*charge);
+                }
             }
             break;
         }
