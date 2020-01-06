@@ -306,26 +306,36 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameTpr() {
         frame->atom_map[atom->seq] = atom;
     }
 
+    for (auto t : {gmx::F_BONDS, gmx::F_G96BONDS, gmx::F_MORSE, gmx::F_CUBICBONDS,
+                   gmx::F_CONNBONDS, gmx::F_HARMONIC, gmx::F_FENEBONDS, gmx::F_TABBONDS,
+                   gmx::F_TABBONDSNC, gmx::F_RESTRBONDS, gmx::F_CONSTR, gmx::F_CONSTRNC}) {
 
-    auto ilist = &top.idef.il[gmx::F_BONDS];
-    gmx::t_iatom *iatoms = ilist->iatoms;
-    for (int i = 0; i < ilist->nr; i += 3) {
-        auto type = *(iatoms++);
-        auto ftype = top.idef.functype[type];
+        auto ilist = &top.idef.il[t];
+        gmx::t_iatom *iatoms = ilist->iatoms;
+        for (int i = 0; i < ilist->nr; i += 3) {
+            auto type = *(iatoms++);
+            auto ftype = top.idef.functype[type];
+            auto nratoms = gmx::interaction_function[ftype].nratoms;
 
-        int atom_num1 = *(iatoms++) + 1;
-        int atom_num2 = *(iatoms++) + 1;
+            if (nratoms != 2) {
+                std::cerr << "Code inpsect > " << __FILE__ << __LINE__ << __PRETTY_FUNCTION__ << std::endl;
+                std::exit(EXIT_FAILURE);
+            }
+
+            int atom_num1 = *(iatoms++) + 1;
+            int atom_num2 = *(iatoms++) + 1;
 
 
-        auto atom1 = frame->atom_map[atom_num1];
-        auto atom2 = frame->atom_map[atom_num2];
+            auto atom1 = frame->atom_map[atom_num1];
+            auto atom2 = frame->atom_map[atom_num2];
 
-        atom1->con_list.push_back(atom_num2);
-        atom2->con_list.push_back(atom_num1);
+            atom1->con_list.push_back(atom_num2);
+            atom2->con_list.push_back(atom_num1);
 
+        }
     }
-    ilist = &top.idef.il[gmx::F_SETTLE];
-    iatoms = ilist->iatoms;
+    auto ilist = &top.idef.il[gmx::F_SETTLE];
+    auto iatoms = ilist->iatoms;
     for (int i = 0; i < ilist->nr;) {
         auto type = *(iatoms++);
         auto ftype = top.idef.functype[type];
@@ -346,7 +356,6 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameTpr() {
 
         i += 1 + nratoms;
     }
-
 
     if (first_time) {
         assignAtom2Molecule();
