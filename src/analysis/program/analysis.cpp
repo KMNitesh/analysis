@@ -24,6 +24,7 @@
 #include "others/MultiwfnAIMDriver.hpp"
 #include "others/NBOOrbitalComposition.hpp"
 #include "others/DelocalizationIndex.hpp"
+#include "others/ADCHCharge.hpp"
 
 void printDSLDetails() {
 
@@ -123,6 +124,11 @@ int main(int argc, char *argv[]) {
         return EXIT_SUCCESS;
     }
 
+    if (vm.count("adch")) {
+        ADCHCharge::process();
+        return EXIT_SUCCESS;
+    }
+
     /*
      *  This is the main menu the user select when the program starts
      *  evergy function of option may has its own submenu, by using different handling models
@@ -147,6 +153,7 @@ int main(int argc, char *argv[]) {
             [&] { MultiwfnAIMDriver::process_interactive(); },
             [&] { NBOOrbitalComposition::process(); },
             [&] { DelocalizationIndex::process_interactive(); },
+            [&] { ADCHCharge::process_interactive(); }
     };
 
     auto mainMenu = [&] {
@@ -169,6 +176,7 @@ int main(int argc, char *argv[]) {
         std::cout << "(15) " << MultiwfnAIMDriver::title() << '\n';
         std::cout << "(16) " << NBOOrbitalComposition::title() << '\n';
         std::cout << "(17) " << DelocalizationIndex::title() << '\n';
+        std::cout << "(18) " << ADCHCharge::title() << '\n';
         return choose<int>(0, actions.size() - 1, "select : ");
     };
 
