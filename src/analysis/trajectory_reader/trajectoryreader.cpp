@@ -319,7 +319,8 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrameTpr() {
             auto nratoms = gmx::interaction_function[ftype].nratoms;
 
             if (nratoms != 2) {
-                std::cerr << "Code inpsect > " << __FILE__ << __LINE__ << __PRETTY_FUNCTION__ << std::endl;
+                std::cerr << "Code inpsect > " << __FILE__ << ':' << __LINE__
+                          << ' ' << __PRETTY_FUNCTION__ << std::endl;
                 std::exit(EXIT_FAILURE);
             }
 

@@ -39,9 +39,10 @@
 2.   NAO orbital contribution by driving Multiwfn
 3.   Delocalization Index (DI) by driving Multiwfn
 4.   QTAIM analysis by driving Multiwfn
+5.   ADCH Charge
 
 #### Build Requirements
-- Language : C++17 ( GCC 7.x or above ) and its STL
+- Language : C++17 ( GCC 9.x or above ) and its STL
 - Build System :  CMake 3.13 or above
 - Third-party libraries :  Boost 1.72 or above,
                            Intel Threading Building Blocks(TBB) ( for Multi-Core Parallelism ), 
@@ -50,7 +51,8 @@
                            Google Test ( for unit test ),
                            Eigen 3.3 ( C++ template library for linear algebra ),
                            Pugixml ( XML format process ),
-                           nlohmann/json 3.7.3
+                           nlohmann/json 3.7.3,
+                           GNU readline
                            
                           
                            
