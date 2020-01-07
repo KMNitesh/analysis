@@ -14,7 +14,7 @@ add_test(NAME "TestCenterRuleGrammer" COMMAND test_center_selection_grammar)
 add_test(NAME "TestTrajectoryReaderTPR" COMMAND test_trajectoryreader_tpr WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(SYSTEM ${GTEST_INCLUDE_DIRS})
 include(GoogleTest)
 
 file(GLOB GTEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)

@@ -56,7 +56,7 @@ endif ()
 
 message("gromacs 5.1.4 source root : " ${GROMACS_SRC_ROOT})
 
-include_directories(${GROMACS_SRC_ROOT}/src)
+include_directories(SYSTEM ${GROMACS_SRC_ROOT}/src)
 include_directories(lib)
 
 
@@ -81,7 +81,7 @@ find_path(NETCDF_INCLUDES netcdf.h HITS ${INCLUES_PATH})
 if (NOT NETCDF_INCLUDES)
     message(FATAL_ERROR "netcdf.h not found")
 endif ()
-include_directories(${NETCDF_INCLUDES})
+include_directories(SYSTEM ${NETCDF_INCLUDES})
 
 find_library(NETCDF_LIBS netcdf PATHS ${LIBRARY_DIRS})
 if (NOT NETCDF_LIBS)
@@ -95,7 +95,7 @@ find_path(FFTW3_INCLUDES fftw3.h HITS ${INCLUES_PATH})
 if (NOT FFTW3_INCLUDES)
     message(FATAL_ERROR "fftw3.h not found")
 endif ()
-include_directories(${FFTW3_INCLUDES})
+include_directories(SYSTEM ${FFTW3_INCLUDES})
 
 find_library(FFTW3_threads_LIBS fftw3_threads HITS ${LIBRARY_DIRS})
 if (NOT FFTW3_threads_LIBS)
@@ -109,7 +109,8 @@ find_path(TBB_INCLUDES "tbb/tbb.h" HITS ${INCLUES_PATH})
 if (NOT TBB_INCLUDES)
     message(FATAL_ERROR "tbb header not found")
 endif ()
-include_directories(${TBB_INCLUDES})
+include_directories(SYSTEM ${TBB_INCLUDES})
+add_compile_definitions(TBB_SUPPRESS_DEPRECATED_MESSAGES)
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(TBB_LIB_NAME tbb_debug)
@@ -137,7 +138,7 @@ link_libraries(rt)
 set(BOOST_INCLUDEDIR ${INCLUES_PATH})
 set(BOOST_LIBRARYDIR ${LIBRARY_DIRS})
 find_package(Boost 1.72 REQUIRED COMPONENTS thread regex program_options filesystem container iostreams)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/sanitizers-cmake/cmake" ${CMAKE_MODULE_PATH})
@@ -158,12 +159,12 @@ endif ()
 
 # Eigen3
 find_package(Eigen3 3.3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 link_libraries(Eigen3::Eigen)
 
 # Blitz
 find_package(blitz REQUIRED)
-include_directories(${BLITZ_INCLUDES})
+include_directories(SYSTEM ${BLITZ_INCLUDES})
 link_libraries(${BLITZ_LIBRARIES})
 
 # readline
@@ -171,7 +172,7 @@ find_path(READLINE_INCLUDES "readline/readline.h" PATHS ${INCLUES_PATH})
 if (NOT READLINE_INCLUDES)
     message(FATAL_ERROR "readline header not found")
 endif ()
-include_directories(${READLINE_INCLUDES})
+include_directories(SYSTEM ${READLINE_INCLUDES})
 find_library(READLINE_LIBS readline PATHS ${LIBRARY_DIRS})
 if (NOT READLINE_LIBS)
     message(FATAL_ERROR "readline library not found")
