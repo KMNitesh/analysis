@@ -21,11 +21,6 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         forcefield.assign_forcefield(frame);
     }
 
-    int sequence = 1;
-    for (auto &mol : frame->molecule_list) {
-        mol->sequence = sequence++;
-    }
-
     enum class Mode {
         Mass,
         Geom,
@@ -72,7 +67,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                              % atom->seq % atom->atom_name
                              % (atom->residue_num ? boost::lexical_cast<std::string>(atom->residue_num.get()) : "-")
                              % (atom->residue_name ? atom->residue_name.get() : "-")
-                             % atom->molecule.lock()->sequence.get()
+                             % atom->molecule.lock()->sequence
                              % atom->type_name
                              % (atom->charge ? (boost::format("%8.4f") % atom->charge.get()).str() : "-")
                              % (atom->mass ? (boost::format("%8.4f") % atom->mass.get()).str() : "-")

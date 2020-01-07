@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/regex.hpp>
+#include <boost/range/adaptors.hpp>
 
 #include "utils/common.hpp"
 #include "trajectoryreader.hpp"
@@ -698,6 +699,9 @@ std::shared_ptr<Frame> TrajectoryReader::readTopology() {
                 break;
         }
         position_file.close();
+    }
+    for (const auto &element : frame->molecule_list | boost::adaptors::indexed(1)) {
+        element.value()->sequence = element.index();
     }
     return frame;
 }

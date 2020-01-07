@@ -17,7 +17,7 @@ public:
     double mass;  // molecular mass
     std::list<std::shared_ptr<Atom>> atom_list;
 
-    boost::optional<int> sequence;
+    unsigned int sequence;
 
     double center_x, center_y, center_z;
 

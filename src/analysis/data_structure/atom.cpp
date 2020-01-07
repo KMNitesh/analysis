@@ -55,6 +55,28 @@ void print::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues)
     std::cout << std::endl;
 }
 
+void print::operator()(const std::shared_ptr<Atom::molecule_nums> &molecule) const {
+    indent(space_num);
+    bool first = true;
+    for (auto &i : molecule->val) {
+        if (first) {
+            std::cout << "molecule num : ";
+            first = false;
+        } else {
+            std::cout << ",";
+        }
+        auto op = fusion::at_c<1>(i);
+        if (op) {
+            std::cout << "-" << fusion::at_c<0>(op.get());
+            auto &step = fusion::at_c<1>(op.get());
+            if (step and step.get() != 1) {
+                std::cout << '#' << step.get();
+            }
+        }
+    }
+    std::cout << std::endl;
+}
+
 void print::operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const {
     struct print_res : boost::static_visitor<> {
         void operator()(const fusion::vector<uint, boost::optional<std::pair<uint, int>>> &i) {
@@ -223,45 +245,74 @@ bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AmberMask &id
 }
 
 bool AtomEqual::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const {
-    if (!atom->residue_name or !atom->residue_num) {
-        throw std::runtime_error("residue selection syntax is invaild in current context");
-    }
-    struct Equal_residue : boost::static_visitor<bool> {
-        explicit Equal_residue(const std::shared_ptr<Atom> &atom) : atom(atom) {}
+    if (residues) {
+        if (!atom->residue_name or !atom->residue_num) {
+            throw std::runtime_error("residue selection syntax is invaild in current context");
+        }
+        struct Equal_residue : boost::static_visitor<bool> {
+            explicit Equal_residue(const std::shared_ptr<Atom> &atom) : atom(atom) {}
 
-        bool operator()(const fusion::vector<uint, boost::optional<std::pair<uint, int>>> &i) {
-            auto op = fusion::at_c<1>(i);
-            if (op) {
-                if (op.get().first >= fusion::at_c<0>(i)) {
-                    return atom->residue_num.get() >= fusion::at_c<0>(i) and
-                           atom->residue_num.get() <= op.get().first and
-                           ((atom->residue_num.get() - fusion::at_c<0>(i)) % op.get().second == 0);
+            bool operator()(const fusion::vector<uint, boost::optional<std::pair<uint, int>>> &i) {
+                auto op = fusion::at_c<1>(i);
+                auto res_num = atom->residue_num.get();
+                if (op) {
+                    if (op.get().first >= fusion::at_c<0>(i)) {
+                        return res_num >= fusion::at_c<0>(i) and res_num <= op.get().first and
+                               ((res_num - fusion::at_c<0>(i)) % op.get().second == 0);
+                    } else {
+                        return res_num >= op.get().first and res_num <= fusion::at_c<0>(i) and
+                               ((res_num - fusion::at_c<0>(i)) % op.get().second == 0);
+                    }
                 } else {
-                    return atom->residue_num.get() >= op.get().first and
-                           atom->residue_num.get() <= fusion::at_c<0>(i) and
-                           ((atom->residue_num.get() - fusion::at_c<0>(i)) % op.get().second == 0);
+                    return res_num == fusion::at_c<0>(i);
                 }
-            } else {
-                return atom->residue_num.get() == fusion::at_c<0>(i);
+                return false;
             }
-            return false;
+
+            bool operator()(const std::string &pattern) {
+                if (fnmatch(pattern.c_str(), atom->residue_name.get().c_str(), FNM_CASEFOLD) == 0) return true;
+                std::string num_str = boost::lexical_cast<std::string>(atom->residue_num.get());
+                return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
+            }
+
+        private:
+            const std::shared_ptr<Atom> &atom;
+        } equal(atom);
+
+        for (auto &i : residues->val) {
+            if (boost::apply_visitor(equal, i)) return true;
         }
-
-        bool operator()(const std::string &pattern) {
-            if (fnmatch(pattern.c_str(), atom->residue_name.get().c_str(), FNM_CASEFOLD) == 0) return true;
-            std::string num_str = boost::lexical_cast<std::string>(atom->residue_num.get());
-            return fnmatch(pattern.c_str(), num_str.c_str(), FNM_CASEFOLD) == 0;
-        }
-
-    private:
-        const std::shared_ptr<Atom> &atom;
-    } equal(atom);
-
-    for (auto &i : residues->val) {
-        if (boost::apply_visitor(equal, i)) return true;
     }
     return false;
 }
+
+bool AtomEqual::operator()(const std::shared_ptr<Atom::molecule_nums> &molecules) const {
+    if (molecules) {
+        auto Equal_molecule = [this](const auto &i) -> bool {
+            auto seq = atom->molecule.lock()->sequence;
+            auto op = fusion::at_c<1>(i);
+            if (op) {
+                auto step = fusion::at_c<1>(op.get()) ? fusion::at_c<1>(op.get()).get() : 1;
+                if (fusion::at_c<0>(op.get()) >= fusion::at_c<0>(i)) {
+                    return seq >= fusion::at_c<0>(i) and seq <= fusion::at_c<0>(op.get()) and
+                           ((seq - fusion::at_c<0>(i)) % step == 0);
+                } else {
+                    return seq >= fusion::at_c<0>(op.get()) and seq <= fusion::at_c<0>(i) and
+                           ((seq - fusion::at_c<0>(i)) % step == 0);
+                }
+            } else {
+                return seq == fusion::at_c<0>(i);
+            }
+            return false;
+        };
+
+        for (auto &i : molecules->val) {
+            if (Equal_molecule(i)) return true;
+        }
+    }
+    return false;
+}
+
 
 bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const {
     if (names) {
@@ -347,7 +398,6 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_element_names> &ele)
         }
     }
     return false;
-
 }
 
 bool AtomEqual::operator()(const std::shared_ptr<Atom::Operator> &op) const {

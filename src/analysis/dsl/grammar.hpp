@@ -33,8 +33,9 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
 
     qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>,
             std::string>(), Skipper> select_item_rule;
-    
+
     qi::rule<Iterator, Atom::Node(), Skipper> residue_select_rule;
+    qi::rule<Iterator, Atom::Node(), Skipper> molecule_select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> nametype_select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> term, factor;
@@ -107,13 +108,17 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
                 }
             })];
 
-    residue_select_rule = ":" >> (select_item_rule % ",")[_val = make_shared_<Atom::residue_name_nums>(_1)];
+    residue_select_rule = ':' >> (select_item_rule % ',')[_val = make_shared_<Atom::residue_name_nums>(_1)];
 
-    nametype_select_rule = "@" >> ("%" >> (select_item_rule % ",")[_val = make_shared_<Atom::atom_types>(_1)]
-                                   | "/" >> (str_with_wildcard % ",")[_val = make_shared_<Atom::atom_element_names>(_1)]
-                                   | (select_item_rule % ",")[_val = make_shared_<Atom::atom_name_nums>(_1)]);
+    molecule_select_rule =
+            '$' >> ((uint_ >> -('-' >> uint_ >> -('#' >> int_))) % ',')[_val = make_shared_<Atom::molecule_nums>(_1)];
 
-    select_rule = residue_select_rule | nametype_select_rule;
+    nametype_select_rule =
+            '@' >> ('%' >> (select_item_rule % ',')[_val = make_shared_<Atom::atom_types>(_1)]
+                    | '/' >> (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)]
+                    | (select_item_rule % ',')[_val = make_shared_<Atom::atom_name_nums>(_1)]);
+
+    select_rule = residue_select_rule | molecule_select_rule | nametype_select_rule;
 
     factor = "(" >> maskParser >> ")" | select_rule;
 
@@ -126,6 +131,7 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
     str_with_wildcard.name("str_with_wildcard");
     select_item_rule.name("select_item_rule");
     residue_select_rule.name("residue_select_rule");
+    molecule_select_rule.name("molecule_select_rule");
     nametype_select_rule.name("nametype_select_rule");
     select_rule.name("select_rule");
     factor.name("factor");

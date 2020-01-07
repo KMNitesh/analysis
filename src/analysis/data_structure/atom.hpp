@@ -66,29 +66,6 @@ public:
         return false;
     }
 
-
-    enum class Op {
-        NOT, AND, OR
-    };
-
-
-    struct Operator;
-    struct atom_name_nums;
-    struct atom_types;
-    struct residue_name_nums;
-    struct atom_element_names;
-
-    using Node =  boost::variant<std::shared_ptr<Operator>, std::shared_ptr<residue_name_nums>,
-            std::shared_ptr<atom_name_nums>, std::shared_ptr<atom_types>, std::shared_ptr<atom_element_names>>;
-
-    struct Operator {
-        explicit Operator(Op op, Node node1 = Node(), Node node2 = Node()) : op(op), node1(node1), node2(node2) {}
-
-        Op op;
-        Node node1;
-        Node node2;
-    };
-
     using numItemType = boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>>;
 
     using select_ranges =  std::vector<boost::variant<numItemType, std::string>>;
@@ -98,6 +75,13 @@ public:
 
         explicit residue_name_nums(const select_ranges &val) : val(val) {}
 
+    };
+
+    struct molecule_nums {
+        using Attr = boost::fusion::vector<uint, boost::optional<boost::fusion::vector<uint, boost::optional<int>>>>;
+        std::vector<Attr> val;
+
+        explicit molecule_nums(const std::vector<Attr> &val) : val(val) {}
     };
 
     struct atom_name_nums {
@@ -133,6 +117,25 @@ public:
         explicit atom_element_names(const std::vector<std::string> &val) : val(val) {}
     };
 
+
+    struct Operator;
+
+    using Node =  boost::variant<std::shared_ptr<Operator>, std::shared_ptr<residue_name_nums>,
+            std::shared_ptr<molecule_nums>, std::shared_ptr<atom_name_nums>,
+            std::shared_ptr<atom_types>, std::shared_ptr<atom_element_names>>;
+
+    enum class Op {
+        NOT, AND, OR
+    };
+
+    struct Operator {
+        explicit Operator(Op op, Node node1 = Node(), Node node2 = Node()) : op(op), node1(node1), node2(node2) {}
+
+        Op op;
+        Node node1;
+        Node node2;
+    };
+
     using AmberMask = Atom::Node;
 
     static bool is_match(const std::shared_ptr<Atom> &atom, const AmberMask &id);
@@ -157,6 +160,8 @@ struct print : boost::static_visitor<> {
 
     void operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const;
 
+    void operator()(const std::shared_ptr<Atom::molecule_nums> &molecules) const;
+
     void operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const;
 
     void operator()(const std::shared_ptr<Atom::atom_types> &types) const;
@@ -171,6 +176,8 @@ struct AtomEqual : boost::static_visitor<bool> {
     explicit AtomEqual(const std::shared_ptr<Atom> &atom) : atom(atom) {}
 
     bool operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const;
+
+    bool operator()(const std::shared_ptr<Atom::molecule_nums> &molecules) const;
 
     bool operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const;
 
@@ -191,6 +198,14 @@ inline bool operator==(const std::shared_ptr<Atom::residue_name_nums> &residues1
                        const std::shared_ptr<Atom::residue_name_nums> &residues2) {
     if (residues1 && residues2) {
         return residues1->val == residues2->val;
+    }
+    return false;
+}
+
+inline bool operator==(const std::shared_ptr<Atom::molecule_nums> &molecules1,
+                       const std::shared_ptr<Atom::molecule_nums> &molecules2) {
+    if (molecules1 && molecules2) {
+        return molecules1->val == molecules2->val;
     }
     return false;
 }

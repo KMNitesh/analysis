@@ -94,11 +94,11 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(exp
 
 template<typename Iterator, typename Skipper>
 std::tuple<CenterRuleNode, std::string>
-input_atom_selection(const CenterGrammar<Iterator, Skipper> &grammar, const std::string &promot) {
+input_atom_selection(const CenterGrammar<Iterator, Skipper> &grammar, const std::string &prompt) {
 
     for (;;) {
         CenterRuleNode mask;
-        std::string input_string = input(promot);
+        std::string input_string = input(prompt);
         boost::trim(input_string);
         if (input_string.empty()) continue;
         auto it = input_string.begin();
