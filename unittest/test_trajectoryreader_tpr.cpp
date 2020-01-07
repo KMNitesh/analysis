@@ -1,42 +1,29 @@
-//
-// Created by xiamr on 5/22/19.
-//
 
-
-#define BOOST_TEST_MODULE "TrajectoryReader Gromacs TPR Topology Test"
-
-#include <string>
-#include <memory>
-
-#include <boost/test/included/unit_test.hpp>
-
+#include <gmock/gmock.h>
 #include "trajectory_reader/trajectoryreader.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/atom.hpp"
 
-BOOST_AUTO_TEST_SUITE(test_trajectoryreader_tpr)
+using namespace testing;
 
-    BOOST_AUTO_TEST_CASE(test_md_10ns_tpr) {
+TEST(test_trajectoryreader_tpr, test_md_10ns_tpr) {
 
-        TrajectoryReader reader;
-        reader.add_topology("md-10ns.tpr");
+    TrajectoryReader reader;
+    reader.add_topology("tpr_test_system1.tpr");
 
-        auto frame = reader.readTopology();
+    auto frame = reader.readTopology();
 
-        BOOST_CHECK(frame->atom_list.size() == 7590);
-        BOOST_CHECK(frame->molecule_list.size() == 2030);
+    ASSERT_THAT(frame->atom_list.size(), Eq(7590));
+    ASSERT_THAT(frame->molecule_list.size(), Eq(2030));
 
-        auto atom1 = frame->atom_list.front();
-        BOOST_TEST(atom1->charge.get() == -8.10476e-01, boost::test_tools::tolerance(0.01));
+    auto atom1 = frame->atom_list.front();
+    ASSERT_THAT(atom1->charge.get(), DoubleNear(-8.10476e-01, 0.01));
 
-        BOOST_TEST(atom1->atom_name == "O1");
-    BOOST_TEST(atom1->type_name == "o");
+    ASSERT_THAT(atom1->atom_name, Eq("O1"));
+    ASSERT_THAT(atom1->type_name, Eq("o"));
 
-    BOOST_TEST(atom1->residue_name.get() == "C27");
+    ASSERT_THAT(atom1->residue_name.get(), Eq("C27"));
 
-    BOOST_TEST(atom1->residue_num.get() == 1 );
-
-
+    ASSERT_THAT(atom1->residue_num.get(), Eq(1));
 }
 
-BOOST_AUTO_TEST_SUITE_END()

@@ -62,7 +62,6 @@ Makefile
 .idea
 .clang-format
 lib/tags
-md-10ns.tpr
 0README
 Tinker.cbp
 parameter.doc
