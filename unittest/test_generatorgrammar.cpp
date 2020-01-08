@@ -87,6 +87,20 @@ TEST_F(GeneratorGrammarTest, MoleculeNumRangeWithStep) {
     ASSERT_THAT(generated, StrEq("$10-20#2"));
 }
 
+TEST_F(GeneratorGrammarTest, MoleculeNumRangeWithStepOne) {
+
+    Atom::Node node = make_shared<Atom::molecule_nums>(
+            std::vector<Atom::molecule_nums::Attr>{
+                    {Atom::molecule_nums::Attr(10, boost::optional<boost::fusion::vector<uint, boost::optional<int>>>{
+                            boost::fusion::vector<uint, boost::optional<int>>{20, 1}
+                    })}
+            });
+
+    ASSERT_TRUE(format_node(node, generated));
+
+    ASSERT_THAT(generated, StrEq("$10-20"));
+}
+
 TEST_F(GeneratorGrammarTest, AtomNameNums) {
 
     Atom::Node node = make_shared<Atom::atom_name_nums>(Atom::select_ranges{

@@ -90,7 +90,7 @@ struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
 
 
         residue_select_rule = ":" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
-        molecule_select_rule = '$' << ((uint_ << -('-' << uint_ << -('#' << int_))) % ',')[_1 = at_c<0>(_val)];
+        molecule_select_rule = '$' << ((uint_ << -('-' << uint_ << -step_num)) % ',')[_1 = at_c<0>(_val)];
         atom_name_select_rule = "@" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
         atom_type_rule = "@%" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
         atom_element_rule = "@/" << (string % ",")[_1 = at_c<0>(_val)];
