@@ -9,14 +9,14 @@
 using namespace std;
 using namespace testing;
 
-class GereratorGrammarTest : public Test {
+class GeneratorGrammarTest : public Test {
 
 protected:
     std::string generated;
     Atom::select_ranges selections;
 };
 
-TEST_F(GereratorGrammarTest, AtomElementNames) {
+TEST_F(GeneratorGrammarTest, AtomElementNames) {
 
     Atom::Node node = make_shared<Atom::atom_element_names>(std::vector<string>{"N", "O"});
 
@@ -25,7 +25,7 @@ TEST_F(GereratorGrammarTest, AtomElementNames) {
     ASSERT_THAT(generated, StrEq("@/N,O"));
 }
 
-TEST_F(GereratorGrammarTest, ResidueNames) {
+TEST_F(GeneratorGrammarTest, ResidueNames) {
 
 
     Atom::Node node = make_shared<Atom::residue_name_nums>(
@@ -36,7 +36,7 @@ TEST_F(GereratorGrammarTest, ResidueNames) {
     ASSERT_THAT(generated, StrEq(":TOL,10"));
 }
 
-TEST_F(GereratorGrammarTest, ResidueNum) {
+TEST_F(GeneratorGrammarTest, ResidueNum) {
 
     Atom::Node node = make_shared<Atom::residue_name_nums>(
             Atom::select_ranges{{Atom::numItemType(10, boost::optional<pair<uint, int>>{})}});
@@ -46,7 +46,48 @@ TEST_F(GereratorGrammarTest, ResidueNum) {
     ASSERT_THAT(generated, StrEq(":10"));
 }
 
-TEST_F(GereratorGrammarTest, AtomNameNums) {
+TEST_F(GeneratorGrammarTest, MoleculeNum) {
+
+    Atom::Node node = make_shared<Atom::molecule_nums>(
+            std::vector<Atom::molecule_nums::Attr>{
+                    {Atom::molecule_nums::Attr(10,
+                                               boost::optional<boost::fusion::vector<uint, boost::optional<int>>>{})}
+            });
+
+    ASSERT_TRUE(format_node(node, generated));
+
+    ASSERT_THAT(generated, StrEq("$10"));
+}
+
+TEST_F(GeneratorGrammarTest, MoleculeNumRangeWithoutStep) {
+
+    Atom::Node node = make_shared<Atom::molecule_nums>(
+            std::vector<Atom::molecule_nums::Attr>{
+                    {Atom::molecule_nums::Attr(10, boost::optional<boost::fusion::vector<uint, boost::optional<int>>>{
+                            boost::fusion::vector<uint, boost::optional<int>>{20, boost::optional<int>{}}
+                    })}
+            });
+
+    ASSERT_TRUE(format_node(node, generated));
+
+    ASSERT_THAT(generated, StrEq("$10-20"));
+}
+
+TEST_F(GeneratorGrammarTest, MoleculeNumRangeWithStep) {
+
+    Atom::Node node = make_shared<Atom::molecule_nums>(
+            std::vector<Atom::molecule_nums::Attr>{
+                    {Atom::molecule_nums::Attr(10, boost::optional<boost::fusion::vector<uint, boost::optional<int>>>{
+                            boost::fusion::vector<uint, boost::optional<int>>{20, 2}
+                    })}
+            });
+
+    ASSERT_TRUE(format_node(node, generated));
+
+    ASSERT_THAT(generated, StrEq("$10-20#2"));
+}
+
+TEST_F(GeneratorGrammarTest, AtomNameNums) {
 
     Atom::Node node = make_shared<Atom::atom_name_nums>(Atom::select_ranges{
             Atom::numItemType(10, make_pair<uint>(20, 2)),
@@ -59,7 +100,7 @@ TEST_F(GereratorGrammarTest, AtomNameNums) {
     ASSERT_THAT(generated, StrEq("@10-20#2,OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, AtomType) {
+TEST_F(GeneratorGrammarTest, AtomType) {
 
     Atom::Node node = make_shared<Atom::atom_types>(Atom::select_ranges{
             Atom::numItemType(10, make_pair<uint>(20, 2)),
@@ -72,7 +113,7 @@ TEST_F(GereratorGrammarTest, AtomType) {
     ASSERT_THAT(generated, StrEq("@%10-20#2,OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, AtomTypeWithStepOne) {
+TEST_F(GeneratorGrammarTest, AtomTypeWithStepOne) {
 
     Atom::Node node = make_shared<Atom::atom_types>(Atom::select_ranges{
             Atom::numItemType(10, make_pair<uint>(20, 1)),
@@ -86,7 +127,7 @@ TEST_F(GereratorGrammarTest, AtomTypeWithStepOne) {
     ASSERT_THAT(generated, StrEq("@%10-20,OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, NotOperator) {
+TEST_F(GeneratorGrammarTest, NotOperator) {
 
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::NOT,
@@ -97,7 +138,7 @@ TEST_F(GereratorGrammarTest, NotOperator) {
     ASSERT_THAT(generated, StrEq("!@OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, ANDOperator) {
+TEST_F(GeneratorGrammarTest, ANDOperator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -111,7 +152,7 @@ TEST_F(GereratorGrammarTest, ANDOperator) {
     ASSERT_THAT(generated, StrEq(":OW,HW&@OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, NOT_AND_Operator) {
+TEST_F(GeneratorGrammarTest, NOT_AND_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -126,7 +167,7 @@ TEST_F(GereratorGrammarTest, NOT_AND_Operator) {
     ASSERT_THAT(generated, StrEq("!(:OW,HW&@OW,HW)"));
 }
 
-TEST_F(GereratorGrammarTest, OROperator) {
+TEST_F(GeneratorGrammarTest, OROperator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -139,7 +180,7 @@ TEST_F(GereratorGrammarTest, OROperator) {
     ASSERT_THAT(generated, StrEq(":OW,HW|@OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, NOT_OR_Operator) {
+TEST_F(GeneratorGrammarTest, NOT_OR_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -154,7 +195,7 @@ TEST_F(GereratorGrammarTest, NOT_OR_Operator) {
     ASSERT_THAT(generated, StrEq("!(:OW,HW|@OW,HW)"));
 }
 
-TEST_F(GereratorGrammarTest, AND_OR_Operator) {
+TEST_F(GeneratorGrammarTest, AND_OR_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -174,7 +215,7 @@ TEST_F(GereratorGrammarTest, AND_OR_Operator) {
     ASSERT_THAT(generated, StrEq("(@%OW,HW|@OW,HW)&(:OW,HW|@OW,HW)"));
 }
 
-TEST_F(GereratorGrammarTest, OR_AND_Operator) {
+TEST_F(GeneratorGrammarTest, OR_AND_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -194,7 +235,7 @@ TEST_F(GereratorGrammarTest, OR_AND_Operator) {
     ASSERT_THAT(generated, StrEq("@%OW,HW&@OW,HW|:OW,HW&@OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, NOT_OR_AND_Operator) {
+TEST_F(GeneratorGrammarTest, NOT_OR_AND_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -221,7 +262,7 @@ TEST_F(GereratorGrammarTest, NOT_OR_AND_Operator) {
     ASSERT_THAT(generated, StrEq("!(@%OW,HW&@OW,HW|:OW,HW&@OW,HW)"));
 }
 
-TEST_F(GereratorGrammarTest, OR_OR_Operator) {
+TEST_F(GeneratorGrammarTest, OR_OR_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -240,7 +281,7 @@ TEST_F(GereratorGrammarTest, OR_OR_Operator) {
     ASSERT_THAT(generated, StrEq("@%OW,HW|@OW,HW|:OW,HW|@OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, AND_AND_Operator) {
+TEST_F(GeneratorGrammarTest, AND_AND_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 
@@ -259,7 +300,7 @@ TEST_F(GereratorGrammarTest, AND_AND_Operator) {
     ASSERT_THAT(generated, StrEq("@%OW,HW&@OW,HW&:OW,HW&@OW,HW"));
 }
 
-TEST_F(GereratorGrammarTest, NOT_NOT_Operator) {
+TEST_F(GeneratorGrammarTest, NOT_NOT_Operator) {
 
     selections = {string{"OW"}, string{"HW"}};
 

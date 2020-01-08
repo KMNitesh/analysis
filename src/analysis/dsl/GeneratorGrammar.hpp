@@ -29,6 +29,11 @@ BOOST_FUSION_ADAPT_ADT(
 )
 
 BOOST_FUSION_ADAPT_ADT(
+        std::shared_ptr<Atom::molecule_nums>,
+        (std::vector<Atom::molecule_nums::Attr>, std::vector<Atom::molecule_nums::Attr>, obj->val, /**/)
+)
+
+BOOST_FUSION_ADAPT_ADT(
         std::shared_ptr<Atom::atom_name_nums>,
         (Atom::select_ranges, Atom::select_ranges, obj->val, /**/)
 )
@@ -59,6 +64,7 @@ struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
     karma::rule<Iterator, fusion::vector<uint, boost::optional<std::pair<uint, int>>>()> num_range;
     karma::rule<Iterator, int()> step_num;
     karma::rule<Iterator, std::shared_ptr<Atom::residue_name_nums>()> residue_select_rule;
+    karma::rule<Iterator, std::shared_ptr<Atom::molecule_nums>()> molecule_select_rule;
     karma::rule<Iterator, std::shared_ptr<Atom::atom_name_nums>()> atom_name_select_rule;
     karma::rule<Iterator, std::shared_ptr<Atom::atom_types>()> atom_type_rule;
     karma::rule<Iterator, std::shared_ptr<Atom::atom_element_names>()> atom_element_rule;
@@ -84,6 +90,7 @@ struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
 
 
         residue_select_rule = ":" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
+        molecule_select_rule = '$' << ((uint_ << -('-' << uint_ << -('#' << int_))) % ',')[_1 = at_c<0>(_val)];
         atom_name_select_rule = "@" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
         atom_type_rule = "@%" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
         atom_element_rule = "@/" << (string % ",")[_1 = at_c<0>(_val)];
@@ -97,7 +104,8 @@ struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
                            << (eps(_r1 > 1) << "(" | eps) << expr(1)[_1 = at_c<1>(_val)]
                            << "|" << expr(1)[_1 = at_c<2>(_val)] << (eps(_r1 > 1) << ")" | eps);
 
-        expr = atom_element_rule | Operator(_r1) | atom_name_select_rule | atom_type_rule | residue_select_rule;
+        expr = atom_element_rule | Operator(_r1) | atom_name_select_rule
+               | atom_type_rule | residue_select_rule | molecule_select_rule;
 
         start = expr(0)[_1 = _val];
 
