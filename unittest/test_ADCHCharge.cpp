@@ -11,4 +11,5 @@ TEST(TestADCHCharge, read_charge) {
     ASSERT_THAT(charge.has_value(), Eq(true));
     ASSERT_THAT(boost::fusion::at_c<0>(*charge), Eq("Am"));
     ASSERT_THAT(boost::fusion::at_c<1>(*charge), DoubleEq(1.164452));
+    ASSERT_THAT(boost::fusion::at_c<2>(*charge), DoubleEq(1.124097));
 }

@@ -15,7 +15,7 @@ public:
 
     static void process(const std::string &file, const std::vector<int> &atoms);
 
-    [[nodiscard]] static boost::optional<boost::fusion::vector<std::string, double>>
+    [[nodiscard]] static boost::optional<boost::fusion::vector<std::string, double, double>>
     read_charge(const std::string &line);
 };
 
