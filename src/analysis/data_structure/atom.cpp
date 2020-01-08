@@ -65,6 +65,7 @@ void print::operator()(const std::shared_ptr<Atom::molecule_nums> &molecule) con
         } else {
             std::cout << ",";
         }
+        std::cout << fusion::at_c<0>(i);
         auto op = fusion::at_c<1>(i);
         if (op) {
             std::cout << "-" << fusion::at_c<0>(op.get());
