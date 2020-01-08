@@ -4,6 +4,8 @@
 
 #include <boost/range/algorithm.hpp>
 #include <boost/range/adaptors.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 #include "RadiusOfGyration.hpp"
 #include "utils/common.hpp"
 #include "data_structure/frame.hpp"
@@ -27,8 +29,9 @@ void RadiusOfGyration::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 void RadiusOfGyration::process(std::shared_ptr<Frame> &frame) {
 
-    double total_radius{};
-    int ntime = 0;
+    using namespace boost::accumulators;
+    accumulator_set<double, features<tag::mean, tag::variance>> acc;
+
     for (auto &mol : moles) {
         double radius2{};
         double mol_mass{};
@@ -40,11 +43,11 @@ void RadiusOfGyration::process(std::shared_ptr<Frame> &frame) {
             radius2 += vector_norm2(v) * atom->mass.value();
             mol_mass += atom->mass.value();
         }
-        ++ntime;
-        total_radius += std::sqrt(radius2 / mol_mass);
+
+        acc(std::sqrt(radius2 / mol_mass));
     }
 
-    series.push_back(total_radius / ntime);
+    series.emplace_back(mean(acc), std::sqrt(variance(acc)));
 }
 
 void RadiusOfGyration::print(std::ostream &os) {
@@ -54,10 +57,11 @@ void RadiusOfGyration::print(std::ostream &os) {
     os << "# Include Hydrogen Atom > " << (bIncludeHydrogen ? 'Y' : 'N') << '\n';
     os << std::string(50, '#') << '\n';
 
-    os << format("#%15s %15s\n", "Frame", "Rg(Ang)");
+    os << boost::format("#%15s %15s %15s\n") % "Frame" % "Rg(Ang)" % "STD(Ang)";
 
+    const boost::format fmt{"%15.5f %15.5f %15.5f\n"};
     for (const auto rg : series | boost::adaptors::indexed(1)) {
-        os << boost::format("%15.5f %15.5f\n") % rg.index() % rg.value();
+        os << boost::format(fmt) % rg.index() % std::get<0>(rg.value()) % std::get<1>(rg.value());
     }
 }
 
