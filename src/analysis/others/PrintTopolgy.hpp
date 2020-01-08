@@ -11,7 +11,7 @@
 class PrintTopolgy {
 public:
 
-    void action(const std::string &topology_filename);
+    static void action(const std::string &topology_filename);
 
     [[nodiscard]] static std::string_view title() { return "Print Selected Atoms in Topolgoy File"; }
 };

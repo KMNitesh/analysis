@@ -120,7 +120,6 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
 }
 
 void printTopolgy(const boost::program_options::variables_map &vm) {
-    PrintTopolgy printer;
     if (vm.count("prm")) {
         auto ff = vm["prm"].as<std::string>();
         if (boost::filesystem::exists(ff)) {
@@ -132,12 +131,12 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
     if (vm.count("topology")) {
         string topol = vm["topology"].as<string>();
         if (boost::filesystem::exists(topol)) {
-            printer.action(topol);
+            PrintTopolgy::action(topol);
             exit(EXIT_SUCCESS);
         }
         cout << "topology file " << topol << " is bad ! please retype !" << endl;
     }
-    printer.action(choose_file("input topology file : ").isExist(true));
+    PrintTopolgy::action(choose_file("input topology file : ").isExist(true));
 }
 
 void executeScript([[maybe_unused]] const boost::program_options::options_description &desc,

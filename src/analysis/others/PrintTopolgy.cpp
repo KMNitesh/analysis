@@ -27,6 +27,8 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         Noop,
     } mode;
 
+    std::cout << std::left << "Total atom numbers : " << std::setw(10) << frame->atom_list.size()
+              << "Total molecule numbers : " << frame->molecule_list.size() << '\n';
     for (;;) {
         beg:
         CenterRuleNode r;
@@ -54,18 +56,19 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             continue;
         }
 
-        std::cout << boost::format("%-6s %-7s %4s %-7s %4s %-6s  %6s %8s  %8s%8s%8s\n")
+        std::cout << boost::format("%-6s %-7s %4s %-7s %4s %-6s  %8s %8s  %8s%8s%8s\n")
                      % "#Atom" % "Name" % "#Res" % "Name" % "#Mol" % "Type" % "Charge" % "Mass"
                      % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
         double weight = 0;
         double sum_x = 0.0;
         double sum_y = 0.0;
         double sum_z = 0.0;
+        const boost::format fmt{"%6d %-7s %4s %-7s %4s %-6s  %8s %8s  %8.3f%8.3f%8.3f\n"};
         for (auto &atom : frame->atom_list) {
             if (Atom::is_match(atom, ast)) {
-                std::cout << boost::format("%6d %-7s %4s %-7s %4s %-6s % 8f %8s %8.3f%8.3f%8.3f\n")
+                std::cout << boost::format(fmt)
                              % atom->seq % atom->atom_name
-                             % (atom->residue_num ? boost::lexical_cast<std::string>(atom->residue_num.get()) : "-")
+                             % (atom->residue_num ? std::to_string(atom->residue_num.get()) : "-")
                              % (atom->residue_name ? atom->residue_name.get() : "-")
                              % atom->molecule.lock()->sequence
                              % atom->type_name
