@@ -4,33 +4,32 @@
 #include "TrajConverter.hpp"
 #include "utils/common.hpp"
 
-namespace {
-    int parse_header(const std::string &line) {
 
-        using namespace boost::spirit::qi;
-        static const auto head_parser = copy(
-                lit("block=") >> omit[lexeme[+(alpha | char_('_'))]] >> "records=" >> int_);
+int TrajConverter::parse_header(const std::string &line) {
 
-        int total_atoms;
-        if (auto it = std::begin(line); phrase_parse(it, std::end(line), head_parser, ascii::space, total_atoms) and
-                                        it == std::end(line))
-            return total_atoms;
+    using namespace boost::spirit::qi;
+    static const auto head_parser = copy(
+            lit("block=") >> omit[lexeme[+(alpha | char_('_'))]] >> "records=" >> int_);
 
-        throw std::runtime_error("file syntax error");
-    }
+    int total_atoms;
+    if (auto it = std::begin(line); phrase_parse(it, std::end(line), head_parser, ascii::space, total_atoms) and
+                                    it == std::end(line))
+        return total_atoms;
 
-    auto parse_atom(const std::string &line) {
+    throw std::runtime_error("file syntax error");
+}
 
-        using namespace boost::spirit::qi;
-        static const auto atom_parser = copy(as_string[lexeme[+alpha]] >> double_ >> double_ >> double_);
+boost::fusion::vector<std::string, double, double, double> TrajConverter::parse_atom(const std::string &line) {
 
-        boost::fusion::vector<std::string, double, double, double> attribute;
-        if (auto it = std::begin(line); phrase_parse(it, std::end(line), atom_parser, ascii::space, attribute) and
-                                        it == std::end(line))
-            return attribute;
+    using namespace boost::spirit::qi;
+    static const auto atom_parser = copy(as_string[lexeme[+alpha]] >> double_ >> double_ >> double_);
 
-        throw std::runtime_error("file syntax error");
-    }
+    boost::fusion::vector<std::string, double, double, double> attribute;
+    if (auto it = std::begin(line); phrase_parse(it, std::end(line), atom_parser, ascii::space, attribute) and
+                                    it == std::end(line))
+        return attribute;
+
+    throw std::runtime_error("file syntax error");
 }
 
 void TrajConverter::process() {
