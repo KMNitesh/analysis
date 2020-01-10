@@ -45,7 +45,7 @@ class TrajectoryReader {
     std::string topology_filename;
 
     enum class TOPOLOGY_TYPE {
-        ARC, MOL2, TPR
+        ARC, MOL2, TPR, PRMTOP
     } topology_type;
 
     struct AmberNetcdf NC;
@@ -79,6 +79,8 @@ protected:
     std::shared_ptr<Frame> readOneFrameTraj();
 
     std::shared_ptr<Frame> readOneFrameTpr();
+
+    std::shared_ptr<Frame> readOneFramePrmtop();
 
     std::shared_ptr<Frame> readOneFrameMol2();
 

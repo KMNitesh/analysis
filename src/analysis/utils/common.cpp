@@ -72,17 +72,18 @@ FileType getFileType(const std::string &filename) {
     boost::to_lower(extension);
 
     const std::unordered_map<std::string, FileType> mapping = {
-            {".xtc",   FileType::XTC},
-            {".trr",   FileType::TRR},
-            {".nc",    FileType::NC},
-            {".mdcrd", FileType::NC},
-            {".xyz",   FileType::ARC},
-            {".arc",   FileType::ARC},
-            {".tpr",   FileType::TPR},
-            {".mol2",  FileType::MOL2},
-            {".prm",   FileType::PRM},
-            {".gro",   FileType::GRO},
-            {".traj",  FileType::TRAJ}
+            {".xtc",    FileType::XTC},
+            {".trr",    FileType::TRR},
+            {".nc",     FileType::NC},
+            {".mdcrd",  FileType::NC},
+            {".xyz",    FileType::ARC},
+            {".arc",    FileType::ARC},
+            {".tpr",    FileType::TPR},
+            {".prmtop", FileType::PRMTOP},
+            {".mol2",   FileType::MOL2},
+            {".prm",    FileType::PRM},
+            {".gro",    FileType::GRO},
+            {".traj",   FileType::TRAJ}
     };
 
     auto it = mapping.find(extension);

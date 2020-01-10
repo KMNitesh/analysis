@@ -1,4 +1,4 @@
-## Molecular dynamics trajectory analysis package for Tinker & Gromacs software
+## Molecular dynamics trajectory analysis package for Tinker & Gromacs & Amber software
 
 #### Architecture
 <img src="doc/Architecture.png" alt="Software Architecture" title="Software Architecture" width="700" height="503" />

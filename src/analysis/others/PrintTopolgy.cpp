@@ -15,6 +15,9 @@ namespace qi = boost::spirit::qi;
 
 void PrintTopolgy::action(const std::string &topology_filename) {
     TrajectoryReader reader;
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     reader.add_topology(topology_filename);
     auto frame = reader.readTopology();
     if (forcefield.isValid()) {
@@ -28,7 +31,10 @@ void PrintTopolgy::action(const std::string &topology_filename) {
     } mode;
 
     std::cout << std::left << "Total atom numbers : " << std::setw(10) << frame->atom_list.size()
-              << "Total molecule numbers : " << frame->molecule_list.size() << '\n';
+              << "Total molecule numbers : " << std::setw(10) << frame->molecule_list.size()
+              << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>
+                      (std::chrono::high_resolution_clock::now() - t1).count() << " ms\n";
+
     for (;;) {
         beg:
         CenterRuleNode r;

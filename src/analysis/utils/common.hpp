@@ -52,6 +52,7 @@ enum class FileType {
     NC,
     ARC,
     TPR,
+    PRMTOP,
     MOL2,
     PRM,
     GRO,
@@ -140,10 +141,14 @@ public:
     operator std::string() {
 
         while (true) {
-//            std::string input_line = input(prompt, in, out);
-            char *buf = readline::readline(prompt.c_str());
-            std::string input_line = buf;
-            free(buf);
+            std::string input_line;
+            if (isatty(STDIN_FILENO) == 1) {
+                char *buf = readline::readline(prompt.c_str());
+                input_line = buf;
+                free(buf);
+            } else {
+                input_line = input(prompt, in, out);
+            }
             boost::trim(input_line);
             if (!input_line.empty()) {
                 if (ext.length()) {
