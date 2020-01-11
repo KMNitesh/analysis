@@ -9,6 +9,7 @@
 #include "utils/trr_writer.hpp"
 #include "utils/xtc_writer.hpp"
 #include "utils/gro_writer.hpp"
+#include "utils/ArcWriter.hpp"
 
 using namespace std;
 
@@ -18,6 +19,7 @@ shared_ptr<TrajectoryFormatWriter> TrajectoryWriterFactoryImpl::make_instance(Fi
             {FileType::XTC, bind(make_shared<XTCWriter>)},
             {FileType::TRR, bind(make_shared<TRRWriter>)},
             {FileType::GRO, bind(make_shared<GROWriter>)},
+            {FileType::ARC, bind(make_shared<ArcWriter>)},
     };
     auto it = mapping.find(t);
     if (it != mapping.end()) { return it->second(); }

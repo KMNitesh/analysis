@@ -79,7 +79,7 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
         reader->set_topology(topol);
     } else {
         if (vm.count("topology")) {
-            cerr << "WRANING !!  do not use topolgy file !\bn";
+            cerr << "WRANING !!  do not use topolgy file !\n";
         }
     }
 
@@ -712,7 +712,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         b_added_topology = false;
     } else {
         if (vm.count("topology")) {
-            std::cerr << "WRANING !!  do not use topolgy file !\bn";
+            std::cerr << "WRANING !!  do not use topolgy file !\n";
         }
     }
     for (auto &xyzfile : xyzfiles) {

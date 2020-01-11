@@ -30,7 +30,7 @@ public:
     void readInfo() override;
 
     static const std::string title() {
-        return "Gromacs XTC & TRR & GRO & NetCDF Output";
+        return "Gromacs XTC & TRR & GRO & NetCDF & ARC Output";
     }
 
     explicit Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory
