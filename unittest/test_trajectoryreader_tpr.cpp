@@ -9,7 +9,7 @@ using namespace testing;
 TEST(test_trajectoryreader_tpr, test_md_10ns_tpr) {
 
     TrajectoryReader reader;
-    reader.add_topology("tpr_test_system1.tpr");
+    reader.set_topology("tpr_test_system1.tpr");
 
     auto frame = reader.readTopology();
 

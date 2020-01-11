@@ -15,7 +15,7 @@
 void GmxTopologyPrinter::print(const std::string &topolgy, const std::string &prm, const std::string &out) {
 
     TrajectoryReader reader;
-    reader.add_filename(topolgy);
+    reader.add_trajectoy_file(topolgy);
     auto frame = reader.readOneFrame();
     forcefield.read(prm);
     forcefield.assign_forcefield(frame);

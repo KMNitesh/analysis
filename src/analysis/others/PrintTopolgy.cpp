@@ -18,7 +18,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    reader.add_topology(topology_filename);
+    reader.set_topology(topology_filename);
     auto frame = reader.readTopology();
     if (forcefield.isValid()) {
         forcefield.assign_forcefield(frame);

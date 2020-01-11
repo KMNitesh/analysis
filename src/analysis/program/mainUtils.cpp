@@ -14,7 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/cxx11/one_of.hpp>
 #include <boost/iostreams/copy.hpp>
-
+#include <boost/program_options.hpp>
 #include "others/PrintTopolgy.hpp"
 #include "taskMenu.hpp"
 #include "ana_module/AbstractAnalysis.hpp"
@@ -76,7 +76,7 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
             cerr << "ERROR !! topology file not exist !\n";
             exit(EXIT_FAILURE);
         }
-        reader->add_topology(topol);
+        reader->set_topology(topol);
     } else {
         if (vm.count("topology")) {
             cerr << "WRANING !!  do not use topolgy file !\bn";
@@ -89,7 +89,7 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
             cerr << "traj file can not use multiple files\n";
             exit(EXIT_FAILURE);
         }
-        reader->add_filename(traj);
+        reader->add_trajectoy_file(traj);
     }
 
     shared_ptr<Frame> frame;
@@ -592,7 +592,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
         exit(EXIT_FAILURE);
     }
     for (auto &xyzfile : xyzfiles) {
-        reader->add_filename(xyzfile);
+        reader->add_trajectoy_file(xyzfile);
         string ext = ext_filename(xyzfile);
         if (ext == "traj" && xyzfiles.size() != 1) {
             cout << "traj file can not use multiple files" << endl;
@@ -601,7 +601,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
         if (!b_added_topology) {
             if (topology) {
                 if (boost::filesystem::exists(topology.value())) {
-                    reader->add_topology(topology.value());
+                    reader->set_topology(topology.value());
                     b_added_topology = true;
                     continue;
                 }
@@ -716,7 +716,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         }
     }
     for (auto &xyzfile : xyzfiles) {
-        reader->add_filename(xyzfile);
+        reader->add_trajectoy_file(xyzfile);
         if (getFileType(xyzfile) == FileType::TRAJ && xyzfiles.size() != 1) {
             std::cout << "traj file can not use multiple files" << std::endl;
             exit(EXIT_FAILURE);
@@ -725,13 +725,13 @@ void processTrajectory(const boost::program_options::options_description &desc,
             if (vm.count("topology")) {
                 std::string topol = vm["topology"].as<std::string>();
                 if (boost::filesystem::exists(topol)) {
-                    reader->add_topology(topol);
+                    reader->set_topology(topol);
                     b_added_topology = true;
                     continue;
                 }
                 std::cout << "topology file " << topol << " is bad ! please retype !" << std::endl;
             }
-            reader->add_topology(choose_file("input topology file : ").isExist(true));
+            reader->set_topology(choose_file("input topology file : ").isExist(true));
             b_added_topology = true;
         }
     }
@@ -745,7 +745,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
                 std::cout << "traj file can not use multiple files [retype]" << std::endl;
                 continue;
             }
-            reader->add_filename(input_line);
+            reader->add_trajectoy_file(input_line);
         }
     }
 
