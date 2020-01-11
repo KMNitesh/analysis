@@ -428,8 +428,8 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFramePrmtop() {
         auto atom_num1 = (*it) / 3 + 1;
         auto atom_num2 = (*(it + 1)) / 3 + 1;
 
-        auto atom1 = frame->atom_map[atom_num1];
-        auto atom2 = frame->atom_map[atom_num2];
+        auto &atom1 = frame->atom_map[atom_num1];
+        auto &atom2 = frame->atom_map[atom_num2];
 
         atom1->con_list.push_back(atom_num2);
         atom2->con_list.push_back(atom_num1);
