@@ -1,5 +1,7 @@
 
 #include <gmock/gmock.h>
+#include <queue>
+#include <boost/optional.hpp>
 #include "trajectory_reader/trajectoryreader.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/atom.hpp"
