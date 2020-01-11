@@ -80,6 +80,7 @@ FileType getFileType(const std::string &filename) {
             {".arc",    FileType::ARC},
             {".tpr",    FileType::TPR},
             {".prmtop", FileType::PRMTOP},
+            {".parm7",  FileType::PRMTOP},
             {".mol2",   FileType::MOL2},
             {".prm",    FileType::PRM},
             {".gro",    FileType::GRO},

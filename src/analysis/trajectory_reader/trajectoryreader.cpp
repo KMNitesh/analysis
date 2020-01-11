@@ -688,22 +688,24 @@ void TrajectoryReader::add_filename(const std::string &filename) {
 void TrajectoryReader::add_topology(const std::string &filename) {
     enable_binaray_file = true;
     topology_filename = filename;
-    std::string ext_name = ext_filename(filename);
-    boost::to_lower(ext_name);
 
-    if (ext_name == "arc" or ext_name == "xyz") {
-        topology_type = TOPOLOGY_TYPE::ARC;
-    } else if (ext_name == "mol2") {
-        topology_type = TOPOLOGY_TYPE::MOL2;
-    } else if (ext_name == "tpr") {
-        topology_type = TOPOLOGY_TYPE::TPR;
-    } else if (ext_name == "prmtop") {
-        topology_type = TOPOLOGY_TYPE::PRMTOP;
-    } else {
-        std::cerr << " Error file type of topology file [ " << filename << " ]\n";
-        exit(1);
+    switch (getFileType(filename)) {
+        case FileType::ARC:
+            topology_type = TOPOLOGY_TYPE::ARC;
+            break;
+        case FileType::TPR:
+            topology_type = TOPOLOGY_TYPE::TPR;
+            break;
+        case FileType::PRMTOP:
+            topology_type = TOPOLOGY_TYPE::PRMTOP;
+            break;
+        case FileType::MOL2:
+            topology_type = TOPOLOGY_TYPE::MOL2;
+            break;
+        default:
+            std::cerr << " Error file type of topology file [ " << filename << " ]\n";
+            exit(1);
     }
-
 }
 
 std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
