@@ -117,7 +117,7 @@ struct PrmtopGrammar : boost::spirit::qi::grammar<Iterator, PrmtopStruct(), Skip
     boost::spirit::qi::rule<Iterator, std::vector<int>(int), Skipper> excluded_atoms_list;
     boost::spirit::qi::rule<Iterator, std::vector<double>(int), Skipper> hbond_acoef;
     boost::spirit::qi::rule<Iterator, std::vector<double>(int), Skipper> hbond_bcoef;
-    boost::spirit::qi::rule<Iterator, void(int), Skipper> hbcut; // hbond_bcoef
+    boost::spirit::qi::rule<Iterator, std::vector<double>(int), Skipper> hbcut; // hbond_bcoef
     boost::spirit::qi::rule<Iterator, std::vector<std::string>(int), Skipper> amber_atom_type;
     boost::spirit::qi::rule<Iterator, std::vector<std::string>(int), Skipper> tree_chain_classification;
     boost::spirit::qi::rule<Iterator, std::vector<int>(int), Skipper> join_array;
@@ -141,7 +141,7 @@ struct PrmtopGrammar : boost::spirit::qi::grammar<Iterator, PrmtopStruct(), Skip
 
 
 template<typename Iterator, typename Skipper>
-inline PrmtopGrammar<Iterator, Skipper>::PrmtopGrammar() : PrmtopGrammar::base_type(root) {
+inline PrmtopGrammar<Iterator, Skipper>::PrmtopGrammar() : PrmtopGrammar::base_type(root, "prmtop") {
     using namespace boost::spirit;
     using qi::lexeme;
     using qi::char_;
@@ -157,155 +157,129 @@ inline PrmtopGrammar<Iterator, Skipper>::PrmtopGrammar() : PrmtopGrammar::base_t
     using boost::phoenix::ref;
     using boost::phoenix::at_c;
     using boost::phoenix::at;
-    using boost::phoenix::bind;
+    using boost::phoenix::val;
 
     using Prmtop = PrmtopStruct;
 
-    version %= "%VERSION" >> lexeme[+(char_ - eol)][trim(_1)] >> eol;
+    version %= eps > "%VERSION" > lexeme[+(char_ - eol)][trim(_1)] > eol;
+    version.name("VERSION");
 
-    title %= "%FLAG TITLE"
-            >> eol
-            >> "%FORMAT(20a4)" >> eol
-            >> lexeme[+(char_ - eol)][trim(_1)] >> eol;
+    title %= eps > "%FLAG TITLE"
+             > eol
+             > "%FORMAT(20a4)" > eol
+             > lexeme[+(char_ - eol)][trim(_1)] > eol;
+    title.name("TITLE");
 
-    fix_int = as_string[no_skip[-eol >> repeat(_r1)[char_]]][_val = stoi(_1)];
+    fix_int = as_string[no_skip[-eol > repeat(_r1)[char_]]][_val = stoi(_1)];
+    fix_int.name("integer");
 
-    pointers = "%FLAG POINTERS"
-            >> eol
-            >> "%FORMAT(10I8)" >> eol
-            >> skip(ascii::space)[repeat(31)[fix_int(8)]] >> eol;
+    pointers = eps > "%FLAG POINTERS"
+               > eol
+               > "%FORMAT(10I8)" > eol
+               > skip(ascii::space)[repeat(31)[fix_int(8)]] > eol;
+    pointers.name("POINTERS");
 
-    string_ %= no_skip[-eol >> repeat(_r1)[char_]][trim(_1)];
+    string_ %= no_skip[-eol > repeat(_r1)[char_]][trim(_1)];
+    string_.name("string");
 
-#define SECTION(X, Y, Z) X >> eol >> Y >> eol >> skip(ascii::space)[repeat(_r1)[Z]] >> eol
+#define SECTION(L, X, Y, Z) L = eps > "%FLAG " X > eol > Y > eol > skip(ascii::space)[repeat(_r1)[Z]] > eol; L.name(X)
 
-    atom_name = SECTION("%FLAG ATOM_NAME", "%FORMAT(20a4)", string_(4));
-
-    charge = SECTION("%FLAG CHARGE", "%FORMAT(5E16.8)", double_);
-
-    atomic_number = SECTION("%FLAG ATOMIC_NUMBER", "%FORMAT(10I8)", fix_int(8));
-
-    mass = SECTION("%FLAG MASS", "%FORMAT(5E16.8)", double_);
-
-    atom_type_index = SECTION("%FLAG ATOM_TYPE_INDEX", "%FORMAT(10I8)", fix_int(8));
-
-    number_excluded_atoms = SECTION("%FLAG NUMBER_EXCLUDED_ATOMS", "%FORMAT(10I8)", fix_int(8));
-
-    nonbonded_parm_index = SECTION("%FLAG NONBONDED_PARM_INDEX", "%FORMAT(10I8)", fix_int(8));
-
-    residue_label = SECTION("%FLAG RESIDUE_LABEL", "%FORMAT(20a4)", string_(4));
-
-    residue_pointer = SECTION("%FLAG RESIDUE_POINTER", "%FORMAT(10I8)", fix_int(8));
-
-    bond_force_constant = SECTION("%FLAG BOND_FORCE_CONSTANT", "%FORMAT(5E16.8)", double_);
-
-    bond_equil_value = SECTION("%FLAG BOND_EQUIL_VALUE", "%FORMAT(5E16.8)", double_);
-
-    angle_force_constant = SECTION("%FLAG ANGLE_FORCE_CONSTANT", "%FORMAT(5E16.8)", double_);
-
-    angle_equil_value = SECTION("%FLAG ANGLE_EQUIL_VALUE", "%FORMAT(5E16.8)", double_);
-
-    dihedral_force_constant = SECTION("%FLAG DIHEDRAL_FORCE_CONSTANT", "%FORMAT(5E16.8)", double_);
-
-    dihedral_periodicity = SECTION("%FLAG DIHEDRAL_PERIODICITY", "%FORMAT(5E16.8)", double_);
-
-    dihedral_phase = SECTION("%FLAG DIHEDRAL_PHASE", "%FORMAT(5E16.8)", double_);
-
-    scee_scale_factor = SECTION("%FLAG SCEE_SCALE_FACTOR", "%FORMAT(5E16.8)", double_);
-
-    scnb_scale_factor = SECTION("%FLAG SCNB_SCALE_FACTOR", "%FORMAT(5E16.8)", double_);
-
-    solty = SECTION("%FLAG SOLTY", "%FORMAT(5E16.8)", double_);
-
-    lennard_jones_acoef = SECTION("%FLAG LENNARD_JONES_ACOEF", "%FORMAT(5E16.8)", double_);
-
-    lennard_jones_bcoef = SECTION("%FLAG LENNARD_JONES_BCOEF", "%FORMAT(5E16.8)", double_);
-
-    bonds_inc_hydrogen = SECTION("%FLAG BONDS_INC_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
-
-    bonds_without_hydrogen = SECTION("%FLAG BONDS_WITHOUT_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
-
-    angles_inc_hydrogen = SECTION("%FLAG ANGLES_INC_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
-
-    angles_without_hydrogen = SECTION("%FLAG ANGLES_WITHOUT_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
-
-    dihedrals_inc_hydrogen = SECTION("%FLAG DIHEDRALS_INC_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
-
-    dihedrals_without_hydrogen = SECTION("%FLAG DIHEDRALS_WITHOUT_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
-
-    excluded_atoms_list = SECTION("%FLAG EXCLUDED_ATOMS_LIST", "%FORMAT(10I8)", fix_int(8));
-
-    hbond_acoef = SECTION("%FLAG HBOND_ACOEF", "%FORMAT(5E16.8)", double_);
-
-    hbond_bcoef = SECTION("%FLAG HBOND_BCOEF", "%FORMAT(5E16.8)", double_);
-
-    hbcut = omit[SECTION("%FLAG HBCUT", "%FORMAT(5E16.8)", double_)];
-
-    amber_atom_type = SECTION("%FLAG AMBER_ATOM_TYPE", "%FORMAT(20a4)", string_(4));
-
-    tree_chain_classification = SECTION("%FLAG TREE_CHAIN_CLASSIFICATION", "%FORMAT(20a4)", string_(4));
-
-    join_array = SECTION("%FLAG JOIN_ARRAY", "%FORMAT(10I8)", fix_int(8));
-
-    irotat = SECTION("%FLAG IROTAT", "%FORMAT(10I8)", fix_int(8));
-
-    solvent_pointers = SECTION("%FLAG SOLVENT_POINTERS", "%FORMAT(3I8)", fix_int(8));
-    atoms_per_molecule = SECTION("%FLAG ATOMS_PER_MOLECULE", "%FORMAT(10I8)", fix_int(8));
-    box_dimensions = SECTION("%FLAG BOX_DIMENSIONS", "%FORMAT(5E16.8)", double_);
+    SECTION(atom_name, "ATOM_NAME", "%FORMAT(20a4)", string_(4));
+    SECTION(charge, "CHARGE", "%FORMAT(5E16.8)", double_);
+    SECTION(atomic_number, "ATOMIC_NUMBER", "%FORMAT(10I8)", fix_int(8));
+    SECTION(mass, "MASS", "%FORMAT(5E16.8)", double_);
+    SECTION(atom_type_index, "ATOM_TYPE_INDEX", "%FORMAT(10I8)", fix_int(8));
+    SECTION(number_excluded_atoms, "NUMBER_EXCLUDED_ATOMS", "%FORMAT(10I8)", fix_int(8));
+    SECTION(nonbonded_parm_index, "NONBONDED_PARM_INDEX", "%FORMAT(10I8)", fix_int(8));
+    SECTION(residue_label, "RESIDUE_LABEL", "%FORMAT(20a4)", string_(4));
+    SECTION(residue_pointer, "RESIDUE_POINTER", "%FORMAT(10I8)", fix_int(8));
+    SECTION(bond_force_constant, "BOND_FORCE_CONSTANT", "%FORMAT(5E16.8)", double_);
+    SECTION(bond_equil_value, "BOND_EQUIL_VALUE", "%FORMAT(5E16.8)", double_);
+    SECTION(angle_force_constant, "ANGLE_FORCE_CONSTANT", "%FORMAT(5E16.8)", double_);
+    SECTION(angle_equil_value, "ANGLE_EQUIL_VALUE", "%FORMAT(5E16.8)", double_);
+    SECTION(dihedral_force_constant, "DIHEDRAL_FORCE_CONSTANT", "%FORMAT(5E16.8)", double_);
+    SECTION(dihedral_periodicity, "DIHEDRAL_PERIODICITY", "%FORMAT(5E16.8)", double_);
+    SECTION(dihedral_phase, "DIHEDRAL_PHASE", "%FORMAT(5E16.8)", double_);
+    SECTION(scee_scale_factor, "SCEE_SCALE_FACTOR", "%FORMAT(5E16.8)", double_);
+    SECTION(scnb_scale_factor, "SCNB_SCALE_FACTOR", "%FORMAT(5E16.8)", double_);
+    SECTION(solty, "SOLTY", "%FORMAT(5E16.8)", double_);
+    SECTION(lennard_jones_acoef, "LENNARD_JONES_ACOEF", "%FORMAT(5E16.8)", double_);
+    SECTION(lennard_jones_bcoef, "LENNARD_JONES_BCOEF", "%FORMAT(5E16.8)", double_);
+    SECTION(bonds_inc_hydrogen, "BONDS_INC_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
+    SECTION(bonds_without_hydrogen, "BONDS_WITHOUT_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
+    SECTION(angles_inc_hydrogen, "ANGLES_INC_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
+    SECTION(angles_without_hydrogen, "ANGLES_WITHOUT_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
+    SECTION(dihedrals_inc_hydrogen, "DIHEDRALS_INC_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
+    SECTION(dihedrals_without_hydrogen, "DIHEDRALS_WITHOUT_HYDROGEN", "%FORMAT(10I8)", fix_int(8));
+    SECTION(excluded_atoms_list, "EXCLUDED_ATOMS_LIST", "%FORMAT(10I8)", fix_int(8));
+    SECTION(hbond_acoef, "HBOND_ACOEF", "%FORMAT(5E16.8)", double_);
+    SECTION(hbond_bcoef, "HBOND_BCOEF", "%FORMAT(5E16.8)", double_);
+    SECTION(hbcut, "HBCUT", "%FORMAT(5E16.8)", double_);
+    SECTION(amber_atom_type, "AMBER_ATOM_TYPE", "%FORMAT(20a4)", string_(4));
+    SECTION(tree_chain_classification, "TREE_CHAIN_CLASSIFICATION", "%FORMAT(20a4)", string_(4));
+    SECTION(join_array, "JOIN_ARRAY", "%FORMAT(10I8)", fix_int(8));
+    SECTION(irotat, "IROTAT", "%FORMAT(10I8)", fix_int(8));
+    SECTION(solvent_pointers, "SOLVENT_POINTERS", "%FORMAT(3I8)", fix_int(8));
+    SECTION(atoms_per_molecule, "ATOMS_PER_MOLECULE", "%FORMAT(10I8)", fix_int(8));
+    SECTION(box_dimensions, "BOX_DIMENSIONS", "%FORMAT(5E16.8)", double_);
 
     solvent_pointers_atoms_per_molecule_box_dimensions %=
-            solvent_pointers(3) >> atoms_per_molecule(at(at_c<0>(ref(_val)), 1)) >> box_dimensions(4);
+            solvent_pointers(3) > atoms_per_molecule(at(at_c<0>(ref(_val)), 1)) > box_dimensions(4);
 
-    radius_set = "%FLAG RADIUS_SET" >> eol >> "%FORMAT(1a80)" >> eol >> no_skip[repeat(80)[char_]] >> eol;
+    radius_set = eps > "%FLAG RADIUS_SET" > eol > "%FORMAT(1a80)" > eol > no_skip[repeat(80)[char_]] > eol;
+    radius_set.name("RADIUS_SET");
 
-    radii = SECTION("%FLAG RADII", "%FORMAT(5E16.8)", double_);
+    SECTION(radii, "RADII", "%FORMAT(5E16.8)", double_);
+    SECTION(screen, "SCREEN", "%FORMAT(5E16.8)", double_);
 
-    screen = SECTION("%FLAG SCREEN", "%FORMAT(5E16.8)", double_);
+    ipol = eps > "%FLAG IPOL" > eol > "%FORMAT(1I8)" > eol > int_ > eol;
+    ipol.name("IPOL");
 
-    ipol = "%FLAG IPOL" >> eol >> "%FORMAT(1I8)" >> eol >> int_ >> eol;
+    root = eps
+           > version
+           > title > pointers
+           > atom_name(field_(ref(_val), Prmtop::NATOM))
+           > charge(field_(ref(_val), Prmtop::NATOM))
+           > atomic_number(field_(ref(_val), Prmtop::NATOM))
+           > mass(field_(ref(_val), Prmtop::NATOM))
+           > atom_type_index(field_(ref(_val), Prmtop::NATOM))
+           > number_excluded_atoms(field_(ref(_val), Prmtop::NATOM))
+           > nonbonded_parm_index(field_(ref(_val), Prmtop::NTYPES) * field_(ref(_val), Prmtop::NTYPES))
+           > residue_label(field_(ref(_val), Prmtop::NRES))
+           > residue_pointer(field_(ref(_val), Prmtop::NRES))
+           > bond_force_constant(field_(ref(_val), Prmtop::NUMBND))
+           > bond_equil_value(field_(ref(_val), Prmtop::NUMBND))
+           > angle_force_constant(field_(ref(_val), Prmtop::NUMANG))
+           > angle_equil_value(field_(ref(_val), Prmtop::NUMANG))
+           > dihedral_force_constant(field_(ref(_val), Prmtop::NPTRA))
+           > dihedral_periodicity(field_(ref(_val), Prmtop::NPTRA))
+           > dihedral_phase(field_(ref(_val), Prmtop::NPTRA))
+           > scee_scale_factor(field_(ref(_val), Prmtop::NPTRA))
+           > scnb_scale_factor(field_(ref(_val), Prmtop::NPTRA))
+           > solty(field_(ref(_val), Prmtop::NATYP))
+           > lennard_jones_acoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2)
+           > lennard_jones_bcoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2)
+           > bonds_inc_hydrogen(3 * field_(ref(_val), Prmtop::NBONH))
+           > bonds_without_hydrogen(3 * field_(ref(_val), Prmtop::NBONA))
+           > angles_inc_hydrogen(4 * field_(ref(_val), Prmtop::NTHETH))
+           > angles_without_hydrogen(4 * field_(ref(_val), Prmtop::NTHETA))
+           > dihedrals_inc_hydrogen(5 * field_(ref(_val), Prmtop::NPHIH))
+           > dihedrals_without_hydrogen(5 * field_(ref(_val), Prmtop::NPHIA))
+           > excluded_atoms_list(field_(ref(_val), Prmtop::NNB))
+           > hbond_acoef(field_(ref(_val), Prmtop::NPHB))
+           > hbond_bcoef(field_(ref(_val), Prmtop::NPHB))
+           > omit[hbcut(field_(ref(_val), Prmtop::NPHB))]
+           > amber_atom_type(field_(ref(_val), Prmtop::NATOM))
+           > tree_chain_classification(field_(ref(_val), Prmtop::NATOM))
+           > join_array(field_(ref(_val), Prmtop::NATOM))
+           > irotat(field_(ref(_val), Prmtop::NATOM))
+           > ((eps(field_(ref(_val), Prmtop::IFBOX) > 0) > solvent_pointers_atoms_per_molecule_box_dimensions) | eps)
+           > radius_set
+           > radii(field_(ref(_val), Prmtop::NATOM))
+           > screen(field_(ref(_val), Prmtop::NATOM))
+           > ipol;
 
-    root = version
-            >> title >> pointers
-            >> atom_name(field_(ref(_val), Prmtop::NATOM))
-            >> charge(field_(ref(_val), Prmtop::NATOM))
-            >> atomic_number(field_(ref(_val), Prmtop::NATOM))
-            >> mass(field_(ref(_val), Prmtop::NATOM))
-            >> atom_type_index(field_(ref(_val), Prmtop::NATOM))
-            >> number_excluded_atoms(field_(ref(_val), Prmtop::NATOM))
-            >> nonbonded_parm_index(field_(ref(_val), Prmtop::NTYPES) * field_(ref(_val), Prmtop::NTYPES))
-            >> residue_label(field_(ref(_val), Prmtop::NRES))
-            >> residue_pointer(field_(ref(_val), Prmtop::NRES))
-            >> bond_force_constant(field_(ref(_val), Prmtop::NUMBND))
-            >> bond_equil_value(field_(ref(_val), Prmtop::NUMBND))
-            >> angle_force_constant(field_(ref(_val), Prmtop::NUMANG))
-            >> angle_equil_value(field_(ref(_val), Prmtop::NUMANG))
-            >> dihedral_force_constant(field_(ref(_val), Prmtop::NPTRA))
-            >> dihedral_periodicity(field_(ref(_val), Prmtop::NPTRA))
-            >> dihedral_phase(field_(ref(_val), Prmtop::NPTRA))
-            >> scee_scale_factor(field_(ref(_val), Prmtop::NPTRA))
-            >> scnb_scale_factor(field_(ref(_val), Prmtop::NPTRA))
-            >> solty(field_(ref(_val), Prmtop::NATYP))
-            >> lennard_jones_acoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2)
-            >> lennard_jones_bcoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2)
-            >> bonds_inc_hydrogen(3 * field_(ref(_val), Prmtop::NBONH))
-            >> bonds_without_hydrogen(3 * field_(ref(_val), Prmtop::NBONA))
-            >> angles_inc_hydrogen(4 * field_(ref(_val), Prmtop::NTHETH))
-            >> angles_without_hydrogen(4 * field_(ref(_val), Prmtop::NTHETA))
-            >> dihedrals_inc_hydrogen(5 * field_(ref(_val), Prmtop::NPHIH))
-            >> dihedrals_without_hydrogen(5 * field_(ref(_val), Prmtop::NPHIA))
-            >> excluded_atoms_list(field_(ref(_val), Prmtop::NNB))
-            >> hbond_acoef(field_(ref(_val), Prmtop::NPHB))
-            >> hbond_bcoef(field_(ref(_val), Prmtop::NPHB))
-            >> hbcut(field_(ref(_val), Prmtop::NPHB))
-            >> amber_atom_type(field_(ref(_val), Prmtop::NATOM))
-            >> tree_chain_classification(field_(ref(_val), Prmtop::NATOM))
-            >> join_array(field_(ref(_val), Prmtop::NATOM))
-            >> irotat(field_(ref(_val), Prmtop::NATOM))
-            >> (eps(field_(ref(_val), Prmtop::IFBOX) > 0) >> solvent_pointers_atoms_per_molecule_box_dimensions | eps)
-            >> radius_set
-            >> radii(field_(ref(_val), Prmtop::NATOM))
-            >> screen(field_(ref(_val), Prmtop::NATOM))
-            >> ipol;
+    root.name("prmtop");
 }
 
 
