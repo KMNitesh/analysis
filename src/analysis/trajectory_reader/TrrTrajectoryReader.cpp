@@ -31,22 +31,11 @@ bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
                 gmx::fread_htrn(fio, &trnheader, box, coord.get(), velocities.get(), nullptr);
                 translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
                           &(frame->alpha), &(frame->beta), &(frame->gamma));
-                if (frame->enable_bound) {
-                    frame->a_axis_half = frame->a_axis / 2;
-                    frame->b_axis_half = frame->b_axis / 2;
-                    frame->c_axis_half = frame->c_axis / 2;
-                }
             } else {
                 if (frame->enable_bound) {
                     std::cerr << "ERROR !! trr trajectory does not  have PBC enabled" << std::endl;
                     exit(1);
                 }
-                frame->a_axis = 0.0;
-                frame->b_axis = 0.0;
-                frame->c_axis = 0.0;
-                frame->alpha = 0.0;
-                frame->beta = 0.0;
-                frame->gamma = 0.0;
                 frame->enable_bound = false;
                 gmx::fread_htrn(fio, &trnheader, nullptr, coord.get(), velocities.get(), nullptr);
             }

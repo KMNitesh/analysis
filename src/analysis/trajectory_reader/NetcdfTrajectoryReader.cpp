@@ -29,11 +29,6 @@ bool NetcdfTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     frame->beta = box[4];
     frame->gamma = box[5];
 
-    if (frame->enable_bound) {
-        frame->a_axis_half = frame->a_axis / 2;
-        frame->b_axis_half = frame->b_axis / 2;
-        frame->c_axis_half = frame->c_axis / 2;
-    }
     return true;
 }
 

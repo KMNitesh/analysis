@@ -20,7 +20,7 @@ bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     } else {
         ret = gmx::read_next_xtc(fio, natoms, &step, &time, box, x, &prec, &bOK);
     }
-    if (!ret) return 0;
+    if (!ret) return false;
 
     if (bOK) {
         if (natoms != static_cast<int>(frame->atom_list.size())) {
@@ -30,9 +30,6 @@ bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
         if (frame->enable_bound) {
             translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
                       &(frame->alpha), &(frame->beta), &(frame->gamma));
-            frame->a_axis_half = frame->a_axis / 2;
-            frame->b_axis_half = frame->b_axis / 2;
-            frame->c_axis_half = frame->c_axis / 2;
         }
         int i = 0;
         for (auto &atom : frame->atom_list) {

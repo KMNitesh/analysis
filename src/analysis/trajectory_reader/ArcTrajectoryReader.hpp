@@ -20,8 +20,6 @@ protected:
 
 private:
 
-    static void apply_box(std::shared_ptr<Frame> &frame);
-
     void parse_box(std::shared_ptr<Frame> &frame);
 
     void parse_coord(std::shared_ptr<Atom> &atom);

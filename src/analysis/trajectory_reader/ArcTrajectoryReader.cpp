@@ -5,6 +5,7 @@
 #include "data_structure/frame.hpp"
 #include "topology_utils.hpp"
 #include "ArcTrajectoryReader.hpp"
+#include "TrajectoryInterface.hpp"
 
 bool ArcTrajectoryReader::open(const std::string &file) {
     ifs.open(file);
@@ -37,7 +38,6 @@ bool ArcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
         field = split(line);
         parse_coord(atom);
     }
-    apply_box(frame);
     if (enable_read_velocity) readOneFrameVelocity(frame);
 
     return true;
@@ -92,14 +92,6 @@ std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
     apply_box(frame);
 
     return frame;
-}
-
-void ArcTrajectoryReader::apply_box(std::shared_ptr<Frame> &frame) {
-    if (frame->enable_bound) {
-        frame->a_axis_half = frame->a_axis / 2;
-        frame->b_axis_half = frame->b_axis / 2;
-        frame->c_axis_half = frame->c_axis / 2;
-    }
 }
 
 void ArcTrajectoryReader::parse_coord(std::shared_ptr<Atom> &atom) {
