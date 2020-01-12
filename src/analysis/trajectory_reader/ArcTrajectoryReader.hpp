@@ -22,14 +22,18 @@ private:
 
     static void apply_box(std::shared_ptr<Frame> &frame);
 
-    static void parse_box(std::shared_ptr<Frame> &frame, const std::vector<std::string> &field);
+    void parse_box(std::shared_ptr<Frame> &frame);
 
-    static void parse_coord(std::shared_ptr<Atom> &atom, const std::vector<std::string> &field);
+    void parse_coord(std::shared_ptr<Atom> &atom);
 
-    std::ifstream ifs;
+    void readOneFrameVelocity(std::shared_ptr<Frame> &frame);
+
+    std::ifstream ifs, velocity_file;
 
     std::string line;
     std::vector<std::string> field;
+
+
 };
 
 
