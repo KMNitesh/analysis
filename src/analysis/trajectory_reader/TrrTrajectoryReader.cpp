@@ -10,7 +10,7 @@ bool TrrTrajectoryReader::open(const std::string &file) {
     return fio != nullptr;
 }
 
-bool TrrTrajectoryReader::readOneFrame(std::shared_ptr<Frame> &frame) {
+bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     gmx::t_trnheader trnheader;
     gmx::gmx_bool bOK;
     gmx::rvec box[3];
@@ -20,6 +20,13 @@ bool TrrTrajectoryReader::readOneFrame(std::shared_ptr<Frame> &frame) {
         frame->setCurrentTime(trnheader.t);
         if (bOK) {
             coord = std::make_unique<gmx::rvec[]>(trnheader.natoms);
+            if (trnheader.v_size) {
+                velocities = std::make_unique<gmx::rvec[]>(trnheader.natoms);
+                frame->has_velocity = true;
+            } else if (enable_read_velocity) {
+                std::cerr << "ERROR!! Gromacs TRR Trajectory file does not have velocities !\n";
+                exit(4);
+            }
             if (trnheader.box_size) {
                 gmx::fread_htrn(fio, &trnheader, box, coord.get(), velocities.get(), nullptr);
                 translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
@@ -31,7 +38,7 @@ bool TrrTrajectoryReader::readOneFrame(std::shared_ptr<Frame> &frame) {
                 }
             } else {
                 if (frame->enable_bound) {
-                    std::cerr << "WARING ! then trajectory have PBC enabled" << std::endl;
+                    std::cerr << "ERROR !! trr trajectory does not  have PBC enabled" << std::endl;
                     exit(1);
                 }
                 frame->a_axis = 0.0;

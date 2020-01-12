@@ -18,6 +18,10 @@ IRSpectrumElectricalFlux::IRSpectrumElectricalFlux() {
 }
 
 void IRSpectrumElectricalFlux::process([[maybe_unused]] std::shared_ptr<Frame> &frame) {
+    if (!frame->has_velocity) {
+        std::cerr << "Trajectory does not have velocity\n";
+        std::exit(EXIT_FAILURE);
+    }
 
     std::tuple<double, double, double> flux{};
 

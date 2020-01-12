@@ -15,11 +15,12 @@ class TrrTrajectoryReader : public TrajectoryInterface {
 public:
     bool open(const std::string &file) override;
 
-    bool readOneFrame(std::shared_ptr<Frame> &frame) override;
-
     void close() override;
 
     ~TrrTrajectoryReader() override;
+
+protected:
+    bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
 
 private:
     gmx::t_fileio *fio = nullptr;

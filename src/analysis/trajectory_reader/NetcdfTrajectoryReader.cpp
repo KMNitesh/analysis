@@ -11,7 +11,7 @@ bool NetcdfTrajectoryReader::open(const std::string &file) {
     return true;
 }
 
-bool NetcdfTrajectoryReader::readOneFrame(std::shared_ptr<Frame> &frame) {
+bool NetcdfTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     auto coord = std::make_unique<double[]>(NC->ncatom3);
     double box[6];
     if (!netcdfGetNextFrame(NC.get(), coord.get(), box)) return false;

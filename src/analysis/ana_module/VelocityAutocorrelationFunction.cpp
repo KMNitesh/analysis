@@ -23,6 +23,11 @@ void VelocityAutocorrelationFunction::processFirstFrame(std::shared_ptr<Frame> &
 
 
 void VelocityAutocorrelationFunction::process(std::shared_ptr<Frame> &frame) {
+    if (!frame->has_velocity) {
+        std::cerr << "Trajectory does not have velocity\n";
+        std::exit(EXIT_FAILURE);
+    }
+
     auto it1 = velocities.begin();
     auto it2 = frame->atom_list.begin();
     for (; it1 != velocities.end(); ++it1, ++it2) {

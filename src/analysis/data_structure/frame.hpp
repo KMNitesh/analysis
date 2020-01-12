@@ -51,6 +51,8 @@ public:
 
     bool enable_bound = false;
 
+    bool has_velocity = false;
+
     void image(double &xr, double &yr, double &zr) const;
 
     void image(std::array<double, 3> &r) const;

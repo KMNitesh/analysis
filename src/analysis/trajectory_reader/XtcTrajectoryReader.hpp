@@ -15,11 +15,12 @@ class XtcTrajectoryReader : public TrajectoryInterface {
 public:
     bool open(const std::string &file) override;
 
-    bool readOneFrame(std::shared_ptr<Frame> &frame) override;
-
     void close() override;
 
     ~XtcTrajectoryReader() override;
+
+protected:
+    bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
 
 private:
 

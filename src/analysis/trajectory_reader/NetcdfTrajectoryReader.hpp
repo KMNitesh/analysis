@@ -10,11 +10,12 @@ class NetcdfTrajectoryReader : public TrajectoryInterface {
 public:
     bool open(const std::string &file) override;
 
-    bool readOneFrame(std::shared_ptr<Frame> &frame) override;
-
     void close() override;
 
     ~NetcdfTrajectoryReader() override;
+
+protected:
+    bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
 
 private:
     std::unique_ptr<struct AmberNetcdf> NC;

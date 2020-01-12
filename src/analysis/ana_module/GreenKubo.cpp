@@ -125,8 +125,11 @@ void GreenKubo::readInfo() {
 
 }
 
-void GreenKubo::process(std::shared_ptr<Frame> &) {
-
+void GreenKubo::process(std::shared_ptr<Frame> &frame) {
+    if (!frame->has_velocity) {
+        std::cerr << "Trajectory does not have velocity\n";
+        std::exit(EXIT_FAILURE);
+    }
 
     steps++;
     double xv, yv, zv;

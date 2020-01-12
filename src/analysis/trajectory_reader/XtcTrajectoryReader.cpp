@@ -10,7 +10,7 @@ bool XtcTrajectoryReader::open(const std::string &file) {
     return fio != nullptr;
 }
 
-bool XtcTrajectoryReader::readOneFrame(std::shared_ptr<Frame> &frame) {
+bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     gmx::matrix box;
     gmx::gmx_bool bOK;
 

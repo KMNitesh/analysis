@@ -13,11 +13,18 @@ public:
 
     std::shared_ptr<Frame> read(const std::string &filename) override;
 
-    bool readOneFrame(std::shared_ptr<Frame> &frame) override;
-
     void close() override {};
 
+protected:
+    bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
+
 private:
+
+    static void apply_box(std::shared_ptr<Frame> &frame);
+
+    static void parse_box(std::shared_ptr<Frame> &frame, const std::vector<std::string> &field);
+
+    static void parse_coord(std::shared_ptr<Atom> &atom, const std::vector<std::string> &field);
 
     std::ifstream ifs;
 
