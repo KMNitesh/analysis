@@ -14,7 +14,7 @@ class TrajectoryInterface {
 public:
     virtual bool open(const std::string &file) = 0;
 
-    bool readOneFrame(std::shared_ptr<Frame> &frame);;
+    bool readOneFrame(std::shared_ptr<Frame> &frame);
 
     virtual void close() = 0;
 

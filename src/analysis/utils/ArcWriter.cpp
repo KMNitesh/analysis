@@ -18,9 +18,9 @@ void ArcWriter::write(const std::shared_ptr<Frame> &frame) {
         ofs << std::setw(13) << frame->a_axis
             << std::setw(12) << frame->b_axis
             << std::setw(12) << frame->c_axis
-            << std::setw(12) << 90.0
-            << std::setw(12) << 90.0
-            << std::setw(12) << 90.0 << '\n';
+            << std::setw(12) << frame->alpha
+            << std::setw(12) << frame->beta
+            << std::setw(12) << frame->gamma << '\n';
 
     for (auto &atom : frame->atom_list) {
 
