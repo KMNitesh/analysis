@@ -26,6 +26,7 @@
 #include "others/DelocalizationIndex.hpp"
 #include "others/ADCHCharge.hpp"
 #include "others/TrajConverter.hpp"
+#include "others/QMStructureComp.hpp"
 
 void printDSLDetails() {
 
@@ -158,9 +159,8 @@ int main(int argc, char *argv[]) {
                 ADCHCharge::process_interactive(
                         vm.count("fchk") ? vm["fchk"].as<std::string>() : boost::optional<std::string>{});
             },
-            [&] {
-                TrajConverter::process();
-            }
+            [&] { TrajConverter::process(); },
+            [&] { QMStructureComp::process(); }
     };
 
     auto mainMenu = [&] {
@@ -185,6 +185,7 @@ int main(int argc, char *argv[]) {
         std::cout << "(17) " << DelocalizationIndex::title() << '\n';
         std::cout << "(18) " << ADCHCharge::title() << '\n';
         std::cout << "(19) " << TrajConverter::title() << '\n';
+        std::cout << "(20) " << QMStructureComp::title() << '\n';
         return choose<int>(0, actions.size() - 1, "select : ");
     };
 
