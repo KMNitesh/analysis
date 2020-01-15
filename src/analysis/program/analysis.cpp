@@ -27,6 +27,7 @@
 #include "others/ADCHCharge.hpp"
 #include "others/TrajConverter.hpp"
 #include "others/QMStructureComp.hpp"
+#include "others/File47CoordindateFormat.hpp"
 
 void printDSLDetails() {
 
@@ -160,7 +161,8 @@ int main(int argc, char *argv[]) {
                         vm.count("fchk") ? vm["fchk"].as<std::string>() : boost::optional<std::string>{});
             },
             [&] { TrajConverter::process(); },
-            [&] { QMStructureComp::process(); }
+            [&] { QMStructureComp::process(); },
+            [&] { File47CoordindateFormat::process(); }
     };
 
     auto mainMenu = [&] {
@@ -186,6 +188,7 @@ int main(int argc, char *argv[]) {
         std::cout << "(18) " << ADCHCharge::title() << '\n';
         std::cout << "(19) " << TrajConverter::title() << '\n';
         std::cout << "(20) " << QMStructureComp::title() << '\n';
+        std::cout << "(21) " << File47CoordindateFormat::title() << '\n';
         return choose<int>(0, actions.size() - 1, "select : ");
     };
 
