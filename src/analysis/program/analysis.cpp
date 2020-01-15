@@ -28,6 +28,7 @@
 #include "others/TrajConverter.hpp"
 #include "others/QMStructureComp.hpp"
 #include "others/File47CoordindateFormat.hpp"
+#include "others/GaussianLogCoordinateFormat.hpp"
 
 void printDSLDetails() {
 
@@ -162,7 +163,8 @@ int main(int argc, char *argv[]) {
             },
             [&] { TrajConverter::process(); },
             [&] { QMStructureComp::process(); },
-            [&] { File47CoordindateFormat::process(); }
+            [&] { File47CoordindateFormat::process(); },
+            [&] { GaussianLogCoordinateFormat::process(); }
     };
 
     auto mainMenu = [&] {
@@ -189,6 +191,7 @@ int main(int argc, char *argv[]) {
         std::cout << "(19) " << TrajConverter::title() << '\n';
         std::cout << "(20) " << QMStructureComp::title() << '\n';
         std::cout << "(21) " << File47CoordindateFormat::title() << '\n';
+        std::cout << "(22) " << GaussianLogCoordinateFormat::title() << '\n';
         return choose<int>(0, actions.size() - 1, "select : ");
     };
 
