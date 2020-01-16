@@ -16,7 +16,7 @@ Trajconv::Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory) :
 
 
 void Trajconv::process(std::shared_ptr<Frame> &frame) {
-    pbc_utils->doPBC(pbc_type, num, frame);
+    pbc_utils->doPBC(pbc_type, mask, frame);
 
     for (auto &[name, w] : writers) {
         w->write(frame);
@@ -56,11 +56,6 @@ void Trajconv::inputOutputFiles(std::istream &in, std::ostream &out) {
     }
 }
 
-void Trajconv::initPBC(PBCType pbc_mode, int num) {
-    pbc_type = pbc_mode;
-    this->num = num;
-}
-
 void Trajconv::selectPBCMode() {
     std::cout << "PBC transform option\n";
     std::cout << "(0) Do nothing\n";
@@ -75,12 +70,11 @@ void Trajconv::selectPBCMode() {
                 break;
             case 1:
                 pbc_type = PBCType::OneAtom;
-                num = choose(1, std::numeric_limits<int>::max(), "Please enter the atom NO. : ");
+                Atom::select1group(mask, "Please enter atom mask : ");
                 break;
             case 2:
                 pbc_type = PBCType::OneMol;
-                num = choose(1, std::numeric_limits<int>::max(),
-                             "Please enter one atom NO. that the molecule include: ");
+                Atom::select1group(mask, "Please enter one atom mask that the molecule include: ");
                 break;
             default:
                 std::cerr << "option not found !\n";

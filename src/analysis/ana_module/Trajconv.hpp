@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <data_structure/atom.hpp>
 
 #include "ana_module/AbstractAnalysis.hpp"
 #include "utils/TrajectoryWriterFactoryImpl.hpp"
@@ -53,7 +54,7 @@ private:
     PBCType pbc_type;
 
     int step = 0;
-    int num;
+    AmberMask mask;
 
     std::shared_ptr<TrajectoryWriterFactoryInterface> factory;
     std::vector<std::pair<std::string, std::shared_ptr<TrajectoryFormatWriter>>> writers;
@@ -63,8 +64,6 @@ protected:
     void selectPBCMode();
 
     void inputOutputFiles(std::istream &in = std::cin, std::ostream &out = std::cout);
-
-    void initPBC(PBCType pbc_mode, int num);
 
 
 };
