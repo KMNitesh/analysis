@@ -104,12 +104,6 @@ namespace mpl = boost::mpl;
 
 using namespace std;
 namespace {
-    template<typename T>
-    struct boost_type {
-        typedef T type;
-
-        boost_type(boost::type<T>) {};
-    };
 
     template<typename components>
     std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> subMenu(const std::string &title) {
@@ -121,10 +115,9 @@ namespace {
         std::vector<std::function<shared_ptr<AbstractAnalysis>()>> task_vec;
         std::vector<string> item_menu;
 
-        mpl::for_each<components, boost::type<mpl::_>>([&task_vec, &item_menu](auto t) {
-            using T = typename decltype(boost_type(t))::type;
-            task_vec.emplace_back(bind(make_shared<T>));
-            item_menu.emplace_back((boost::format("(%d) %s") % task_vec.size() % T::title()).str());
+        mpl::for_each<components, boost::type<mpl::_>>([&task_vec, &item_menu] < typename T > (boost::type<T>) {
+                task_vec.emplace_back(bind(make_shared<T>));
+                item_menu.emplace_back((boost::format("(%d) %s") % task_vec.size() % T::title()).str());
         });
 
         auto menu1 = [&item_menu, &title]() {
@@ -261,12 +254,12 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
     std::vector<std::function<std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>>()>> menu_functions;
     std::vector<string> item_menu;
 
-    mpl::for_each<mainMenu, boost::type<mpl::_>>([&menu_functions, &item_menu, &menuString](auto t) {
-        using T = typename decltype(boost_type(t))::type;
-        auto title = menuString[menu_functions.size()];
-        menu_functions.emplace_back([title] { return subMenu<T>(title); });
-        item_menu.emplace_back((boost::format("(%d) %s") % menu_functions.size() % title).str());
-    });
+    mpl::for_each<mainMenu, boost::type<mpl::_>>(
+            [&menu_functions, &item_menu, &menuString] < typename T > (boost::type<T>) {
+                    auto title = menuString[menu_functions.size()];
+                    menu_functions.emplace_back([title] { return subMenu<T>(title); });
+                    item_menu.emplace_back((boost::format("(%d) %s") % menu_functions.size() % title).str());
+            });
 
     auto menu1 = [&item_menu]() {
         std::cout << "--- Trajectory Analysis ---" << std::endl;

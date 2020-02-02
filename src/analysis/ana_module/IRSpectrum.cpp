@@ -151,7 +151,7 @@ void IRSpectrum::processFirstFrame(std::shared_ptr<Frame> &frame) {
 std::tuple<double, double, double> IRSpectrum::getDipole(std::shared_ptr<Frame> &frame) {
 
     return boost::accumulate(selected_mols, std::tuple<double, double, double>{},
-                             [&frame](auto &init, auto &mol) {
+                             [&frame](const auto &init, auto &mol) {
                                  return init + mol->calc_dipole(frame);
                              });
 }

@@ -33,7 +33,7 @@ void Cluster::process(std::shared_ptr<Frame> &frame) {
         }
     }
     auto center = boost::accumulate(coord, std::tuple<double, double, double>{},
-                                    [](auto &lhs, auto &rhs) { return lhs + rhs; }) / coord.size();
+                                    [](const auto &init, const auto &rhs) { return init + rhs; }) / coord.size();
     for (auto &element : coord) {
         element -= center;
     }

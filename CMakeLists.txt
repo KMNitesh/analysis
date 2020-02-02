@@ -3,7 +3,7 @@ project(Tinker)
 
 enable_language(Fortran C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 #set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
 

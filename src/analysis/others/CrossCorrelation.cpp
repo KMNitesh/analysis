@@ -180,7 +180,7 @@ CrossCorrelation::calculateCrossCorrelation2(std::deque<std::tuple<double, doubl
     }
 
     auto[stdev_u, stdev_v] = boost::accumulate(series, std::pair<double, double>(),
-                                               [u, v](auto &p, auto &t) {
+                                               [u, v](auto &&p, auto &t) {
                                                    std::get<0>(p) += std::pow(std::get<1>(t) - u, 2);
                                                    std::get<1>(p) += std::pow(std::get<2>(t) - v, 2);
                                                    return p;
@@ -202,7 +202,7 @@ double CrossCorrelation::calCovariance(const std::deque<std::tuple<double, doubl
     auto[u, v] = calcSeriesAverage(series);
 
     auto[stdev_u, stdev_v] = boost::accumulate(series, std::pair<double, double>(),
-                                               [u, v](auto &p, auto &t) {
+                                               [u, v](auto &&p, auto &t) {
                                                    std::get<0>(p) += std::pow(std::get<1>(t) - u, 2);
                                                    std::get<1>(p) += std::pow(std::get<2>(t) - v, 2);
                                                    return p;
@@ -230,7 +230,7 @@ CrossCorrelation::calcSeriesAverage(const std::deque<std::tuple<double, double, 
             .precondition([&] { BOOST_CONTRACT_ASSERT(!series.empty()); });
 
     auto[u_sum, v_sum] = boost::accumulate(series, std::pair<double, double>(),
-                                           [](auto &p, auto &t) {
+                                           [](auto &&p, auto &t) {
                                                std::get<0>(p) += std::get<1>(t);
                                                std::get<1>(p) += std::get<2>(t);
                                                return p;
