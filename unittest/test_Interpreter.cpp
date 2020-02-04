@@ -18,7 +18,8 @@ protected:
 
     void pass() {
         it = input_string.begin();
-        ASSERT_TRUE(qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end());
+        auto result = qi::phrase_parse(it, input_string.end(), grammar, SkipperT(), ast) && it == input_string.end();
+        ASSERT_TRUE(result);
     }
 
     InterpreterGrammarT grammar;
@@ -217,7 +218,22 @@ TEST_F(InterpreterGrammarTest, FOR_Operation) {
 
     input_string = R"( for (i = 1; i < 4; ++i ) {} )";
     pass();
-    Interpreter interpreter;
+    ASSERT_NO_THROW(interpreter.execute(ast));
+    ASSERT_THAT(boost::any_cast<int>(interpreter.getVariables()["i"]), Eq(4));
+}
+
+TEST_F(InterpreterGrammarTest, FOR_BREAK_Operation) {
+
+    input_string = R"(for ( i = 1; i < 4; ++i ) { break; })";
+    pass();
+    ASSERT_NO_THROW(interpreter.execute(ast));
+    ASSERT_THAT(boost::any_cast<int>(interpreter.getVariables()["i"]), Eq(1));
+}
+
+TEST_F(InterpreterGrammarTest, FOR_CONTINUE_Operation) {
+
+    input_string = R"(for ( i = 1; i < 4; ++i ) { continue; })";
+    pass();
     ASSERT_NO_THROW(interpreter.execute(ast));
     ASSERT_THAT(boost::any_cast<int>(interpreter.getVariables()["i"]), Eq(4));
 }

@@ -5,11 +5,6 @@
 #ifndef TINKER_INTERPRETER_HPP
 #define TINKER_INTERPRETER_HPP
 
-#ifndef BOOST_SPIRIT_DEBUG_MAIN_HPP
-#define BOOST_SPIRIT_DEBUG_MAIN_HPP
-
-#endif
-
 #include <utility>
 #include <unordered_map>
 #include <boost/spirit/include/qi.hpp>
@@ -24,6 +19,8 @@
 #include <boost/any.hpp>
 #include <boost/type_index.hpp>
 #include <boost/algorithm/cxx11/one_of.hpp>
+#include <boost/spirit/repository/include/qi_kwd.hpp>
+#include <boost/spirit/repository/include/qi_distinct.hpp>
 
 #include <boost/range/combine.hpp>
 #include <functional>
@@ -40,7 +37,7 @@ namespace phoenix = boost::phoenix;
 
 struct Identifer {
     explicit Identifer(std::string name, bool &_pass) : name(std::move(name)) {
-        std::vector<std::string> keywords = {"for", "if", "else", "do", "while", "until"};
+        std::vector<std::string> keywords = {"for", "if", "else", "do", "while", "until", "break", "continue"};
         if (boost::algorithm::one_of_equal(keywords, this->name)) {
             std::cerr << "keyword (" << this->name << ") is reserved and cannot use for indentifer name\n";
             _pass = false;
@@ -175,6 +172,12 @@ struct AssignStmt {
     TYPE t;
 };
 
+struct BreakStmt {
+};
+
+struct ContinueStmt {
+};
+
 /*
  *   This the SDT for subset of C and Python
  */
@@ -203,6 +206,7 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
 
     qi::rule<Iterator, boost::any(), qi::locals<boost::any, boost::any, boost::any>, Skipper> if_else_stmt;
 
+    qi::rule<Iterator, boost::any(), Skipper> break_stmt, continue_stmt;
 
     InterpreterGrammar() : InterpreterGrammar::base_type(languague) {
         using qi::int_;
@@ -234,6 +238,7 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
         using qi::skip;
         using qi::_pass;
         using qi::eoi;
+        using boost::spirit::repository::qi::distinct;
 
         mask %= '[' >> skip(qi::ascii::space)[maskParser] >> ']';
 
@@ -248,10 +253,10 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
                 >> -(assign_expr[push_back(_a, _1)] >> *(',' >> assign_expr[push_back(_a, _1)]))
                 >> eps[_val = _a];
 
-        parenthese_expr = '(' >> assign_expr[_val = _1] >> ')' | literal[_val = _1];
+        parenthese_expr = ('(' > assign_expr[_val = _1] > ')') | literal[_val = _1];
 
         function_call_expr = parenthese_expr[_val = _1] | identifer[_val = _1]
-                >> *('(' >> function_call_arguments_expr[_val = construct<Function>(_val, _1)] >> ')');
+                >> *('(' > function_call_arguments_expr[_val = construct<Function>(_val, _1)] >> ')');
 
         suffix_unary_op_expr = function_call_expr[_val = _1]
                 >> -(lit("++")[_val = construct<ArithmeticOperation>(ArithmeticOp::PostIncrement, _val)] |
@@ -304,54 +309,62 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
 
         assign_expr =
                 logical_or_expr[_val = _1]
-                        >> -('=' >> assign_expr[_val = construct<AssignStmt>(_val, _1)] |
-                             "*=" >> assign_expr[_val = construct<AssignStmt>(
+                        >> -('=' > assign_expr[_val = construct<AssignStmt>(_val, _1)] |
+                             "*=" > assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Multiply, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "/=" >> assign_expr[_val = construct<AssignStmt>(
+                             "/=" > assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Divide, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "%=" >> assign_expr[_val = construct<AssignStmt>(
+                             "%=" > assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Mod, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "+=" >> assign_expr[_val = construct<AssignStmt>(
+                             "+=" > assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "-=" >> assign_expr[_val = construct<AssignStmt>(
+                             "-=" > assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "&=" >> assign_expr[_val = construct<AssignStmt>(
+                             "&=" > assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<BitwiseOperation>(BitwiseOp::And, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "|=" >> assign_expr[_val = construct<AssignStmt>(
+                             "|=" > assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<BitwiseOperation>(BitwiseOp::Or, _val, _1),
                                      AssignStmt::TYPE::Compound)]);
 
-        stmt %= for_stmt | if_else_stmt | while_stmt | do_while_until_stmt | assign_expr >> ';';
+        for_stmt = distinct(char_("a-zA-Z_0-9"))["for"]
+                   > '(' > assign_expr[_a = _1] > ';'
+                   > assign_expr[_b = _1] > ';'
+                   > assign_expr[_c = _1] > ')' > '{'
+                   > stmts[_d = _1] > '}'
+                   > eps[_val = construct<ForStmt>(_a, _b, _c, _d)];
+
+        if_else_stmt = distinct(char_("a-zA-Z_0-9"))["if"]
+                       > '(' > assign_expr[_a = _1] > ')' > '{' > stmts[_b = _1] > '}' >
+                       -(lit("else") > '{' > stmts[_c = _1] > '}')
+                       > eps[_val = construct<IfElseStmt>(_a, _b, _c)];
+
+        while_stmt = distinct(char_("a-zA-Z_0-9"))["while"]
+                     > '(' > assign_expr[_a = _1] > ')' > '{' > stmts[_b = _1] > '}'
+                     > eps[_val = construct<WhileStmt>(_a, _b)];
+
+        do_while_until_stmt = distinct(char_("a-zA-Z_0-9"))["do"]
+                              > '{' > stmts[_a = _1] > '}'
+                              > ((lit("until") > '(' > assign_expr[_b = _1] > ')' > ';'
+                                  > eps[_val = construct<DoUntilStmt>(_a, _b)]) |
+                                 (lit("while") > '(' > assign_expr[_b = _1] > ')' > ';'
+                                  > eps[_val = construct<DoWhileStmt>(_a, _b)]));
+
+        break_stmt = distinct(char_("a-zA-Z_0-9"))["break"] > lit(';')[_val = construct<BreakStmt>()];
+
+        continue_stmt = distinct(char_("a-zA-Z_0-9"))["continue"] > lit(';')[_val = construct<ContinueStmt>()];
+
+        stmt %= break_stmt | continue_stmt | for_stmt | if_else_stmt |
+                while_stmt | do_while_until_stmt | (assign_expr > ';');
 
         stmts = eps[_a = construct<std::vector<boost::any>>()] >> *(stmt[push_back(_a, _1)]) >> eps[_val = _a];
 
-        for_stmt = lit("for") >> "(" >> assign_expr[_a = _1] >> ';'
-                              >> assign_expr[_b = _1] >> ';'
-                              >> assign_expr[_c = _1] >> ')' >> '{'
-                              >> stmts[_d = _1] >> '}'
-                              >> eps[_val = construct<ForStmt>(_a, _b, _c, _d)];
-
-        if_else_stmt = lit("if") >> '(' >> assign_expr[_a = _1] >> ')' >> '{' >> stmts[_b = _1] >> '}' >>
-                                 -(lit("else") >> '{' >> stmts[_c = _1] >> '}')
-                                 >> eps[_val = construct<IfElseStmt>(_a, _b, _c)];
-
-        while_stmt = lit("while") >> '(' >> assign_expr[_a = _1] >> ')' >> '{' >> stmts[_b = _1] >> '}'
-                                  >> eps[_val = construct<WhileStmt>(_a, _b)];
-
-        do_while_until_stmt = lit("do") >> '{' >> stmts[_a = _1] >> '}'
-                                        >> (lit("until") >> '(' >> assign_expr[_b = _1] >> ')' >> ';'
-                                                         >> eps[_val = construct<DoUntilStmt>(_a, _b)] |
-                                            lit("while") >> '(' >> assign_expr[_b = _1] >> ')' >> ';'
-                                                         >> eps[_val = construct<DoWhileStmt>(_a, _b)]);
-
         languague %= stmts >> eoi;
-
 
         qi::on_error<qi::fail>(
                 languague,

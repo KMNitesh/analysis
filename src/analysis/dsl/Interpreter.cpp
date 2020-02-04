@@ -154,22 +154,39 @@ boost::any Interpreter::evalRightValue(boost::any ast) {
     } else if (ast.type() == typeid(ForStmt)) {
         auto for_stmt = boost::any_cast<ForStmt>(ast);
         for (evalRightValue(for_stmt.expr1); condtion(evalRightValue(for_stmt.expr2)); evalRightValue(for_stmt.expr3)) {
-            evalRightValue(for_stmt.stmt_block);
+            try { evalRightValue(for_stmt.stmt_block); }
+            catch (BreakStmt &) { break; }
+            catch (ContinueStmt &) { continue; }
         }
         return {};
     } else if (ast.type() == typeid(WhileStmt)) {
         auto while_stmt = boost::any_cast<WhileStmt>(ast);
-        while (condtion(evalRightValue(while_stmt.condition))) { evalRightValue(while_stmt.stmt_block); }
+        while (condtion(evalRightValue(while_stmt.condition))) {
+            try { evalRightValue(while_stmt.stmt_block); }
+            catch (BreakStmt &) { break; }
+            catch (ContinueStmt &) { continue; }
+        }
         return {};
     } else if (ast.type() == typeid(DoUntilStmt)) {
         auto do_until_stmt = boost::any_cast<DoUntilStmt>(ast);
-        do { evalRightValue(do_until_stmt.stmt_block); } while (!condtion(evalRightValue(do_until_stmt.condition)));
+        do {
+            try { evalRightValue(do_until_stmt.stmt_block); }
+            catch (BreakStmt &) { break; }
+            catch (ContinueStmt &) { continue; }
+        } while (!condtion(evalRightValue(do_until_stmt.condition)));
         return {};
     } else if (ast.type() == typeid(DoWhileStmt)) {
         auto do_while_stmt = boost::any_cast<DoWhileStmt>(ast);
-        do { evalRightValue(do_while_stmt.stmt_block); }
-        while (condtion(evalRightValue(do_while_stmt.condition)));
+        do {
+            try { evalRightValue(do_while_stmt.stmt_block); }
+            catch (BreakStmt &) { break; }
+            catch (ContinueStmt &) { continue; }
+        } while (condtion(evalRightValue(do_while_stmt.condition)));
         return {};
+    } else if (ast.type() == typeid(BreakStmt)) {
+        throw BreakStmt{};
+    } else if (ast.type() == typeid(ContinueStmt)) {
+        throw ContinueStmt{};
     } else if (ast.type() == typeid(Function)) {
         auto f = boost::any_cast<Function>(ast);
         return evalFunction(boost::any_cast<Identifer>(f.name).name, f.arguments, f.optional_arguments);
@@ -568,6 +585,7 @@ boost::any Interpreter::evalLogicalOperation(const LogicalOperation &op) {
             }
             break;
     }
+    return {};
 }
 
 boost::any Interpreter::evalArithmeticAdd(boost::any lhs, boost::any rhs) {
