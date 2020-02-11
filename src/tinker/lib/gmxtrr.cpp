@@ -2,10 +2,11 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
 #include "gmxtrr.h"
-#include "../src/analysis/utils/common.hpp"
-#include "../src/analysis/utils/ThrowAssert.hpp"
+
+constexpr double radian = 57.29577951308232088;
 
 using namespace std;
 
@@ -116,7 +117,7 @@ void append_frame_x_(const char *fn,int *leng, int *step, double *time,
 void translate( gmx::real xbox, gmx::real ybox, gmx::real zbox,
                 gmx::real alpha, gmx::real beta, gmx::real gamma, gmx::rvec *box){
 
-    throw_assert(xbox > 0 and ybox > 0 and zbox > 0 and alpha > 0 and beta > 0 and gamma > 0, "PBC BOX INVAILD");
+    assert(xbox > 0 and ybox > 0 and zbox > 0 and alpha > 0 and beta > 0 and gamma > 0);
 
     bool triclinic = false;
     bool orthogonal = false;

@@ -1,6 +1,6 @@
-link_libraries(libtinker_shared)
 
-include_directories(${PROJECT_BINARY_DIR}/lib)
+add_subdirectory(lib)
+link_libraries(libtinker_shared)
 
 add_executable(dynamic dynamic.f)
 add_executable(analyze analyze.f)

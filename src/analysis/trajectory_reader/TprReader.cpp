@@ -13,7 +13,17 @@ namespace gmx {
 #include "gromacs/utility/smalloc.h"
 
 #include "gromacs/fileio/tpxio.h"
-#include "gromacs/topology/mtop_util.c"
+#include "gromacs/topology/mtop_util.h"
+
+#include "gromacs/legacyheaders/types/enums.h"
+#include "gromacs/legacyheaders/types/ifunc.h"
+#include "gromacs/legacyheaders/types/inputrec.h"
+#include "gromacs/legacyheaders/types/simple.h"
+#include "gromacs/math/vectypes.h"
+#include "gromacs/topology/atoms.h"
+#include "gromacs/topology/block.h"
+#include "gromacs/topology/idef.h"
+#include "gromacs/topology/topology.h"
 
 }
 

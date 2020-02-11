@@ -14,8 +14,8 @@ void netcdf_rewind_(struct AmberNetcdf **handle) {
     nc->currentFrame = 0;
 }
 void netcdf_close_(struct AmberNetcdf **handle) {
-    if (netcdfClose(*handle)){
-        cerr << "Error close amber netcdf file"   << endl;
+    if (netcdfClose(*handle)) {
+        cerr << "Error close amber netcdf file" << endl;
         exit(1);
     }
     delete *handle;
@@ -62,12 +62,12 @@ void netcdf_append_box_x_(const char *fn, int *leng,
     fstream ncfile(filename);
     struct AmberNetcdf nc;
     if (ncfile.good()) {
-        if (netcdfOpen(&nc, filename)){
+        if (netcdfOpen(&nc, filename)) {
             std::cerr << "Error open " << filename << endl;
             exit(1);
         };
     } else {
-        if (netcdfCreate(&nc, filename, *natoms, 1)){
+        if (netcdfCreate(&nc, filename, *natoms, 1)) {
             std::cerr << "Error create " << filename << endl;
             exit(1);
         }
@@ -88,13 +88,13 @@ void netcdf_append_box_x_(const char *fn, int *leng,
     }
 
     int frame_set = nc.ncframe < 0 ? 0 : nc.ncframe;
-    if (netcdfWriteFrame(&nc, frame_set ,coord, box)){
+    if (netcdfWriteFrame(&nc, frame_set, coord, box)) {
         cerr << "Error write  amber netcdf frame " << endl;
         exit(1);
     }
 
-    if (netcdfClose(&nc)){
-        cerr << "Error close amber netcdf file"   << endl;
+    if (netcdfClose(&nc)) {
+        cerr << "Error close amber netcdf file" << endl;
         exit(1);
     }
     delete[] coord;
@@ -107,12 +107,12 @@ void netcdf_append_x_(const char *fn, int *leng, int *natoms, double *x, double 
     fstream ncfile(filename);
     struct AmberNetcdf nc;
     if (ncfile.good()) {
-        if (netcdfOpen(&nc, filename)){
+        if (netcdfOpen(&nc, filename)) {
             std::cerr << "Error open " << filename << endl;
             exit(1);
         }
     } else {
-        if (netcdfCreate(&nc, filename, *natoms, 1)){
+        if (netcdfCreate(&nc, filename, *natoms, 1)) {
             std::cerr << "Error create " << filename << endl;
             exit(1);
         }
@@ -125,13 +125,13 @@ void netcdf_append_x_(const char *fn, int *leng, int *natoms, double *x, double 
         coord[3 * i + 2] = z[i];
     }
     int frame_set = nc.ncframe < 0 ? 0 : nc.ncframe;
-    if (netcdfWriteFrame(&nc, frame_set ,coord, NULL)){
+    if (netcdfWriteFrame(&nc, frame_set, coord, NULL)) {
         cerr << "Error write  amber netcdf frame " << endl;
         exit(1);
     }
 
-    if (netcdfClose(&nc)){
-        cerr << "Error close amber netcdf file"   << endl;
+    if (netcdfClose(&nc)) {
+        cerr << "Error close amber netcdf file" << endl;
         exit(1);
     }
     delete[] coord;
