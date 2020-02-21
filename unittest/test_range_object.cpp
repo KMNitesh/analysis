@@ -45,7 +45,7 @@ TEST(range, WithNegativeIncrement) {
 }
 
 TEST(range, WithNoneResult) {
-    for (auto i : range(10, 10)) {
+    for ([[maybe_unused]] auto i : range(10, 10)) {
         FAIL();
     }
 }

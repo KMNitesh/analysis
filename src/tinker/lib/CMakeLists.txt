@@ -23,3 +23,7 @@ target_link_libraries(libtinker_shared
     PRIVATE ${GROMACS_LIBRARIES}
 )
 
+target_link_directories(libtinker_shared
+    PRIVATE ${GROMACS_LIBRARY_DIRS}
+)
+

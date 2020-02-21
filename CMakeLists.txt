@@ -5,8 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
 option(ENABLE_UNITTEST "Enable unit test cases" ON)
 option(ENABLE_NATIVE "Enable native cpu instruction support" ON)
 

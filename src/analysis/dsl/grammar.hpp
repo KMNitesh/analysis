@@ -8,6 +8,7 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include <boost/spirit/repository/include/qi_distinct.hpp>
 #include <boost/phoenix.hpp>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -44,6 +45,8 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
 
     qi::rule<Iterator, std::string(), Skipper> str_with_wildcard;
 
+    qi::rule<Iterator, Atom::Node(), Skipper> macro_rule;
+
 };
 
 
@@ -71,6 +74,7 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
     using phoenix::ref;
     using qi::on_error;
     using qi::fail;
+    using boost::spirit::repository::qi::distinct;
 
     str_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]][_val = replace_all_copy(_1, "=", "*")];
 
@@ -118,7 +122,57 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
                     | '/' >> (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)]
                     | (select_item_rule % ',')[_val = make_shared_<Atom::atom_name_nums>(_1)]);
 
-    select_rule = residue_select_rule | molecule_select_rule | nametype_select_rule;
+#define DISTINCT(x) distinct(char_("a-zA-Z_0-9") | char_("-"))[x]
+
+    static auto protein = std::vector<boost::variant<Atom::numItemType, std::string>>{
+            "ALA", "ARG", "ASN", "ASP", "CYS", "GLU", "GLN", "GLY", "HIS", "HYP", "ILE", "LLE",
+            "LEU", "LYS", "MET", "PHE", "PRO", "GLP", "SER", "THR", "TRP", "TYR", "VAL"};
+
+    static auto dna = std::vector<boost::variant<Atom::numItemType, std::string>>{
+            "DA5", "DA", "DA3", "DAN",
+            "DT5", "DT", "DT3", "DTN",
+            "DG5", "DG", "DG3", "DGN",
+            "DC5", "DC", "DC3", "DCN"};
+
+    static auto rna = std::vector<boost::variant<Atom::numItemType, std::string>>{
+            "RA5", "RA", "RA3", "RAN",
+            "RU5", "RU", "RU3", "RUN",
+            "RG5", "RG", "RG3", "RGN",
+            "RC5", "RC", "RC3", "RCN"};
+
+    macro_rule = DISTINCT("System")[_val = make_shared_<Atom::atom_element_names>(std::vector<std::string>{"*"})]
+                 | DISTINCT("Protein")[_val = make_shared_<Atom::residue_name_nums>(protein)]
+                 | DISTINCT("Protein-H")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::residue_name_nums>(protein),
+            make_shared_<Atom::Operator>(
+                    Atom::Op::NOT,
+                    make_shared_<Atom::atom_element_names>(std::vector<std::string>{"H*"})))]
+                 | DISTINCT("Backbone")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::residue_name_nums>(protein),
+            make_shared_<Atom::atom_element_names>(std::vector<std::string>{"CA", "C", "O", "N", "H"}))]
+                 | DISTINCT("MainChain")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::residue_name_nums>(protein),
+            make_shared_<Atom::atom_element_names>(std::vector<std::string>{"CA", "C", "N"}))]
+                 | DISTINCT("DNA")[_val = make_shared_<Atom::residue_name_nums>(dna)]
+                 | DISTINCT("DNA-H")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::residue_name_nums>(dna),
+            make_shared_<Atom::Operator>(
+                    Atom::Op::NOT, make_shared_<Atom::atom_element_names>(std::vector<std::string>{"H*"})))]
+                 | DISTINCT("RNA")[_val = make_shared_<Atom::residue_name_nums>(rna)]
+                 | DISTINCT("RNA-H")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::residue_name_nums>(rna),
+            make_shared_<Atom::Operator>(
+                    Atom::Op::NOT,
+                    make_shared_<Atom::atom_element_names>(std::vector<std::string>{"H*"})))]
+                 | DISTINCT("Water")[_val = make_shared_<Atom::residue_name_nums>(
+            std::vector<boost::variant<Atom::numItemType, std::string>>{"WAT", "SOL"})];
+
+    select_rule = macro_rule | residue_select_rule | molecule_select_rule | nametype_select_rule;
 
     factor = "(" >> maskParser >> ")" | select_rule;
 

@@ -418,3 +418,28 @@ TEST_F(TestGrammar, zero_step) {
     ASSERT_TRUE(result(false));
 }
 
+TEST(TestGrammarWord, System) {
+    Grammar<std::string::iterator, qi::ascii::space_type> grammar;
+    Atom::AmberMask mask;
+    std::string input_string = "System";
+    auto it = input_string.begin();
+    ASSERT_TRUE(qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask)
+                and it == input_string.end());
+    Atom::Node node = make_shared<Atom::atom_element_names>(std::vector<std::string>{"*"});
+    ASSERT_TRUE(node == mask);
+}
+
+TEST(TestGrammarWord, Protein) {
+    Grammar<std::string::iterator, qi::ascii::space_type> grammar;
+    Atom::AmberMask mask;
+    std::string input_string = "Protein";
+    auto it = input_string.begin();
+    ASSERT_TRUE(qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask)
+                and it == input_string.end());
+    Atom::Node node = make_shared<Atom::residue_name_nums>(
+            std::vector<boost::variant<Atom::numItemType, std::string>>{
+                    "ALA", "ARG", "ASN", "ASP", "CYS", "GLU", "GLN", "GLY", "HIS", "HYP", "ILE", "LLE",
+                    "LEU", "LYS", "MET", "PHE", "PRO", "GLP", "SER", "THR", "TRP", "TYR", "VAL"
+            });
+    ASSERT_TRUE(node == mask);
+}

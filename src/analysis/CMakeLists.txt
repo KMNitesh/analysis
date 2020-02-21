@@ -1,5 +1,5 @@
 
-find_package(Boost 1.72 REQUIRED COMPONENTS thread regex program_options filesystem iostreams)
+find_package(Boost 1.72 REQUIRED CONFIG COMPONENTS thread regex program_options filesystem iostreams)
 
 find_package(TBB 2020.1 REQUIRED COMPONENTS tbb tbbmalloc)
 target_compile_definitions(TBB::tbb INTERFACE TBB_SUPPRESS_DEPRECATED_MESSAGES)
@@ -35,6 +35,10 @@ target_link_libraries(base
     PUBLIC Readline::Readline
     PRIVATE NetCDF::NetCDF
     PRIVATE ${GROMACS_LIBRARIES}
+)
+
+target_link_directories(base
+    PUBLIC ${GROMACS_LIBRARY_DIRS}
 )
 
 target_compile_definitions(base
