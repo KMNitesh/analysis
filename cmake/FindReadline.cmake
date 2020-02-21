@@ -20,18 +20,18 @@
 #  Readline_LIBRARY          The readline library.
 
 find_path(Readline_ROOT_DIR
-        NAMES include/readline/readline.h
-        )
+    NAMES include/readline/readline.h
+    )
 
 find_path(Readline_INCLUDE_DIR
-        NAMES readline/readline.h
-        HINTS ${Readline_ROOT_DIR}/include
-        )
+    NAMES readline/readline.h
+    HINTS ${Readline_ROOT_DIR}/include
+    )
 
 find_library(Readline_LIBRARY
-        NAMES readline
-        HINTS ${Readline_ROOT_DIR}/lib
-        )
+    NAMES readline
+    HINTS ${Readline_ROOT_DIR}/lib
+    )
 
 if (Readline_INCLUDE_DIR AND Readline_LIBRARY AND Ncurses_LIBRARY)
     set(READLINE_FOUND TRUE)
@@ -42,14 +42,16 @@ else (Readline_INCLUDE_DIR AND Readline_LIBRARY AND Ncurses_LIBRARY)
     MARK_AS_ADVANCED(Readline_INCLUDE_DIR Readline_LIBRARY)
 endif (Readline_INCLUDE_DIR AND Readline_LIBRARY AND Ncurses_LIBRARY)
 
-if (READLINE_FOUND)
-    add_library(Readline::Readline SHARED IMPORTED)
-    set_target_properties(Readline::Readline PROPERTIES IMPORTED_LOCATION ${Readline_LIBRARY})
-    set_target_properties(Readline::Readline PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${Readline_INCLUDE_DIR})
+if (READLINE_FOUND AND NOT TARGET Readline::Readline)
+    add_library(Readline::Readline UNKNOWN IMPORTED)
+    set_target_properties(Readline::Readline PROPERTIES
+        IMPORTED_LOCATION ${Readline_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${Readline_INCLUDE_DIR}
+        )
 endif ()
 
 mark_as_advanced(
-        Readline_ROOT_DIR
-        Readline_INCLUDE_DIR
-        Readline_LIBRARY
+    Readline_ROOT_DIR
+    Readline_INCLUDE_DIR
+    Readline_LIBRARY
 )

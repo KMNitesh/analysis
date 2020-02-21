@@ -17,6 +17,22 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/sanitizers-cmake/cmake" ${C
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/findFFTW" ${CMAKE_MODULE_PATH})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
+    string(APPEND CMAKE_CXX_FLAGS_DEBUG " -Wall -Wextra")
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " -ffast-math")
+    if (ENABLE_NATIVE)
+        string(APPEND CMAKE_CXX_FLAGS_RELEASE " -march=native")
+    endif()
+endif()
+
+if (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+    string(APPEND CMAKE_Fortran_FLAGS_DEBUG " -Wall -Wextra")
+    string(APPEND CMAKE_Fortran_FLAGS_RELEASE " -ffast-math")
+    if (ENABLE_NATIVE)
+        string(APPEND CMAKE_Fortran_FLAGS_RELEASE " -march=native")
+    endif()
+endif()
+
 # gromacs
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GROMACS REQUIRED libgromacs>=5.1.4 libgromacs_mpi>=5.1.4)

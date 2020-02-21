@@ -12,7 +12,7 @@ find_package(Readline REQUIRED)
 
 find_package(nlohmann_json 3.7.3 REQUIRED)
 
-file(GLOB_RECURSE ANALYSISSRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.hpp *.cpp)
+file(GLOB_RECURSE ANALYSISSRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS *.hpp *.cpp)
 list(REMOVE_ITEM ANALYSISSRCS program/analysis.cpp)
 
 add_library(base STATIC ${ANALYSISSRCS})
@@ -33,18 +33,12 @@ target_link_libraries(base
     PUBLIC Eigen3::Eigen
     PUBLIC nlohmann_json::nlohmann_json
     PUBLIC Readline::Readline
-    PUBLIC NetCDF::NetCDF
+    PRIVATE NetCDF::NetCDF
     PRIVATE ${GROMACS_LIBRARIES}
 )
 
-target_compile_options(base
-    PUBLIC $<$<AND:$<CONFIG:Debug>,$<STREQUAL:$<CXX_COMPILER_ID>,GNU>>:-Wall -Wextra>
-    PUBLIC $<$<AND:$<CONFIG:Release>,$<STREQUAL:$<CXX_COMPILER_ID>,GNU>>:-ffast-math>
-    PUBLIC $<$<AND:$<CONFIG:Release>,$<STREQUAL:$<CXX_COMPILER_ID>,GNU>,$<BOOL:${ENABLE_NATIVE}>>:-march=native>
-)
-
 target_compile_definitions(base
-    PUBLIC $<$<AND:$<CONFIG:Release>,$<STREQUAL:$<CXX_COMPILER_ID>,GNU>>:BOOST_DISABLE_ASSERTS>
+    PRIVATE $<$<AND:$<CONFIG:Release>,$<STREQUAL:$<CXX_COMPILER_ID>,GNU>>:BOOST_DISABLE_ASSERTS>
 )
 
 add_executable(analysis program/analysis.cpp)
