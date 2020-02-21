@@ -140,8 +140,11 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
             "RG5", "RG", "RG3", "RGN",
             "RC5", "RC", "RC3", "RCN"};
 
-    macro_rule = DISTINCT("System")[_val = make_shared_<Atom::atom_element_names>(std::vector<std::string>{"*"})]
+    macro_rule = (DISTINCT("System") | DISTINCT("All"))
+                 [_val = make_shared_<Atom::atom_element_names>(std::vector<std::string>{"*"})]
+
                  | DISTINCT("Protein")[_val = make_shared_<Atom::residue_name_nums>(protein)]
+
                  | DISTINCT("Protein-H")[_val = make_shared_<Atom::Operator>(
             Atom::Op::AND,
             make_shared_<Atom::residue_name_nums>(protein),
@@ -152,23 +155,53 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
             Atom::Op::AND,
             make_shared_<Atom::residue_name_nums>(protein),
             make_shared_<Atom::atom_element_names>(std::vector<std::string>{"CA", "C", "O", "N", "H"}))]
+
                  | DISTINCT("MainChain")[_val = make_shared_<Atom::Operator>(
             Atom::Op::AND,
             make_shared_<Atom::residue_name_nums>(protein),
             make_shared_<Atom::atom_element_names>(std::vector<std::string>{"CA", "C", "N"}))]
+
+                 | DISTINCT("C-alpha")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::residue_name_nums>(protein),
+            make_shared_<Atom::atom_element_names>(std::vector<std::string>{"CA"}))]
+
+                 | DISTINCT("SideChain")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::residue_name_nums>(protein),
+            make_shared_<Atom::Operator>(
+                    Atom::Op::NOT,
+                    make_shared_<Atom::atom_element_names>(std::vector<std::string>{"CA", "C", "O", "N", "H"})))]
+
+                 | DISTINCT("SideChain-H")[_val = make_shared_<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared_<Atom::Operator>(
+                    Atom::Op::AND,
+                    make_shared_<Atom::residue_name_nums>(protein),
+                    make_shared_<Atom::Operator>(
+                            Atom::Op::NOT,
+                            make_shared_<Atom::atom_element_names>(
+                                    std::vector<std::string>{"CA", "C", "O", "N", "H"}))),
+            make_shared_<Atom::Operator>(
+                    Atom::Op::NOT, make_shared_<Atom::atom_element_names>(std::vector<std::string>{"H*"})))]
+
                  | DISTINCT("DNA")[_val = make_shared_<Atom::residue_name_nums>(dna)]
+
                  | DISTINCT("DNA-H")[_val = make_shared_<Atom::Operator>(
             Atom::Op::AND,
             make_shared_<Atom::residue_name_nums>(dna),
             make_shared_<Atom::Operator>(
                     Atom::Op::NOT, make_shared_<Atom::atom_element_names>(std::vector<std::string>{"H*"})))]
+
                  | DISTINCT("RNA")[_val = make_shared_<Atom::residue_name_nums>(rna)]
+
                  | DISTINCT("RNA-H")[_val = make_shared_<Atom::Operator>(
             Atom::Op::AND,
             make_shared_<Atom::residue_name_nums>(rna),
             make_shared_<Atom::Operator>(
                     Atom::Op::NOT,
                     make_shared_<Atom::atom_element_names>(std::vector<std::string>{"H*"})))]
+
                  | DISTINCT("Water")[_val = make_shared_<Atom::residue_name_nums>(
             std::vector<boost::variant<Atom::numItemType, std::string>>{"WAT", "SOL"})];
 
