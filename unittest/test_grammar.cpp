@@ -418,28 +418,195 @@ TEST_F(TestGrammar, zero_step) {
     ASSERT_TRUE(result(false));
 }
 
-TEST(TestGrammarWord, System) {
+class TestGrammarMacro : public Test {
+protected:
+    void parse() {
+        auto it = input_string.begin();
+        ASSERT_TRUE(qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask)
+                    and it == input_string.end());
+    }
+
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
     Atom::AmberMask mask;
-    std::string input_string = "System";
-    auto it = input_string.begin();
-    ASSERT_TRUE(qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask)
-                and it == input_string.end());
-    Atom::Node node = make_shared<Atom::atom_element_names>(std::vector<std::string>{"*"});
-    ASSERT_TRUE(node == mask);
+    std::string input_string;
+};
+
+TEST_F(TestGrammarMacro, System) {
+    input_string = "System";
+    parse();
+    Atom::Node node = make_shared<Atom::atom_name_nums>(Atom::select_ranges{"*"});
+    ASSERT_THAT(mask, Eq(node));
 }
 
-TEST(TestGrammarWord, Protein) {
-    Grammar<std::string::iterator, qi::ascii::space_type> grammar;
-    Atom::AmberMask mask;
-    std::string input_string = "Protein";
-    auto it = input_string.begin();
-    ASSERT_TRUE(qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask)
-                and it == input_string.end());
-    Atom::Node node = make_shared<Atom::residue_name_nums>(
-            std::vector<boost::variant<Atom::numItemType, std::string>>{
-                    "ALA", "ARG", "ASN", "ASP", "CYS", "GLU", "GLN", "GLY", "HIS", "HYP", "ILE", "LLE",
-                    "LEU", "LYS", "MET", "PHE", "PRO", "GLP", "SER", "THR", "TRP", "TYR", "VAL"
-            });
-    ASSERT_TRUE(node == mask);
+TEST_F(TestGrammarMacro, All) {
+    input_string = "All";
+    parse();
+    Atom::Node node = make_shared<Atom::atom_name_nums>(Atom::select_ranges{"*"});
+    ASSERT_THAT(mask, Eq(node));
 }
+
+TEST_F(TestGrammarMacro, Protein) {
+    input_string = "Protein";
+    parse();
+    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::protein);
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, Protein_H) {
+    input_string = "Protein-H";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+            make_shared<Atom::Operator>(
+                    Atom::Op::NOT,
+                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"}))
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, Backbone) {
+    input_string = "Backbone";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "O", "N", "H"})
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, MainChain) {
+    input_string = "MainChain";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N"})
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, MainChainPlusCb) {
+    input_string = "MainChain+Cb";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N","CB"})
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, MainChainPlusH) {
+    input_string = "MainChain+H";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N","H"})
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, C_alpha) {
+    input_string = "C-alpha";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA"})
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, SideChain) {
+    input_string = "SideChain";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+            make_shared<Atom::Operator>(
+                    Atom::Op::NOT,
+                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "O", "N", "H"}))
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, SideChain_H) {
+    input_string = "SideChain-H";
+    parse();
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::Operator>(
+                    Atom::Op::AND,
+                    make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
+                    make_shared<Atom::Operator>(
+                            Atom::Op::NOT,
+                            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "O", "N", "H"}))),
+            make_shared<Atom::Operator>(
+                    Atom::Op::NOT,
+                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"}))
+
+    );
+    ASSERT_THAT(mask, Eq(node));
+}
+
+
+TEST_F(TestGrammarMacro, DNA) {
+    input_string = "DNA";
+    parse();
+
+    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::dna);
+
+    ASSERT_THAT(mask, Eq(node));
+}
+
+
+TEST_F(TestGrammarMacro, DNA_H) {
+    input_string = "DNA-H";
+    parse();
+
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::dna),
+            make_shared<Atom::Operator>(Atom::Op::NOT,
+                                        make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"}))
+    );
+
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, RNA) {
+    input_string = "RNA";
+    parse();
+
+    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::rna);
+
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, RNA_H) {
+    input_string = "RNA-H";
+    parse();
+
+    Atom::Node node = make_shared<Atom::Operator>(
+            Atom::Op::AND,
+            make_shared<Atom::residue_name_nums>(decltype(grammar)::rna),
+            make_shared<Atom::Operator>(Atom::Op::NOT,
+                                        make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"})));
+
+    ASSERT_THAT(mask, Eq(node));
+}
+
+TEST_F(TestGrammarMacro, Water) {
+    input_string = "Water";
+    parse();
+
+    Atom::Node node = make_shared<Atom::residue_name_nums>(Atom::select_ranges{"WAT", "SOL"});
+
+    ASSERT_THAT(mask, Eq(node));
+}
+
+
+
