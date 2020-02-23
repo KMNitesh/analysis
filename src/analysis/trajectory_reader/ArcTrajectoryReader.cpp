@@ -101,12 +101,8 @@ void ArcTrajectoryReader::parse_coord(std::shared_ptr<Atom> &atom) {
 }
 
 void ArcTrajectoryReader::parse_box(std::shared_ptr<Frame> &frame) {
-    frame->a_axis = std::stod(field[0]);
-    frame->b_axis = std::stod(field[1]);
-    frame->c_axis = std::stod(field[2]);
-    frame->alpha = std::stod(field[3]);
-    frame->beta = std::stod(field[4]);
-    frame->gamma = std::stod(field[5]);
+    frame->box = PBCBox(std::stod(field[0]), std::stod(field[1]), std::stod(field[2]),
+                        std::stod(field[3]), std::stod(field[4]), std::stod(field[5]));
 }
 
 void ArcTrajectoryReader::readOneFrameVelocity(std::shared_ptr<Frame> &frame) {

@@ -1,7 +1,3 @@
-//
-// Created by xiamr on 3/19/19.
-//
-
 #ifndef TINKER_XTC_WRITER_HPP
 #define TINKER_XTC_WRITER_HPP
 

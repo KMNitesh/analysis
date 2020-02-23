@@ -47,9 +47,7 @@ TEST(TRRWriter, WriteFrameToFile) {
     std::string filename = "output.trr";
     auto fio = reinterpret_cast<gmx::t_fileio *>(1000);
     auto frame = make_shared<Frame>();
-    frame->a_axis = frame->b_axis = frame->c_axis = 10.000;
-    frame->a_axis_half = frame->b_axis_half = frame->c_axis_half = 5.000;
-    frame->alpha = frame->beta = frame->gamma = 90;
+    frame->box = PBCBox(10.0, 10.0, 10.0, 90.0, 90.0, 90.0);
 
     auto atom1 = make_shared<Atom>();
 

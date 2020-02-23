@@ -17,6 +17,10 @@ ClusterVolume::ClusterVolume() {
 }
 
 void ClusterVolume::processFirstFrame(std::shared_ptr<Frame> &frame) {
+    if (frame->box.get_box_type() != PBCBox::Type::orthogonal) {
+        std::cerr << "Not supported \n";
+        std::exit(1);
+    }
     boost::for_each(frame->atom_list,
                     [this](std::shared_ptr<Atom> &atom) {
                         if (Atom::is_match(atom, this->atom_mask)) this->atom_group.insert(atom);
@@ -344,11 +348,12 @@ ClusterVolume::argument_type ClusterVolume::preprocess(std::shared_ptr<Frame> &f
         ++i;
     }
 
-    double grid_x_step = frame->a_axis / grid_x;
-    double grid_y_step = frame->b_axis / grid_y;
-    double grid_z_step = frame->c_axis / grid_z;
+    auto &[a_axis, b_axis, c_axis] = frame->box.getAxis();
+    double grid_x_step = a_axis / grid_x;
+    double grid_y_step = b_axis / grid_y;
+    double grid_z_step = c_axis / grid_z;
 
-    auto total_volume = frame->a_axis * frame->b_axis * frame->c_axis; // Ang^3
+    auto total_volume = frame->volume(); // Ang^3
     return {grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume,
             current_frame_num};
 }

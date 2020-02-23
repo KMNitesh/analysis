@@ -1,6 +1,3 @@
-//
-// Created by xiamr on 3/19/19.
-//
 
 #include <string>
 #include <memory>
@@ -15,8 +12,6 @@ namespace gmx {
 #include "gromacs/utility/smalloc.h"
 
 }
-
-#include "gmxtrr.h"
 
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
@@ -48,19 +43,15 @@ void GROWriter::write(const std::shared_ptr<Frame> &frame) {
         }
 
         *os << boost::format("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n") % local_mol_index % std::to_string(local_mol_index) %
-               atom->atom_name % atom->seq % (atom->x / 10.0) % (atom->y / 10.0 ) % (atom->z / 10.0);
+               atom->atom_name % atom->seq % (atom->x / 10.0) % (atom->y / 10.0) % (atom->z / 10.0);
     }
     if (frame->enable_bound) {
-        if (frame->alpha == 90.00 and frame->beta == 90.00 and frame->gamma == 90.00) {
-            *os << boost::format("%f   %f   %f \n") % (frame->a_axis / 10.0) % (frame->b_axis / 10.0) %
-                   (frame->c_axis / 10.0);
-        } else {
-            gmx::rvec box[3];
-            translate(frame->a_axis / 10.0, frame->b_axis / 10.0, frame->c_axis / 10.0,
-                      frame->alpha, frame->beta, frame->gamma, box);
-            *os << boost::format("%f   %f   %f   %f   %f   %f    %f   %f   %f\n") %
-                   box[0][0] % box[1][1] % box[2][2] % box[0][1] % box[0][2] % box[1][2] % box[2][0] %
-                   box[2][1];
-        }
+        gmx::matrix box;
+        frame->box.getBoxParameter(box);
+        if (frame->box.get_box_type() == PBCBox::Type::orthogonal)
+            *os << boost::format("%f   %f   %f\n") % box[0][0] % box[1][1] % box[2][2];
+        else
+            *os << boost::format("%f   %f   %f   %f   %f   %f    %f   %f   %f\n")
+                   % box[0][0] % box[1][1] % box[2][2] % box[0][1] % box[0][2] % box[1][2] % box[2][0] % box[2][1];
     }
 }

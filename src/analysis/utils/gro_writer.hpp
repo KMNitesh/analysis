@@ -1,12 +1,8 @@
-#include <utility>
-
-//
-// Created by xiamr on 3/19/19.
-//
 
 #ifndef TINKER_GRO_WRITER_HPP
 #define TINKER_GRO_WRITER_HPP
 
+#include <utility>
 #include <string>
 #include <memory>
 #include <fstream>
@@ -16,7 +12,6 @@
 #include "FileImpl.hpp"
 
 class Frame;
-
 
 class GROWriter : public TrajectoryFormatWriter {
 

@@ -14,13 +14,15 @@ void ArcWriter::close() {
 void ArcWriter::write(const std::shared_ptr<Frame> &frame) {
     ofs << std::setw(6) << frame->atom_list.size() << "  " << frame->title << '\n';
     ofs << std::fixed << std::setprecision(6);
-    if (frame->enable_bound)
-        ofs << std::setw(13) << frame->a_axis
-            << std::setw(12) << frame->b_axis
-            << std::setw(12) << frame->c_axis
-            << std::setw(12) << frame->alpha
-            << std::setw(12) << frame->beta
-            << std::setw(12) << frame->gamma << '\n';
+    if (frame->enable_bound) {
+        const auto &[a_axis, b_axis, c_axis, alpha, beta, gamma] = frame->box.getBoxParameter();
+        ofs << std::setw(13) << a_axis
+            << std::setw(12) << b_axis
+            << std::setw(12) << c_axis
+            << std::setw(12) << alpha
+            << std::setw(12) << beta
+            << std::setw(12) << gamma << '\n';
+    }
 
     for (auto &atom : frame->atom_list) {
 

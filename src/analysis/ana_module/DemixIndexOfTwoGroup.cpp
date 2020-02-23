@@ -14,11 +14,12 @@ DemixIndexOfTwoGroup::DemixIndexOfTwoGroup() {
 auto
 DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame) {
 
-    auto box_index_x = int(atom->x / (frame->a_axis / grid_x)) % grid_x;
+    auto &[a_axis, b_axis, c_axis] = frame->box.getAxis();
+    auto box_index_x = int(atom->x / (a_axis / grid_x)) % grid_x;
     while (box_index_x < 0) box_index_x += grid_x;
-    auto box_index_y = int(atom->y / (frame->b_axis / grid_y)) % grid_y;
+    auto box_index_y = int(atom->y / (b_axis / grid_y)) % grid_y;
     while (box_index_y < 0) box_index_y += grid_y;
-    auto box_index_z = int(atom->z / (frame->c_axis / grid_z)) % grid_z;
+    auto box_index_z = int(atom->z / (c_axis / grid_z)) % grid_z;
     while (box_index_z < 0) box_index_z += grid_z;
 
     if (!atom->mass) {
@@ -124,6 +125,10 @@ void DemixIndexOfTwoGroup::print(std::ostream &os) {
 }
 
 void DemixIndexOfTwoGroup::processFirstFrame(std::shared_ptr<Frame> &frame) {
+    if (frame->box.get_box_type() != PBCBox::Type::orthogonal) {
+        std::cerr << "Not supported \n";
+        std::exit(1);
+    }
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
                   [this](std::shared_ptr<Atom> &atom) {
                       if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);

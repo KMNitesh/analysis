@@ -10,8 +10,7 @@
 #include <tuple>
 #include <vector>
 
-class PBCBox {
-public:
+struct PBCBoxStruct {
     double xbox, ybox, zbox;
     double alpha, beta, gamma;
 };
@@ -27,13 +26,13 @@ public:
 
     void readContent();
 
-    const PBCBox &getPBCBox() const { return box; }
+    const PBCBoxStruct &getPBCBox() const { return box; }
 
     const AtomicPosition &getAtomicPosition() const { return positions; }
 
 protected:
     std::shared_ptr<std::istream> istream;
-    PBCBox box{};
+    PBCBoxStruct box{};
     AtomicPosition positions;
 };
 

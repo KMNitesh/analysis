@@ -22,13 +22,7 @@ bool NetcdfTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
         atom->z = coord[3 * i + 2];
         i++;
     }
-    frame->a_axis = box[0];
-    frame->b_axis = box[1];
-    frame->c_axis = box[2];
-    frame->alpha = box[3];
-    frame->beta = box[4];
-    frame->gamma = box[5];
-
+    frame->box = PBCBox(box[0], box[1], box[2], box[3], box[4], box[5]);
     return true;
 }
 

@@ -31,11 +31,8 @@ protected:
 
         // Matched Frame
         frame = make_shared<Frame>();
-        frame->a_axis = 0.2484379303840836E+02;
-        frame->b_axis = 0.2484379303840836E+02;
-        frame->c_axis = 0.2484379303840836E+02;
+        frame->box = PBCBox(0.2484379303840836E+02, 0.2484379303840836E+02, 0.2484379303840836E+02, 90.0, 90.0, 90.0);
 
-        frame->alpha = frame->beta = frame->gamma = 90.0;
         atom1 = make_shared<Atom>();
         atom1->x = -0.4961401991829424E+01;
         atom1->y = -0.7444276104052326E+01;
@@ -76,14 +73,14 @@ TEST_F(DynFrameFindTest, processFrameNotMatchWithAtomPosition) {
 
 TEST_F(DynFrameFindTest, processFrameNotMatchWithBoxLength) {
     nframe = AnyFrameNumber;
-    frame->b_axis = 9.99;
+    frame->box = PBCBox(0.2484379303840836E+02, 9.99, 0.2484379303840836E+02, 90.0, 90.0, 90.0);
     process(frame);
     ASSERT_THAT(matched_frames.size(), Eq(0));
 }
 
 TEST_F(DynFrameFindTest, processFrameNotMatchWithBoxAngle) {
     nframe = AnyFrameNumber;
-    frame->beta = 89.9999;
+    frame->box = PBCBox(0.2484379303840836E+02, 0.2484379303840836E+02, 0.2484379303840836E+02, 90.0, 89.9999, 90.0);
     process(frame);
     ASSERT_THAT(matched_frames.size(), Eq(0));
 }

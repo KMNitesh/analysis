@@ -13,6 +13,7 @@
 #include <tuple>
 #include <cassert>
 #include <Eigen/Eigen>
+#include <utils/PBCBox.hpp>
 
 class Atom;
 
@@ -30,18 +31,7 @@ public:
         current_time = currentTime;
     }
 
-    double a_axis = 0.0;
-    double b_axis = 0.0;
-    double c_axis = 0.0;
-
-    double a_axis_half = 0.0;
-    double b_axis_half = 0.0;
-    double c_axis_half = 0.0;
-
-    double alpha = 0.0;
-    double beta = 0.0;
-    double gamma = 0.0;
-
+    PBCBox box;
     std::string title;
 
     std::list<std::shared_ptr<Atom>> atom_list;
@@ -61,7 +51,7 @@ public:
 
     double volume() const {
         assert(enable_bound);
-        return a_axis * b_axis * c_axis;
+        return box.volume();
     }
 
     std::tuple<double, double, double> getDipole();

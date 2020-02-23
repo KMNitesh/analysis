@@ -27,12 +27,13 @@ static bool double_equal(double v1, double v2, double eps) {
 void DynFrameFind::process(std::shared_ptr<Frame> &frame) {
     nframe++;
 
-    if (!double_equal(frame->a_axis, reader->getPBCBox().xbox, eps)) return;
-    if (!double_equal(frame->b_axis, reader->getPBCBox().ybox, eps)) return;
-    if (!double_equal(frame->c_axis, reader->getPBCBox().zbox, eps)) return;
-    if (!double_equal(frame->alpha, reader->getPBCBox().alpha, eps)) return;
-    if (!double_equal(frame->beta, reader->getPBCBox().beta, eps)) return;
-    if (!double_equal(frame->gamma, reader->getPBCBox().gamma, eps)) return;
+    const auto &[a_axis, b_axis, c_axis, alpha, beta, gamma] = frame->box.getBoxParameter();
+    if (!double_equal(a_axis, reader->getPBCBox().xbox, eps)) return;
+    if (!double_equal(b_axis, reader->getPBCBox().ybox, eps)) return;
+    if (!double_equal(c_axis, reader->getPBCBox().zbox, eps)) return;
+    if (!double_equal(alpha, reader->getPBCBox().alpha, eps)) return;
+    if (!double_equal(beta, reader->getPBCBox().beta, eps)) return;
+    if (!double_equal(gamma, reader->getPBCBox().gamma, eps)) return;
 
     std::shared_ptr<Atom> atom;
     std::tuple<double, double, double> coord;
@@ -44,7 +45,7 @@ void DynFrameFind::process(std::shared_ptr<Frame> &frame) {
     matched_frames.push_back(nframe);
 }
 
-void DynFrameFind::print(std::ostream &os) {
+void DynFrameFind::print([[maybe_unused]] std::ostream &os) {
     std::cout << title() << '\n';
 
     std::cout << "Matched frame :";

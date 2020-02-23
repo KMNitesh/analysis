@@ -1,12 +1,7 @@
-//
-// Created by xiamr on 3/19/19.
-//
 
 #include "xtc_writer.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/atom.hpp"
-#include "gmxtrr.h"
-
 #include "ThrowAssert.hpp"
 
 void XTCWriter::open(const std::string &filename) {
@@ -31,9 +26,8 @@ void XTCWriter::write(const std::shared_ptr<Frame> &frame) {
         i++;
     }
 
-    gmx::rvec box[3];
-    translate(frame->a_axis / 10.0, frame->b_axis / 10.0, frame->c_axis / 10.0,
-              frame->alpha, frame->beta, frame->gamma, box);
+    gmx::matrix box;
+    frame->box.getBoxParameter(box);
     getGromacsImpl()->write_xtc(xd, i, step, time, box, x, prec);
 
     step++;

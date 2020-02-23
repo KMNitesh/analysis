@@ -66,39 +66,36 @@ void PBCUtils::do_move_center_basedto_molecule(AmberMask &mask, std::shared_ptr<
 }
 
 void PBCUtils::do_molecule_aggregate(std::shared_ptr<Frame> &frame) const {
+
+    auto &[a_axis, b_axis, c_axis] = frame->box.getAxis();
     for (auto &mol : frame->molecule_list) {
         mol->calc_geom_center(frame);
-        double x_move = 0.0;
-        double y_move = 0.0;
-        double z_move = 0.0;
-        while (mol->center_x > frame->a_axis_half) {
-            mol->center_x -= frame->a_axis;
-            x_move -= frame->a_axis;
+        double center_x_origin = mol->center_x;
+        double center_y_origin = mol->center_y;
+        double center_z_origin = mol->center_z;
+        while (std::abs(mol->center_x) > 0.5 * a_axis) {
+            mol->center_x -= sign(a_axis, mol->center_x);
         }
-        while (mol->center_x < -frame->a_axis_half) {
-            mol->center_x += frame->a_axis;
-            x_move += frame->a_axis;
+        while (std::abs(mol->center_y) > 0.5 * b_axis) {
+            mol->center_y -= sign(b_axis, mol->center_y);
         }
-        while (mol->center_y > frame->b_axis_half) {
-            mol->center_y -= frame->b_axis;
-            y_move -= frame->b_axis;
+        while (std::abs(mol->center_z) > 0.5 * c_axis) {
+            mol->center_z -= sign(c_axis, mol->center_z);
         }
-        while (mol->center_y < -frame->b_axis_half) {
-            mol->center_y += frame->b_axis;
-            y_move += frame->b_axis;
+        if (frame->box.get_box_type() == PBCBox::Type::octahedron) {
+            if (std::abs(mol->center_x) + std::abs(mol->center_y) + std::abs(mol->center_z) > 0.75 * a_axis) {
+                mol->center_x -= sign(0.5 * a_axis, mol->center_x);
+                mol->center_y -= sign(0.5 * b_axis, mol->center_y);
+                mol->center_z -= sign(0.5 * c_axis, mol->center_z);
+            }
         }
-        while (mol->center_z > frame->c_axis_half) {
-            mol->center_z -= frame->c_axis;
-            z_move -= frame->c_axis;
-        }
-        while (mol->center_z < -frame->c_axis_half) {
-            mol->center_z += frame->c_axis;
-            z_move += frame->c_axis;
-        }
+        auto x_move = mol->center_x - center_x_origin;
+        auto y_move = mol->center_y - center_y_origin;
+        auto z_move = mol->center_z - center_z_origin;
         for (auto &atom : mol->atom_list) {
-            atom->x += x_move + frame->a_axis_half;
-            atom->y += y_move + frame->b_axis_half;
-            atom->z += z_move + frame->c_axis_half;
+            atom->x += x_move + 0.5 * a_axis;
+            atom->y += y_move + 0.5 * b_axis;
+            atom->z += z_move + 0.5 * c_axis;
         }
     }
 }

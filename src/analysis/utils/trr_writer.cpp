@@ -7,7 +7,6 @@
 #include "trr_writer.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/atom.hpp"
-#include "gmxtrr.h"
 #include "ThrowAssert.hpp"
 
 void TRRWriter::open(const std::string &filename) {
@@ -41,10 +40,8 @@ void TRRWriter::write(const std::shared_ptr<Frame> &frame) {
         }
     }
 
-    gmx::rvec box[3];
-    translate(frame->a_axis / 10.0, frame->b_axis / 10.0, frame->c_axis / 10.0,
-              frame->alpha, frame->beta, frame->gamma, box);
-
+    gmx::matrix box;
+    frame->box.getBoxParameter(box);
     getGromacsImpl()->fwrite_trn(xd, step, time, 0.0, box, frame->atom_list.size(), x.get(), v.get(), NULL);
     step++;
     time++;

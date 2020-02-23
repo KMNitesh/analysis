@@ -28,9 +28,7 @@ TEST(GROWriter, OpenCloseFileAndWriteFrame) {
 
     auto frame = make_shared<Frame>();
     frame->title = "Unit Test Case";
-    frame->a_axis = frame->b_axis = frame->c_axis = 10.000;
-    frame->a_axis_half = frame->b_axis_half = frame->c_axis_half = 5.000;
-    frame->alpha = frame->beta = frame->gamma = 90;
+    frame->box = PBCBox(10.0, 10.0, 10.0, 90.0, 90.0, 90.0);
     frame->enable_bound = true;
 
     auto atom1 = make_shared<Atom>();
@@ -68,7 +66,7 @@ TEST(GROWriter, OpenCloseFileAndWriteFrame) {
     except << "2\n";
     except << format("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n", 1, "1", "N", 1, -0.990, 0.889, 0.21);
     except << format("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n", 1, "1", "O2", 2, 0.090, 0.319, 0.41);
-    except << format("%f   %f   %f \n", 1.0, 1.0, 1.0);
+    except << format("%f   %f   %f\n", 1.0, 1.0, 1.0);
     ASSERT_THAT(mock->str(), StrEq(except.str()));
     writer.close();
 }

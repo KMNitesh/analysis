@@ -3,7 +3,12 @@
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
 #include "TrrTrajectoryReader.hpp"
-#include "utils/gmxtrr.h"
+
+namespace gmx {
+
+#include "gromacs/fileio/trnio.h"
+
+}
 
 bool TrrTrajectoryReader::open(const std::string &file) {
     fio = gmx::open_trn(file.c_str(), "r");
@@ -29,8 +34,7 @@ bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
             }
             if (trnheader.box_size) {
                 gmx::fread_htrn(fio, &trnheader, box, coord.get(), velocities.get(), nullptr);
-                translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
-                          &(frame->alpha), &(frame->beta), &(frame->gamma));
+                frame->box = PBCBox(box);
             } else {
                 if (frame->enable_bound) {
                     std::cerr << "ERROR !! trr trajectory does not  have PBC enabled" << std::endl;

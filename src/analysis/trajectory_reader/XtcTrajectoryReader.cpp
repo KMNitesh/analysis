@@ -3,7 +3,6 @@
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
 #include "XtcTrajectoryReader.hpp"
-#include "utils/gmxtrr.h"
 
 bool XtcTrajectoryReader::open(const std::string &file) {
     fio = gmx::open_xtc(file.c_str(), "r");
@@ -28,8 +27,7 @@ bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
             exit(1);
         }
         if (frame->enable_bound) {
-            translate(box, &(frame->a_axis), &(frame->b_axis), &(frame->c_axis),
-                      &(frame->alpha), &(frame->beta), &(frame->gamma));
+            frame->box = PBCBox(box);
         }
         int i = 0;
         for (auto &atom : frame->atom_list) {

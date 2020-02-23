@@ -1,13 +1,8 @@
-//
-// Created by xiamr on 3/19/19.
-//
 
 #include <iostream>
 #include "netcdf_writer.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/atom.hpp"
-#include "gmxtrr.h"
-
 
 void NetCDFWriter::open(const std::string &filename) {
     this->filename = filename;
@@ -29,13 +24,7 @@ void NetCDFWriter::write(const std::shared_ptr<Frame> &frame) {
     }
 
     double x[NC.ncatom3];
-    double box[6];
-    box[0] = frame->a_axis;
-    box[1] = frame->b_axis;
-    box[2] = frame->c_axis;
-    box[3] = frame->alpha;
-    box[4] = frame->beta;
-    box[5] = frame->gamma;
+    auto box = frame->box.getBoxParameter();
     double *p = x;
     for (auto &atom : frame->atom_list) {
         *p = atom->x;
@@ -45,7 +34,7 @@ void NetCDFWriter::write(const std::shared_ptr<Frame> &frame) {
         *p = atom->z;
         p++;
     }
-    if (getNetcdfImpl()->netcdfWriteNextFrame(&NC, x, box)) {
+    if (getNetcdfImpl()->netcdfWriteNextFrame(&NC, x, box.data())) {
         std::cerr << "Error write  mdcrd frame " << std::endl;
     }
     step++;

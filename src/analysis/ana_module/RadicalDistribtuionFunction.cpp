@@ -13,9 +13,10 @@ RadicalDistribtuionFunction::RadicalDistribtuionFunction() {
 void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 
     nframe++;
-    xbox = frame->a_axis;
-    ybox = frame->b_axis;
-    zbox = frame->c_axis;
+    const auto &axis = frame->box.getAxis();
+    xbox = axis[0];
+    ybox = axis[1];
+    zbox = axis[2];
 
     for (auto &atom_j : group1) {
         double xj = atom_j->x;
