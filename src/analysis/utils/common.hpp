@@ -674,7 +674,7 @@ auto join(Args &&... args) {
     return join_type()(std::forward<Args>(args)...);
 }
 
-// for molecule aggregation use
-typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> graph_t;
+class Atom;
+typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, std::shared_ptr<Atom>> graph_t;
 
 #endif //TINKER_COMMON_HPP

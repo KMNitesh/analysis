@@ -7,8 +7,7 @@
 
 #include "utils/std.hpp"
 #include <boost/optional.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/breadth_first_search.hpp>
+#include "utils/common.hpp"
 
 class Frame;
 
@@ -40,23 +39,11 @@ public:
      */
     int seq();
 
-    void build_graph(std::shared_ptr<Frame> &frame);
-
 private:
+
+    void build_graph(const std::shared_ptr<Frame> &frame);
+
     graph_t g;
-
-    boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
-
-    class AggregateVisitor : boost::default_bfs_visitor {
-    public:
-        explicit AggregateVisitor(std::shared_ptr<Frame> &frame) : frame(frame) {};
-
-        template<typename Edge, typename Graph>
-        void tree_edge(Edge e, const Graph &g) const;
-
-    private:
-        std::shared_ptr<Frame> &frame;
-    };
 };
 
 

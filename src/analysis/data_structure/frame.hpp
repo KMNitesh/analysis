@@ -14,7 +14,6 @@
 #include <cassert>
 #include <Eigen/Eigen>
 #include <utils/PBCBox.hpp>
-#include "utils/common.hpp"
 
 class Atom;
 
@@ -37,7 +36,6 @@ public:
 
     std::list<std::shared_ptr<Atom>> atom_list;
     std::unordered_map<int, std::shared_ptr<Atom>> atom_map;
-    std::unordered_map<boost::graph_traits<graph_t>::vertex_descriptor, std::shared_ptr<Atom>> vertex_descriptor_map;
 
     std::list<std::shared_ptr<Molecule>> molecule_list;
 
