@@ -14,21 +14,24 @@
 namespace {
     class PDBAtom {
     public:
-        PDBAtom(int atomNum, std::string atomName, double x, double y, double z)
-                : atom_num(atomNum), atom_name(std::move(atomName)), x(x), y(y), z(z) {}
+        PDBAtom(int atomNum, std::string atomName, double x, double y, double z, std::string symbol)
+                : atom_num(atomNum), atom_name(std::move(atomName)), x(x), y(y), z(z), symbol(std::move(symbol)){}
 
         int atom_num;
         std::string atom_name;
         double x, y, z;
+        std::string symbol;
     };
 
     class Residue {
     public:
-        Residue(std::string resName, int residueNum) : res_name(std::move(resName)), residue_num(residueNum) {}
+        Residue(std::string chain, std::string resName, int residueNum) : 
+            chain(std::move(chain)), res_name(std::move(resName)), residue_num(residueNum) {}
 
         std::string res_name;
         int residue_num;
         std::vector<PDBAtom> atoms;
+        std::string chain;
 
         std::optional<int> min_num;
 
@@ -43,14 +46,16 @@ namespace {
     std::ostream &operator<<(std::ostream &os, const Residue &residue) {
         int min = residue.get_min_atom();
         for (auto i : boost::irange(std::size_t(0), residue.atoms.size())) {
-            os << boost::format("ATOM  %5d %-4s %+3s  %4d    %8.3f%8.3f%8.3f  1.00  0.00\n")
+            os << boost::format("ATOM  %5d %-4s %+3s %s%4d    %8.3f%8.3f%8.3f  1.00  0.00          %2s\n")
                   % (i + min)
                   % residue.atoms[i].atom_name
                   % residue.res_name
+                  % residue.chain
                   % residue.residue_num
                   % residue.atoms[i].x
                   % residue.atoms[i].y
-                  % residue.atoms[i].z;
+                  % residue.atoms[i].z
+                  % residue.atoms[i].symbol;
         }
         return os;
     }
@@ -148,7 +153,9 @@ namespace {
                 auto atom_name = line.substr(12, 4);
                 boost::trim(atom_name);
                 auto res_name = line.substr(17, 3);
+                auto chain_name = line.substr(21,1);
                 auto res_num = std::stoi(line.substr(22, 4));
+                auto symbol = line.substr(76,2);
 
                 auto x = std::stod(line.substr(30, 8));
                 auto y = std::stod(line.substr(38, 8));
@@ -158,9 +165,9 @@ namespace {
                     || residues.back().residue_num != res_num
                     || residues.back().res_name != res_name) {
 
-                    residues.emplace_back(Residue{res_name, res_num});
+                    residues.emplace_back(Residue{chain_name, res_name, res_num});
                 }
-                residues.back().atoms.emplace_back(atom_num, atom_name, x, y, z);
+                residues.back().atoms.emplace_back(atom_num, atom_name, x, y, z, symbol);
             }
         }
         return residues;
@@ -230,7 +237,8 @@ void GQuadruplexPdb2gmx::superpose_and_move() {
     std::ifstream pdb_ifs(input_pdb);
     auto residues = readPDB(pdb_ifs);
 
-    double superpose_x[2], superpose_y[2], superpose_z[2];
+    auto total_atom_size_stub = boost::accumulate(stub, 0, [](auto result, auto &r) { return result + r.atoms.size(); });
+    double superpose_x[total_atom_size_stub], superpose_y[total_atom_size_stub], superpose_z[total_atom_size_stub];
 
     auto total_atom_size = boost::accumulate(residues, 0, [](auto result, auto &r) { return result + r.atoms.size(); });
     double x[total_atom_size], y[total_atom_size], z[total_atom_size];
@@ -239,10 +247,10 @@ void GQuadruplexPdb2gmx::superpose_and_move() {
     fill_array(x, y, z, residues);
 
     double mid[3];
-    RMSDCal::center(total_atom_size, x, y, z, mid, 2);
-    RMSDCal::center(2, superpose_x, superpose_y, superpose_z, mid, 2);
+    RMSDCal::center(total_atom_size, x, y, z, mid, total_atom_size_stub);
+    RMSDCal::center(total_atom_size_stub, superpose_x, superpose_y, superpose_z, mid, total_atom_size_stub);
 
-    RMSDCal::quatfit(2, superpose_x, superpose_y, superpose_z, total_atom_size, x, y, z, 2);
+    RMSDCal::quatfit(total_atom_size_stub, superpose_x, superpose_y, superpose_z, total_atom_size, x, y, z, total_atom_size_stub);
 
     move_position(x, y, z, residues, mid);
 

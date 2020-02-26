@@ -86,23 +86,18 @@ double RMSDCal::rmsvalue(std::shared_ptr<Frame> &frame) {
 void RMSDCal::save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame) const {
     for (const auto &element : join(atoms_for_superpose, atoms_for_rmscalc) | boost::adaptors::indexed()) {
         if (element.index() == 0) {
-            x[element.index()] = element.value()->x;
-            y[element.index()] = element.value()->y;
-            z[element.index()] = element.value()->z;
+            std::tie(x[element.index()],y[element.index()],z[element.index()]) = element.value()->getCoordinate();
         } else {
-            double xr = element.value()->x - x[0];
-            double yr = element.value()->y - y[0];
-            double zr = element.value()->z - z[0];
-            frame->image(xr, yr, zr);
-            x[element.index()] = x[0] + xr;
-            y[element.index()] = y[0] + yr;
-            z[element.index()] = z[0] + zr;
+            auto r = element.value()->getCoordinate() - std::make_tuple(x[element.index()-1],y[element.index()-1],z[element.index()-1]);
+            frame->image(r);
+            std::tie(x[element.index()],y[element.index()],z[element.index()]) 
+                = r + std::make_tuple(x[element.index()-1],y[element.index()-1],z[element.index()-1]);
         }
     }
 }
 
 void RMSDCal::center(int n1, double x1[], double y1[], double z1[],
-                     double mid[], int nfit) {
+        double mid[], int nfit) {
 
     mid[0] = mid[1] = mid[2] = 0.0;
     double norm = 0.0;
@@ -123,7 +118,7 @@ void RMSDCal::center(int n1, double x1[], double y1[], double z1[],
 }
 
 void RMSDCal::quatfit(int /* n1 */, double x1[], double y1[], double z1[],
-                      int n_rms_calc, double x2[], double y2[], double z2[], int nfit) {
+        int n_rms_calc, double x2[], double y2[], double z2[], int nfit) {
     int i;
     //    int i1, i2;
     //    double weigh;
@@ -196,7 +191,7 @@ void RMSDCal::quatfit(int /* n1 */, double x1[], double y1[], double z1[],
 }
 
 double RMSDCal::rmsfit(double x1[], double y1[], double z1[],
-                       double x2[], double y2[], double z2[], int n_rms_calc) {
+        double x2[], double y2[], double z2[], int n_rms_calc) {
 
     double fit;
     double xr, yr, zr, dist2;
@@ -217,7 +212,7 @@ double RMSDCal::rmsfit(double x1[], double y1[], double z1[],
 
 
 double RMSDCal::rms_max(double x1[], double y1[], double z1[],
-                        double x2[], double y2[], double z2[], int n_rms_calc) {
+        double x2[], double y2[], double z2[], int n_rms_calc) {
 
     double xr, yr, zr, dist2;
     double rms2 = 0.0;
@@ -333,7 +328,7 @@ void RMSDCal::jacobi(int n, double a[4][4], double d[], double v[4][4]) {
         }
     }
 
-    label_10:
+label_10:
     //    delete [] b; b = nullptr;
     //    delete [] z; z = nullptr;
 
@@ -367,12 +362,12 @@ void RMSDCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(
             frame->atom_list,
             [this](std::shared_ptr<Atom> &atom) {
-                if (Atom::is_match(atom, mask_for_superpose)) {
-                    atoms_for_superpose.insert(atom);
-                } else if (Atom::is_match(atom, mask_for_rmscalc)) {
-                    atoms_for_rmscalc.insert(atom);
-                }
-            });
+            if (Atom::is_match(atom, mask_for_superpose)) {
+                atoms_for_superpose.insert(atom);
+            } else if (Atom::is_match(atom, mask_for_rmscalc)) {
+                atoms_for_rmscalc.insert(atom);
+            }
+        });
     auto n_size = atoms_for_superpose.size() + atoms_for_rmscalc.size();
 
     x1 = new double[n_size];

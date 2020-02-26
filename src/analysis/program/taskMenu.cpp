@@ -268,9 +268,15 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
         return choose<int>(0, mpl::size<mainMenu>::value, "select : ");
     };
 
-    while (true) {
+    for(;;) {
         int num = menu1();
-        if (num == 0) return task_list;
+        if (num == 0) {
+            if (task_list->empty()){
+                std::cerr << "You do not have any task yet !!\n";
+                continue;
+            }
+            return task_list;
+        }
         auto tasks = menu_functions[num - 1]();
         task_list->splice(task_list->end(), *tasks);
     }

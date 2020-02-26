@@ -7,6 +7,8 @@
 
 #include "utils/std.hpp"
 #include <boost/optional.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/breadth_first_search.hpp>
 
 class Frame;
 
@@ -19,26 +21,42 @@ public:
 
     unsigned int sequence;
 
-    double center_x, center_y, center_z;
-
     bool bExculde = false;
-
-    void calc_geom_center(const std::shared_ptr<Frame> &frame);
 
     void calc_mass();
 
-    std::tuple<double, double, double>
-    calc_weigh_center(const std::shared_ptr<Frame> &frame, bool includeHydrogen = true);
+    std::tuple<double, double, double> calc_geom_center(const std::shared_ptr<Frame> &frame);
+
+    std::tuple<double, double, double> calc_weigh_center(const std::shared_ptr<Frame> &frame, bool includeHydrogen = true);
 
     std::tuple<double, double, double> calc_charge_center(const std::shared_ptr<Frame> &frame);
 
     std::tuple<double, double, double> calc_dipole(const std::shared_ptr<Frame> &frame);
 
+    void do_aggregate(std::shared_ptr<Frame> &frame);
     /**
      * @return return seq of first atom for temporary use
      *         else return 0
      */
     int seq();
+
+    void build_graph(std::shared_ptr<Frame> &frame);
+
+private:
+    graph_t g;
+
+    boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
+
+    class AggregateVisitor : boost::default_bfs_visitor {
+    public:
+        explicit AggregateVisitor(std::shared_ptr<Frame> &frame) : frame(frame) {};
+
+        template<typename Edge, typename Graph>
+        void tree_edge(Edge e, const Graph &g) const;
+
+    private:
+        std::shared_ptr<Frame> &frame;
+    };
 };
 
 

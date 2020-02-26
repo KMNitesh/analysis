@@ -61,9 +61,11 @@ void Trajconv::selectPBCMode() {
     std::cout << "(0) Do nothing\n";
     std::cout << "(1) Make atom i as center\n";
     std::cout << "(2) Make molecule i as center\n";
+    std::cout << "(3) Make atom group as center\n";
+    std::cout << "(4) all atoms into box\n";
 
     while (true) {
-        int option = choose(0, 2, "Choose : ");
+        int option = choose(0, 4, "Choose : ");
         switch (option) {
             case 0:
                 pbc_type = PBCType::None;
@@ -75,6 +77,13 @@ void Trajconv::selectPBCMode() {
             case 2:
                 pbc_type = PBCType::OneMol;
                 Atom::select1group(mask, "Please enter one atom mask that the molecule include: ");
+                break;
+            case 3:
+                pbc_type = PBCType::AtomGroup;
+                Atom::select1group(mask, "Please enter atom group: ");
+                break;
+            case 4:
+                pbc_type = PBCType::AllIntoBox;
                 break;
             default:
                 std::cerr << "option not found !\n";

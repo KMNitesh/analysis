@@ -6,8 +6,11 @@
 namespace gmx {
 
 #include "gromacs/math/vectypes.h"
+#include "gromacs/pbcutil/pbc.h"
 
 }
+
+class PBCUtils;
 
 class PBCBox {
 public:
@@ -47,6 +50,10 @@ private:
     std::array<double, 3> axis;
     std::array<double, 3> angles;
 
+    friend class PBCUtils;
+    mutable gmx::matrix box;
+    mutable gmx::t_pbc pbc;
+    mutable bool dirty = true;
 };
 
 

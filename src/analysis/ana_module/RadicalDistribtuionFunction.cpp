@@ -13,10 +13,7 @@ RadicalDistribtuionFunction::RadicalDistribtuionFunction() {
 void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 
     nframe++;
-    const auto &axis = frame->box.getAxis();
-    xbox = axis[0];
-    ybox = axis[1];
-    zbox = axis[2];
+    volume = frame->volume();
 
     for (auto &atom_j : group1) {
         double xj = atom_j->x;
@@ -62,7 +59,6 @@ void RadicalDistribtuionFunction::print(std::ostream &os) {
     if (numj != 0 and numk != 0) {
         double factor = (4.0 / 3.0) * M_PI * nframe;
         int pairs = numj * numk;
-        double volume = xbox * ybox * zbox;
         factor *= pairs / volume;
         for (int i = 1; i <= nbin; i++) {
             double rupper = i * width;

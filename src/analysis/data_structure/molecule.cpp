@@ -26,144 +26,92 @@ void Molecule::calc_mass() {
 }
 
 
-std::tuple<double, double, double>
-Molecule::calc_weigh_center(const std::shared_ptr<Frame> &frame, bool includeHydrogen) {
-    double xmid = 0.0;
-    double ymid = 0.0;
-    double zmid = 0.0;
-    bool first_atom = true;
-    double first_x, first_y, first_z;
+std::tuple<double, double, double> Molecule::calc_weigh_center(const std::shared_ptr<Frame> &frame, bool includeHydrogen) {
+    std::tuple<double,double,double> sum;
     double mol_mass = 0.0;
+    auto pre = atom_list.front()->getCoordinate();
     for (auto &atom : atom_list) {
         if (!includeHydrogen and which(atom) == Symbol::Hydrogen) continue;
-
-        if (first_atom) {
-            first_atom = false;
-            first_x = atom->x;
-            first_y = atom->y;
-            first_z = atom->z;
-            assert(atom->mass);
-            double weigh = atom->mass.get();
-            mol_mass += weigh;
-            xmid = first_x * weigh;
-            ymid = first_y * weigh;
-            zmid = first_z * weigh;
-
-        } else {
-            double xr = atom->x - first_x;
-            double yr = atom->y - first_y;
-            double zr = atom->z - first_z;
-            frame->image(xr, yr, zr);
-            assert(atom->mass);
-            double weigh = atom->mass.get();
-            mol_mass += weigh;
-            xmid += (first_x + xr) * weigh;
-            ymid += (first_y + yr) * weigh;
-            zmid += (first_z + zr) * weigh;
-        }
+        auto r = atom->getCoordinate() - pre;
+        frame->image(r);
+        pre += r;
+        auto weight = atom->mass.value();
+        mol_mass += weight;
+        sum += mol_mass * r;
     }
-
-    return std::make_tuple(xmid / mol_mass, ymid / mol_mass, zmid / mol_mass);
+    return sum / mol_mass;
 }
 
 std::tuple<double, double, double> Molecule::calc_charge_center(const std::shared_ptr<Frame> &frame) {
-    double xmid = 0.0;
-    double ymid = 0.0;
-    double zmid = 0.0;
-    bool first_atom = true;
-    double first_x, first_y, first_z;
-    double mol_charge = 0.0;
-    for (auto &atom : atom_list) {
-        if (first_atom) {
-            first_atom = false;
-            first_x = atom->x;
-            first_y = atom->y;
-            first_z = atom->z;
-            assert(atom->charge);
-            double charge = atom->charge.value();
-            mol_charge += charge;
-            xmid = first_x * charge;
-            ymid = first_y * charge;
-            zmid = first_z * charge;
+    std::tuple<double,double,double> sum{};
+    double mol_charge{};
+    auto pre = atom_list.front()->getCoordinate();
 
-        } else {
-            double xr = atom->x - first_x;
-            double yr = atom->y - first_y;
-            double zr = atom->z - first_z;
-            frame->image(xr, yr, zr);
-            assert(atom->charge);
-            double charge = atom->charge.value();
-            mol_charge += charge;
-            xmid += (first_x + xr) * charge;
-            ymid += (first_y + yr) * charge;
-            zmid += (first_z + zr) * charge;
-        }
+    for (auto &atom : atom_list) {
+        auto r = atom->getCoordinate() - pre;
+        frame->image(r);
+        pre += r;
+        auto charge = *(atom->charge);
+        mol_charge += charge;
+        sum += charge * pre;
     }
     if (abs(mol_charge) < 1E-3) {
-        calc_geom_center(frame);
-        return {center_x, center_y, center_z};
+        return calc_geom_center(frame);
     }
-
-    return {xmid / mol_charge, ymid / mol_charge, zmid / mol_charge};
+    return sum / mol_charge;
 }
 
 std::tuple<double, double, double> Molecule::calc_dipole(const std::shared_ptr<Frame> &frame) {
-
-    double dipole_x = 0.0;
-    double dipole_y = 0.0;
-    double dipole_z = 0.0;
-
-    bool first_atom = true;
-
-    double first_x, first_y, first_z;
-
+    std::tuple<double,double,double> dipole{};
+    auto pre = atom_list.front()->getCoordinate();
     for (auto &atom : atom_list) {
-        if (first_atom) {
-            first_x = atom->x;
-            first_y = atom->y;
-            first_z = atom->z;
-            first_atom = false;
-        } else {
-            double xr = atom->x - first_x;
-            double yr = atom->y - first_y;
-            double zr = atom->z - first_z;
-
-            frame->image(xr, yr, zr);
-
-            dipole_x += atom->charge.value() * xr;
-            dipole_y += atom->charge.value() * yr;
-            dipole_z += atom->charge.value() * zr;
-        }
+        auto r = atom->getCoordinate() - pre;
+        frame->image(r);
+        pre += r;
+        dipole += atom->charge.value() * pre;
     }
-    return {dipole_x, dipole_y, dipole_z};
+    return dipole;
 }
 
-void Molecule::calc_geom_center(const std::shared_ptr<Frame> &frame) {
-    double sum_x = 0.0;
-    double sum_y = 0.0;
-    double sum_z = 0.0;
-    bool first_atom = true;
-    double first_x, first_y, first_z;
+std::tuple<double,double,double> Molecule::calc_geom_center(const std::shared_ptr<Frame> &frame) {
+    std::tuple<double,double,double> sum{};
+    auto pre_coord = atom_list.front()->getCoordinate();
     for (auto &atom : atom_list) {
-        if (first_atom) {
-            first_atom = false;
-            sum_x = first_x = atom->x;
-            sum_y = first_y = atom->y;
-            sum_z = first_z = atom->z;
-        } else {
-            double xr = atom->x - first_x;
-            double yr = atom->y - first_y;
-            double zr = atom->z - first_z;
-            frame->image(xr, yr, zr);
-            sum_x += first_x + xr;
-            sum_y += first_y + yr;
-            sum_z += first_z + zr;
+        auto r = atom->getCoordinate() - pre_coord;
+        frame->image(r);
+        pre_coord += r;
+        sum += pre_coord;
+    }
+    return sum / atom_list.size();
+}
+
+
+void Molecule::do_aggregate(std::shared_ptr<Frame> &frame){
+    auto pre_coord = atom_list.front()->getCoordinate();
+    for (auto &atom : atom_list){
+        auto r = atom->getCoordinate() - pre_coord;
+        frame->image(r);
+        pre_coord += r;
+        std::tie(atom->x, atom->y, atom->z) = pre_coord;
+    }
+}
+
+void Molecule::build_graph(std::shared_ptr<Frame> &frame) {
+    for(auto &atom : atom_list) {
+        for ( auto i : atom->con_list) {
+            boost::add_edge(atom->vertex_descriptor, frame->atom_map[i]->vertex_descriptor, g);
         }
     }
-    auto len = atom_list.size();
-    center_x = sum_x / len;
-    center_y = sum_y / len;
-    center_z = sum_z / len;
+}
+
+template<typename Edge, typename Graph>
+void Molecule::AggregateVisitor::tree_edge(Edge e, const Graph &g) const {
+    auto &source = frame->vertex_descriptor_map[boost::source(e, g)];
+    auto &target = frame->vertex_descriptor_map[boost::source(e, g)];
+    auto r = target->getCoordinate() - source->getCoordinate();
+    frame->image(r);
+    r += source->getCoordinate();
+    std::tie(target->x, target->y, target->z) = r;
 }
 
 double min_distance(std::shared_ptr<Molecule> &mol1, std::shared_ptr<Molecule> &mol2, std::shared_ptr<Frame> &frame) {

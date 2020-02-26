@@ -309,26 +309,26 @@ struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
 
         assign_expr =
                 logical_or_expr[_val = _1]
-                        >> -('=' > assign_expr[_val = construct<AssignStmt>(_val, _1)] |
-                             "*=" > assign_expr[_val = construct<AssignStmt>(
+                        >> -('=' >> assign_expr[_val = construct<AssignStmt>(_val, _1)] |
+                             "*=" >> assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Multiply, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "/=" > assign_expr[_val = construct<AssignStmt>(
+                             "/=" >> assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Divide, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "%=" > assign_expr[_val = construct<AssignStmt>(
+                             "%=" >> assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Mod, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "+=" > assign_expr[_val = construct<AssignStmt>(
+                             "+=" >> assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Plus, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "-=" > assign_expr[_val = construct<AssignStmt>(
+                             "-=" >> assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<ArithmeticOperation>(ArithmeticOp::Subtract, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "&=" > assign_expr[_val = construct<AssignStmt>(
+                             "&=" >> assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<BitwiseOperation>(BitwiseOp::And, _val, _1),
                                      AssignStmt::TYPE::Compound)] |
-                             "|=" > assign_expr[_val = construct<AssignStmt>(
+                             "|=" >> assign_expr[_val = construct<AssignStmt>(
                                      _val, construct<BitwiseOperation>(BitwiseOp::Or, _val, _1),
                                      AssignStmt::TYPE::Compound)]);
 

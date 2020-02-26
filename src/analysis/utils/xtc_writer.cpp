@@ -17,7 +17,7 @@ void XTCWriter::open(const std::string &filename) {
 
 void XTCWriter::write(const std::shared_ptr<Frame> &frame) {
     throw_assert(xd != nullptr, "Gromacs Xtc File handle invalid");
-    gmx::rvec x[frame->atom_list.size()];
+    auto x = std::make_unique<gmx::rvec[]>(frame->atom_list.size());
     int i = 0;
     for (auto &atom : frame->atom_list) {
         x[i][0] = atom->x / 10.0;
@@ -28,7 +28,7 @@ void XTCWriter::write(const std::shared_ptr<Frame> &frame) {
 
     gmx::matrix box;
     frame->box.getBoxParameter(box);
-    getGromacsImpl()->write_xtc(xd, i, step, time, box, x, prec);
+    getGromacsImpl()->write_xtc(xd, i, step, time, box, x.get(), prec);
 
     step++;
     time++;

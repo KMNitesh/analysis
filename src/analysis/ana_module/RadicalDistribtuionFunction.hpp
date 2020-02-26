@@ -44,7 +44,7 @@ private:
     std::map<int, int> hist;
     std::map<int, double> gr, gs, integral;
 
-    double xbox, ybox, zbox;
+    double volume;
 
     Atom::AmberMask ids1;
     Atom::AmberMask ids2;

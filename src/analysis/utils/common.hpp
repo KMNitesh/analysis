@@ -15,6 +15,7 @@
 #include <boost/math/constants/constants.hpp>
 #include <boost/range/join.hpp>
 #include <boost/format.hpp>
+#include <boost/graph/adjacency_list.hpp>
 
 namespace readline {
 
@@ -547,16 +548,32 @@ auto operator+(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
                            std::get<2>(lhs) + std::get<2>(rhs));
 }
 
-template<typename T>
-auto &operator+=(std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+template<typename T, typename U>
+auto &operator+=(std::tuple<T, T, T> &lhs, const std::tuple<U, U, U> &rhs) {
     std::get<0>(lhs) += std::get<0>(rhs);
     std::get<1>(lhs) += std::get<1>(rhs);
     std::get<2>(lhs) += std::get<2>(rhs);
     return lhs;
 }
 
-template<typename T>
-auto &operator-=(std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+template<typename T, typename U>
+auto &operator+=(std::tuple<T&, T&, T&> &&lhs, const std::tuple<U, U, U> &rhs) {
+    std::get<0>(lhs) += std::get<0>(rhs);
+    std::get<1>(lhs) += std::get<1>(rhs);
+    std::get<2>(lhs) += std::get<2>(rhs);
+    return lhs;
+}
+
+template<typename T, typename U>
+auto &operator-=(std::tuple<T, T, T> &lhs, const std::tuple<U, U, U> &rhs) {
+    std::get<0>(lhs) -= std::get<0>(rhs);
+    std::get<1>(lhs) -= std::get<1>(rhs);
+    std::get<2>(lhs) -= std::get<2>(rhs);
+    return lhs;
+}
+
+template<typename T, typename U>
+auto &operator-=(std::tuple<T&, T&, T&> &&lhs, const std::tuple<U, U, U> &rhs) {
     std::get<0>(lhs) -= std::get<0>(rhs);
     std::get<1>(lhs) -= std::get<1>(rhs);
     std::get<2>(lhs) -= std::get<2>(rhs);
@@ -656,5 +673,8 @@ template<typename... Args>
 auto join(Args &&... args) {
     return join_type()(std::forward<Args>(args)...);
 }
+
+// for molecule aggregation use
+typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> graph_t;
 
 #endif //TINKER_COMMON_HPP

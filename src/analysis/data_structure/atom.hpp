@@ -14,7 +14,8 @@
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
-
+#include <boost/graph/adjacency_list.hpp>
+#include "utils/common.hpp"
 
 class Molecule;
 
@@ -22,6 +23,7 @@ class Atom {
 
     boost::optional<int> at_no;
 public:
+    boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor;
     std::size_t seq;
     std::string atom_name;
 

@@ -42,7 +42,9 @@ public:
     enum class PBCType {
         None,
         OneAtom,
-        OneMol
+        OneMol,
+        AtomGroup,
+        AllIntoBox
     };
 
     const auto &getWriters() const {
