@@ -52,6 +52,7 @@ namespace {
 
             template<typename Edge, typename Graph>
                 void tree_edge(Edge e, const Graph &g) {
+                    if(map.empty()) map[boost::vertex(0,g)] = g[boost::vertex(0,g)]->getCoordinate();
                     const auto &source_loc = map[boost::source(e, g)];
                     const auto &target = g[boost::target(e, g)];
                     auto r = target->getCoordinate() - source_loc;
@@ -79,7 +80,7 @@ std::tuple<double, double, double> Molecule::calc_weigh_center(const std::shared
             auto weight = atom->mass.value();
             mol_mass += weight;
             sum += weight * r;
-    });
+            });
     boost::breadth_first_search(g, atom_list.front()->vertex_descriptor, boost::visitor(vis));
     return sum / mol_mass;
 }
@@ -93,9 +94,9 @@ std::tuple<double, double, double> Molecule::calc_charge_center(const std::share
             auto charge = atom->charge.get();
             mol_charge += charge;
             sum += charge * r;
-    });
+            });
     boost::breadth_first_search(g, atom_list.front()->vertex_descriptor, boost::visitor(vis));
-    
+
     if (std::abs(mol_charge) < 1E-3) {
         return calc_geom_center(frame);
     }
@@ -109,7 +110,7 @@ std::tuple<double, double, double> Molecule::calc_dipole(const std::shared_ptr<F
     CenterVisitor vis(frame, [&dipole](auto &r, const std::shared_ptr<Atom> &atom){
             auto charge = atom->charge.get();
             dipole += charge * r;
-    });
+            });
     boost::breadth_first_search(g, atom_list.front()->vertex_descriptor, boost::visitor(vis));
     return dipole;
 }
