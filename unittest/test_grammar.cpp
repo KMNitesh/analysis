@@ -471,7 +471,7 @@ TEST_F(TestGrammarMacro, Backbone) {
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
             make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "O", "N", "H"})
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N"})
     );
     ASSERT_THAT(mask, Eq(node));
 }
@@ -482,7 +482,7 @@ TEST_F(TestGrammarMacro, MainChain) {
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
             make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N"})
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N". "O"})
     );
     ASSERT_THAT(mask, Eq(node));
 }
@@ -493,7 +493,7 @@ TEST_F(TestGrammarMacro, MainChainPlusCb) {
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
             make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N","CB"})
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O", "CB"})
     );
     ASSERT_THAT(mask, Eq(node));
 }
@@ -504,7 +504,7 @@ TEST_F(TestGrammarMacro, MainChainPlusH) {
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
             make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N","H"})
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O", "H"})
     );
     ASSERT_THAT(mask, Eq(node));
 }
@@ -603,7 +603,7 @@ TEST_F(TestGrammarMacro, Water) {
     input_string = "Water";
     parse();
 
-    Atom::Node node = make_shared<Atom::residue_name_nums>(Atom::select_ranges{"WAT", "SOL"});
+    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::water);
 
     ASSERT_THAT(mask, Eq(node));
 }
