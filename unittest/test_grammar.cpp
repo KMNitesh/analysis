@@ -482,7 +482,7 @@ TEST_F(TestGrammarMacro, MainChain) {
     Atom::Node node = make_shared<Atom::Operator>(
             Atom::Op::AND,
             make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N". "O"})
+            make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O"})
     );
     ASSERT_THAT(mask, Eq(node));
 }

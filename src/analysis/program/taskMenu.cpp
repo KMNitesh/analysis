@@ -47,6 +47,7 @@ namespace mpl = boost::mpl;
 
 #include "ana_module/Trajconv.hpp"
 #include "ana_module/Distance.hpp"
+#include "ana_module/Angle.hpp"
 #include "ana_module/CoordinateNumPerFrame.hpp"
 #include "ana_module/FirstCoordExchangeSearch.hpp"
 #include "ana_module/RadicalDistribtuionFunction.hpp"
@@ -164,6 +165,7 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
 
     using structurePropertyMenu = mpl::vector<
             Distance,
+            Angle,
             Distance2Plane,
             CoordinateNumPerFrame,
             RadicalDistribtuionFunction,
