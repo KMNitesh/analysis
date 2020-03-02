@@ -1,7 +1,7 @@
 //
 // Created by xiamr on 6/14/19.
 //
-#include "RMSFCal.hpp"
+#include "ana_module/RMSFCal.hpp"
 
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
@@ -94,11 +94,28 @@ void RMSFCal::print(std::ostream &os) {
     if (pdb_ostream) os << "# mask_for_first_frame_output   > " << mask_for_first_frame_output << '\n';
     os << std::string(50, '#') << '\n';
     os << boost::format("#%15s %15s\n") % "AtomSeq" % "RMSF(Ang)";
+    std::map<std::shared_ptr<Atom>, double> rms_values;
     for (const auto &element :
          join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
-        os << boost::format(" %15d %15.8f\n") % element.value()->seq % rmsvalue(element.index());
+        auto rms = rmsvalue(element.index());
+        if (output_residue_average) rms_values[element.value()] = rms;
+        os << boost::format(" %15d %15.8f\n") % element.value()->seq % rms;
     }
     os << std::string(50, '#') << '\n';
+
+    if (output_residue_average) {
+        os << "# Average for residues \n";
+        os << boost::format("#%15s %15s %15s %15s\n") % "Residue Sequence" % "Resid" % "Resname" % "RMSF(Ang)";
+        for (const auto &element : residues | boost::adaptors::indexed(1)) {
+            const auto &residue = element.value();
+            double rms = boost::accumulate(residue.atoms, 0.0,
+                                           [&rms_values](auto sum, auto &atom) { return sum + rms_values[atom]; }) /
+                         residue.atoms.size();
+            os << boost::format(" %15d %15d %15s %15.8f\n") % element.index() % residue.num % residue.name % rms;
+        }
+
+        os << std::string(50, '#') << '\n';
+    }
     os << ">>>JSON<<<\n";
     saveJson(os);
     os << "<<<JSON>>>\n";
@@ -132,6 +149,9 @@ void RMSFCal::calculate_average_structure() {
 void RMSFCal::readInfo() {
     Atom::select1group(mask_for_superpose, "Please enter atoms for superpose > ");
     Atom::select1group(mask_for_rmsfcalc, "Please enter atoms for rmsf calc > ");
+
+    output_residue_average = choose_bool("average for each residue [N] > ", Default(false));
+
     if (choose_bool("Output superposed strcuture [N] > ", Default(false))) {
         Atom::select1group(mask_for_first_frame_output, "Please enter atoms for first frame output > ");
         std::string filename = choose_file("Enter pdb filename for output > ").extension("pdb");
@@ -174,6 +194,23 @@ void RMSFCal::center(int n_for_center, double *x, double *y, double *z, double m
     }
 }
 
+void RMSFCal::add_atom_to_residue_vector(std::shared_ptr<Atom> &atom) {
+    auto num = atom->residue_num.value();
+    auto name = atom->residue_name.value();
+    if (residues.empty()) {
+        residues.emplace_back(num, std::move(name));
+        residues.back().atoms.insert(atom);
+    } else {
+        auto &last_residue = residues.back();
+        if (last_residue.num == num and last_residue.name == name) {
+            last_residue.atoms.insert(atom);
+        } else {
+            residues.emplace_back(num, std::move(name));
+            residues.back().atoms.insert(atom);
+        }
+    }
+}
+
 void RMSFCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
         auto b_for_superpose = Atom::is_match(atom, mask_for_superpose);
@@ -185,6 +222,9 @@ void RMSFCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
             atoms_for_rmsfcalc.push_back(atom);
         else if (b_for_superpose)
             atoms_for_superpose.push_back(atom);
+        if (output_residue_average and b_for_rmsf_calc) {
+            add_atom_to_residue_vector(atom);
+        }
 
         if (pdb_ostream and Atom::is_match(atom, mask_for_first_frame_output))
             atoms_for_first_frame_output.push_back(atom);
@@ -192,7 +232,8 @@ void RMSFCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
     allocate_array_memory();
 
-    mols = PBCUtils::calculate_intermol(join(atoms_for_superpose, atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc), frame);
+    mols = PBCUtils::calculate_intermol(join(atoms_for_superpose, atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc),
+                                        frame);
 }
 
 void RMSFCal::allocate_array_memory() {
