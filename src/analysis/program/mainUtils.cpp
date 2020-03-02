@@ -18,17 +18,6 @@
 #include <string>
 #include <vector>
 
-#include "utils/common.hpp"
-#include "data_structure/forcefield.hpp"
-#include "data_structure/frame.hpp"
-#include "dsl/Interpreter.hpp"
-#include "others/PrintTopolgy.hpp"
-#include "program/taskMenu.hpp"
-#include "trajectory_reader/trajectoryreader.hpp"
-#include "utils/NormalVectorSelector.hpp"
-#include "utils/ThrowAssert.hpp"
-#include "utils/TwoAtomVectorSelector.hpp"
-#include "utils/TypeUtility.hpp"
 #include "ana_module/AbstractAnalysis.hpp"
 #include "ana_module/AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 #include "ana_module/DemixIndexOfTwoGroup.hpp"
@@ -40,6 +29,17 @@
 #include "ana_module/RotAcf.hpp"
 #include "ana_module/RotAcfCutoff.hpp"
 #include "ana_module/Trajconv.hpp"
+#include "data_structure/forcefield.hpp"
+#include "data_structure/frame.hpp"
+#include "dsl/Interpreter.hpp"
+#include "others/PrintTopolgy.hpp"
+#include "program/taskMenu.hpp"
+#include "trajectory_reader/trajectoryreader.hpp"
+#include "utils/NormalVectorSelector.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/TwoAtomVectorSelector.hpp"
+#include "utils/TypeUtility.hpp"
+#include "utils/common.hpp"
 
 using namespace std;
 
@@ -780,9 +780,15 @@ void processTrajectory(const boost::program_options::options_description &desc,
     auto time_after_print = std::chrono::steady_clock::now();
     auto finish_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     auto finish_time_format = std::put_time(std::localtime(&finish_time), "%F %T");
+    auto frame_process_time = chrono_cast(time_after_process - time_before_process);
+    auto post_process_time = chrono_cast(time_after_print - time_after_process);
+    auto total_time = chrono_cast(time_after_print - time_before_process);
 
     if (outfile.is_open()) {
         outfile << "#  Finish Time  > " << finish_time_format << '\n';
+        outfile << "Frame process time = " << frame_process_time << '\n';
+        outfile << "  Postprocess time = " << post_process_time << '\n';
+        outfile << "        Total time = " << total_time << '\n';
         outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
         outfile << "#  start frame  > " << start << '\n';
@@ -795,9 +801,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
     }
 
     std::cout << "(:  Mission Complete  :)   Finish Time  >>> " << finish_time_format << " <<<\n";
-    std::cout << "Frame process time = " << chrono_cast(time_after_process - time_before_process) << '\n';
-    std::cout << "  Postprocess time = " << chrono_cast(time_after_print - time_after_process) << '\n';
-    std::cout << "        Total time = " << chrono_cast(time_after_print - time_before_process) << '\n';
+    std::cout << "Frame process time = " << frame_process_time << '\n';
+    std::cout << "  Postprocess time = " << post_process_time << '\n';
+    std::cout << "        Total time = " << total_time << '\n';
 }
 
 std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> &task_list,

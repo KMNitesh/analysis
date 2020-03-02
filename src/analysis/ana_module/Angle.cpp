@@ -96,9 +96,9 @@ void Angle::print(std::ostream &os) {
     os << "# mask2 > " << mask2 << '\n';
     os << "# type2 > " << (type2 == AxisType::MIN ? "MIN" : "MAX") << '\n';
     os << std::string(50, '#') << '\n';
-    os << std::setw(10) << "#Frame" << std::setw(15) << "Angle(degree)" << '\n';
+    os << '#' << std::setw(9) << "Frame" << std::setw(15) << "Angle(degree)" << '\n';
     os << std::setprecision(3);
-    for (const auto &ele : deque | boost::adaptors::indexed(0)) {
+    for (const auto &ele : deque | boost::adaptors::indexed(1)) {
         os << std::setw(10) << ele.index() << std::setw(15) << ele.value() << '\n';
     }
 }

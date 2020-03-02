@@ -52,9 +52,11 @@ class RMSFCal : public AbstractAnalysis {
     bool output_residue_average = false;
 
     struct Residue {
-        Residue(std::size_t num, std::string name) : num(num), name(std::move(name)) {}
+        Residue(std::size_t num, std::string name, std::shared_ptr<Molecule> mol)
+            : num(num), name(std::move(name)), mol(std::move(mol)) {}
         std::size_t num;
         std::string name;
+        std::shared_ptr<Molecule> mol;
         std::set<std::shared_ptr<Atom>> atoms;
     };
     std::vector<Residue> residues;

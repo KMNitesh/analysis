@@ -198,14 +198,14 @@ void RMSFCal::add_atom_to_residue_vector(std::shared_ptr<Atom> &atom) {
     auto num = atom->residue_num.value();
     auto name = atom->residue_name.value();
     if (residues.empty()) {
-        residues.emplace_back(num, std::move(name));
+        residues.emplace_back(num, std::move(name), atom->molecule.lock());
         residues.back().atoms.insert(atom);
     } else {
         auto &last_residue = residues.back();
-        if (last_residue.num == num and last_residue.name == name) {
+        if (last_residue.num == num and last_residue.name == name and last_residue.mol == atom->molecule.lock()) {
             last_residue.atoms.insert(atom);
         } else {
-            residues.emplace_back(num, std::move(name));
+            residues.emplace_back(num, std::move(name), atom->molecule.lock());
             residues.back().atoms.insert(atom);
         }
     }
