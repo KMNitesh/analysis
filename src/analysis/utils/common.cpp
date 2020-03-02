@@ -2,16 +2,16 @@
 // Created by xiamr on 3/17/19.
 //
 
+#include "common.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <regex>
-#include <boost/filesystem.hpp>
 #include <utility>
-#include "common.hpp"
-#include "data_structure/frame.hpp"
-#include "data_structure/forcefield.hpp"
 
+#include "data_structure/forcefield.hpp"
+#include "data_structure/frame.hpp"
 
 bool enable_read_velocity = false;
 bool enable_tbb = false;
@@ -19,7 +19,6 @@ bool enable_outfile = false;
 
 Forcefield forcefield;
 bool enable_forcefield = false;
-
 
 std::vector<std::string> split(const std::string &str, const std::string &sep) {
     std::vector<std::string> ret_;
@@ -45,7 +44,6 @@ std::vector<std::string> split_quoted(const std::string &str) {
     return ret_;
 }
 
-
 std::string input(const std::string &prompt, std::istream &in, std::ostream &out) {
     out << prompt;
     std::string inputline;
@@ -55,7 +53,6 @@ std::string input(const std::string &prompt, std::istream &in, std::ostream &out
     }
     return inputline;
 }
-
 
 std::string ext_filename(const std::string &filename) {
     auto field = split(filename, ".");
@@ -72,29 +69,16 @@ FileType getFileType(const std::string &filename) {
     boost::to_lower(extension);
 
     const std::unordered_map<std::string, FileType> mapping = {
-            {".xtc",    FileType::XTC},
-            {".trr",    FileType::TRR},
-            {".nc",     FileType::NC},
-            {".mdcrd",  FileType::NC},
-            {".xyz",    FileType::ARC},
-            {".arc",    FileType::ARC},
-            {".tpr",    FileType::TPR},
-            {".prmtop", FileType::PRMTOP},
-            {".parm7",  FileType::PRMTOP},
-            {".mol2",   FileType::MOL2},
-            {".prm",    FileType::PRM},
-            {".gro",    FileType::GRO},
-            {".traj",   FileType::TRAJ}
-    };
+        {".xtc", FileType::XTC},      {".trr", FileType::TRR},   {".nc", FileType::NC},   {".mdcrd", FileType::NC},
+        {".xyz", FileType::ARC},      {".arc", FileType::ARC},   {".tpr", FileType::TPR}, {".prmtop", FileType::PRMTOP},
+        {".parm7", FileType::PRMTOP}, {".mol2", FileType::MOL2}, {".prm", FileType::PRM}, {".gro", FileType::GRO},
+        {".traj", FileType::TRAJ},    {".json", FileType::JSON}};
 
     auto it = mapping.find(extension);
     return it != mapping.end() ? it->second : FileType::UnKnown;
-
 }
 
-
-bool choose_bool(const std::string &prompt, Default<bool> defaultValue,
-                 std::istream &in, std::ostream &out) {
+bool choose_bool(const std::string &prompt, Default<bool> defaultValue, std::istream &in, std::ostream &out) {
     while (true) {
         std::string input_line = input(prompt, in, out);
         boost::trim(input_line);
@@ -113,18 +97,18 @@ bool choose_bool(const std::string &prompt, Default<bool> defaultValue,
     }
 }
 
-std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty,
-                        std::istream &in, std::ostream &out) {
+std::string choose_file(const std::string &prompt, bool exist, std::string ext, bool can_empty, std::istream &in,
+                        std::ostream &out) {
     return choose_file(prompt, in, out).isExist(exist).extension(std::move(ext)).can_empty(can_empty);
 }
 
-double
-atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, const std::shared_ptr<Frame> &frame) {
+double atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
+                     const std::shared_ptr<Frame> &frame) {
     return std::sqrt(atom_distance2(atom1, atom2, frame));
 }
 
-double
-atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, const std::shared_ptr<Frame> &frame) {
+double atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
+                      const std::shared_ptr<Frame> &frame) {
     auto xr = atom1->x - atom2->x;
     auto yr = atom1->y - atom2->y;
     auto zr = atom1->z - atom2->z;
@@ -135,20 +119,18 @@ atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &
 boost::program_options::options_description make_program_options() {
     namespace po = boost::program_options;
     po::options_description desc("Allowed options");
-    desc.add_options()
-            ("help,h", "show this help message")
-            ("topology,p", po::value<std::string>()->value_name("topology-file-name"), "topology file")
-            ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing()
-                    ->value_name("trajectory-file-name"), "trajectory file")
-            ("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")
-            ("prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")
-            ("target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")
-            ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")
-            ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")
-            ("aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")
-            ("di", "Delocalization Index based on Multiwfn")
-            ("adch", "Atomic dipole corrected Hirshfeld population (ADCH) Charge")
-            ("fchk", po::value<std::string>()->value_name("file-name"), "Gaussian Fchk File");
+    desc.add_options()("help,h", "show this help message")(
+        "topology,p", po::value<std::string>()->value_name("topology-file-name"), "topology file")(
+        "file,f", po::value<std::vector<std::string>>()->multitoken()->composing()->value_name("trajectory-file-name"),
+        "trajectory file")("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")(
+        "prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")(
+        "target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")(
+        "script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")(
+        "script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")(
+        "aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")(
+        "di", "Delocalization Index based on Multiwfn")("adch",
+                                                        "Atomic dipole corrected Hirshfeld population (ADCH) Charge")(
+        "fchk", po::value<std::string>()->value_name("file-name"), "Gaussian Fchk File");
 
     return desc;
 }

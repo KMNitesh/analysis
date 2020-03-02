@@ -2,56 +2,54 @@
 // Created by xiamr on 6/14/19.
 //
 
+#include "mainUtils.hpp"
 
-#include <string>
 #include <tbb/tbb.h>
-#include <cmath>
-#include <memory>
-#include <list>
-#include <vector>
-#include <iostream>
-#include <chrono>
-#include <boost/filesystem.hpp>
+
 #include <boost/algorithm/cxx11/one_of.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/program_options.hpp>
-#include "others/PrintTopolgy.hpp"
-#include "taskMenu.hpp"
-#include "ana_module/AbstractAnalysis.hpp"
-#include "data_structure/forcefield.hpp"
+#include <chrono>
+#include <cmath>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "trajectory_reader/trajectoryreader.hpp"
-
-#include "mainUtils.hpp"
 #include "utils/common.hpp"
+#include "data_structure/forcefield.hpp"
 #include "data_structure/frame.hpp"
-#include "utils/TypeUtility.hpp"
-#include "ana_module/Trajconv.hpp"
-#include "ana_module/RotAcf.hpp"
-#include "ana_module/RotAcfCutoff.hpp"
 #include "dsl/Interpreter.hpp"
-#include "utils/ThrowAssert.hpp"
-#include "ana_module/DipoleVectorSelector.hpp"
+#include "others/PrintTopolgy.hpp"
+#include "program/taskMenu.hpp"
+#include "trajectory_reader/trajectoryreader.hpp"
 #include "utils/NormalVectorSelector.hpp"
+#include "utils/ThrowAssert.hpp"
 #include "utils/TwoAtomVectorSelector.hpp"
-#include "ana_module/RadicalDistribtuionFunction.hpp"
+#include "utils/TypeUtility.hpp"
+#include "ana_module/AbstractAnalysis.hpp"
+#include "ana_module/AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 #include "ana_module/DemixIndexOfTwoGroup.hpp"
-#include "ana_module/ResidenceTime.hpp"
 #include "ana_module/Diffuse.hpp"
 #include "ana_module/DiffuseCutoff.hpp"
-#include "ana_module/AngleDistributionBetweenTwoVectorWithCutoff.hpp"
+#include "ana_module/DipoleVectorSelector.hpp"
+#include "ana_module/RadicalDistribtuionFunction.hpp"
+#include "ana_module/ResidenceTime.hpp"
+#include "ana_module/RotAcf.hpp"
+#include "ana_module/RotAcfCutoff.hpp"
+#include "ana_module/Trajconv.hpp"
 
 using namespace std;
 
-void processOneFrame(shared_ptr<Frame> &frame,
-                     shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list) {
+void processOneFrame(shared_ptr<Frame> &frame, shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list) {
     for (auto &task : *task_list) {
         task->process(frame);
     }
 }
 
-void processFirstFrame(shared_ptr<Frame> &frame,
-                       shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list) {
+void processFirstFrame(shared_ptr<Frame> &frame, shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list) {
     for (auto &task : *task_list) {
         task->processFirstFrame(frame);
     }
@@ -64,9 +62,8 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
     }
 
     auto reader = make_shared<TrajectoryReader>();
-    if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
-            {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
-
+    if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>({FileType::NC, FileType::XTC, FileType::TRR},
+                                                                        getFileType(xyzfiles[0]))) {
         if (!vm.count("topology")) {
             cerr << "ERROR !! topology file not set !\n";
             exit(EXIT_FAILURE);
@@ -140,8 +137,8 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
 }
 
 void executeScript([[maybe_unused]] const boost::program_options::options_description &desc,
-                   const boost::program_options::variables_map &vm, std::vector<std::string> &xyzfiles,
-                   int argc, char *argv[]) {
+                   const boost::program_options::variables_map &vm, std::vector<std::string> &xyzfiles, int argc,
+                   char *argv[]) {
     string scriptContent;
 
     boost::optional<string> script_file;
@@ -149,12 +146,10 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         scriptContent = vm["script"].as<string>();
 
     } else if (vm.count("script-file")) {
-
         try {
             script_file = vm["script-file"].as<string>();
             ifstream f(script_file.value());
-            string content((std::istreambuf_iterator<char>(f)),
-                           std::istreambuf_iterator<char>());
+            string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
             scriptContent = content;
 
         } catch (std::exception &e) {
@@ -190,213 +185,189 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
 
     auto task_list = make_shared<list<shared_ptr<AbstractAnalysis>>>();
 
-    interpreter.registerFunction(
-                    "rdf", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<RadicalDistribtuionFunction>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))),
-                                    AutoConvert(get<3>(args.at(4))),
-                                    AutoConvert(get<3>(args.at(5))));
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function rdf (" << __FILE__ << ":" << __LINE__ << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<Atom::Node>("M")
-            .addArgument<Atom::Node>("L")
-            .addArgument<double, int>("max_dist", 10.0)
-            .addArgument<double, int>("width", 0.01)
-            .addArgument<bool>("intramol", false)
-            .addArgument<string>("out");
+    interpreter
+        .registerFunction("rdf",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<RadicalDistribtuionFunction>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
+                                                      AutoConvert(get<3>(args.at(4))), AutoConvert(get<3>(args.at(5))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function rdf (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<Atom::Node>("M")
+        .addArgument<Atom::Node>("L")
+        .addArgument<double, int>("max_dist", 10.0)
+        .addArgument<double, int>("width", 0.01)
+        .addArgument<bool>("intramol", false)
+        .addArgument<string>("out");
 
+    interpreter
+        .registerFunction("rotacf",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<RotAcf>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
+                                                      AutoConvert(get<3>(args.at(4))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function rotacf (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              cout << task->description();
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<shared_ptr<VectorSelector>>("vector")
+        .addArgument<int>("P")
+        .addArgument<double, int>("time_increment_ps", 0.1)
+        .addArgument<double, int>("max_time_grap_ps")
+        .addArgument<string>("out");
 
-    interpreter.registerFunction(
-                    "rotacf", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<RotAcf>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))),
-                                    AutoConvert(get<3>(args.at(4))));
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function rotacf (" << __FILE__ << ":" << __LINE__ << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        cout << task->description();
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<shared_ptr<VectorSelector>>("vector")
-            .addArgument<int>("P")
-            .addArgument<double, int>("time_increment_ps", 0.1)
-            .addArgument<double, int>("max_time_grap_ps")
-            .addArgument<string>("out");
+    interpreter
+        .registerFunction("rotacfCutoff",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<RotAcfCutoff>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
+                                                      AutoConvert(get<3>(args.at(4))), AutoConvert(get<3>(args.at(5))),
+                                                      AutoConvert(get<3>(args.at(6))), AutoConvert(get<3>(args.at(7))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function rotacfCutoff (" << __FILE__ << ":" << __LINE__
+                                       << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              cout << task->description();
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<Atom::Node>("M")
+        .addArgument<Atom::Node>("L")
+        .addArgument<shared_ptr<VectorSelector>>("vector")
+        .addArgument<int>("P")
+        .addArgument<double, int>("cutoff")
+        .addArgument<double, int>("time_increment_ps", 0.1)
+        .addArgument<double, int>("max_time_grap_ps")
+        .addArgument<string>("out");
 
+    interpreter
+        .registerFunction("demix",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<DemixIndexOfTwoGroup>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function demix (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<Atom::Node>("component1")
+        .addArgument<Atom::Node>("component2")
+        .addArgument<Grid>("grid")
+        .addArgument<string>("out");
 
-    interpreter.registerFunction(
-                    "rotacfCutoff", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<RotAcfCutoff>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))),
-                                    AutoConvert(get<3>(args.at(4))),
-                                    AutoConvert(get<3>(args.at(5))),
-                                    AutoConvert(get<3>(args.at(6))),
-                                    AutoConvert(get<3>(args.at(7))));
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function rotacfCutoff (" << __FILE__ << ":" << __LINE__ << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        cout << task->description();
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<Atom::Node>("M")
-            .addArgument<Atom::Node>("L")
-            .addArgument<shared_ptr<VectorSelector>>("vector")
-            .addArgument<int>("P")
-            .addArgument<double, int>("cutoff")
-            .addArgument<double, int>("time_increment_ps", 0.1)
-            .addArgument<double, int>("max_time_grap_ps")
-            .addArgument<string>("out");
+    interpreter
+        .registerFunction("residenceTime",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<ResidenceTime>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
+                                                      AutoConvert(get<3>(args.at(4))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function residenceTime (" << __FILE__ << ":" << __LINE__
+                                       << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<Atom::Node>("M")
+        .addArgument<Atom::Node>("L")
+        .addArgument<double, int>("cutoff")
+        .addArgument<double, int>("time_star")
+        .addArgument<string>("out");
 
+    interpreter
+        .registerFunction("diffuse",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<Diffuse>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function diffuse (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              cout << task->description();
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<Atom::Node>("mask")
+        .addArgument<double, int>("time_increment_ps", 0.1)
+        .addArgument<int>("total_frames")
+        .addArgument<string>("out");
 
-    interpreter.registerFunction(
-                    "demix", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<DemixIndexOfTwoGroup>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))));
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function demix (" << __FILE__ << ":" << __LINE__ << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<Atom::Node>("component1")
-            .addArgument<Atom::Node>("component2")
-            .addArgument<Grid>("grid")
-            .addArgument<string>("out");
+    interpreter
+        .registerFunction("diffuseCutoff",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<DiffuseCutoff>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
+                                                      AutoConvert(get<3>(args.at(4))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function diffuseCutoff (" << __FILE__ << ":" << __LINE__
+                                       << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              cout << task->description();
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<Atom::Node>("M")
+        .addArgument<Atom::Node>("L")
+        .addArgument<double, int>("cutoff")
+        .addArgument<double, int>("time_increment_ps", 0.1)
+        .addArgument<string>("out");
 
-    interpreter.registerFunction(
-                    "residenceTime", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<ResidenceTime>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))),
-                                    AutoConvert(get<3>(args.at(4))));
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function residenceTime (" << __FILE__ << ":" << __LINE__ << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<Atom::Node>("M")
-            .addArgument<Atom::Node>("L")
-            .addArgument<double, int>("cutoff")
-            .addArgument<double, int>("time_star")
-            .addArgument<string>("out");
-
-
-    interpreter.registerFunction(
-                    "diffuse", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<Diffuse>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))));
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function diffuse (" << __FILE__ << ":" << __LINE__ << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        cout << task->description();
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<Atom::Node>("mask")
-            .addArgument<double, int>("time_increment_ps", 0.1)
-            .addArgument<int>("total_frames")
-            .addArgument<string>("out");
-
-    interpreter.registerFunction(
-                    "diffuseCutoff", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<DiffuseCutoff>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))),
-                                    AutoConvert(get<3>(args.at(4))));
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function diffuseCutoff (" << __FILE__ << ":" << __LINE__ << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        cout << task->description();
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<Atom::Node>("M")
-            .addArgument<Atom::Node>("L")
-            .addArgument<double, int>("cutoff")
-            .addArgument<double, int>("time_increment_ps", 0.1)
-            .addArgument<string>("out");
-
-
-    interpreter.registerFunction(
-                    "crossAngleCutoff", [&task_list](auto &args) -> boost::any {
-                        auto task = make_shared<AngleDistributionBetweenTwoVectorWithCutoff>();
-                        try {
-                            task->setParameters(
-                                    AutoConvert(get<3>(args.at(0))),
-                                    AutoConvert(get<3>(args.at(1))),
-                                    AutoConvert(get<3>(args.at(2))),
-                                    AutoConvert(get<3>(args.at(3))),
-                                    AutoConvert(get<3>(args.at(4))),
-                                    AutoConvert(get<3>(args.at(5))),
-                                    AutoConvert(get<3>(args.at(6))),
-                                    AutoConvert(get<3>(args.at(7))),
-                                    AutoConvert(get<3>(args.at(8)))
-                            );
-                        } catch (std::exception &e) {
-                            cerr << e.what() << " for function crossAngleCutoff (" << __FILE__ << ":" << __LINE__
-                                 << ")\n";
-                            exit(EXIT_FAILURE);
-                        }
-                        task_list->emplace_back(task);
-                        cout << task->description();
-                        return shared_ptr<AbstractAnalysis>(task);
-                    })
-            .addArgument<Atom::Node>("M")
-            .addArgument<Atom::Node>("L")
-            .addArgument<shared_ptr<VectorSelector>>("vector1")
-            .addArgument<shared_ptr<VectorSelector>>("vector2")
-            .addArgument<double, int>("angle_max", 180)
-            .addArgument<double, int>("angle_width", 0.5)
-            .addArgument<double, int>("cutoff1", 0)
-            .addArgument<double, int>("cutoff2")
-            .addArgument<string>("out");
+    interpreter
+        .registerFunction("crossAngleCutoff",
+                          [&task_list](auto &args) -> boost::any {
+                              auto task = make_shared<AngleDistributionBetweenTwoVectorWithCutoff>();
+                              try {
+                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
+                                                      AutoConvert(get<3>(args.at(4))), AutoConvert(get<3>(args.at(5))),
+                                                      AutoConvert(get<3>(args.at(6))), AutoConvert(get<3>(args.at(7))),
+                                                      AutoConvert(get<3>(args.at(8))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function crossAngleCutoff (" << __FILE__ << ":" << __LINE__
+                                       << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              task_list->emplace_back(task);
+                              cout << task->description();
+                              return shared_ptr<AbstractAnalysis>(task);
+                          })
+        .addArgument<Atom::Node>("M")
+        .addArgument<Atom::Node>("L")
+        .addArgument<shared_ptr<VectorSelector>>("vector1")
+        .addArgument<shared_ptr<VectorSelector>>("vector2")
+        .addArgument<double, int>("angle_max", 180)
+        .addArgument<double, int>("angle_width", 0.5)
+        .addArgument<double, int>("cutoff1", 0)
+        .addArgument<double, int>("cutoff2")
+        .addArgument<string>("out");
     //  const Atom::Node &M,
     //        const Atom::Node &L,
     //        std::shared_ptr<VectorSelector> vector1,
@@ -407,34 +378,43 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
     //        double cutoff2,
     //        const std::string &outfilename
 
-    interpreter.registerFunction(
-            "DipoleVector", [](auto &args) -> boost::any {
-                auto vector = make_shared<DipoleVectorSelector>();
-                try {
-                    vector->setParameters(boost::any_cast<Atom::Node>(get<3>(args.at(0))));
-                } catch (std::exception &e) {
-                    cerr << e.what() << " for function DipoleVector (" << __FILE__ << ":" << __LINE__ << ")\n";
-                    exit(EXIT_FAILURE);
-                }
-                return shared_ptr<VectorSelector>(vector);
-            }).addArgument<Atom::Node>("mask");
+    interpreter
+        .registerFunction("DipoleVector",
+                          [](auto &args) -> boost::any {
+                              auto vector = make_shared<DipoleVectorSelector>();
+                              try {
+                                  vector->setParameters(boost::any_cast<Atom::Node>(get<3>(args.at(0))));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function DipoleVector (" << __FILE__ << ":" << __LINE__
+                                       << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                              return shared_ptr<VectorSelector>(vector);
+                          })
+        .addArgument<Atom::Node>("mask");
 
-    interpreter.registerFunction(
-            "NormalVector", [](auto &args) -> boost::any {
+    interpreter
+        .registerFunction(
+            "NormalVector",
+            [](auto &args) -> boost::any {
                 auto vector = make_shared<NormalVectorSelector>();
                 try {
-                    vector->setParameters(AutoConvert(get<3>(args.at(0))),
-                                          AutoConvert(get<3>(args.at(1))),
+                    vector->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
                                           AutoConvert(get<3>(args.at(2))));
                 } catch (std::exception &e) {
                     cerr << e.what() << " for function NormalVector (" << __FILE__ << ":" << __LINE__ << ")\n";
                     exit(EXIT_FAILURE);
                 }
                 return shared_ptr<VectorSelector>(vector);
-            }).addArgument<Atom::Node>("mask1").addArgument<Atom::Node>("mask2").addArgument<Atom::Node>("mask3");
+            })
+        .addArgument<Atom::Node>("mask1")
+        .addArgument<Atom::Node>("mask2")
+        .addArgument<Atom::Node>("mask3");
 
-    interpreter.registerFunction(
-            "TwoAtomVector", [](auto &args) -> boost::any {
+    interpreter
+        .registerFunction(
+            "TwoAtomVector",
+            [](auto &args) -> boost::any {
                 auto vector = make_shared<TwoAtomVectorSelector>();
                 try {
                     vector->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))));
@@ -443,72 +423,87 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                     exit(EXIT_FAILURE);
                 }
                 return shared_ptr<VectorSelector>(vector);
-            }).addArgument<Atom::Node>("mask1").addArgument<Atom::Node>("mask2");
+            })
+        .addArgument<Atom::Node>("mask1")
+        .addArgument<Atom::Node>("mask2");
 
-    interpreter.registerFunction(
-            "Grid", [](auto &args) -> boost::any {
-                try {
-                    return Grid{AutoConvert(get<3>(args.at(0))),
-                                AutoConvert(get<3>(args.at(1))),
-                                AutoConvert(get<3>(args.at(2)))};
-                } catch (std::exception &e) {
-                    cerr << e.what() << " for function Grid (" << __FILE__ << ":" << __LINE__ << ")\n";
-                    exit(EXIT_FAILURE);
-                }
-            }).addArgument<int>("x").addArgument<int>("y").addArgument<int>("z");
+    interpreter
+        .registerFunction("Grid",
+                          [](auto &args) -> boost::any {
+                              try {
+                                  return Grid{AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
+                                              AutoConvert(get<3>(args.at(2)))};
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function Grid (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                          })
+        .addArgument<int>("x")
+        .addArgument<int>("y")
+        .addArgument<int>("z");
 
-    interpreter.registerFunction(
-            "readTop", [&topology](auto &args) -> boost::any {
-                try {
-                    topology = AutoConvert(get<3>(args.at(0)));
-                    return topology.value();
-                } catch (std::exception &e) {
-                    cerr << e.what() << " for function readTop (" << __FILE__ << ":" << __LINE__ << ")\n";
-                    exit(EXIT_FAILURE);
-                }
-            }).addArgument<string>("file");
+    interpreter
+        .registerFunction("readTop",
+                          [&topology](auto &args) -> boost::any {
+                              try {
+                                  topology = AutoConvert(get<3>(args.at(0)));
+                                  return topology.value();
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function readTop (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                          })
+        .addArgument<string>("file");
 
-    interpreter.registerFunction(
-            "trajin", [&xyzfiles](auto &args) -> boost::any {
-                try {
-                    string xyz = AutoConvert(get<3>(args.at(0)));
-                    xyzfiles.emplace_back(xyz);
-                    return xyz;
-                } catch (std::exception &e) {
-                    cerr << e.what() << " for function trajin (" << __FILE__ << ":" << __LINE__ << ")\n";
-                    exit(EXIT_FAILURE);
-                }
-            }).addArgument<string>("file");
+    interpreter
+        .registerFunction("trajin",
+                          [&xyzfiles](auto &args) -> boost::any {
+                              try {
+                                  string xyz = AutoConvert(get<3>(args.at(0)));
+                                  xyzfiles.emplace_back(xyz);
+                                  return xyz;
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function trajin (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                          })
+        .addArgument<string>("file");
 
-    interpreter.registerFunction(
-            "readFF", [&forcefield_file](auto &args) -> boost::any {
-                try {
-                    forcefield_file = AutoConvert(get<3>(args.at(0)));
-                    return forcefield_file.value();
-                } catch (std::exception &e) {
-                    cerr << e.what() << " for function readFF (" << __FILE__ << ":" << __LINE__ << ")\n";
-                    exit(EXIT_FAILURE);
-                }
-            }).addArgument<string>("file");
+    interpreter
+        .registerFunction("readFF",
+                          [&forcefield_file](auto &args) -> boost::any {
+                              try {
+                                  forcefield_file = AutoConvert(get<3>(args.at(0)));
+                                  return forcefield_file.value();
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function readFF (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
+                          })
+        .addArgument<string>("file");
 
-    interpreter.registerFunction("go", [&](auto &args) -> boost::any {
-                int start, total_frames, step_size, nthreads;
-                try {
-                    start = AutoConvert(get<3>(args.at(0)));
-                    total_frames = AutoConvert(get<3>(args.at(1)));
-                    step_size = AutoConvert(get<3>(args.at(2)));
-                    nthreads = AutoConvert(get<3>(args.at(3)));
-                } catch (std::exception &e) {
-                    cerr << e.what() << " for function go (" << __FILE__ << ":" << __LINE__ << ")\n";
-                    exit(EXIT_FAILURE);
-                }
+    interpreter
+        .registerFunction("go",
+                          [&](auto &args) -> boost::any {
+                              int start, total_frames, step_size, nthreads;
+                              try {
+                                  start = AutoConvert(get<3>(args.at(0)));
+                                  total_frames = AutoConvert(get<3>(args.at(1)));
+                                  step_size = AutoConvert(get<3>(args.at(2)));
+                                  nthreads = AutoConvert(get<3>(args.at(3)));
+                              } catch (std::exception &e) {
+                                  cerr << e.what() << " for function go (" << __FILE__ << ":" << __LINE__ << ")\n";
+                                  exit(EXIT_FAILURE);
+                              }
 
-                return executeAnalysis(xyzfiles, argc, argv, scriptContent, script_file, topology, forcefield_file,
-                                       output_file, task_list,
-                                       start, total_frames, step_size, nthreads);
-
-            }).addArgument<int>("start", 1).addArgument<int>("end", 0)
-            .addArgument<int>("step", 1).addArgument<int>("nthreads", 0);
+                              return executeAnalysis(xyzfiles, argc, argv, scriptContent, script_file, topology,
+                                                     forcefield_file, output_file, task_list, start, total_frames,
+                                                     step_size, nthreads);
+                          })
+        .addArgument<int>("start", 1)
+        .addArgument<int>("end", 0)
+        .addArgument<int>("step", 1)
+        .addArgument<int>("nthreads", 0);
 
     interpreter.execute(ast);
 
@@ -523,8 +518,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
                     boost::optional<string> &script_file, boost::optional<string> &topology,
                     boost::optional<string> &forcefield_file, const boost::optional<string> &output_file,
                     shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list, int start, int total_frames,
-                    int step_size,
-                    int nthreads) {
+                    int step_size, int nthreads) {
     if (task_list->empty()) {
         cerr << "Empty task in the pending list, skip go function ...\n";
         return 0;
@@ -532,9 +526,9 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
 
     auto start_time = chrono::steady_clock::now();
 
-    cout << boost::format("Start Process...  start = %d, end = %s, step = %d, nthreads = %s\n")
-            % start % (total_frames == 0 ? "all" : to_string(total_frames)) % step_size
-            % (nthreads == 0 ? "automatic" : to_string(nthreads));
+    cout << boost::format("Start Process...  start = %d, end = %s, step = %d, nthreads = %s\n") % start %
+                (total_frames == 0 ? "all" : to_string(total_frames)) % step_size %
+                (nthreads == 0 ? "automatic" : to_string(nthreads));
 
     if (start <= 0) {
         cerr << "start frame cannot less than 1\n";
@@ -554,7 +548,6 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
     }
     if (enable_forcefield) {
         if (topology && getFileType(topology.value()) != FileType::ARC) {
-
         } else if (forcefield_file) {
             if (boost::filesystem::exists(forcefield_file.value())) {
                 forcefield.read(forcefield_file.value());
@@ -578,8 +571,8 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
 
     auto reader = make_shared<TrajectoryReader>();
     bool b_added_topology = true;
-    if (boost::algorithm::one_of_equal<initializer_list<FileType>>(
-            {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
+    if (boost::algorithm::one_of_equal<initializer_list<FileType>>({FileType::NC, FileType::XTC, FileType::TRR},
+                                                                   getFileType(xyzfiles[0]))) {
         b_added_topology = false;
     } else {
         if (topology) {
@@ -624,8 +617,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
     int current_frame_num = 0;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames)
-            break;
+        if (total_frames != 0 and current_frame_num > total_frames) break;
         if (current_frame_num % 10 == 0) {
             if (Clear) {
                 cout << "\r";
@@ -700,15 +692,15 @@ void processTrajectory(const boost::program_options::options_description &desc,
 
     tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
     if (enable_tbb) {
-        int threads = choose<int>(0, sysconf(_SC_NPROCESSORS_ONLN),
-                                  "How many cores to used in parallel[automatic]:", Default(0));
+        int threads =
+            choose<int>(0, sysconf(_SC_NPROCESSORS_ONLN), "How many cores to used in parallel[automatic]:", Default(0));
         tbb_init.initialize(threads == 0 ? tbb::task_scheduler_init::automatic : threads);
     }
 
     auto reader = std::make_shared<TrajectoryReader>();
     bool b_added_topology = true;
     if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
-            {FileType::NC, FileType::XTC, FileType::TRR}, getFileType(xyzfiles[0]))) {
+            {FileType::NC, FileType::XTC, FileType::TRR, FileType::JSON}, getFileType(xyzfiles[0]))) {
         b_added_topology = false;
     } else {
         if (vm.count("topology")) {
@@ -735,7 +727,6 @@ void processTrajectory(const boost::program_options::options_description &desc,
             b_added_topology = true;
         }
     }
-
 
     if (choose_bool("Do you want to use multiple files [N]:", Default(false))) {
         while (true) {
@@ -770,12 +761,12 @@ void processTrajectory(const boost::program_options::options_description &desc,
     int current_frame_num = 0;
     if (parallel_while_task) {
         task_list->remove(parallel_while_task);
-        parallel_while_task->do_parallel_while([&] {
-            return getFrame(task_list, start, step_size, total_frames, current_frame_num, reader);
-        });
+        parallel_while_task->do_parallel_while(
+            [&] { return getFrame(task_list, start, step_size, total_frames, current_frame_num, reader); });
         task_list->push_back(parallel_while_task);
     } else {
-        while (getFrame(task_list, start, step_size, total_frames, current_frame_num, reader));
+        while (getFrame(task_list, start, step_size, total_frames, current_frame_num, reader))
+            ;
     }
     auto time_after_process = std::chrono::steady_clock::now();
 
@@ -796,9 +787,10 @@ void processTrajectory(const boost::program_options::options_description &desc,
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
         outfile << "#  start frame  > " << start << '\n';
         outfile << "#  step (frame) > " << step_size << '\n';
-        outfile << "#  end   frame  > " <<
-                (total_frames == 0 ?
-                 ("all(" + std::to_string(current_frame_num) + ')') : std::to_string(total_frames)) << '\n';
+        outfile << "#  end   frame  > "
+                << (total_frames == 0 ? ("all(" + std::to_string(current_frame_num) + ')')
+                                      : std::to_string(total_frames))
+                << '\n';
         boost::iostreams::copy(ss, outfile);
     }
 
@@ -814,8 +806,7 @@ std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<Abstra
     std::shared_ptr<Frame> frame;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames)
-            break;
+        if (total_frames != 0 and current_frame_num > total_frames) break;
         std::cout << "\rProcessing Coordinate Frame  " << current_frame_num << "   " << std::flush;
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {

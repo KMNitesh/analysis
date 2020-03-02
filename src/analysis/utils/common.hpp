@@ -58,6 +58,7 @@ enum class FileType {
     PRM,
     GRO,
     TRAJ,
+    JSON,
     UnKnown
 };
 
