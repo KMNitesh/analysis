@@ -5,31 +5,29 @@
 #ifndef TINKER_FRAME_HPP
 #define TINKER_FRAME_HPP
 
-#include "config.h"
-#include <string>
-#include <list>
-#include <unordered_map>
-#include <memory>
-#include <tuple>
-#include <cassert>
 #include <Eigen/Eigen>
+#include <cassert>
+#include <list>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <unordered_map>
 #include <utils/PBCBox.hpp>
+
+#include "config.h"
+#include "utils/common.hpp"
 
 class Atom;
 
 class Molecule;
 
 class Frame : public std::enable_shared_from_this<Frame> {
-
     std::optional<float> current_time;
-public:
-    const std::optional<float> &getCurrentTime() const {
-        return current_time;
-    }
 
-    void setCurrentTime(const std::optional<float> &currentTime) {
-        current_time = currentTime;
-    }
+   public:
+    const std::optional<float> &getCurrentTime() const { return current_time; }
+
+    void setCurrentTime(const std::optional<float> &currentTime) { current_time = currentTime; }
 
     PBCBox box;
     std::string title;
@@ -55,6 +53,8 @@ public:
     }
 
     std::tuple<double, double, double> getDipole();
+
+    void build_graph();
 };
 
-#endif //TINKER_FRAME_HPP
+#endif  // TINKER_FRAME_HPP

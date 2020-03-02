@@ -2,17 +2,19 @@
 #ifndef TINKER_ANGLE_HPP
 #define TINKER_ANGLE_HPP
 
-#include "AbstractAnalysis.hpp"
-#include "data_structure/atom.hpp"
-#include "utils/std.hpp"
 #include <Eigen/Eigen>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 
+#include "AbstractAnalysis.hpp"
+#include "data_structure/atom.hpp"
+#include "utils/std.hpp"
+#include "utils/PBCUtils.hpp"
+
 class Frame;
 
 class Angle : public AbstractAnalysis {
-public:
+   public:
     Angle();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -25,17 +27,14 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Angle between two groups (mass-weighted)"; }
 
-protected:
+   protected:
+    enum class AxisType { MIN, MAX };
 
-    enum class AxisType {
-        MIN, MAX
-    };
+    Eigen::Matrix3d calculate_inertia(std::shared_ptr<Frame> &frame,
+                                      const std::vector<std::shared_ptr<Atom>> &atom_group, PBCUtils::MolPair &mols);
 
-    Eigen::Matrix3d calculate_inertia(
-            std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atom_group);
-
-    [[nodiscard]] std::tuple<double, double, double>
-    calculate_axis(AxisType type, const Eigen::Matrix3d &inertia) const;
+    [[nodiscard]] std::tuple<double, double, double> calculate_axis(AxisType type,
+                                                                    const Eigen::Matrix3d &inertia) const;
 
     AmberMask mask1, mask2;
 
@@ -43,7 +42,9 @@ protected:
 
     std::vector<std::shared_ptr<Atom>> atom_group1, atom_group2;
 
+    PBCUtils::MolPair mol1, mol2;
+
     std::deque<double> deque;
 };
 
-#endif // TINKER_ANGLE_HPP
+#endif  // TINKER_ANGLE_HPP

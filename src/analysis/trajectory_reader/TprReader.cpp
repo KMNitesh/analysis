@@ -126,6 +126,7 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
     }
 
     topology_utils::assgin_atom_to_molecule(frame);
+    frame->build_graph();
 
     if (atoms.nres != boost::numeric_cast<int>(frame->molecule_list.size())) {
         std::cout << "Residue numbers and Molecule numbers not match\n";

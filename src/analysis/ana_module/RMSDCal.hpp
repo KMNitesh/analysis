@@ -5,17 +5,18 @@
 #ifndef TINKER_RMSDCAL_HPP
 #define TINKER_RMSDCAL_HPP
 
+#include <boost/graph/breadth_first_search.hpp>
 #include <map>
 #include <unordered_set>
 
-#include "utils/common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/common.hpp"
 #include "utils/xtc_writer.hpp"
+#include "utils/PBCUtils.hpp"
 
 class RMSDCal : public AbstractAnalysis {
-public:
-
+   public:
     RMSDCal();
 
     ~RMSDCal() override;
@@ -30,22 +31,18 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "RMSD Calculator"; }
 
-    static double rmsfit(double x1[], double y1[], double z1[],
-                         double x2[], double y2[], double z2[], int n_rms_calc);
+    static double rmsfit(double x1[], double y1[], double z1[], double x2[], double y2[], double z2[], int n_rms_calc);
 
-    static double rms_max(double x1[], double y1[], double z1[],
-                          double x2[], double y2[], double z2[], int n_rms_calc);
+    static double rms_max(double x1[], double y1[], double z1[], double x2[], double y2[], double z2[], int n_rms_calc);
 
     static void jacobi(int n, double a[4][4], double d[], double v[4][4]);
 
-    static void quatfit(int n1, double x1[], double y1[], double z1[],
-                        int n_rms_calc, double x2[], double y2[], double z2[], int nfit);
+    static void quatfit(int n1, double x1[], double y1[], double z1[], int n_rms_calc, double x2[], double y2[],
+                        double z2[], int nfit);
 
-    static void center(int n1, double x1[], double y1[], double z1[],
-                       double mid[], int nfit);
+    static void center(int n1, double x1[], double y1[], double z1[], double mid[], int nfit);
 
-private:
-
+   private:
     std::deque<double> rmsds;
     bool first_frame = true;
 
@@ -54,20 +51,22 @@ private:
 
     double rmsvalue(std::shared_ptr<Frame> &frame);
 
-    void save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame) const;
+    void save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame);
 
     AmberMask mask_for_superpose;
     AmberMask mask_for_rmscalc;
+
+    PBCUtils::MolPair mols;
 
     std::set<std::shared_ptr<Atom>> atoms_for_superpose;
     std::set<std::shared_ptr<Atom>> atoms_for_rmscalc;
 
     std::unique_ptr<XTCWriter> writer;
+    void update(const std::shared_ptr<Frame> &frame);
 
     void save_superposed_frame(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
 
     void saveJson(std::ostream &os) const;
-
 };
 
-#endif //TINKER_RMSDCAL_HPP
+#endif  // TINKER_RMSDCAL_HPP

@@ -13,7 +13,8 @@
 #include "utils/common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
-#include "RMSDCal.hpp"
+#include "ana_module/RMSDCal.hpp"
+#include "utils/PBCUtils.hpp"
 
 class Frame;
 
@@ -44,6 +45,8 @@ protected:
     std::vector<std::shared_ptr<Atom>> atoms_for_superpose;
     std::vector<std::shared_ptr<Atom>> atoms_for_superpose_and_rmsfcalc;
     std::vector<std::shared_ptr<Atom>> atoms_for_rmsfcalc;
+
+    PBCUtils::MolPair mols; 
 
     AmberMask mask_for_first_frame_output;
     std::vector<std::shared_ptr<Atom>> atoms_for_first_frame_output;
@@ -76,7 +79,7 @@ protected:
 
     void append_pdb(const std::vector<std::tuple<double, double, double>> &f_coord);
 
-    std::tuple<double, double, double> save_coord(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
+    void save_coord(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
 
     std::vector<std::tuple<double, double, double>>
     append_coord(double x[], double y[], double z[], int nfit1, int nfit2, int n);

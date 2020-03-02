@@ -86,5 +86,6 @@ std::shared_ptr<Frame> Mol2Reader::read(const std::string &filename) {
         }
     }
     topology_utils::assgin_atom_to_molecule(frame);
+    frame->build_graph();
     return frame;
 }

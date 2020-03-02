@@ -21,7 +21,7 @@ void FindMinBetweenTwoGroups::process(std::shared_ptr<Frame> &frame) {
         for (std::size_t j = i + 1; j < length; j++) {
             auto &mol1 = mol_list[i];
             auto &mol2 = mol_list[j];
-            line_rest.push_back(min_distance(mol1, mol2, frame));
+            line_rest.push_back(min_distance(mol1, mol2, frame).first);
         }
     }
     results.push_back(line_rest);

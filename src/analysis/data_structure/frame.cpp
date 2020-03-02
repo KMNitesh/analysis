@@ -1,21 +1,19 @@
 //
 // Created by xiamr on 3/17/19.
 //
-#include "config.h"
 #include "frame.hpp"
-#include "utils/common.hpp"
-#include "molecule.hpp"
-#include "data_structure/atom.hpp"
 
+#include "config.h"
+#include "data_structure/atom.hpp"
+#include "molecule.hpp"
+#include "utils/common.hpp"
 
 void Frame::image(double &xr, double &yr, double &zr) const {
     if (!enable_bound) return;
     box.image(xr, yr, zr);
 }
 
-void Frame::image(std::array<double, 3> &r) const {
-    image(r[0], r[1], r[2]);
-}
+void Frame::image(std::array<double, 3> &r) const { image(r[0], r[1], r[2]); }
 
 void Frame::image(std::tuple<double, double, double> &r) const {
     auto &[xr, yr, zr] = r;
@@ -31,4 +29,6 @@ std::tuple<double, double, double> Frame::getDipole() {
     return system_dipole;
 }
 
-
+void Frame::build_graph() {
+    for (auto &mol : molecule_list) mol->build_graph(shared_from_this());
+}

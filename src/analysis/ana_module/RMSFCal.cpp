@@ -1,13 +1,15 @@
 //
 // Created by xiamr on 6/14/19.
 //
+#include "RMSFCal.hpp"
+
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/join.hpp>
-#include "RMSFCal.hpp"
+
 #include "data_structure/frame.hpp"
-#include "utils/common.hpp"
 #include "nlohmann/json.hpp"
+#include "utils/common.hpp"
 
 RMSFCal::RMSFCal() {
     enable_outfile = true;
@@ -17,31 +19,23 @@ RMSFCal::RMSFCal() {
 }
 
 void RMSFCal::process(std::shared_ptr<Frame> &frame) {
-
     int nfit1 = static_cast<int>(atoms_for_superpose.size());
     int nfit2 = static_cast<int>(atoms_for_superpose_and_rmsfcalc.size());
     int nfit = nfit1 + nfit2;
     int n = static_cast<int>(atoms_for_rmsfcalc.size());
 
     if (steps == 0) {
-        auto first = save_coord(x1, y1, z1, frame);
+        save_coord(x1, y1, z1, frame);
         double mid[3];
         center(nfit + n, x1, y1, z1, mid, nfit);
         coords.emplace_back(append_coord(x1, y1, z1, nfit1, nfit2, n));
         if (pdb_ostream) {
             for (auto &atom : atoms_for_first_frame_output) {
-                auto shift = atom->getCoordinate();
-                shift -= first;
-                frame->image(shift);
-
-                *pdb_ostream << boost::format("ATOM  %5s %-4s %3s  %4s    %8.3f%8.3f%8.3f  1.00  0.00            \n")
-                                % atom->seq
-                                % atom->atom_name
-                                % atom->residue_name.value()
-                                % atom->residue_num.value()
-                                % (std::get<0>(first) + std::get<0>(shift) - mid[0])
-                                % (std::get<1>(first) + std::get<1>(shift) - mid[1])
-                                % (std::get<2>(first) + std::get<2>(shift) - mid[2]);
+                const auto &coord = atom->getCoordinate();
+                *pdb_ostream << boost::format("ATOM  %5s %-4s %3s  %4s    %8.3f%8.3f%8.3f  1.00  0.00            \n") %
+                                    atom->seq % atom->atom_name % atom->residue_name.value() %
+                                    atom->residue_num.value() % (std::get<0>(coord) - mid[0]) %
+                                    (std::get<1>(coord) - mid[1]) % (std::get<2>(coord) - mid[2]);
             }
             *pdb_ostream << "TER\n";
         }
@@ -57,8 +51,8 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
     steps++;
 }
 
-std::vector<std::tuple<double, double, double>>
-RMSFCal::append_coord(double x[], double y[], double z[], int nfit1, int nfit2, int n) {
+std::vector<std::tuple<double, double, double>> RMSFCal::append_coord(double x[], double y[], double z[], int nfit1,
+                                                                      int nfit2, int n) {
     std::vector<std::tuple<double, double, double>> f_coord;
     f_coord.reserve(nfit2 + n);
     for (int index = 0; index < nfit2 + n; index++) {
@@ -70,40 +64,27 @@ RMSFCal::append_coord(double x[], double y[], double z[], int nfit1, int nfit2, 
     return f_coord;
 }
 
-std::tuple<double, double, double>
-RMSFCal::save_coord(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame) {
-    for (const auto &element : join(atoms_for_superpose, atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) |
-            boost::adaptors::indexed()) {
-        if (element.index() == 0) {
-            std::tie(x[0], y[0], z[0]) = element.value()->getCoordinate();
-        } else {
-            auto shift = element.value()->getCoordinate() - std::make_tuple(x[element.index()-1], y[element.index()-1], z[element.index()-1]);
-            frame->image(shift);
-            std::tie(x[element.index()], y[element.index()], z[element.index()]) =
-                std::make_tuple(x[element.index()-1], y[element.index()-1], z[element.index()-1]) + shift;
-        }
+void RMSFCal::save_coord(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame) {
+    PBCUtils::move(mols, frame);
+    for (const auto &element :
+         join(atoms_for_superpose, atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
+        std::tie(x[element.index()], y[element.index()], z[element.index()]) = element.value()->getCoordinate();
     }
-    return {x[0], y[0], z[0]};
 }
 
 void RMSFCal::append_pdb(const std::vector<std::tuple<double, double, double>> &f_coord) {
     if (!pdb_ostream) return;
-    for (const auto &element : join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) |
-            boost::adaptors::indexed()) {
-        *pdb_ostream << boost::format("ATOM  %5s %-4s %3s  %4s    %8.3f%8.3f%8.3f  1.00  0.00            \n")
-            % element.value()->seq
-            % element.value()->atom_name
-            % element.value()->residue_name.value()
-            % element.value()->residue_num.value()
-            % std::get<0>(f_coord[element.index()])
-            % std::get<1>(f_coord[element.index()])
-            % std::get<2>(f_coord[element.index()]);
+    for (const auto &element :
+         join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
+        *pdb_ostream << boost::format("ATOM  %5s %-4s %3s  %4s    %8.3f%8.3f%8.3f  1.00  0.00            \n") %
+                            element.value()->seq % element.value()->atom_name % element.value()->residue_name.value() %
+                            element.value()->residue_num.value() % std::get<0>(f_coord[element.index()]) %
+                            std::get<1>(f_coord[element.index()]) % std::get<2>(f_coord[element.index()]);
     }
     *pdb_ostream << "TER\n";
 }
 
 void RMSFCal::print(std::ostream &os) {
-
     calculate_average_structure();
 
     os << std::string(50, '#') << '\n';
@@ -113,8 +94,8 @@ void RMSFCal::print(std::ostream &os) {
     if (pdb_ostream) os << "# mask_for_first_frame_output   > " << mask_for_first_frame_output << '\n';
     os << std::string(50, '#') << '\n';
     os << boost::format("#%15s %15s\n") % "AtomSeq" % "RMSF(Ang)";
-    for (const auto &element : join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) |
-            boost::adaptors::indexed()) {
+    for (const auto &element :
+         join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
         os << boost::format(" %15d %15.8f\n") % element.value()->seq % rmsvalue(element.index());
     }
     os << std::string(50, '#') << '\n';
@@ -129,8 +110,8 @@ void RMSFCal::saveJson(std::ostream &os) const {
     json["mask_fro_superpose"] = to_string(mask_for_superpose);
     json["mask_for_rmsfcalc"] = to_string(mask_for_rmsfcalc);
     if (pdb_ostream) json["mask_for_first_frame_output"] = to_string(mask_for_first_frame_output);
-    for (const auto &element : join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) |
-            boost::adaptors::indexed()) {
+    for (const auto &element :
+         join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
         json["RMSF"] = {
             {"X", "AtomSeq"},
             {"Y", {{"name", "RMSF"}, {"unit", "Ang"}}},
@@ -163,7 +144,6 @@ void RMSFCal::readInfo() {
 }
 
 double RMSFCal::rmsvalue(int index) const {
-
     double dx2_y2_z2 = 0.0;
     for (int frame = 0; frame < steps; frame++) {
         auto dx = std::get<0>(coords[frame][index]) - x_avg[index];
@@ -175,7 +155,6 @@ double RMSFCal::rmsvalue(int index) const {
 }
 
 void RMSFCal::center(int n_for_center, double *x, double *y, double *z, double mid[], int nfit) {
-
     mid[0] = mid[1] = mid[2] = 0.0;
     double norm = 0.0;
     for (int i = 0; i < nfit; ++i) {
@@ -196,22 +175,24 @@ void RMSFCal::center(int n_for_center, double *x, double *y, double *z, double m
 }
 
 void RMSFCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(
-            frame->atom_list,
-            [this](std::shared_ptr<Atom> &atom) {
-            auto b_for_superpose = Atom::is_match(atom, mask_for_superpose);
-            auto b_for_rmsf_calc = Atom::is_match(atom, mask_for_rmsfcalc);
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        auto b_for_superpose = Atom::is_match(atom, mask_for_superpose);
+        auto b_for_rmsf_calc = Atom::is_match(atom, mask_for_rmsfcalc);
 
-            if (b_for_superpose and b_for_rmsf_calc) atoms_for_superpose_and_rmsfcalc.push_back(atom);
-            else if (b_for_rmsf_calc) atoms_for_rmsfcalc.push_back(atom);
-            else if (b_for_superpose) atoms_for_superpose.push_back(atom);
+        if (b_for_superpose and b_for_rmsf_calc)
+            atoms_for_superpose_and_rmsfcalc.push_back(atom);
+        else if (b_for_rmsf_calc)
+            atoms_for_rmsfcalc.push_back(atom);
+        else if (b_for_superpose)
+            atoms_for_superpose.push_back(atom);
 
-            if (pdb_ostream and Atom::is_match(atom, mask_for_first_frame_output))
+        if (pdb_ostream and Atom::is_match(atom, mask_for_first_frame_output))
             atoms_for_first_frame_output.push_back(atom);
-            });
+    });
 
     allocate_array_memory();
 
+    mols = PBCUtils::calculate_intermol(join(atoms_for_superpose, atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc), frame);
 }
 
 void RMSFCal::allocate_array_memory() {

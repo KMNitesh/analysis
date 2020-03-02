@@ -119,12 +119,12 @@ std::string choose_file(const std::string &prompt, bool exist, std::string ext, 
 }
 
 double
-atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame) {
+atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, const std::shared_ptr<Frame> &frame) {
     return std::sqrt(atom_distance2(atom1, atom2, frame));
 }
 
 double
-atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame) {
+atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, const std::shared_ptr<Frame> &frame) {
     auto xr = atom1->x - atom2->x;
     auto yr = atom1->y - atom2->y;
     auto zr = atom1->z - atom2->z;

@@ -191,10 +191,10 @@ template<typename T>
 T sign(const T &x, const T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
 
 double
-atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame);
+atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, const std::shared_ptr<Frame> &frame);
 
 double
-atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, std::shared_ptr<Frame> &frame);
+atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2, const std::shared_ptr<Frame> &frame);
 
 template<typename T>
 struct make_shared_f {
