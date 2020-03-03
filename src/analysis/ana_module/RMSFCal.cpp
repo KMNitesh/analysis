@@ -227,6 +227,6 @@ void RMSFCal::allocate_array_memory() {
     y2.resize(total_size);
     z2.resize(total_size);
 
-    acc.resize(total_size);
+    acc.resize(nfit2 + n);
 }
 
