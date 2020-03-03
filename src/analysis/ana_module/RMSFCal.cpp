@@ -14,8 +14,6 @@
 RMSFCal::RMSFCal() {
     enable_outfile = true;
     enable_forcefield = true;
-
-    coords.reserve(getDefaultVectorReserve());
 }
 
 void RMSFCal::process(std::shared_ptr<Frame> &frame) {
@@ -25,10 +23,10 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
     int n = static_cast<int>(atoms_for_rmsfcalc.size());
 
     if (steps == 0) {
-        save_coord(x1, y1, z1, frame);
+        save_coord(x1.data(), y1.data(), z1.data(), frame);
         double mid[3];
-        center(nfit + n, x1, y1, z1, mid, nfit);
-        coords.emplace_back(append_coord(x1, y1, z1, nfit1, nfit2, n));
+        center(nfit + n, x1.data(), y1.data(), z1.data(), mid, nfit);
+        update_accumulators(x1.data(), y1.data(), z1.data(), nfit1, nfit2, n);
         if (pdb_ostream) {
             for (auto &atom : atoms_for_first_frame_output) {
                 const auto &coord = atom->getCoordinate();
@@ -40,28 +38,22 @@ void RMSFCal::process(std::shared_ptr<Frame> &frame) {
             *pdb_ostream << "TER\n";
         }
     } else {
-        save_coord(x2, y2, z2, frame);
+        save_coord(x2.data(), y2.data(), z2.data(), frame);
         double mid[3];
-        center(nfit + n, x2, y2, z2, mid, nfit);
-        quatfit(nfit + n, x1, y1, z1, nfit + n, x2, y2, z2, nfit);
-        auto f_coord = append_coord(x2, y2, z2, nfit1, nfit2, n);
-        append_pdb(f_coord);
-        coords.emplace_back(std::move(f_coord));
+        center(nfit + n, x2.data(), y2.data(), z2.data(), mid, nfit);
+        quatfit(nfit + n, x1.data(), y1.data(), z1.data(), nfit + n, x2.data(), y2.data(), z2.data(), nfit);
+        append_pdb();
+        update_accumulators(x2.data(), y2.data(), z2.data(), nfit1, nfit2, n);
     }
     steps++;
 }
 
-std::vector<std::tuple<double, double, double>> RMSFCal::append_coord(double x[], double y[], double z[], int nfit1,
-                                                                      int nfit2, int n) {
-    std::vector<std::tuple<double, double, double>> f_coord;
-    f_coord.reserve(nfit2 + n);
+void RMSFCal::update_accumulators(double x[], double y[], double z[], int nfit1, int nfit2, int n) {
     for (int index = 0; index < nfit2 + n; index++) {
-        x_avg[index] += x[index + nfit1];
-        y_avg[index] += y[index + nfit1];
-        z_avg[index] += z[index + nfit1];
-        f_coord.emplace_back(x[index + nfit1], y[index + nfit1], z[index + nfit1]);
+        acc[index][0](x[index + nfit1]);
+        acc[index][1](y[index + nfit1]);
+        acc[index][2](z[index + nfit1]);
     }
-    return f_coord;
 }
 
 void RMSFCal::save_coord(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame) {
@@ -72,21 +64,19 @@ void RMSFCal::save_coord(double *x, double *y, double *z, const std::shared_ptr<
     }
 }
 
-void RMSFCal::append_pdb(const std::vector<std::tuple<double, double, double>> &f_coord) {
+void RMSFCal::append_pdb() {
     if (!pdb_ostream) return;
     for (const auto &element :
          join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
         *pdb_ostream << boost::format("ATOM  %5s %-4s %3s  %4s    %8.3f%8.3f%8.3f  1.00  0.00            \n") %
                             element.value()->seq % element.value()->atom_name % element.value()->residue_name.value() %
-                            element.value()->residue_num.value() % std::get<0>(f_coord[element.index()]) %
-                            std::get<1>(f_coord[element.index()]) % std::get<2>(f_coord[element.index()]);
+                            element.value()->residue_num.value() % x2[element.index()] % y2[element.index()] %
+                            z2[element.index()];
     }
     *pdb_ostream << "TER\n";
 }
 
 void RMSFCal::print(std::ostream &os) {
-    calculate_average_structure();
-
     os << std::string(50, '#') << '\n';
     os << "# " << title() << " # \n";
     os << "# mask_for_superpose  > " << mask_for_superpose << '\n';
@@ -138,14 +128,6 @@ void RMSFCal::saveJson(std::ostream &os) const {
     os << json;
 }
 
-void RMSFCal::calculate_average_structure() {
-    for (std::size_t index = 0; index < atoms_for_superpose_and_rmsfcalc.size() + atoms_for_rmsfcalc.size(); index++) {
-        x_avg[index] /= steps;
-        y_avg[index] /= steps;
-        z_avg[index] /= steps;
-    }
-}
-
 void RMSFCal::readInfo() {
     Atom::select1group(mask_for_superpose, "Please enter atoms for superpose > ");
     Atom::select1group(mask_for_rmsfcalc, "Please enter atoms for rmsf calc > ");
@@ -164,14 +146,8 @@ void RMSFCal::readInfo() {
 }
 
 double RMSFCal::rmsvalue(int index) const {
-    double dx2_y2_z2 = 0.0;
-    for (int frame = 0; frame < steps; frame++) {
-        auto dx = std::get<0>(coords[frame][index]) - x_avg[index];
-        auto dy = std::get<1>(coords[frame][index]) - y_avg[index];
-        auto dz = std::get<2>(coords[frame][index]) - z_avg[index];
-        dx2_y2_z2 += dx * dx + dy * dy + dz * dz;
-    }
-    return sqrt(dx2_y2_z2 / steps);
+    using boost::accumulators::variance;
+    return std::sqrt(variance(acc[index][0]) + variance(acc[index][1]) + variance(acc[index][2]));
 }
 
 void RMSFCal::center(int n_for_center, double *x, double *y, double *z, double mid[], int nfit) {
@@ -241,29 +217,16 @@ void RMSFCal::allocate_array_memory() {
     auto nfit2 = atoms_for_superpose_and_rmsfcalc.size();
     auto n = atoms_for_rmsfcalc.size();
 
-    x_avg = new double[nfit2 + n];
-    y_avg = new double[nfit2 + n];
-    z_avg = new double[nfit2 + n];
+    auto total_size = nfit1 + nfit2 + n;
 
-    x1 = new double[nfit1 + nfit2 + n];
-    y1 = new double[nfit1 + nfit2 + n];
-    z1 = new double[nfit1 + nfit2 + n];
+    x1.resize(total_size);
+    y1.resize(total_size);
+    z1.resize(total_size);
 
-    x2 = new double[nfit1 + nfit2 + n];
-    y2 = new double[nfit1 + nfit2 + n];
-    z2 = new double[nfit1 + nfit2 + n];
+    x2.resize(total_size);
+    y2.resize(total_size);
+    z2.resize(total_size);
+
+    acc.resize(total_size);
 }
 
-RMSFCal::~RMSFCal() {
-    boost::checked_array_delete(x_avg);
-    boost::checked_array_delete(y_avg);
-    boost::checked_array_delete(z_avg);
-
-    boost::checked_array_delete(x1);
-    boost::checked_array_delete(y1);
-    boost::checked_array_delete(z1);
-
-    boost::checked_array_delete(x2);
-    boost::checked_array_delete(y2);
-    boost::checked_array_delete(z2);
-}

@@ -5,6 +5,8 @@
 #ifndef TINKER_RMSFCAL_HPP
 #define TINKER_RMSFCAL_HPP
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 #include <map>
 #include <memory>
 #include <string>
@@ -31,8 +33,6 @@ class RMSFCal : public AbstractAnalysis {
     void readInfo() override;
 
     [[nodiscard]] static std::string_view title() { return "RMSF Calculator"; }
-
-    ~RMSFCal() override;
 
    protected:
     std::unique_ptr<std::ostream> pdb_ostream;
@@ -76,22 +76,21 @@ class RMSFCal : public AbstractAnalysis {
 
     static void center(int n_for_center, double x[], double y[], double z[], double mid[], int nfit);
 
-    double *x_avg = nullptr, *y_avg = nullptr, *z_avg = nullptr;
-    double *x1 = nullptr, *y1 = nullptr, *z1 = nullptr;
-    double *x2 = nullptr, *y2 = nullptr, *z2 = nullptr;
+    std::vector<double> x1, y1, z1;
+    std::vector<double> x2, y2, z2;
 
     [[nodiscard]] double rmsvalue(int index) const;
 
-    std::vector<std::vector<std::tuple<double, double, double>>> coords;
+    std::vector<std::array<
+        boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::variance>>,
+        3>>
+        acc;
 
-    void append_pdb(const std::vector<std::tuple<double, double, double>> &f_coord);
+    void append_pdb();
 
     void save_coord(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame);
 
-    std::vector<std::tuple<double, double, double>> append_coord(double x[], double y[], double z[], int nfit1,
-                                                                 int nfit2, int n);
-
-    void calculate_average_structure();
+    void update_accumulators(double x[], double y[], double z[], int nfit1, int nfit2, int n);
 
     void allocate_array_memory();
 
