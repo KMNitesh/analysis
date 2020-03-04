@@ -2,17 +2,17 @@
 // Created by xiamr on 10/14/19.
 //
 
-#include "utils/std.hpp"
 #include <gmock/gmock.h>
+
 #include "ana_module/RMSFCal.hpp"
 #include "data_structure/frame.hpp"
+#include "utils/std.hpp"
 
 using namespace testing;
 
 class TestRMSF : public RMSFCal, public Test {
-protected:
+   protected:
     void SetUp() override {
-
         atom1 = std::make_shared<Atom>();
         atom1->seq = 1;
         atom1->residue_name = "MOL";
@@ -58,21 +58,13 @@ protected:
 };
 
 TEST_F(TestRMSF, IntegrationTest) {
-
     std::vector<std::tuple<double, double, double>> coordinates{
-            {10, 10, 10},
-            {11, 10, 10},
-            {9,  10, 10},
-            {8,  10, 10},
-            {7,  10, 10}
-    };
+        {10, 10, 10}, {11, 10, 10}, {9, 10, 10}, {8, 10, 10}, {7, 10, 10}};
 
     for (const auto &element : coordinates) {
         std::tie(atom4->x, atom4->y, atom4->z) = element;
         process(frame);
     }
-
-    calculate_average_structure();
 
     ASSERT_THAT(rmsvalue(0), DoubleEq(std::sqrt(2)));
 }

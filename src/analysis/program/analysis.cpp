@@ -29,6 +29,7 @@
 #include "others/QMStructureComp.hpp"
 #include "others/File47CoordindateFormat.hpp"
 #include "others/GaussianLogCoordinateFormat.hpp"
+#include "others/HOOH_Calculator.hpp"
 
 void printDSLDetails() {
 
@@ -146,25 +147,26 @@ int main(int argc, char *argv[]) {
             [&] { RamanSpectrum::calculateSpectrum(getOutputFilename(vm)); },
             [&] { CrossCorrelation::calculate(getOutputFilename(vm)); },
             [&] { GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm)); },
-            [&] { GQuadruplexPdb2gmx::convert(); },
-            [&] { GQuadruplexPdb2gmx::superpose_and_move(); },
-            [&] { NBOSpin::process(); },
-            [&] { GQuadruplexPdb2gmx::renumberAtomAndResidueNum(); },
-            [&] { Averager::process(); },
-            [&] { ITS_PostProcess::process(); },
-            [&] { ITS_Reweight::process(); },
-            [&] { GromosReader::process(); },
-            [&] { MultiwfnAIMDriver::process_interactive(); },
-            [&] { NBOOrbitalComposition::process(); },
-            [&] { DelocalizationIndex::process_interactive(); },
+            [] { GQuadruplexPdb2gmx::convert(); },
+            [] { GQuadruplexPdb2gmx::superpose_and_move(); },
+            [] { NBOSpin::process(); },
+            [] { GQuadruplexPdb2gmx::renumberAtomAndResidueNum(); },
+            [] { Averager::process(); },
+            [] { ITS_PostProcess::process(); },
+            [] { ITS_Reweight::process(); },
+            [] { GromosReader::process(); },
+            [] { MultiwfnAIMDriver::process_interactive(); },
+            [] { NBOOrbitalComposition::process(); },
+            [] { DelocalizationIndex::process_interactive(); },
             [&] {
                 ADCHCharge::process_interactive(
                         vm.count("fchk") ? vm["fchk"].as<std::string>() : boost::optional<std::string>{});
             },
-            [&] { TrajConverter::process(); },
-            [&] { QMStructureComp::process(); },
-            [&] { File47CoordindateFormat::process(); },
-            [&] { GaussianLogCoordinateFormat::process(); }
+            [] { TrajConverter::process(); },
+            [] { QMStructureComp::process(); },
+            [] { File47CoordindateFormat::process(); },
+            [] { GaussianLogCoordinateFormat::process(); },
+            [] { HOOH_Calculator::process(); }
     };
 
     auto mainMenu = [&] {
@@ -192,6 +194,7 @@ int main(int argc, char *argv[]) {
         std::cout << "(20) " << QMStructureComp::title() << '\n';
         std::cout << "(21) " << File47CoordindateFormat::title() << '\n';
         std::cout << "(22) " << GaussianLogCoordinateFormat::title() << '\n';
+        std::cout << "(23) " << HOOH_Calculator::title() << '\n';
         return choose<int>(0, actions.size() - 1, "select : ");
     };
 
