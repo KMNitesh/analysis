@@ -67,7 +67,7 @@ void PBCUtils::do_move_center_basedto_atom(AmberMask &mask, std::shared_ptr<Fram
 }
 
 void PBCUtils::do_move_center_basedto_atom_group(AmberMask &mask, std::shared_ptr<Frame> &frame) const {
-    auto selected_atoms = find_atoms(mask, frame);
+    if (selected_atoms.empty()) selected_atoms = find_atoms(mask, frame);
     auto mols = calculate_intermol(selected_atoms, frame);
     move(mols, frame);
     auto center = boost::accumulate(selected_atoms, std::tuple<double, double, double>{},
@@ -77,7 +77,7 @@ void PBCUtils::do_move_center_basedto_atom_group(AmberMask &mask, std::shared_pt
     for (auto &mol : frame->molecule_list) {
         if (mols.first.contains(mol)) continue;
         mol->do_aggregate(frame);
-        auto r = mol->calc_geom_center(frame) - center;
+        auto r = mol->calc_geom_center_inplace() - center;
         auto old = r;
         frame->image(r);
         r -= old;
@@ -159,7 +159,7 @@ void PBCUtils::move(std::set<std::shared_ptr<Molecule>> &mols_set,
 }
 
 PBCUtils::MolPair PBCUtils::calculate_intermol_imp(std::set<std::shared_ptr<Molecule>> &mols_set,
-                                         const std::shared_ptr<Frame> &frame) {
+                                                   const std::shared_ptr<Frame> &frame) {
     for (auto &mol : mols_set) {
         mol->do_aggregate(frame);
         mol->calc_geom_center_inplace();

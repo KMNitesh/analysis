@@ -89,6 +89,7 @@ class PBCUtils {
    private:
     static MolPair calculate_intermol_imp(std::set<std::shared_ptr<Molecule>> &mols_set,
                                           const std::shared_ptr<Frame> &frame);
+    inline static std::vector<std::shared_ptr<Atom>> selected_atoms;
 };
 
 #endif  // TINKER_PBCUTILS_HPP
