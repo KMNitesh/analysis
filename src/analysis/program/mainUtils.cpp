@@ -62,8 +62,8 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
     }
 
     auto reader = make_shared<TrajectoryReader>();
-    if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>({FileType::NC, FileType::XTC, FileType::TRR},
-                                                                        getFileType(xyzfiles[0]))) {
+    if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
+            {FileType::NC, FileType::XTC, FileType::TRR, FileType::JSON, FileType::GRO}, getFileType(xyzfiles[0]))) {
         if (!vm.count("topology")) {
             cerr << "ERROR !! topology file not set !\n";
             exit(EXIT_FAILURE);
@@ -571,8 +571,8 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
 
     auto reader = make_shared<TrajectoryReader>();
     bool b_added_topology = true;
-    if (boost::algorithm::one_of_equal<initializer_list<FileType>>({FileType::NC, FileType::XTC, FileType::TRR},
-                                                                   getFileType(xyzfiles[0]))) {
+    if (boost::algorithm::one_of_equal<initializer_list<FileType>>(
+            {FileType::NC, FileType::XTC, FileType::TRR, FileType::JSON, FileType::GRO}, getFileType(xyzfiles[0]))) {
         b_added_topology = false;
     } else {
         if (topology) {
@@ -700,7 +700,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
     auto reader = std::make_shared<TrajectoryReader>();
     bool b_added_topology = true;
     if (boost::algorithm::one_of_equal<std::initializer_list<FileType>>(
-            {FileType::NC, FileType::XTC, FileType::TRR, FileType::JSON}, getFileType(xyzfiles[0]))) {
+            {FileType::NC, FileType::XTC, FileType::TRR, FileType::JSON, FileType::GRO}, getFileType(xyzfiles[0]))) {
         b_added_topology = false;
     } else {
         if (vm.count("topology")) {
@@ -786,9 +786,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
 
     if (outfile.is_open()) {
         outfile << "#  Finish Time  > " << finish_time_format << '\n';
-        outfile << "Frame process time = " << frame_process_time << '\n';
-        outfile << "  Postprocess time = " << post_process_time << '\n';
-        outfile << "        Total time = " << total_time << '\n';
+        outfile << "#  Frame process time = " << frame_process_time << '\n';
+        outfile << "#    Postprocess time = " << post_process_time << '\n';
+        outfile << "#          Total time = " << total_time << '\n';
         outfile << "#  workdir > " << boost::filesystem::current_path() << '\n';
         outfile << "#  cmdline > " << print_cmdline(argc, argv) << '\n';
         outfile << "#  start frame  > " << start << '\n';
