@@ -14,9 +14,7 @@ class PBCUtils;
 
 class PBCBox {
 public:
-    enum class Type {
-        orthogonal, octahedron
-    };
+ enum class Type { orthogonal, octahedron, other };
 
     PBCBox() = default;
 

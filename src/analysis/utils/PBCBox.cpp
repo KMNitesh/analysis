@@ -1,26 +1,26 @@
-#include <cmath>
-#include <boost/format.hpp>
 #include "PBCBox.hpp"
+
+#include <boost/format.hpp>
+#include <cmath>
+
 #include "common.hpp"
 
 void PBCBox::check_box_type() {
     if (numeric_near(angles[0], 90.0) and numeric_near(angles[1], 90.0) and numeric_near(angles[2], 90.0)) {
         box_type = Type::orthogonal;
     } else if (numeric_near(axis[0], axis[1], 1E-2) and numeric_near(axis[0], axis[2], 1E-2) and
-            numeric_near(angles[0], 70.53, 0.1) and numeric_near(angles[1], 109.47, 0.1) and
-            numeric_near(angles[2], 70.53, 0.1)) {
+               numeric_near(angles[0], 70.53, 0.1) and numeric_near(angles[1], 109.47, 0.1) and
+               numeric_near(angles[2], 70.53, 0.1)) {
         box_type = Type::octahedron;
     } else {
-        throw std::runtime_error((boost::format("unknown box type : %f %f %f %f %f %f\n")
-                    % axis[0] % axis[1] % axis[2] % angles[0] % angles[1] % angles[2]).str());
+        box_type = Type::other;
     }
 }
 
-PBCBox::PBCBox(double xbox, double ybox, double zbox, double alpha, double beta, double gamma) :
-    axis{xbox, ybox, zbox},
-    angles{alpha, beta, gamma} {
-        check_box_type();
-    }
+PBCBox::PBCBox(double xbox, double ybox, double zbox, double alpha, double beta, double gamma)
+    : axis{xbox, ybox, zbox}, angles{alpha, beta, gamma} {
+    check_box_type();
+}
 
 PBCBox::PBCBox(gmx::matrix box) {
     const auto &[v1x, v1y, v1z] = box[0];
@@ -42,16 +42,15 @@ PBCBox::PBCBox(gmx::matrix box) {
     check_box_type();
 
     for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j ) {
+        for (int j = 0; j < 3; ++j) {
             this->box[i][j] = 10 * box[i][j];
         }
     }
-    gmx::set_pbc(&pbc,-1,this->box);
+    gmx::set_pbc(&pbc, -1, this->box);
     dirty = false;
 }
 
 void PBCBox::getBoxParameter(gmx::matrix box) const {
-
     if (dirty) {
         box[0][0] = axis[0];
         box[0][1] = 0.0;
@@ -72,15 +71,15 @@ void PBCBox::getBoxParameter(gmx::matrix box) const {
         box[2][1] *= 0.1;
         box[2][2] *= 0.1;
         for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j ) {
+            for (int j = 0; j < 3; ++j) {
                 this->box[i][j] = 10 * box[i][j];
             }
         }
-        gmx::set_pbc(&pbc,-1,this->box);
+        gmx::set_pbc(&pbc, -1, this->box);
         dirty = false;
     } else {
         for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j ) {
+            for (int j = 0; j < 3; ++j) {
                 box[i][j] = 0.1 * this->box[i][j];
             }
         }
@@ -88,7 +87,6 @@ void PBCBox::getBoxParameter(gmx::matrix box) const {
 }
 
 void PBCBox::image(double &xr, double &yr, double &zr) const {
-
     if (dirty) {
         gmx::matrix box;
         getBoxParameter(box);
@@ -98,16 +96,15 @@ void PBCBox::image(double &xr, double &yr, double &zr) const {
         while (std::abs(xr) > 0.5 * axis[0]) xr -= sign(axis[0], xr);
         while (std::abs(yr) > 0.5 * axis[1]) yr -= sign(axis[1], yr);
         while (std::abs(zr) > 0.5 * axis[2]) zr -= sign(axis[2], zr);
-    } if (box_type == Type::octahedron) {
-        gmx::rvec x1 = { xr , yr, zr };
-        gmx::rvec x2 = { 0,0,0}; 
+    } else {
+        gmx::rvec x1 = {xr, yr, zr};
+        gmx::rvec x2 = {0, 0, 0};
         gmx::rvec dx;
-        gmx::pbc_dx(&pbc,x1,x2,dx);
+        gmx::pbc_dx(&pbc, x1, x2, dx);
         xr = dx[0];
         yr = dx[1];
         zr = dx[2];
     }
-
 }
 
 double PBCBox::volume() const {
