@@ -5,8 +5,10 @@
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/PBCUtils.hpp"
 
 class Frame;
 
@@ -25,17 +27,18 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Distance to plane"; }
 
-private:
-
+   private:
     std::array<AmberMask, 3> plane_marks;
     std::array<std::shared_ptr<Atom>, 3> plane_atoms;
 
     std::vector<AmberMask> outplane_marks;
     std::vector<std::shared_ptr<Atom>> outplane_atoms;
 
+    PBCUtils::MolPair mol;
+
     struct Point {
         Point(std::tuple<double, double, double> value)
-                : x(std::get<0>(value)), y(std::get<1>(value)), z(std::get<2>(value)) {}
+            : x(std::get<0>(value)), y(std::get<1>(value)), z(std::get<2>(value)) {}
 
         double x, y, z;
     };

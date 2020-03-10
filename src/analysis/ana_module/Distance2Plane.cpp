@@ -1,15 +1,15 @@
 
 
-#include "utils/std.hpp"
-#include "utils/common.hpp"
-#include "data_structure/frame.hpp"
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
 #include "Distance2Plane.hpp"
 
-Distance2Plane::Distance2Plane() {
-    enable_outfile = true;
-}
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+
+#include "data_structure/frame.hpp"
+#include "utils/common.hpp"
+#include "utils/std.hpp"
+
+Distance2Plane::Distance2Plane() { enable_outfile = true; }
 
 void Distance2Plane::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
@@ -26,10 +26,12 @@ void Distance2Plane::processFirstFrame(std::shared_ptr<Frame> &frame) {
             }
         }
     });
+
+    mol = PBCUtils::calculate_intermol(join(plane_atoms, outplane_atoms), frame);
 }
 
 void Distance2Plane::process([[maybe_unused]] std::shared_ptr<Frame> &frame) {
-
+    PBCUtils::move(mol, frame);
     Point p1 = plane_atoms[0]->getCoordinate();
     Point p2 = plane_atoms[1]->getCoordinate();
     Point p3 = plane_atoms[2]->getCoordinate();
@@ -46,7 +48,6 @@ void Distance2Plane::process([[maybe_unused]] std::shared_ptr<Frame> &frame) {
     acc(dist);
 
     distances.push_back(dist);
-
 }
 
 void Distance2Plane::print(std::ostream &os) {
@@ -77,7 +78,6 @@ void Distance2Plane::print(std::ostream &os) {
 }
 
 void Distance2Plane::readInfo() {
-
     Atom::select1group(plane_marks[0], "Enter atom1 for plane > ");
     Atom::select1group(plane_marks[1], "Enter atom2 for plane > ");
     Atom::select1group(plane_marks[2], "Enter atom3 for plane > ");
@@ -92,7 +92,6 @@ void Distance2Plane::readInfo() {
 }
 
 std::tuple<double, double, double, double> Distance2Plane::get_panel(Point p1, Point p2, Point p3) {
-
     auto a = ((p2.y - p1.y) * (p3.z - p1.z) - (p2.z - p1.z) * (p3.y - p1.y));
 
     auto b = ((p2.z - p1.z) * (p3.x - p1.x) - (p2.x - p1.x) * (p3.z - p1.z));
