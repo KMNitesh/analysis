@@ -77,7 +77,7 @@ class PBCUtils {
         for (auto &atom : atoms) {
             mols_set.insert(atom->molecule.lock());
         }
-        return calculate_intermol_imp(mols_set, frame);
+        return {mols_set, calculate_intermol_imp(mols_set, frame)};
     }
 
     static void move(std::set<std::shared_ptr<Molecule>> &mols_set,
@@ -87,11 +87,14 @@ class PBCUtils {
     static void move(MolPair &mols, const std::shared_ptr<Frame> &frame) { move(mols.first, mols.second, frame); };
 
    private:
-    static MolPair calculate_intermol_imp(const std::set<std::shared_ptr<Molecule>> &mols_set,
-                                          const std::shared_ptr<Frame> &frame);
+    static std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> calculate_intermol_imp(
+        const std::set<std::shared_ptr<Molecule>> &mols_set, const std::shared_ptr<Frame> &frame);
+
+    static std::tuple<double, double, double> cal_box_center_shift(const std::shared_ptr<Frame> &frame);
 
     mutable std::vector<std::shared_ptr<Atom>> selected_atoms;
     mutable std::shared_ptr<Molecule> selected_molecule;
+    mutable std::set<std::shared_ptr<Molecule>> mols_set;
 };
 
 #endif  // TINKER_PBCUTILS_HPP

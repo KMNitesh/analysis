@@ -58,24 +58,27 @@ void PBCUtils::do_move_center_basedto_atom(AmberMask &mask, std::shared_ptr<Fram
             std::tie(atom->x, atom->y, atom->z) += r;
         }
     }
+    const auto box_center_shift = cal_box_center_shift(frame);
     for (auto &atom : frame->atom_list) {
-        std::tie(atom->x, atom->y, atom->z) -=
-            center - 0.5 * (std::make_tuple(frame->box.box[0][0], frame->box.box[0][1], frame->box.box[0][2]) +
-                            std::make_tuple(frame->box.box[1][0], frame->box.box[1][1], frame->box.box[1][2]) +
-                            std::make_tuple(frame->box.box[2][0], frame->box.box[2][1], frame->box.box[2][2]));
+        std::tie(atom->x, atom->y, atom->z) -= center - box_center_shift;
     }
 }
 
 void PBCUtils::do_move_center_basedto_atom_group(AmberMask &mask, std::shared_ptr<Frame> &frame) const {
-    if (selected_atoms.empty()) selected_atoms = find_atoms(mask, frame);
-    auto mols = calculate_intermol(selected_atoms, frame);
-    move(mols, frame);
+    if (selected_atoms.empty()) {
+        selected_atoms = find_atoms(mask, frame);
+        for (auto &atom : selected_atoms) {
+            mols_set.insert(atom->molecule.lock());
+        }
+    }
+    auto mol_seq = calculate_intermol_imp(mols_set, frame);
+    move(mols_set, mol_seq, frame);
     auto center = boost::accumulate(selected_atoms, std::tuple<double, double, double>{},
                                     [](auto sum, auto &atom) { return sum + atom->getCoordinate(); }) /
                   selected_atoms.size();
 
     for (auto &mol : frame->molecule_list) {
-        if (mols.first.contains(mol)) continue;
+        if (mols_set.contains(mol)) continue;
         mol->do_aggregate(frame);
         auto r = mol->calc_geom_center_inplace() - center;
         auto old = r;
@@ -85,12 +88,9 @@ void PBCUtils::do_move_center_basedto_atom_group(AmberMask &mask, std::shared_pt
             std::tie(atom->x, atom->y, atom->z) += r;
         }
     }
-
+    const auto box_center_shift = cal_box_center_shift(frame);
     for (auto &atom : frame->atom_list) {
-        std::tie(atom->x, atom->y, atom->z) -=
-            center - 0.5 * (std::make_tuple(frame->box.box[0][0], frame->box.box[0][1], frame->box.box[0][2]) +
-                            std::make_tuple(frame->box.box[1][0], frame->box.box[1][1], frame->box.box[1][2]) +
-                            std::make_tuple(frame->box.box[2][0], frame->box.box[2][1], frame->box.box[2][2]));
+        std::tie(atom->x, atom->y, atom->z) -= center - box_center_shift;
     }
 }
 
@@ -107,11 +107,9 @@ void PBCUtils::do_move_center_basedto_molecule(AmberMask &mask, std::shared_ptr<
             std::tie(atom->x, atom->y, atom->z) += r;
         }
     }
+    const auto box_center_shift = cal_box_center_shift(frame);
     for (auto &atom : frame->atom_list) {
-        std::tie(atom->x, atom->y, atom->z) -=
-            center - 0.5 * (std::make_tuple(frame->box.box[0][0], frame->box.box[0][1], frame->box.box[0][2]) +
-                            std::make_tuple(frame->box.box[1][0], frame->box.box[1][1], frame->box.box[1][2]) +
-                            std::make_tuple(frame->box.box[2][0], frame->box.box[2][1], frame->box.box[2][2]));
+        std::tie(atom->x, atom->y, atom->z) -= center - box_center_shift;
     }
 }
 
@@ -128,14 +126,19 @@ void PBCUtils::do_move_all_atom_into_box(std::shared_ptr<Frame> &frame) const {
 }
 
 void PBCUtils::doPBC(Trajconv::PBCType pbc_mode, AmberMask &mask, std::shared_ptr<Frame> &frame) const {
-    if (pbc_mode == Trajconv::PBCType::AllIntoBox) {
-        do_move_all_atom_into_box(frame);
-    } else if (pbc_mode == Trajconv::PBCType::OneAtom) {
-        do_move_center_basedto_atom(mask, frame);
-    } else if (pbc_mode == Trajconv::PBCType::OneMol) {
-        do_move_center_basedto_molecule(mask, frame);
-    } else if (pbc_mode == Trajconv::PBCType::AtomGroup) {
-        do_move_center_basedto_atom_group(mask, frame);
+    switch (pbc_mode) {
+        case Trajconv::PBCType::AllIntoBox:
+            do_move_all_atom_into_box(frame);
+            break;
+        case Trajconv::PBCType::OneAtom:
+            do_move_center_basedto_atom(mask, frame);
+            break;
+        case Trajconv::PBCType::OneMol:
+            do_move_center_basedto_molecule(mask, frame);
+            break;
+        case Trajconv::PBCType::AtomGroup:
+            do_move_center_basedto_atom_group(mask, frame);
+            break;
     }
 }
 
@@ -158,8 +161,8 @@ void PBCUtils::move(std::set<std::shared_ptr<Molecule>> &mols_set,
     }
 }
 
-PBCUtils::MolPair PBCUtils::calculate_intermol_imp(const std::set<std::shared_ptr<Molecule>> &mols_set,
-                                                   const std::shared_ptr<Frame> &frame) {
+std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> PBCUtils::calculate_intermol_imp(
+    const std::set<std::shared_ptr<Molecule>> &mols_set, const std::shared_ptr<Frame> &frame) {
     for (auto &mol : mols_set) {
         mol->do_aggregate(frame);
         mol->calc_geom_center_inplace();
@@ -196,5 +199,10 @@ PBCUtils::MolPair PBCUtils::calculate_intermol_imp(const std::set<std::shared_pt
     std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> mole_seq;
     Visitor vis(mols, mole_seq);
     breadth_first_search(tg, root, boost::visitor(vis));
-    return {mols_set, mole_seq};
+    return mole_seq;
+}
+std::tuple<double, double, double> PBCUtils::cal_box_center_shift(const std::shared_ptr<Frame> &frame) {
+    return 0.5 * (std::make_tuple(frame->box.box[0][0], frame->box.box[0][1], frame->box.box[0][2]) +
+                  std::make_tuple(frame->box.box[1][0], frame->box.box[1][1], frame->box.box[1][2]) +
+                  std::make_tuple(frame->box.box[2][0], frame->box.box[2][1], frame->box.box[2][2]));
 }
