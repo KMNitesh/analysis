@@ -1,13 +1,8 @@
 ## Molecular dynamics trajectory analysis package for Tinker & Gromacs & Amber software
 
 #### Architecture
-<img src="doc/Architecture.png" alt="Software Architecture" title="Software Architecture" width="700" height="503" />
+<img src="doc/Architecture.png" alt="Software Architecture" title="Software Architecture" width="500" height="359" />
 
-
-#### Function enhancement to MD Engine
-
-1. add discrete charge transfer term to AMOEBA polarizable force field
-2. add binary trajectory format (NetCDF,from Amber) support in molecular dynamics and post-analysis program
 
 #### Typical analysis functions
  
@@ -42,15 +37,15 @@
 5.   ADCH Charge
 
 #### Build Requirements
-- Language : C++17 ( GCC 9.x or above ) and its STL
-- Build System :  CMake 3.13 or above
-- Third-party libraries :  Boost 1.72 or above,
-                           Intel Threading Building Blocks(TBB) ( for Multi-Core Parallelism ), 
-                           NetCDF,  FFTW3 , 
-                           GROMACS library ( for reading and writting Gromacs topology and trajectory file ),
-                           Google Test ( for unit test ),
+- Language : C++20 ( GCC 9.x or above )
+- Build System :  CMake 3.15
+- Third-party libraries :  Boost 1.72,
+                           Intel Threading Building Blocks(TBB) 2020.1 ( for Multi-Core Parallelism ), 
+                           NetCDF,  FFTW3, 
+                           GROMACS library 5.1.4 ( for reading and writting Gromacs topology and trajectory file ),
+                           Google Test 1.10 ( for unit test ),
                            Eigen 3.3 ( C++ template library for linear algebra ),
-                           Pugixml ( XML format process ),
+                           Pugixml 1.10 ( XML format process ),
                            nlohmann/json 3.7.3,
                            GNU readline
                            
