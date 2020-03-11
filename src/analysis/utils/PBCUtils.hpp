@@ -87,9 +87,11 @@ class PBCUtils {
     static void move(MolPair &mols, const std::shared_ptr<Frame> &frame) { move(mols.first, mols.second, frame); };
 
    private:
-    static MolPair calculate_intermol_imp(std::set<std::shared_ptr<Molecule>> &mols_set,
+    static MolPair calculate_intermol_imp(const std::set<std::shared_ptr<Molecule>> &mols_set,
                                           const std::shared_ptr<Frame> &frame);
-    inline static std::vector<std::shared_ptr<Atom>> selected_atoms;
+
+    mutable std::vector<std::shared_ptr<Atom>> selected_atoms;
+    mutable std::shared_ptr<Molecule> selected_molecule;
 };
 
 #endif  // TINKER_PBCUTILS_HPP
