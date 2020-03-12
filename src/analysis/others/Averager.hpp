@@ -9,7 +9,6 @@
 
 class Averager {
 public:
-
     static void process();
 
     [[nodiscard]] static std::string_view title() { return "Averager"; }
@@ -21,5 +20,4 @@ public:
     static void output_average(std::ostream &os, int range, const std::vector<std::vector<double>> &lines);
 };
 
-
-#endif //TINKER_AVERAGER_HPP
+#endif  // TINKER_AVERAGER_HPP

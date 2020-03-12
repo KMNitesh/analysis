@@ -3,6 +3,7 @@
 //
 
 #include "DensityOfStates.hpp"
+
 #include "utils/common.hpp"
 
 void DensityOfStates::print(std::ostream &os) {
@@ -31,5 +32,4 @@ void DensityOfStates::print(std::ostream &os) {
     }
 
     os << std::string(50, '#') << '\n';
-
 }

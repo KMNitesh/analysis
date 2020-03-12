@@ -5,68 +5,60 @@
 #ifndef TINKER_TYPEUTILITY_HPP
 #define TINKER_TYPEUTILITY_HPP
 
-#include <boost/type_index.hpp>
 #include <boost/any.hpp>
+#include <boost/type_index.hpp>
 #include <typeindex>
 
-#include "data_structure/atom.hpp"
 #include "VectorSelector.hpp"
 #include "ana_module/AbstractAnalysis.hpp"
 #include "common.hpp"
+#include "data_structure/atom.hpp"
 
-template<typename... Ts>
+template <typename... Ts>
 class TypeIs;
 
-template<>
+template <>
 class TypeIs<> {
 public:
-    bool operator()(const boost::any &) {
-        return false;
-    }
+    bool operator()(const boost::any &) { return false; }
 
-    std::vector<std::string> pretty_names() {
-        return {};
-    }
+    std::vector<std::string> pretty_names() { return {}; }
 };
 
-
-template<typename T>
+template <typename T>
 inline std::string pretty_name() {
     return boost::typeindex::type_id<T>().pretty_name();
 }
 
-template<>
+template <>
 inline std::string pretty_name<std::string>() {
     return "string";
 }
 
-template<>
+template <>
 inline std::string pretty_name<Grid>() {
     return "Grid";
 }
 
-template<>
+template <>
 inline std::string pretty_name<Atom::Node>() {
     return "AmberMask";
 }
 
-template<>
+template <>
 inline std::string pretty_name<std::shared_ptr<VectorSelector>>() {
     return "VectorSelector";
 }
 
-template<>
+template <>
 inline std::string pretty_name<std::shared_ptr<AbstractAnalysis>>() {
     return "BasicAnalysis";
 }
 
-
-template<typename T, typename... Ts>
+template <typename T, typename... Ts>
 class TypeIs<T, Ts...> {
 public:
-    bool operator()(const boost::any &val) {
-        return val.type() == typeid(T) or TypeIs<Ts...>()(val);
-    }
+    bool operator()(const boost::any &val) { return val.type() == typeid(T) or TypeIs<Ts...>()(val); }
 
     std::vector<std::string> pretty_names() {
         auto v = TypeIs<Ts...>().pretty_names();
@@ -75,12 +67,10 @@ public:
     }
 };
 
-template<typename... Ts>
+template <typename... Ts>
 class TypePrettyNames {
 public:
-    std::vector<std::string> operator()() {
-        return TypeIs<Ts...>().pretty_names();
-    }
+    std::vector<std::string> operator()() { return TypeIs<Ts...>().pretty_names(); }
 };
 
 std::string getPrettyName(const boost::any &v);
@@ -99,42 +89,25 @@ inline double cast_to_double(const boost::any &v) {
 
 class AutoConvert {
     const boost::any &v;
+
 public:
     AutoConvert(const boost::any &v) : v(v) {}
 
-    operator int() const {
-        return boost::any_cast<int>(v);
-    }
+    operator int() const { return boost::any_cast<int>(v); }
 
-    operator double() const {
-        return cast_to_double(v);
-    }
+    operator double() const { return cast_to_double(v); }
 
-    operator bool() const {
-        return boost::any_cast<bool>(v);
-    }
+    operator bool() const { return boost::any_cast<bool>(v); }
 
-    operator std::string() const {
-        return boost::any_cast<std::string>(v);
-    }
+    operator std::string() const { return boost::any_cast<std::string>(v); }
 
-    operator Atom::Node() const {
-        return boost::any_cast<Atom::Node>(v);
-    }
+    operator Atom::Node() const { return boost::any_cast<Atom::Node>(v); }
 
-    operator Grid() const {
-        return boost::any_cast<Grid>(v);
-    }
+    operator Grid() const { return boost::any_cast<Grid>(v); }
 
-    operator std::shared_ptr<VectorSelector>() const {
-        return boost::any_cast<std::shared_ptr<VectorSelector>>(v);
-    }
+    operator std::shared_ptr<VectorSelector>() const { return boost::any_cast<std::shared_ptr<VectorSelector>>(v); }
 
-    operator std::shared_ptr<AbstractAnalysis>() const {
-        return boost::any_cast<std::shared_ptr<AbstractAnalysis>>(v);
-    }
-
+    operator std::shared_ptr<AbstractAnalysis>() const { return boost::any_cast<std::shared_ptr<AbstractAnalysis>>(v); }
 };
 
-
-#endif //TINKER_TYPEUTILITY_HPP
+#endif  // TINKER_TYPEUTILITY_HPP

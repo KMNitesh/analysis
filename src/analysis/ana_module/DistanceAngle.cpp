@@ -3,15 +3,13 @@
 //
 
 #include "DistanceAngle.hpp"
+
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
-
-DistanceAngle::DistanceAngle() {
-    enable_outfile = true;
-}
+DistanceAngle::DistanceAngle() { enable_outfile = true; }
 
 void DistanceAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
@@ -37,14 +35,12 @@ void DistanceAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
 void DistanceAngle::process(std::shared_ptr<Frame> &frame) {
     for (auto &[ref, atom2] : pairs) {
-
         auto r = atom2->getCoordinate() - ref->getCoordinate();
         frame->image(r);
 
         r /= vector_norm(r);
 
         for (auto &atom3 : group3) {
-
             auto v = atom3->getCoordinate() - ref->getCoordinate();
             frame->image(v);
 
@@ -63,7 +59,6 @@ void DistanceAngle::process(std::shared_ptr<Frame> &frame) {
                 hist[{i_distance_bin, i_angle_bin}] += 1;
             }
         }
-
     }
 }
 
@@ -99,10 +94,8 @@ void DistanceAngle::printData(std::ostream &os) const {
         double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
             double pop = double(hist.at(std::make_pair(i_distance, i_angle))) / (max_value * dv);
-            os << boost::format(fmt)
-                  % ((i_distance - 0.5) * distance_width)
-                  % ((i_angle - 0.5) * angle_width)
-                  % (pop == 0.0 ? 100.0 : factor * log(pop));
+            os << boost::format(fmt) % ((i_distance - 0.5) * distance_width) % ((i_angle - 0.5) * angle_width) %
+                      (pop == 0.0 ? 100.0 : factor * log(pop));
         }
     }
 }
@@ -112,10 +105,10 @@ void DistanceAngle::readInfo() {
     Atom::select1group(mask2, "Please Enter mask for Atom2(OAn) > ");
     Atom::select1group(mask3, "Please Enter mask for Atom3(Ow) > ");
 
-    double rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:",
-                         Default(10.0));
-    distance_width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:",
-                            Default(0.01));
+    double rmax = choose(0.0, std::numeric_limits<double>::max(),
+                         "Enter Maximum Distance to Accumulate[10.0 Ang]:", Default(10.0));
+    distance_width =
+        choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:", Default(0.01));
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));
     temperature = choose(0.0, 10000.0, "Temperature [298] (K):", Default(298.0));

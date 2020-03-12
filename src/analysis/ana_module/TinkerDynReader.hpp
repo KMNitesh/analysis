@@ -5,8 +5,8 @@
 #ifndef TINKER_TINKERDYNREADER_HPP
 #define TINKER_TINKERDYNREADER_HPP
 
-#include <memory>
 #include <fstream>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -22,7 +22,7 @@ public:
 
 class TinkerDynReader {
 public:
-    explicit TinkerDynReader(std::shared_ptr<std::istream> istream) : istream(std::move(istream)) {};
+    explicit TinkerDynReader(std::shared_ptr<std::istream> istream) : istream(std::move(istream)){};
 
     void readContent();
 
@@ -36,5 +36,4 @@ protected:
     AtomicPosition positions;
 };
 
-
-#endif //TINKER_TINKERDYNREADER_HPP
+#endif  // TINKER_TINKERDYNREADER_HPP

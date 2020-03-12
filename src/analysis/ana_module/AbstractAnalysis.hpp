@@ -13,7 +13,7 @@ class Frame;
 
 class AbstractAnalysis {
 public:
-    virtual void processFirstFrame([[maybe_unused]] std::shared_ptr<Frame> &frame) {};
+    virtual void processFirstFrame([[maybe_unused]] std::shared_ptr<Frame> &frame){};
 
     virtual void process(std::shared_ptr<Frame> &frame) = 0;
 
@@ -34,12 +34,11 @@ public:
     virtual ~AbstractAnalysis() = default;
 
 protected:
-    virtual void do_parallel_while_impl([[maybe_unused]] std::function<std::shared_ptr<Frame>()> func) {};
+    virtual void do_parallel_while_impl([[maybe_unused]] std::function<std::shared_ptr<Frame>()> func){};
 
     virtual bool enable_paralel_while_impl() { return false; }
 
     std::string outfilename;
 };
 
-
-#endif //TINKER_ABSTRACTANALYSIS_HPP
+#endif // TINKER_ABSTRACTANALYSIS_HPP

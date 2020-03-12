@@ -14,7 +14,7 @@ void Histogram::initialize(const pair<double, double> &range, double width) {
     dimension_range = range;
     dimension_width = width;
 
-    auto[dimension_min, dimension_max] = range;
+    auto [dimension_min, dimension_max] = range;
 
     dimension_bins = static_cast<int>((dimension_max - dimension_min) / dimension_width);
 

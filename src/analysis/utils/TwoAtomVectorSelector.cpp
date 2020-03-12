@@ -2,11 +2,13 @@
 // Created by xiamr on 7/5/19.
 //
 
-#include <iostream>
 #include "TwoAtomVectorSelector.hpp"
+
+#include <iostream>
+
 #include "ThrowAssert.hpp"
-#include "data_structure/frame.hpp"
 #include "common.hpp"
+#include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 
 using namespace std;
@@ -33,8 +35,8 @@ int TwoAtomVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
     return pairs.size();
 }
 
-std::vector<std::tuple<double, double, double>>
-TwoAtomVectorSelector::calculateVectors(const std::shared_ptr<Frame> &frame) {
+std::vector<std::tuple<double, double, double>> TwoAtomVectorSelector::calculateVectors(
+    const std::shared_ptr<Frame> &frame) {
     std::vector<std::tuple<double, double, double>> vectors;
     for (auto &pair : pairs) {
         vectors.push_back(calVector(pair, frame));
@@ -53,18 +55,16 @@ void TwoAtomVectorSelector::print(std::ostream &os) {
     os << "# Group1 > " << mask1 << "\n Group2 > " << mask2 << '\n';
 }
 
-std::tuple<double, double, double>
-TwoAtomVectorSelector::calVector(const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
-                                 const std::shared_ptr<Frame> &frame) {
+std::tuple<double, double, double> TwoAtomVectorSelector::calVector(
+    const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms, const std::shared_ptr<Frame> &frame) {
     auto r = get<1>(atoms)->getCoordinate() - get<0>(atoms)->getCoordinate();
     frame->image(r);
     r /= vector_norm(r);
     return r;
-
 }
 
-tuple<double, double, double>
-TwoAtomVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) {
+tuple<double, double, double> TwoAtomVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol,
+                                                                     const std::shared_ptr<Frame> &frame) {
     shared_ptr<Atom> atom1, atom2;
     for (auto &atom : mol->atom_list) {
         if (Atom::is_match(atom, mask1)) {

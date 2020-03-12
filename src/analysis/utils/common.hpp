@@ -61,7 +61,7 @@ std::string input(const std::string &prompt = "", std::istream &in = std::cin, s
 
 template <typename T>
 class Default {
-   public:
+public:
     Default() = default;
 
     explicit Default(T x) : x(x) {}
@@ -70,7 +70,7 @@ class Default {
 
     operator bool() const { return x.has_value(); }
 
-   private:
+private:
     boost::optional<T> x;
 };
 
@@ -107,7 +107,7 @@ bool choose_bool(const std::string &prompt, Default<bool> defaultValue = {}, std
 std::string ext_filename(const std::string &filename);
 
 class ChooseFile {
-   public:
+public:
     ChooseFile(std::string prompt, std::istream &in, std::ostream &out) : prompt(std::move(prompt)), in(in), out(out) {}
 
     ChooseFile &isExist(bool exist) {
@@ -156,7 +156,7 @@ class ChooseFile {
         }
     }
 
-   private:
+private:
     const std::string prompt;
     std::istream &in;
     std::ostream &out;
@@ -204,12 +204,12 @@ inline auto make_shared_(_Args &&... __args) {
 boost::program_options::options_description make_program_options();
 
 class range_object {
-   private:
+private:
     int _end;
     int _step;
     int _curr;
 
-   public:
+public:
     range_object(int start, int end, int step = 1) : _end(end), _step(step), _curr(start){};
 
     const range_object &begin() const { return *this; }
@@ -252,7 +252,7 @@ class enumerate_iterator {
     int _start;
     int _step;
 
-   public:
+public:
     enumerate_iterator(decltype(std::begin(Iterable())) it, int start, int step) : it(it), _start(start), _step(step) {}
 
     void operator++() {
@@ -273,7 +273,7 @@ class enumerate_object {
     int _start;
     int _step;
 
-   public:
+public:
     explicit enumerate_object(Iterable &iter, int start = 0, int step = 1) : _iter(iter), _start(start), _step(step) {
         //    std::cout << "Constructor1\n";
     }
@@ -328,10 +328,10 @@ std::string print_cmdline(int argc, const char *const argv[]);
 
 template <typename Iterable>
 class PushIterable {
-   public:
+public:
     using value_type = typename Iterable::value_type;
 
-   private:
+private:
     Iterable &_iter;
 
     decltype(std::begin(_iter)) _begin;
@@ -339,7 +339,7 @@ class PushIterable {
 
     std::stack<value_type> queue;
 
-   public:
+public:
     explicit PushIterable(Iterable &iter) : _iter(iter), _begin(std::begin(_iter)), _end(std::end(_iter)) {}
 
     const PushIterable &begin() const { return *this; }
@@ -388,15 +388,15 @@ class PushIterable {
 template <typename Iterable, typename = std::enable_if_t<std::is_integral_v<typename Iterable::value_type> &&
                                                          !std::is_same_v<typename Iterable::value_type, bool>>>
 class combine_seq {
-   public:
+public:
     using value_type = typename Iterable::value_type;
 
-   private:
+private:
     PushIterable<Iterable> _iter;
 
     boost::optional<std::string> _curr;
 
-   public:
+public:
     explicit combine_seq(Iterable &iter) : _iter(iter) {}
 
     combine_seq &begin() { return *this; }
@@ -555,7 +555,7 @@ auto &operator*=(std::tuple<T1, T1, T1> &vector1, T2 norm) {
 }
 
 class Grid {
-   public:
+public:
     int x, y, z;
 };
 

@@ -9,7 +9,6 @@
 
 class IRSpectrumDeltaDipole : public IRSpectrum {
 public:
-
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
@@ -17,8 +16,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Infrared radiation (IR) Spectrum from delta Dipole"; }
 
     static void calculateSpectrum(const std::string &out);
-
 };
 
-
-#endif //TINKER_IRSPECTRUMDELTADIPOLE_HPP
+#endif  // TINKER_IRSPECTRUMDELTADIPOLE_HPP

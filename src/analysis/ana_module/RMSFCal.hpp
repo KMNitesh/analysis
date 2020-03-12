@@ -21,7 +21,7 @@
 class Frame;
 
 class RMSFCal : public AbstractAnalysis {
-   public:
+public:
     RMSFCal();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -34,7 +34,7 @@ class RMSFCal : public AbstractAnalysis {
 
     [[nodiscard]] static std::string_view title() { return "RMSF Calculator"; }
 
-   protected:
+protected:
     std::unique_ptr<std::ostream> pdb_ostream;
 
     AmberMask mask_for_superpose;
@@ -96,7 +96,7 @@ class RMSFCal : public AbstractAnalysis {
 
     void saveJson(std::ostream &os) const;
 
-   private:
+private:
     void add_atom_to_residue_vector(std::shared_ptr<Atom> &atom);
 };
 

@@ -12,16 +12,17 @@
 
 // Input/Output Stream Library
 
-#include <ios>
-#include <istream>
-#include <iostream>
 #include <fstream>
+#include <ios>
+#include <iostream>
+#include <istream>
 #include <sstream>
 
 // Containers
 #include <array>
 #include <deque>
 #include <forward_list>
+#include <initializer_list>
 #include <list>
 #include <map>
 #include <queue>
@@ -31,8 +32,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <initializer_list>
-
 // multi-threading
 #include <atomic>
 #include <condition_variable>
@@ -40,21 +39,18 @@
 #include <thread>
 
 // Other
-#include <memory>
-#include <string>
-#include <tuple>
-#include <utility>
-
-
-#include <type_traits>
 #include <algorithm>
 #include <chrono>
+#include <functional>
+#include <memory>
 #include <numeric>
 #include <random>
-
-#include <functional>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
 // C Library
 #include <cmath>
 
-#endif //TINKER_STD_HPP
+#endif  // TINKER_STD_HPP

@@ -1,7 +1,9 @@
 #ifndef TINKER_ITS_REWEIGHT_HPP
 #define TINKER_ITS_REWEIGHT_HPP
 
-#include <string_view>
+#include <boost/fusion/sequence.hpp>
+
+#include "utils/std.hpp"
 
 class ITS_Reweight {
 public:
@@ -9,12 +11,10 @@ public:
 
     static void process();
 
-    [[nodiscard]] static std::pair<bool, std::vector<boost::fusion::vector<int, std::vector<double>>>>
-    read_fb(std::istream &is);
+    [[nodiscard]] static std::pair<bool, std::vector<boost::fusion::vector<int, std::vector<double>>>> read_fb(
+        std::istream &is);
 
     [[nodiscard]] static std::pair<bool, std::vector<std::pair<double, double>>> read_pot(std::istream &is);
-
 };
 
-
-#endif //TINKER_ITS_REWEIGHT_HPP
+#endif  // TINKER_ITS_REWEIGHT_HPP

@@ -1,24 +1,24 @@
 
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
 #include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
+
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
-#include "utils/ThrowAssert.hpp"
-#include "utils/common.hpp"
-#include "utils/VectorSelectorFactory.hpp"
 #include "nlohmann/json.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/VectorSelectorFactory.hpp"
+#include "utils/common.hpp"
 
-AngleDistributionBetweenTwoVectorWithCutoff::AngleDistributionBetweenTwoVectorWithCutoff() {
-    enable_outfile = true;
-}
-
+AngleDistributionBetweenTwoVectorWithCutoff::AngleDistributionBetweenTwoVectorWithCutoff() { enable_outfile = true; }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->metal_mask)) this->group1.insert(atom);
-                        if (Atom::is_match(atom, this->ligand_mask)) this->group2.insert(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->metal_mask))
+            this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ligand_mask))
+            this->group2.insert(atom);
+    });
     throw_assert(this->group1.size() == 1, "Group1 must has only one atom");
     throw_assert(!this->group1.empty(), "Group2 must has at least one atom");
 }
@@ -26,10 +26,9 @@ void AngleDistributionBetweenTwoVectorWithCutoff::processFirstFrame(std::shared_
 void AngleDistributionBetweenTwoVectorWithCutoff::process(std::shared_ptr<Frame> &frame) {
     nframe++;
     for (auto &ref : group1) {
-        for (auto &atom: group2) {
+        for (auto &atom : group2) {
             double distance = atom_distance(ref, atom, frame);
             if (cutoff1 <= distance and distance < cutoff2) {
-
                 auto v1 = vector1->calculateVector(ref->molecule.lock(), frame);
                 auto v2 = vector2->calculateVector(atom->molecule.lock(), frame);
 
@@ -45,7 +44,6 @@ void AngleDistributionBetweenTwoVectorWithCutoff::process(std::shared_ptr<Frame>
             }
         }
     }
-
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
@@ -64,7 +62,6 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
 
     os << "# cutoff1 > " << cutoff1 << '\n';
     os << "# cutoff2 > " << cutoff2 << '\n';
-
 
     std::set<int> appeared_atoms;
 
@@ -96,16 +93,15 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
         os << '\n';
     }
 
-
     os << std::string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
-    for (auto[grid, value] : angle_hist.getDistribution()) {
+    for (auto [grid, value] : angle_hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
     os << std::string(50, '#') << '\n';
 
     os << format("#%15s %15s\n", "cos(theta)", "Probability Density(%)");
-    for (auto[grid, value] : cos_hist.getDistribution()) {
+    for (auto [grid, value] : cos_hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
     os << std::string(50, '#') << '\n';
@@ -113,7 +109,6 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
     os << ">>>JSON<<<\n";
     saveJson(os);
     os << "<<<JSON>>>\n";
-
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
@@ -140,7 +135,6 @@ void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
     init_cos_hist(angle_max, angle_width);
 }
 
-
 std::string AngleDistributionBetweenTwoVectorWithCutoff::description() {
     std::stringstream ss;
     std::string title_line = "------ " + std::string(title()) + " ------";
@@ -158,17 +152,11 @@ std::string AngleDistributionBetweenTwoVectorWithCutoff::description() {
     return ss.str();
 }
 
-void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(
-        const AmberMask &M,
-        const AmberMask &L,
-        std::shared_ptr<VectorSelector> vector1,
-        std::shared_ptr<VectorSelector> vector2,
-        double angle_max,
-        double angle_width,
-        double cutoff1,
-        double cutoff2,
-        const std::string &outfilename) {
-
+void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(const AmberMask &M, const AmberMask &L,
+                                                                std::shared_ptr<VectorSelector> vector1,
+                                                                std::shared_ptr<VectorSelector> vector2,
+                                                                double angle_max, double angle_width, double cutoff1,
+                                                                double cutoff2, const std::string &outfilename) {
     this->metal_mask = M;
     this->ligand_mask = L;
 
@@ -211,11 +199,9 @@ void AngleDistributionBetweenTwoVectorWithCutoff::setParameters(
 
     angle_hist.initialize(angle_max, angle_width);
     init_cos_hist(angle_max, angle_width);
-
 }
 
-void AngleDistributionBetweenTwoVectorWithCutoff::init_cos_hist(double angle_max,
-                                                                double angle_width) {
+void AngleDistributionBetweenTwoVectorWithCutoff::init_cos_hist(double angle_max, double angle_width) {
     cos_hist.initialize({cos(angle_max / radian), 1}, abs(1 - cos(angle_max / radian)) / (angle_max / angle_width));
 }
 
@@ -227,34 +213,19 @@ void AngleDistributionBetweenTwoVectorWithCutoff::saveJson(std::ostream &os) con
     json["L"] = to_string(ligand_mask);
     json["vector1"] = vector1->description();
     json["vector2"] = vector2->description();
-    json["angle_max"] = {{"value", angle_hist.dimension_range.second},
-                         {"unit",  "degree"}};
+    json["angle_max"] = {{"value", angle_hist.dimension_range.second}, {"unit", "degree"}};
 
-    json["angle_width"] = {{"value", angle_hist.getWidth()},
-                           {"unit",  "degree"}};
+    json["angle_width"] = {{"value", angle_hist.getWidth()}, {"unit", "degree"}};
 
-    json["cutoff1"] = {{"value", cutoff1},
-                       {"unit",  "Ang"}};
+    json["cutoff1"] = {{"value", cutoff1}, {"unit", "Ang"}};
 
+    json["cutoff2"] = {{"value", cutoff2}, {"unit", "Ang"}};
 
-    json["cutoff2"] = {{"value", cutoff2},
-                       {"unit",  "Ang"}};
+    json["Probability Density"] = {{"meta", {{"X", "Angle(degree)"}, {"Y", "Probability Density(degree-1)"}}},
+                                   {"values", angle_hist.getDistribution()}};
 
-    json["Probability Density"] = {
-            {"meta",   {
-                               {"X", "Angle(degree)"},
-                               {"Y", "Probability Density(degree-1)"}
-                       }},
-            {"values", angle_hist.getDistribution()}
-    };
-
-    json["Probability Density by cosine"] = {
-            {"meta",   {
-                               {"X", "cos(theta)"},
-                               {"Y", "Probability Density"}
-                       }},
-            {"values", cos_hist.getDistribution()}
-    };
+    json["Probability Density by cosine"] = {{"meta", {{"X", "cos(theta)"}, {"Y", "Probability Density"}}},
+                                             {"values", cos_hist.getDistribution()}};
 
     os << json;
 }

@@ -9,7 +9,6 @@
 
 class SspResidenceTime : public ResidenceTime {
 public:
-
     void print(std::ostream &os) override;
 
     void readInfo() override;
@@ -19,9 +18,7 @@ public:
     }
 
 protected:
-
     void calculateSSP();
 };
 
-
-#endif //TINKER_SSPRESIDENCETIME_HPP
+#endif  // TINKER_SSPRESIDENCETIME_HPP

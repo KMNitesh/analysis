@@ -2,18 +2,19 @@
 // Created by xiamr on 3/17/19.
 //
 
+#include "atom.hpp"
+
 #include <fnmatch.h>
 
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
 #include <boost/fusion/include/at_c.hpp>
+#include <boost/optional.hpp>
+#include <boost/variant.hpp>
 
-#include "utils/common.hpp"
-#include "atom.hpp"
-#include "dsl/grammar.hpp"
 #include "dsl/GeneratorGrammar.hpp"
-#include "utils/ThrowAssert.hpp"
+#include "dsl/grammar.hpp"
 #include "molecule.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/common.hpp"
 
 namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
@@ -39,9 +40,7 @@ void print::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues)
             }
         }
 
-        void operator()(std::string &i) {
-            std::cout << i;
-        }
+        void operator()(std::string &i) { std::cout << i; }
     } p;
     for (auto &i : residues->val) {
         if (first) {
@@ -91,9 +90,7 @@ void print::operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const
             }
         }
 
-        void operator()(const std::string &i) {
-            std::cout << i;
-        }
+        void operator()(const std::string &i) { std::cout << i; }
     } p;
     indent(space_num);
     bool first = true;
@@ -123,9 +120,7 @@ void print::operator()(const std::shared_ptr<Atom::atom_types> &types) const {
             }
         }
 
-        void operator()(const std::string &i) {
-            std::cout << i;
-        }
+        void operator()(const std::string &i) { std::cout << i; }
     } p;
     bool first = true;
     for (auto &i : types->val) {
@@ -179,14 +174,10 @@ void print::operator()(const std::shared_ptr<Atom::Operator> &op) const {
     }
 }
 
-void print::indent(int space_num) const {
-    std::cout << std::string(3 * space_num, ' ');
-}
+void print::indent(int space_num) const { std::cout << std::string(3 * space_num, ' '); }
 
-
-template<typename Iterator, typename Skipper>
+template <typename Iterator, typename Skipper>
 Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &promot) {
-
     for (;;) {
         Atom::AmberMask mask;
         auto input_string = input(promot);
@@ -210,20 +201,15 @@ Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, 
             continue;
         }
         return mask;
-
     }
 }
 
-
-void
-Atom::select2group(Atom::AmberMask &ids1, Atom::AmberMask &ids2,
-                   const std::string &prompt1, const std::string &prompt2) {
-
+void Atom::select2group(Atom::AmberMask &ids1, Atom::AmberMask &ids2, const std::string &prompt1,
+                        const std::string &prompt2) {
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
 
     ids1 = input_atom_selection(grammar, prompt1);
     ids2 = input_atom_selection(grammar, prompt2);
-
 }
 
 void Atom::select1group(AmberMask &ids, const std::string &prompt) {
@@ -236,14 +222,11 @@ void Atom::select1group(AmberMask &ids, const std::string &prompt) {
     ids = input_atom_selection(grammar, prompt);
 }
 
-
 bool is_match_impl(const std::shared_ptr<Atom> &atom, const Atom::Node &ast) {
     return boost::apply_visitor(AtomEqual(atom), ast);
 }
 
-bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AmberMask &id) {
-    return is_match_impl(atom, id);
-}
+bool Atom::is_match(const std::shared_ptr<Atom> &atom, const Atom::AmberMask &id) { return is_match_impl(atom, id); }
 
 bool AtomEqual::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const {
     if (residues) {
@@ -313,7 +296,6 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::molecule_nums> &molecules
     }
     return false;
 }
-
 
 bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_name_nums> &names) const {
     if (names) {
@@ -410,13 +392,11 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::Operator> &op) const {
             case Atom::Op::AND: {
                 AtomEqual equal(atom);
                 return boost::apply_visitor(equal, op->node1) and boost::apply_visitor(equal, op->node2);
-            }
-                break;
+            } break;
             case Atom::Op::OR: {
                 AtomEqual equal(atom);
                 return boost::apply_visitor(equal, op->node1) or boost::apply_visitor(equal, op->node2);
-            }
-                break;
+            } break;
             default:
                 throw std::runtime_error("invalid Operator");
         }

@@ -1,12 +1,12 @@
 
-#include <iostream>
 #include "netcdf_writer.hpp"
-#include "data_structure/frame.hpp"
-#include "data_structure/atom.hpp"
 
-void NetCDFWriter::open(const std::string &filename) {
-    this->filename = filename;
-}
+#include <iostream>
+
+#include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
+
+void NetCDFWriter::open(const std::string &filename) { this->filename = filename; }
 
 void NetCDFWriter::close() {
     if (_is_open) {

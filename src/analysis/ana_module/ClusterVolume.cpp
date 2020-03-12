@@ -2,14 +2,17 @@
 // Created by xiamr on 8/26/19.
 //
 
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
-#include <boost/range/irange.hpp>
-#include <tbb/parallel_while.h>
 #include "ClusterVolume.hpp"
-#include "utils/common.hpp"
+
+#include <tbb/parallel_while.h>
+
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/irange.hpp>
+
 #include "data_structure/frame.hpp"
 #include "nlohmann/json.hpp"
+#include "utils/common.hpp"
 
 ClusterVolume::ClusterVolume() {
     enable_outfile = true;
@@ -21,11 +24,12 @@ void ClusterVolume::processFirstFrame(std::shared_ptr<Frame> &frame) {
         std::cerr << "Not supported \n";
         std::exit(1);
     }
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->atom_mask)) this->atom_group.insert(atom);
-                        else this->other_atoms.insert(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->atom_mask))
+            this->atom_group.insert(atom);
+        else
+            this->other_atoms.insert(atom);
+    });
 
     for (auto &atom : atom_group) {
         radii_for_atom_group.push_back(getVdwRadii(atom));
@@ -35,12 +39,9 @@ void ClusterVolume::processFirstFrame(std::shared_ptr<Frame> &frame) {
     }
 }
 
-void
-ClusterVolume::fill_atom(boost::multi_array<ATOM_Category, 3> *grid,
-                         double grid_x_step, double grid_y_step, double grid_z_step,
-                         ATOM_Category category,
-                         double x, double y, double z, double radii) const {
-
+void ClusterVolume::fill_atom(boost::multi_array<ATOM_Category, 3> *grid, double grid_x_step, double grid_y_step,
+                              double grid_z_step, ATOM_Category category, double x, double y, double z,
+                              double radii) const {
     auto radii2 = radii * radii;
     int radii_x = std::ceil(radii / grid_x_step);
     int radii_y = std::ceil(radii / grid_y_step);
@@ -49,13 +50,11 @@ ClusterVolume::fill_atom(boost::multi_array<ATOM_Category, 3> *grid,
     for (int i = -radii_x; i <= radii_x; ++i) {
         for (int j = -radii_y; j <= radii_y; ++j) {
             for (int k = -radii_z; k <= radii_z; ++k) {
-
                 auto xr = i * grid_x_step;
                 auto yr = j * grid_y_step;
                 auto zr = k * grid_z_step;
 
                 if ((xr * xr + yr * yr + zr * zr) < radii2) {
-
                     auto box_index_x = int((x + xr) / grid_x_step) % grid_x;
                     while (box_index_x < 0) box_index_x += grid_x;
                     auto box_index_y = int((y + yr) / grid_y_step) % grid_y;
@@ -75,29 +74,19 @@ ClusterVolume::fill_atom(boost::multi_array<ATOM_Category, 3> *grid,
 }
 
 void ClusterVolume::process(std::shared_ptr<Frame> &frame) {
+    auto [grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume, nframe] =
+        preprocess(frame);
 
-
-    auto[grid, atom_group_array, other_atom_array,
-    grid_x_step, grid_y_step, grid_z_step,
-    total_volume, nframe] = preprocess(frame);
-
-    work_body(grid, atom_group_array, other_atom_array,
-              grid_x_step, grid_y_step, grid_z_step,
-              total_volume, nframe);
+    work_body(grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume, nframe);
 }
 
 void ClusterVolume::work_body(boost::multi_array<ATOM_Category, 3> *grid,
                               boost::multi_array<double, 2> *atom_group_array,
-                              boost::multi_array<double, 2> *other_atom_array,
-                              double grid_x_step,
-                              double grid_y_step,
-                              double grid_z_step,
-                              double total_volume,
-                              int nframe) {
-
+                              boost::multi_array<double, 2> *other_atom_array, double grid_x_step, double grid_y_step,
+                              double grid_z_step, double total_volume, int nframe) {
     double total_grid_points = grid_x * grid_y * grid_z;
-    auto[num_grid_point_before_fill, num_grid_point_after_fill] = do_grid(grid, atom_group_array, other_atom_array,
-                                                                          grid_x_step, grid_y_step, grid_z_step);
+    auto [num_grid_point_before_fill, num_grid_point_after_fill] =
+        do_grid(grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step);
 
     auto percentage_before_fill = num_grid_point_before_fill / total_grid_points;
     auto volume_before_fill = total_volume * percentage_before_fill;
@@ -113,33 +102,26 @@ void ClusterVolume::work_body(boost::multi_array<ATOM_Category, 3> *grid,
 std::pair<std::size_t, std::size_t> ClusterVolume::do_grid(boost::multi_array<ATOM_Category, 3> *grid,
                                                            boost::multi_array<double, 2> *atom_group_array,
                                                            boost::multi_array<double, 2> *other_atom_array,
-                                                           double grid_x_step,
-                                                           double grid_y_step,
+                                                           double grid_x_step, double grid_y_step,
                                                            double grid_z_step) const {
-
-
     for (auto index : boost::irange(radii_for_other_atoms.size())) {
-        fill_atom(grid, grid_x_step, grid_y_step, grid_z_step, ATOM_Category::OTHER,
-                  (*other_atom_array)[index][0], (*other_atom_array)[index][1], (*other_atom_array)[index][2],
-                  radii_for_other_atoms[index]);
+        fill_atom(grid, grid_x_step, grid_y_step, grid_z_step, ATOM_Category::OTHER, (*other_atom_array)[index][0],
+                  (*other_atom_array)[index][1], (*other_atom_array)[index][2], radii_for_other_atoms[index]);
     }
 
     for (auto index : boost::irange(radii_for_atom_group.size())) {
-        fill_atom(grid, grid_x_step, grid_y_step, grid_z_step, ATOM_Category::DEST,
-                  (*atom_group_array)[index][0], (*atom_group_array)[index][1], (*atom_group_array)[index][2],
-                  radii_for_atom_group[index]);
+        fill_atom(grid, grid_x_step, grid_y_step, grid_z_step, ATOM_Category::DEST, (*atom_group_array)[index][0],
+                  (*atom_group_array)[index][1], (*atom_group_array)[index][2], radii_for_atom_group[index]);
     }
     auto num_grid_point_before_fill = countFilledGridPoints(grid);
-    while (fill_space(grid, grid_x_step, grid_y_step, grid_z_step));
+    while (fill_space(grid, grid_x_step, grid_y_step, grid_z_step))
+        ;
     auto num_grid_point_after_fill = countFilledGridPoints(grid);
     return {num_grid_point_before_fill, num_grid_point_after_fill};
 }
 
-
-bool
-ClusterVolume::fill_space(boost::multi_array<ATOM_Category, 3> *grid,
-                          double grid_x_step, double grid_y_step, double grid_z_step) const {
-
+bool ClusterVolume::fill_space(boost::multi_array<ATOM_Category, 3> *grid, double grid_x_step, double grid_y_step,
+                               double grid_z_step) const {
     bool updated = false;
 
     auto neighs = generate_neighbor_grids(grid_x_step, grid_y_step, grid_z_step);
@@ -147,9 +129,8 @@ ClusterVolume::fill_space(boost::multi_array<ATOM_Category, 3> *grid,
     auto total_size = neighs.size() * 3;
     int neighs_vec[total_size];
 
-
     int *p = neighs_vec;
-    for (auto[neigh_x, neigh_y, neigh_z] : neighs) {
+    for (auto [neigh_x, neigh_y, neigh_z] : neighs) {
         *p = neigh_x;
         ++p;
         *p = neigh_y;
@@ -157,7 +138,6 @@ ClusterVolume::fill_space(boost::multi_array<ATOM_Category, 3> *grid,
         *p = neigh_z;
         ++p;
     }
-
 
     for (int i = 0; i < grid_x; i++) {
         for (int j = 0; j < grid_y; j++) {
@@ -167,7 +147,6 @@ ClusterVolume::fill_space(boost::multi_array<ATOM_Category, 3> *grid,
                     bool found_dest_atom = false;
                     p = neighs_vec;
                     while (p < (neighs_vec + total_size)) {
-
                         auto neigh_x = *p;
                         ++p;
                         auto neigh_y = *p;
@@ -226,28 +205,16 @@ void ClusterVolume::print(std::ostream &os) {
     nlohmann::json json;
     json["title"] = title();
     json["mask"] = to_string(atom_mask);
-    json["grid"] = {
-            {"X", grid_x},
-            {"Y", grid_y},
-            {"Z", grid_z}
-    };
+    json["grid"] = {{"X", grid_x}, {"Y", grid_y}, {"Z", grid_z}};
 
-    os << boost::format("%10s %20s %20s %20s %20s\n")
-          % "Frame"
-          % "vdW Volume Pencentage(%)"
-          % "vdW Volume(Ang^3)"
-          % "Fill Space Volume Pencentage(%)"
-          % "Fill Space Volume(Ang^3)";
+    os << boost::format("%10s %20s %20s %20s %20s\n") % "Frame" % "vdW Volume Pencentage(%)" % "vdW Volume(Ang^3)" %
+              "Fill Space Volume Pencentage(%)" % "Fill Space Volume(Ang^3)";
     for (int index : boost::irange(1, current_frame_num + 1)) {
         std::decay_t<decltype(volumes)>::const_accessor accessor;
         volumes.find(accessor, index);
-        os << boost::format("%10d %20.5f %20.5f %20.5f %20.5f\n")
-              % accessor->first
-              % (100 * std::get<0>(accessor->second))
-              % std::get<1>(accessor->second)
-              % (100 * std::get<2>(accessor->second))
-              % std::get<3>(accessor->second);
-
+        os << boost::format("%10d %20.5f %20.5f %20.5f %20.5f\n") % accessor->first %
+                  (100 * std::get<0>(accessor->second)) % std::get<1>(accessor->second) %
+                  (100 * std::get<2>(accessor->second)) % std::get<3>(accessor->second);
 
         json["Frame"].push_back(accessor->first);
         json["vdW Volume Pencentage(%)"].push_back(100 * std::get<0>(accessor->second));
@@ -261,7 +228,6 @@ void ClusterVolume::print(std::ostream &os) {
     os << ">>>JSON<<<\n";
     os << json;
     os << "<<<JSON>>>\n";
-
 }
 
 void ClusterVolume::readInfo() {
@@ -269,8 +235,6 @@ void ClusterVolume::readInfo() {
     grid_x = choose<int>(1, 10000, "Grid in X dememsion  :  ");
     grid_y = choose<int>(1, 10000, "Grid in Y dememsion  :  ");
     grid_z = choose<int>(1, 10000, "Grid in Z dememsion  :  ");
-
-
 }
 
 double ClusterVolume::getVdwRadii(const std::shared_ptr<Atom> &atom) {
@@ -280,14 +244,14 @@ double ClusterVolume::getVdwRadii(const std::shared_ptr<Atom> &atom) {
         return it->second;
     } else {
         std::cerr << "vdW radii not available for atom "
-                     "( name = " << atom->atom_name << ", mass = " << atom->mass << ")\n";
+                     "( name = "
+                  << atom->atom_name << ", mass = " << atom->mass << ")\n";
         exit(1);
     }
 }
 
-std::vector<std::tuple<int, int, int>>
-ClusterVolume::generate_neighbor_grids(double grid_x_step, double grid_y_step, double grid_z_step) const {
-
+std::vector<std::tuple<int, int, int>> ClusterVolume::generate_neighbor_grids(double grid_x_step, double grid_y_step,
+                                                                              double grid_z_step) const {
     std::vector<std::tuple<int, int, int>> neighs;
     const double radii = 3.0;
     auto radii2 = radii * radii;
@@ -299,13 +263,11 @@ ClusterVolume::generate_neighbor_grids(double grid_x_step, double grid_y_step, d
     for (int i = -radii_x; i <= radii_x; ++i) {
         for (int j = -radii_y; j <= radii_y; ++j) {
             for (int k = -radii_z; k <= radii_z; ++k) {
-
                 auto xr = i * grid_x_step;
                 auto yr = j * grid_y_step;
                 auto zr = k * grid_z_step;
 
                 if ((xr * xr + yr * yr + zr * zr) < radii2) {
-
                     auto box_index_x = int(xr / grid_x_step) % grid_x;
                     auto box_index_y = int(yr / grid_y_step) % grid_y;
                     auto box_index_z = int(zr / grid_z_step) % grid_z;
@@ -319,10 +281,7 @@ ClusterVolume::generate_neighbor_grids(double grid_x_step, double grid_y_step, d
     return neighs;
 }
 
-bool ClusterVolume::enable_paralel_while_impl() {
-    return true;
-}
-
+bool ClusterVolume::enable_paralel_while_impl() { return true; }
 
 ClusterVolume::argument_type ClusterVolume::preprocess(std::shared_ptr<Frame> &frame) {
     current_frame_num++;
@@ -353,13 +312,12 @@ ClusterVolume::argument_type ClusterVolume::preprocess(std::shared_ptr<Frame> &f
     double grid_y_step = b_axis / grid_y;
     double grid_z_step = c_axis / grid_z;
 
-    auto total_volume = frame->volume(); // Ang^3
-    return {grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume,
-            current_frame_num};
+    auto total_volume = frame->volume();  // Ang^3
+    return {grid,        atom_group_array, other_atom_array, grid_x_step,
+            grid_y_step, grid_z_step,      total_volume,     current_frame_num};
 }
 
 void ClusterVolume::do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) {
-
     FrameStream stream(func, this);
 
     ApplyBody body(this);
@@ -382,15 +340,12 @@ bool ClusterVolume::FrameStream::pop_if_present(ClusterVolume::argument_type &it
 }
 
 void ClusterVolume::ApplyBody::operator()(ClusterVolume::argument_type &item) const {
-    auto&[grid, atom_group_array, other_atom_array,
-    grid_x_step, grid_y_step, grid_z_step,
-    total_volume, nframe] = item;
+    auto &[grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume, nframe] =
+        item;
 
-    parent->work_body(grid, atom_group_array, other_atom_array,
-                      grid_x_step, grid_y_step, grid_z_step,
-                      total_volume, nframe);
+    parent->work_body(grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume,
+                      nframe);
     delete std::get<0>(item);
     delete std::get<1>(item);
     delete std::get<2>(item);
 }
-

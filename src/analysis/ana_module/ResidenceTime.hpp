@@ -5,12 +5,14 @@
 #ifndef TINKER_RESIDENCETIME_HPP
 #define TINKER_RESIDENCETIME_HPP
 
-#include <memory>
-#include <unordered_set>
-#include <string>
-#include <map>
-#include <Eigen/Eigen>
 #include <tbb/tbb.h>
+
+#include <Eigen/Eigen>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_set>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 
@@ -18,7 +20,6 @@ class Frame;
 
 class ResidenceTime : public AbstractAnalysis {
 public:
-
     ResidenceTime();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -27,15 +28,14 @@ public:
 
     void print(std::ostream &os) override;
 
-    void setParameters(const Atom::Node &id1, const Atom::Node &id2,
-                       double cutoff, int t_star, const std::string &outfilename);
+    void setParameters(const Atom::Node &id1, const Atom::Node &id2, double cutoff, int t_star,
+                       const std::string &outfilename);
 
     void readInfo() override;
 
     [[nodiscard]] static std::string_view title() { return "ResidenceTime"; }
 
 protected:
-
     std::map<int, std::list<bool>> mark_map;
 
     void calculate();
@@ -49,10 +49,7 @@ protected:
 
     int time_star = 0;
 
-    enum class TimeStarMode : int {
-        Loose = 0,
-        Strict = 1
-    } timeStarMode;
+    enum class TimeStarMode : int { Loose = 0, Strict = 1 } timeStarMode;
 
     AmberMask center_atom_mask;
     AmberMask Ow_atom_mask;
@@ -67,4 +64,4 @@ protected:
     void readBasicSetting();
 };
 
-#endif //TINKER_RESIDENCETIME_HPP
+#endif  // TINKER_RESIDENCETIME_HPP

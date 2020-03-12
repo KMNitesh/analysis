@@ -9,11 +9,9 @@
 
 class DensityOfStates : public VelocityAutocorrelationFunction {
 public:
-
     void print(std::ostream &os) override;
 
     [[nodiscard]] static std::string_view title() { return "Density of States (DOS)"; }
 };
 
-
-#endif //TINKER_DENSITYOFSTATES_HPP
+#endif  // TINKER_DENSITYOFSTATES_HPP

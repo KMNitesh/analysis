@@ -3,8 +3,9 @@
 //
 
 #include "FindMinBetweenTwoGroups.hpp"
-#include "data_structure/frame.hpp"
+
 #include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/common.hpp"
 
@@ -13,7 +14,6 @@ using namespace std;
 FindMinBetweenTwoGroups::FindMinBetweenTwoGroups() { enable_outfile = true; }
 
 void FindMinBetweenTwoGroups::process(std::shared_ptr<Frame> &frame) {
-
     std::size_t length = mol_list.size();
 
     std::vector<double> line_rest;
@@ -33,7 +33,6 @@ void FindMinBetweenTwoGroups::print(std::ostream &os) {
     os << "Group  " << amberMask << '\n';
     os << "************************************************\n";
 
-
     os << boost::format("%6s") % "Frame";
     std::size_t length = mol_list.size();
     for (std::size_t i = 0; i < length - 1; i++) {
@@ -50,18 +49,14 @@ void FindMinBetweenTwoGroups::print(std::ostream &os) {
         nframe++;
 
         os << boost::format("%6d") % nframe;
-        for (auto value: v) os << boost::format("  %9.2f  ") % value;
+        for (auto value : v) os << boost::format("  %9.2f  ") % value;
         os << '\n';
     }
-
 
     os << "************************************************\n";
 }
 
-
-void FindMinBetweenTwoGroups::readInfo() {
-    Atom::select1group(amberMask, "Input Residue Name Mask: ");
-}
+void FindMinBetweenTwoGroups::readInfo() { Atom::select1group(amberMask, "Input Residue Name Mask: "); }
 
 void FindMinBetweenTwoGroups::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {

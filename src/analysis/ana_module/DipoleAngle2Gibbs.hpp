@@ -16,10 +16,9 @@ public:
     [[nodiscard]] static std::string_view title() { return "Dipole Angle to Gibbs Free Energy"; };
 
 protected:
-
     double temperature;  // unit: K
 
     void printData(std::ostream &os) const;
 };
 
-#endif //TINKER_DIPOLEANGLE2GIBBS_HPP
+#endif  // TINKER_DIPOLEANGLE2GIBBS_HPP

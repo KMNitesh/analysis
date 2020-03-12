@@ -5,8 +5,8 @@
 #ifndef TINKER_FILEINTERFACE_HPP
 #define TINKER_FILEINTERFACE_HPP
 
-#include <string>
 #include <ostream>
+#include <string>
 
 class FileInterface : public std::ostream {
 public:
@@ -15,5 +15,4 @@ public:
     virtual void close() = 0;
 };
 
-
-#endif //TINKER_FILEINTERFACE_HPP
+#endif  // TINKER_FILEINTERFACE_HPP

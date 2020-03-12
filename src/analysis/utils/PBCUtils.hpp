@@ -16,7 +16,7 @@
 class Frame;
 
 class Visitor : public boost::default_bfs_visitor {
-   public:
+public:
     explicit Visitor(std::vector<std::shared_ptr<Molecule>> &mols,
                      std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> &mole_seq)
         : mols(mols), mole_seq(mole_seq){};
@@ -32,7 +32,7 @@ class Visitor : public boost::default_bfs_visitor {
 };
 
 class AggregateVisitor : public boost::default_bfs_visitor {
-   public:
+public:
     explicit AggregateVisitor(const std::shared_ptr<Frame> &frame) : frame(frame){};
 
     template <typename Edge, typename Graph>
@@ -44,12 +44,12 @@ class AggregateVisitor : public boost::default_bfs_visitor {
         std::tie(target->x, target->y, target->z) = r + source->getCoordinate();
     }
 
-   private:
+private:
     const std::shared_ptr<Frame> &frame;
 };
 
 class PBCUtils {
-   public:
+public:
     void do_move_center_basedto_atom(AmberMask &mask, std::shared_ptr<Frame> &frame) const;
 
     void do_move_center_basedto_atom_group(AmberMask &mask, std::shared_ptr<Frame> &frame) const;
@@ -86,7 +86,7 @@ class PBCUtils {
 
     static void move(MolPair &mols, const std::shared_ptr<Frame> &frame) { move(mols.first, mols.second, frame); };
 
-   private:
+private:
     static std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> calculate_intermol_imp(
         const std::set<std::shared_ptr<Molecule>> &mols_set, const std::shared_ptr<Frame> &frame);
 

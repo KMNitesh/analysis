@@ -6,13 +6,13 @@
 #define TINKER_TRAJECTORYWRITERFACTORYINTERFACE_HPP
 
 #include <memory>
-#include "utils/common.hpp"
+
 #include "TrajectoryFormatWriter.hpp"
+#include "utils/common.hpp"
 
 class TrajectoryWriterFactoryInterface {
 public:
     virtual std::shared_ptr<TrajectoryFormatWriter> make_instance(FileType t) = 0;
 };
 
-
-#endif //TINKER_TRAJECTORYWRITERFACTORYINTERFACE_HPP
+#endif  // TINKER_TRAJECTORYWRITERFACTORYINTERFACE_HPP

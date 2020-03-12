@@ -4,12 +4,12 @@
 
 #include "PrintTopolgy.hpp"
 
-#include "dsl/center_selection_grammar.hpp"
-#include "trajectory_reader/trajectoryreader.hpp"
-#include "data_structure/frame.hpp"
 #include "data_structure/atom.hpp"
 #include "data_structure/forcefield.hpp"
+#include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
+#include "dsl/center_selection_grammar.hpp"
+#include "trajectory_reader/trajectoryreader.hpp"
 
 namespace qi = boost::spirit::qi;
 
@@ -30,13 +30,14 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         Noop,
     } mode;
 
-    std::cout << std::left << "Total atom numbers : " << std::setw(10) << frame->atom_list.size()
-              << "Total molecule numbers : " << std::setw(10) << frame->molecule_list.size()
-              << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>
-                      (std::chrono::high_resolution_clock::now() - t1).count() << " ms\n";
+    std::cout
+        << std::left << "Total atom numbers : " << std::setw(10) << frame->atom_list.size()
+        << "Total molecule numbers : " << std::setw(10) << frame->molecule_list.size() << "Load time : "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t1).count()
+        << " ms\n";
 
     for (;;) {
-        beg:
+    beg:
         CenterRuleNode r;
         selectCentergroup(r, "> ");
         Atom::Node ast;
@@ -62,9 +63,8 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             continue;
         }
 
-        std::cout << boost::format("%-6s %-7s %4s %-7s %4s %-6s  %8s %8s  %8s%8s%8s\n")
-                     % "#Atom" % "Name" % "#Res" % "Name" % "#Mol" % "Type" % "Charge" % "Mass"
-                     % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
+        std::cout << boost::format("%-6s %-7s %4s %-7s %4s %-6s  %8s %8s  %8s%8s%8s\n") % "#Atom" % "Name" % "#Res" %
+                         "Name" % "#Mol" % "Type" % "Charge" % "Mass" % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
         double weight = 0;
         double sum_x = 0.0;
         double sum_y = 0.0;
@@ -72,17 +72,13 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         const boost::format fmt{"%6d %-7s %4s %-7s %4s %-6s  %8s %8s  %8.3f%8.3f%8.3f\n"};
         for (auto &atom : frame->atom_list) {
             if (Atom::is_match(atom, ast)) {
-                std::cout << boost::format(fmt)
-                             % atom->seq % atom->atom_name
-                             % (atom->residue_num ? std::to_string(atom->residue_num.get()) : "-")
-                             % (atom->residue_name ? atom->residue_name.get() : "-")
-                             % atom->molecule.lock()->sequence
-                             % atom->type_name
-                             % (atom->charge ? (boost::format("%8.4f") % atom->charge.get()).str() : "-")
-                             % (atom->mass ? (boost::format("%8.4f") % atom->mass.get()).str() : "-")
-                             % atom->x
-                             % atom->y
-                             % atom->z;
+                std::cout << boost::format(fmt) % atom->seq % atom->atom_name %
+                                 (atom->residue_num ? std::to_string(atom->residue_num.get()) : "-") %
+                                 (atom->residue_name ? atom->residue_name.get() : "-") %
+                                 atom->molecule.lock()->sequence % atom->type_name %
+                                 (atom->charge ? (boost::format("%8.4f") % atom->charge.get()).str() : "-") %
+                                 (atom->mass ? (boost::format("%8.4f") % atom->mass.get()).str() : "-") % atom->x %
+                                 atom->y % atom->z;
                 switch (mode) {
                     case Mode::Mass:
                         if (!atom->mass) {
@@ -110,23 +106,18 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                 case Mode::Mass:
 
                     std::cout << boost::format("Mass Center %8s%8s%8s\n") % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
-                    std::cout << boost::format("            %8.3f%8.3f%8.3f\n")
-                                 % (sum_x / weight)
-                                 % (sum_y / weight)
-                                 % (sum_z / weight);
+                    std::cout << boost::format("            %8.3f%8.3f%8.3f\n") % (sum_x / weight) % (sum_y / weight) %
+                                     (sum_z / weight);
 
                     break;
                 case Mode::Geom:
                     std::cout << boost::format("Geom Center %8s%8s%8s\n") % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
-                    std::cout << boost::format("            %8.3f%8.3f%8.3f\n")
-                                 % (sum_x / weight)
-                                 % (sum_y / weight)
-                                 % (sum_z / weight);
+                    std::cout << boost::format("            %8.3f%8.3f%8.3f\n") % (sum_x / weight) % (sum_y / weight) %
+                                     (sum_z / weight);
                     break;
                 case Mode::Noop:
                     break;
             }
         }
-
     }
 }

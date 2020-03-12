@@ -2,18 +2,17 @@
 // Created by xiamr on 6/14/19.
 //
 
-#include <boost/range/adaptors.hpp>
 #include "DemixIndexOfTwoGroup.hpp"
+
+#include <boost/range/adaptors.hpp>
+
 #include "data_structure/frame.hpp"
 #include "nlohmann/json.hpp"
 
-DemixIndexOfTwoGroup::DemixIndexOfTwoGroup() {
-    enable_outfile = true;
-}
+DemixIndexOfTwoGroup::DemixIndexOfTwoGroup() { enable_outfile = true; }
 
-auto
-DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame) {
-
+auto DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom,
+                                                const std::shared_ptr<Frame> &frame) {
     auto &[a_axis, b_axis, c_axis] = frame->box.getAxis();
     auto box_index_x = int(atom->x / (a_axis / grid_x)) % grid_x;
     while (box_index_x < 0) box_index_x += grid_x;
@@ -34,7 +33,6 @@ DemixIndexOfTwoGroup::calculate_grid_index(const std::shared_ptr<Atom> &atom, co
 }
 
 void DemixIndexOfTwoGroup::process(std::shared_ptr<Frame> &frame) {
-
     double group1_dens[grid_x][grid_y][grid_z];
     double group2_dens[grid_x][grid_y][grid_z];
 
@@ -42,11 +40,11 @@ void DemixIndexOfTwoGroup::process(std::shared_ptr<Frame> &frame) {
     bzero(group2_dens, grid_x * grid_y * grid_z * sizeof(double));
 
     for (auto &atom : group1) {
-        auto[box_index_x, box_index_y, box_index_z] =  calculate_grid_index(atom, frame);
+        auto [box_index_x, box_index_y, box_index_z] = calculate_grid_index(atom, frame);
         group1_dens[box_index_x][box_index_y][box_index_z] += atom->mass.get();
     }
     for (auto &atom : group2) {
-        auto[box_index_x, box_index_y, box_index_z] =  calculate_grid_index(atom, frame);
+        auto [box_index_x, box_index_y, box_index_z] = calculate_grid_index(atom, frame);
         group2_dens[box_index_x][box_index_y][box_index_z] += atom->mass.get();
     }
 
@@ -66,7 +64,6 @@ void DemixIndexOfTwoGroup::process(std::shared_ptr<Frame> &frame) {
         }
     }
 
-
     d_sum /= frame->volume();
 
     auto d_ideal = 1 / (1 / d1_sum + 1 / d2_sum);
@@ -83,7 +80,6 @@ void DemixIndexOfTwoGroup::readInfo() {
 }
 
 void DemixIndexOfTwoGroup::print(std::ostream &os) {
-
     os << std::string(50, '#') << '\n';
     os << "#    Demix Rate (normalization)\n";
     os << "#    Group1  " << mask1 << '\n';
@@ -100,7 +96,7 @@ void DemixIndexOfTwoGroup::print(std::ostream &os) {
     os << "@ s0 legend \"Demix Rate\"\n";
 
     os << "# Frame      Demix Rate \n";
-    for (const auto &element: demix_index_list | boost::adaptors::indexed(1)) {
+    for (const auto &element : demix_index_list | boost::adaptors::indexed(1)) {
         os << element.index() << "        " << std::get<0>(element.value()) / std::get<1>(element.value()) << '\n';
     }
     os << std::string(50, '#') << '\n';
@@ -111,11 +107,7 @@ void DemixIndexOfTwoGroup::print(std::ostream &os) {
     json["group1"] = to_string(mask1);
     json["group2"] = to_string(mask2);
 
-    json["grid"] = {
-            {"X", grid_x},
-            {"Y", grid_y},
-            {"Z", grid_z}
-    };
+    json["grid"] = {{"X", grid_x}, {"Y", grid_y}, {"Z", grid_z}};
 
     json["DemixRate"] = demix_index_list;
 
@@ -129,11 +121,10 @@ void DemixIndexOfTwoGroup::processFirstFrame(std::shared_ptr<Frame> &frame) {
         std::cerr << "Not supported \n";
         std::exit(1);
     }
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](std::shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+    });
 }
 
 void DemixIndexOfTwoGroup::setParameters(const AmberMask &id1, const AmberMask &id2, const Grid &grid,

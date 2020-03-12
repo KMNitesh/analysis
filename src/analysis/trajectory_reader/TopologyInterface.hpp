@@ -1,8 +1,8 @@
 #ifndef TINKER_TOPOLOGYINTERFACE_HPP
 #define TINKER_TOPOLOGYINTERFACE_HPP
 
-#include <string>
 #include <memory>
+#include <string>
 
 class Frame;
 
@@ -13,5 +13,4 @@ public:
     virtual ~TopologyInterface() = default;
 };
 
-
-#endif //TINKER_TOPOLOGYINTERFACE_HPP
+#endif  // TINKER_TOPOLOGYINTERFACE_HPP

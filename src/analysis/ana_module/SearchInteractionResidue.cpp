@@ -3,6 +3,7 @@
 //
 
 #include "SearchInteractionResidue.hpp"
+
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
 
@@ -11,21 +12,19 @@ using namespace std;
 SearchInteractionResidue::SearchInteractionResidue() { enable_outfile = true; }
 
 void SearchInteractionResidue::process(std::shared_ptr<Frame> &frame) {
-
-    std::unordered_set<std::string> residue_set; // resname:no
+    std::unordered_set<std::string> residue_set;  // resname:no
 
     for (auto &atomA : group1) {
         for (auto &atomB : group2) {
             if (atom_distance(atomA, atomB, frame) <= cutoff) {
-                residue_set.insert(
-                        atomB->residue_name.get() + "-" + boost::lexical_cast<std::string>(atomB->residue_num.get()));
+                residue_set.insert(atomB->residue_name.get() + "-" +
+                                   boost::lexical_cast<std::string>(atomB->residue_num.get()));
             }
         }
     }
     interaction_residues.push_back(residue_set);
     total_frames++;
 }
-
 
 void SearchInteractionResidue::print(std::ostream &os) {
     os << "************************************************\n";
@@ -35,7 +34,6 @@ void SearchInteractionResidue::print(std::ostream &os) {
     os << "cutoff :" << cutoff << " Ang\n";
 
     os << "************************************************\n";
-
 
     using ResItem = struct {
         std::string name;
@@ -66,7 +64,8 @@ void SearchInteractionResidue::print(std::ostream &os) {
     for (auto &item : itemVec) {
         os << boost::format("%10s") % item->name;
     }
-    os << boost::format("\n%10s") % "Freq";;
+    os << boost::format("\n%10s") % "Freq";
+    ;
     for (auto &item : itemVec) {
         os << boost::format("%9.1f%%") % (item->count * 100.0 / total_frames);
     }
@@ -75,8 +74,8 @@ void SearchInteractionResidue::print(std::ostream &os) {
         os << boost::format("%10d") % nframe;
         int index = 1;
         for (auto &item : itemVec) {
-            os << boost::format("%10d") % (style == OutputStyle::NUMBER ?
-                                           (set.count(item->name) ? index : 0) : set.count(item->name));
+            os << boost::format("%10d") %
+                      (style == OutputStyle::NUMBER ? (set.count(item->name) ? index : 0) : set.count(item->name));
             index++;
         }
         os << '\n';
@@ -84,8 +83,6 @@ void SearchInteractionResidue::print(std::ostream &os) {
     }
 
     os << "************************************************" << endl;
-
-
 }
 
 void SearchInteractionResidue::readInfo() {
@@ -97,9 +94,8 @@ void SearchInteractionResidue::readInfo() {
 }
 
 void SearchInteractionResidue::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+    });
 }

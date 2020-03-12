@@ -26,9 +26,9 @@
 #define INCLUDED__THROW_ASSERT_HPP
 
 #include <exception>
-#include <string>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #define THROWASSERT_LOGGER(report)
 
@@ -42,20 +42,15 @@ private:
     std::string report;
 
 public:
-
     /// Helper class for formatting assertion message
     class StreamFormatter {
     private:
-
         std::ostringstream stream;
 
     public:
+        operator std::string() const { return stream.str(); }
 
-        operator std::string() const {
-            return stream.str();
-        }
-
-        template<typename T>
+        template <typename T>
         StreamFormatter &operator<<(const T &value) {
             stream << value;
             return *this;
@@ -73,7 +68,7 @@ public:
 
     /// Construct an assertion failure exception
     AssertionFailureException(const char *expression, const char *file, int line, const std::string &message)
-            : expression(expression), file(file), line(line), message(message) {
+        : expression(expression), file(file), line(line), message(message) {
         std::ostringstream outputStream;
 
         if (!message.empty()) {
@@ -95,36 +90,29 @@ public:
     }
 
     /// The assertion message
-    virtual const char *what() const throw() {
-        return report.c_str();
-    }
+    virtual const char *what() const throw() { return report.c_str(); }
 
     /// The expression which was asserted to be true
-    const char *Expression() const throw() {
-        return expression;
-    }
+    const char *Expression() const throw() { return expression; }
 
     /// Source file
-    const char *File() const throw() {
-        return file;
-    }
+    const char *File() const throw() { return file; }
 
     /// Source line
-    int Line() const throw() {
-        return line;
-    }
+    int Line() const throw() { return line; }
 
     /// Description of failure
-    const char *Message() const throw() {
-        return message.c_str();
-    }
+    const char *Message() const throw() { return message.c_str(); }
 
-    ~AssertionFailureException() throw() {
-    }
+    ~AssertionFailureException() throw() {}
 };
 
+/// Assert that EXPRESSION evaluates to true, otherwise raise AssertionFailureException with associated MESSAGE (which
+/// may use C++ stream-style message formatting)
+#define throw_assert(EXPRESSION, MESSAGE)                                                           \
+    if (!(EXPRESSION)) {                                                                            \
+        throw AssertionFailureException(#EXPRESSION, __FILE__, __LINE__,                            \
+                                        (AssertionFailureException::StreamFormatter() << MESSAGE)); \
+    }
 
-/// Assert that EXPRESSION evaluates to true, otherwise raise AssertionFailureException with associated MESSAGE (which may use C++ stream-style message formatting)
-#define throw_assert(EXPRESSION, MESSAGE) if(!(EXPRESSION)) { throw AssertionFailureException(#EXPRESSION, __FILE__, __LINE__, (AssertionFailureException::StreamFormatter() << MESSAGE)); }
-
-#endif // !defined(INCLUDED__THROW_ASSERT_HPP)
+#endif  // !defined(INCLUDED__THROW_ASSERT_HPP)

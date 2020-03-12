@@ -2,14 +2,15 @@
 // Created by xiamr on 8/13/19.
 //
 
-#include <boost/range/combine.hpp>
-#include <boost/range/algorithm.hpp>
+#include "VelocityAutocorrelationFunction.hpp"
+
 #include <tbb/tbb.h>
 
+#include <boost/range/algorithm.hpp>
+#include <boost/range/combine.hpp>
 
-#include "VelocityAutocorrelationFunction.hpp"
-#include "utils/common.hpp"
 #include "data_structure/frame.hpp"
+#include "utils/common.hpp"
 
 VelocityAutocorrelationFunction::VelocityAutocorrelationFunction() {
     enable_outfile = true;
@@ -20,7 +21,6 @@ VelocityAutocorrelationFunction::VelocityAutocorrelationFunction() {
 void VelocityAutocorrelationFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {
     velocities.resize(frame->atom_list.size());
 }
-
 
 void VelocityAutocorrelationFunction::process(std::shared_ptr<Frame> &frame) {
     if (!frame->has_velocity) {
@@ -53,31 +53,29 @@ void VelocityAutocorrelationFunction::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
 }
 
-std::vector<double>
-VelocityAutocorrelationFunction::calculateAcf(
-        const std::vector<std::deque<std::tuple<double, double, double>>> &velocities, int max_time_grap_frame) {
-
+std::vector<double> VelocityAutocorrelationFunction::calculateAcf(
+    const std::vector<std::deque<std::tuple<double, double, double>>> &velocities, int max_time_grap_frame) {
     const auto max_calculate_length = std::min<std::size_t>(velocities.at(0).size(), max_time_grap_frame + 1);
 
     auto acf = tbb::parallel_reduce(
-            tbb::blocked_range2d<size_t>(0, velocities.size(), 0, velocities.front().size()),
-            std::vector<double>(max_calculate_length),
-            [&velocities, max_time_grap_frame](const tbb::blocked_range2d<size_t> &range, auto acf) {
-                for (auto index = range.rows().begin(); index != range.rows().end(); ++index) {
-                    auto &vel = velocities[index];
-                    for (auto i = range.cols().begin(); i != range.cols().end(); ++i) {
-                        for (auto j = i; j < std::min<std::size_t>(vel.size(), max_time_grap_frame + i + 1); ++j) {
-                            acf[j - i] += dot_multiplication(vel[i], vel[j]);
-                        }
+        tbb::blocked_range2d<size_t>(0, velocities.size(), 0, velocities.front().size()),
+        std::vector<double>(max_calculate_length),
+        [&velocities, max_time_grap_frame](const tbb::blocked_range2d<size_t> &range, auto acf) {
+            for (auto index = range.rows().begin(); index != range.rows().end(); ++index) {
+                auto &vel = velocities[index];
+                for (auto i = range.cols().begin(); i != range.cols().end(); ++i) {
+                    for (auto j = i; j < std::min<std::size_t>(vel.size(), max_time_grap_frame + i + 1); ++j) {
+                        acf[j - i] += dot_multiplication(vel[i], vel[j]);
                     }
                 }
-                return acf;
-            }, [](const auto &lhs, const auto &rhs) {
-                std::vector<double> acf(lhs.size());
-                boost::transform(lhs, rhs, acf.begin(), std::plus<>());
-                return acf;
             }
-    );
+            return acf;
+        },
+        [](const auto &lhs, const auto &rhs) {
+            std::vector<double> acf(lhs.size());
+            boost::transform(lhs, rhs, acf.begin(), std::plus<>());
+            return acf;
+        });
     auto total_mols = velocities.size();
     auto total_size = velocities[0].size();
     acf[0] /= total_mols * total_size;
@@ -92,4 +90,3 @@ void VelocityAutocorrelationFunction::readInfo() {
     time_increment_ps = choose(100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
     max_time_grap_ps = choose(10000.0, "max_time_grap_ps [100 ps] :", Default(100.0));
 }
-

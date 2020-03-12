@@ -34,7 +34,7 @@ namespace {
 
 template <typename Func>
 class CenterVisitor : public boost::default_bfs_visitor {
-   public:
+public:
     explicit CenterVisitor(const std::shared_ptr<Frame> &frame, std::shared_ptr<Atom> &atom, Func f)
         : frame(frame), func(std::move(f)) {
         map[atom->vertex_descriptor] = atom->getCoordinate();
@@ -51,7 +51,7 @@ class CenterVisitor : public boost::default_bfs_visitor {
         map[boost::target(e, g)] = r;
     }
 
-   private:
+private:
     const std::shared_ptr<Frame> &frame;
     std::map<boost::graph_traits<graph_t>::vertex_descriptor, std::tuple<double, double, double>> map;
     Func func;

@@ -2,8 +2,9 @@
 #define TINKER_ARCTRAJECTORYREADER_HPP
 
 #include <fstream>
-#include "TrajectoryInterface.hpp"
+
 #include "TopologyInterface.hpp"
+#include "TrajectoryInterface.hpp"
 
 class Frame;
 
@@ -13,13 +14,12 @@ public:
 
     std::shared_ptr<Frame> read(const std::string &filename) override;
 
-    void close() override {};
+    void close() override{};
 
 protected:
     bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
 
 private:
-
     void parse_box(std::shared_ptr<Frame> &frame);
 
     void parse_coord(std::shared_ptr<Atom> &atom);
@@ -30,9 +30,6 @@ private:
 
     std::string line;
     std::vector<std::string> field;
-
-
 };
 
-
-#endif //TINKER_ARCTRAJECTORYREADER_HPP
+#endif  // TINKER_ARCTRAJECTORYREADER_HPP

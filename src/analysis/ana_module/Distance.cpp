@@ -1,19 +1,21 @@
 //
 // Created by xiamr on 6/14/19.
 //
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
 #include "Distance.hpp"
+
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
-#include "utils/common.hpp"
 #include "nlohmann/json.hpp"
+#include "utils/common.hpp"
 
 Distance::Distance() {
     enable_outfile = true;
     enable_forcefield = true;
 }
 
-template<typename SinglePassRange>
+template <typename SinglePassRange>
 std::tuple<double, double, double> Distance::calculate_mass_center(const SinglePassRange &atoms_group) {
     std::tuple<double, double, double> coord{};
     double weigh{};
@@ -26,9 +28,7 @@ std::tuple<double, double, double> Distance::calculate_mass_center(const SingleP
     return coord / weigh;
 }
 
-
 void Distance::process(std::shared_ptr<Frame> &frame) {
-
     auto coord1 = calculate_mass_center(atoms_for_group1);
     auto coord2 = calculate_mass_center(atoms_for_group2);
 
@@ -41,9 +41,7 @@ void Distance::process(std::shared_ptr<Frame> &frame) {
     distances.push_back(dist);
 }
 
-
 void Distance::print(std::ostream &os) {
-
     os << std::string(50, '#') << '\n';
     os << "# " << title() << " # \n";
     os << "# mask for group1 > " << mask_for_group1 << '\n';
@@ -63,20 +61,16 @@ void Distance::print(std::ostream &os) {
     os << "<<<JSON>>>\n";
 }
 
-void Distance::readInfo() {
-    Atom::select2group(mask_for_group1, mask_for_group2);
-}
+void Distance::readInfo() { Atom::select2group(mask_for_group1, mask_for_group2); }
 
 void Distance::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, mask_for_group1)) atoms_for_group1.insert(atom);
-                        if (Atom::is_match(atom, mask_for_group2)) atoms_for_group2.insert(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, mask_for_group1)) atoms_for_group1.insert(atom);
+        if (Atom::is_match(atom, mask_for_group2)) atoms_for_group2.insert(atom);
+    });
 }
 
 void Distance::saveJson(std::ostream &os) const {
-
     nlohmann::json json;
 
     json["title"] = title();
@@ -89,4 +83,3 @@ void Distance::saveJson(std::ostream &os) const {
 
     os << json;
 }
-

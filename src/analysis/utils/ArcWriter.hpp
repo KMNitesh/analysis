@@ -2,6 +2,7 @@
 #define TINKER_ARCWRITER_HPP
 
 #include "TrajectoryFormatWriter.hpp"
+#include "utils/std.hpp"
 
 class ArcWriter : public TrajectoryFormatWriter {
 public:
@@ -12,9 +13,7 @@ public:
     void write(const std::shared_ptr<Frame> &frame) override;
 
 private:
-
     std::ofstream ofs;
 };
 
-
-#endif //TINKER_ARCWRITER_HPP
+#endif  // TINKER_ARCWRITER_HPP

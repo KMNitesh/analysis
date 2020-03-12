@@ -2,10 +2,12 @@
 // Created by xiamr on 7/24/19.
 //
 
-#include <boost/algorithm/string/predicate.hpp>
 #include "TinkerDynReader.hpp"
-#include "utils/common.hpp"
+
+#include <boost/algorithm/string/predicate.hpp>
+
 #include "utils/ThrowAssert.hpp"
+#include "utils/common.hpp"
 
 void TinkerDynReader::readContent() {
     std::string line;
@@ -34,10 +36,9 @@ void TinkerDynReader::readContent() {
                 }
                 auto fields = split(line);
                 throw_assert(fields.size() == 3, "Atomic Positions Information in dyn file is invalid!");
-                positions.coordinates.emplace_back(
-                        std::stod(boost::replace_all_copy(fields[0], "D", "E")),
-                        std::stod(boost::replace_all_copy(fields[1], "D", "E")),
-                        std::stod(boost::replace_all_copy(fields[2], "D", "E")));
+                positions.coordinates.emplace_back(std::stod(boost::replace_all_copy(fields[0], "D", "E")),
+                                                   std::stod(boost::replace_all_copy(fields[1], "D", "E")),
+                                                   std::stod(boost::replace_all_copy(fields[2], "D", "E")));
             }
         }
     }

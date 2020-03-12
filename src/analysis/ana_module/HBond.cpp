@@ -3,9 +3,10 @@
 //
 
 #include "HBond.hpp"
-#include "data_structure/frame.hpp"
+
 #include "data_structure/atom.hpp"
 #include "data_structure/forcefield.hpp"
+#include "data_structure/frame.hpp"
 #include "utils/common.hpp"
 
 using namespace std;
@@ -31,7 +32,8 @@ Symbol which(const std::shared_ptr<Atom> &atom) {
         return Symbol::Sulfur;
     else if (mass >= 22.5 and mass < 23.5)
         return Symbol::Sodium;
-    else return Symbol::Unknown;
+    else
+        return Symbol::Unknown;
 }
 
 void HBond::print(std::ostream &os) {
@@ -72,8 +74,6 @@ void HBond::print(std::ostream &os) {
 }
 
 void HBond::process(std::shared_ptr<Frame> &frame) {
-
-
     steps++;
     hbonds[steps] = 0;
     switch (mode) {
@@ -87,12 +87,9 @@ void HBond::process(std::shared_ptr<Frame> &frame) {
             Selector_Acceptor(frame);
             break;
     }
-
 }
 
-
 void HBond::readInfo() {
-
     Atom::select1group(ids1, "Please enter group:");
 
     auto input_line = input("Which selector: [(1)Acceptor | (2)Donor | (3)Both]:");
@@ -128,10 +125,8 @@ void HBond::readInfo() {
     }
 
     this->donor_acceptor_dist_cutoff =
-            choose(0.0, static_cast<double>(std::numeric_limits<int>::max()), "Donor-Acceptor Distance:");
-    this->angle_cutoff =
-            choose(0.0, static_cast<double>(std::numeric_limits<int>::max()), "Angle cutoff:");
-
+        choose(0.0, static_cast<double>(std::numeric_limits<int>::max()), "Donor-Acceptor Distance:");
+    this->angle_cutoff = choose(0.0, static_cast<double>(std::numeric_limits<int>::max()), "Angle cutoff:");
 }
 
 void HBond::Selector_Acceptor(std::shared_ptr<Frame> &frame) {
@@ -193,7 +188,7 @@ void HBond::Selector_Donor(std::shared_ptr<Frame> &frame) {
             auto atom1 = frame->atom_map[atom2->con_list.front()];
             auto atom1_symbol = which(atom1);
             if (atom1_symbol == Symbol::Nitrogen or atom1_symbol == Symbol::Oxygen) {
-                for (auto &atom3: group2) {
+                for (auto &atom3 : group2) {
                     // Atom3
                     auto atom3_symbol = which(atom3);
                     if (atom3_symbol == Symbol::Nitrogen or atom3_symbol == Symbol::Oxygen) {
@@ -293,10 +288,8 @@ void HBond::Selector_Both(std::shared_ptr<Frame> &frame) {
 }
 
 void HBond::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (this->mode not_eq Selector::Both && Atom::is_match(atom, this->ids2))
-                          this->group2.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (this->mode not_eq Selector::Both && Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+    });
 }

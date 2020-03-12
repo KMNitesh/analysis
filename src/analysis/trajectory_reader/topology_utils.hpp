@@ -16,5 +16,4 @@ public:
     static void add_to_mol(std::shared_ptr<Atom> &atom, std::shared_ptr<Molecule> &mol, std::shared_ptr<Frame> &frame);
 };
 
-
-#endif //TINKER_TOPOLOGY_UTILS_HPP
+#endif  // TINKER_TOPOLOGY_UTILS_HPP

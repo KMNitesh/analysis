@@ -1,6 +1,7 @@
+#include "NetcdfTrajectoryReader.hpp"
+
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
-#include "NetcdfTrajectoryReader.hpp"
 
 bool NetcdfTrajectoryReader::open(const std::string &file) {
     NC = std::make_unique<struct AmberNetcdf>();
@@ -33,6 +34,4 @@ void NetcdfTrajectoryReader::close() {
     }
 }
 
-NetcdfTrajectoryReader::~NetcdfTrajectoryReader() {
-    NetcdfTrajectoryReader::close();
-}
+NetcdfTrajectoryReader::~NetcdfTrajectoryReader() { NetcdfTrajectoryReader::close(); }

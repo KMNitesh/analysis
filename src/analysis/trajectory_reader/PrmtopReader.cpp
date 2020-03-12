@@ -1,9 +1,11 @@
-#include <boost/range/irange.hpp>
 #include "PrmtopReader.hpp"
-#include "topology_utils.hpp"
+
+#include <boost/range/irange.hpp>
+
 #include "data_structure/atom.hpp"
-#include "data_structure/molecule.hpp"
 #include "data_structure/frame.hpp"
+#include "data_structure/molecule.hpp"
+#include "topology_utils.hpp"
 #include "trajectory_reader/PrmtopParser.hpp"
 #include "utils/common.hpp"
 
@@ -35,9 +37,7 @@ std::shared_ptr<Frame> PrmtopReader::read(const std::string &filename) {
     }
 
     int residue_num = 1;
-    for (auto it = std::begin(prmtop->residue_pointer), next_it = it + 1;;
-         it = next_it, ++next_it, ++residue_num) {
-
+    for (auto it = std::begin(prmtop->residue_pointer), next_it = it + 1;; it = next_it, ++next_it, ++residue_num) {
         if (next_it != std::end(prmtop->residue_pointer)) {
             for (auto i : boost::irange(*it, *next_it)) {
                 auto &atom = frame->atom_map[i];

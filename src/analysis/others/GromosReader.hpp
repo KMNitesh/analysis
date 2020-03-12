@@ -1,7 +1,7 @@
 #ifndef TINKER_GROMOSREADER_HPP
 #define TINKER_GROMOSREADER_HPP
 
-#include <string_view>
+#include "utils/std.hpp"
 
 class GromosReader {
 public:
@@ -19,10 +19,8 @@ public:
         std::array<std::vector<double>, 3> intergroups;
     };
 
-    static void save2Xml(const std::vector<Energy> &energies,
-                         const std::vector<std::string> &menuStrings,
-                         const std::array<std::string, 3> &energy_names,
-                         const std::vector<std::string> &group_names,
+    static void save2Xml(const std::vector<Energy> &energies, const std::vector<std::string> &menuStrings,
+                         const std::array<std::string, 3> &energy_names, const std::vector<std::string> &group_names,
                          std::ostream &os = std::cout);
 
     struct Bundle {
@@ -32,8 +30,7 @@ public:
         std::vector<std::string> group_names;
     };
 
-    static void printEnergies(const std::vector<Energy> &energies,
-                              const std::vector<std::string> &menuStrings,
+    static void printEnergies(const std::vector<Energy> &energies, const std::vector<std::string> &menuStrings,
                               const std::array<std::string, 3> &energy_names,
                               const std::vector<std::string> &group_names);
 
@@ -44,5 +41,4 @@ public:
     [[nodiscard]] static Bundle readXml(const std::string &filename);
 };
 
-
-#endif //TINKER_GROMOSREADER_HPP
+#endif  // TINKER_GROMOSREADER_HPP

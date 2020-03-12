@@ -9,7 +9,6 @@
 
 class RamanSpectrum {
 public:
-
     RamanSpectrum();
 
     [[nodiscard]] static std::string_view title() { return "Raman radiation (IR) Spectrum"; }
@@ -17,5 +16,4 @@ public:
     static void calculateSpectrum(const std::string &out);
 };
 
-
-#endif //TINKER_RAMANSPECTRUM_HPP
+#endif  // TINKER_RAMANSPECTRUM_HPP

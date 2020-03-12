@@ -13,9 +13,8 @@ public:
 
     void close_trn(gmx::t_fileio *fio) override { gmx::close_trn(fio); }
 
-    void
-    fwrite_trn(gmx::t_fileio *fio, int step, gmx::real t, gmx::real lambda, gmx::rvec *box, int natoms, gmx::rvec *x,
-               gmx::rvec *v, gmx::rvec *f) override {
+    void fwrite_trn(gmx::t_fileio *fio, int step, gmx::real t, gmx::real lambda, gmx::rvec *box, int natoms,
+                    gmx::rvec *x, gmx::rvec *v, gmx::rvec *f) override {
         gmx::fwrite_trn(fio, step, t, lambda, box, natoms, x, v, f);
     }
 
@@ -29,4 +28,4 @@ public:
     }
 };
 
-#endif // TINKER_GROMACSIMPL_HPP
+#endif  // TINKER_GROMACSIMPL_HPP

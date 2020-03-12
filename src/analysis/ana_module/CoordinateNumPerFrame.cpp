@@ -2,16 +2,15 @@
 // Created by xiamr on 6/14/19.
 //
 
-#include <boost/range/adaptors.hpp>
 #include "CoordinateNumPerFrame.hpp"
+
+#include <boost/range/adaptors.hpp>
+
 #include "data_structure/frame.hpp"
 
-CoordinateNumPerFrame::CoordinateNumPerFrame() {
-    enable_outfile = true;
-}
+CoordinateNumPerFrame::CoordinateNumPerFrame() { enable_outfile = true; }
 
 void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
-
     int cn_sum = 0;
     for (auto &atom1 : group1) {
         for (auto &atom2 : group2) {
@@ -21,7 +20,6 @@ void CoordinateNumPerFrame::process(std::shared_ptr<Frame> &frame) {
         }
     }
     cn_list.push_back(cn_sum);
-
 }
 
 void CoordinateNumPerFrame::print(std::ostream &os) {
@@ -31,7 +29,7 @@ void CoordinateNumPerFrame::print(std::ostream &os) {
     os << "type 2 :" << ids2 << '\n';
     os << "cutoff :" << dist_cutoff << '\n';
     os << "***************************" << '\n';
-    for (const auto &element: cn_list | boost::adaptors::indexed(1)) {
+    for (const auto &element : cn_list | boost::adaptors::indexed(1)) {
         os << element.index() << "   " << element.value() << '\n';
     }
     os << "***************************" << '\n';
@@ -43,10 +41,8 @@ void CoordinateNumPerFrame::readInfo() {
 }
 
 void CoordinateNumPerFrame::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](std::shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+    });
 }
-

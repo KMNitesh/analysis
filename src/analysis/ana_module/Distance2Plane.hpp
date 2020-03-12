@@ -14,7 +14,6 @@ class Frame;
 
 class Distance2Plane : public AbstractAnalysis {
 public:
-
     Distance2Plane();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -27,7 +26,7 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Distance to plane"; }
 
-   private:
+private:
     std::array<AmberMask, 3> plane_marks;
     std::array<std::shared_ptr<Atom>, 3> plane_atoms;
 
@@ -50,14 +49,8 @@ public:
     std::deque<double> distances;
 
     boost::accumulators::accumulator_set<
-            double,
-            boost::accumulators::features<
-                    boost::accumulators::tag::mean,
-                    boost::accumulators::tag::variance
-            >
-    > acc;
-
+        double, boost::accumulators::features<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
+        acc;
 };
 
-
-#endif //TINKER_DISTANCE2PLANE_HPP
+#endif  // TINKER_DISTANCE2PLANE_HPP

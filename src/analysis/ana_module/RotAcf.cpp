@@ -2,28 +2,28 @@
 // Created by xiamr on 7/3/19.
 //
 
-#include <functional>
+#include "RotAcf.hpp"
+
 #include <tbb/tbb.h>
+
 #include <boost/range/algorithm.hpp>
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/irange.hpp>
+#include <functional>
 
-#include "utils/common.hpp"
-#include "RotAcf.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/LegendrePolynomial.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/VectorSelectorFactory.hpp"
-#include "utils/LegendrePolynomial.hpp"
+#include "utils/common.hpp"
 
 RotAcf::RotAcf() {
     enable_outfile = true;
     enable_tbb = true;
 }
 
-void RotAcf::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    rots.resize(vectorSelector->initialize(frame));
-}
+void RotAcf::processFirstFrame(std::shared_ptr<Frame> &frame) { rots.resize(vectorSelector->initialize(frame)); }
 
 void RotAcf::process(std::shared_ptr<Frame> &frame) {
     auto vectors = vectorSelector->calculateVectors(frame);
@@ -37,11 +37,10 @@ void RotAcf::process(std::shared_ptr<Frame> &frame) {
 
 void RotAcf::print(std::ostream &os) {
     const std::unordered_map<int, std::function<std::vector<double>()>> func_mapping{
-            {1, [this] { return calculate(LegendrePolynomialLevel1()); }},
-            {2, [this] { return calculate(LegendrePolynomialLevel2()); }},
-            {3, [this] { return calculate(LegendrePolynomialLevel3()); }},
-            {4, [this] { return calculate(LegendrePolynomialLevel4()); }}
-    };
+        {1, [this] { return calculate(LegendrePolynomialLevel1()); }},
+        {2, [this] { return calculate(LegendrePolynomialLevel2()); }},
+        {3, [this] { return calculate(LegendrePolynomialLevel3()); }},
+        {4, [this] { return calculate(LegendrePolynomialLevel4()); }}};
     auto acf = func_mapping.at(LegendrePolynomial)();
     auto integration = integrate(acf);
     os << description() << '\n';
@@ -55,63 +54,63 @@ void RotAcf::print(std::ostream &os) {
 std::vector<double> RotAcf::integrate(const std::vector<double> &acf) const {
     std::vector<double> integrate(acf.size());
     integrate[0] = 0.0;
-    for (auto i  : boost::irange(std::size_t(1), integrate.size())) {
+    for (auto i : boost::irange(std::size_t(1), integrate.size())) {
         integrate[i] = integrate[i - 1] + 0.5 * (acf[i - 1] + acf[i]) * time_increment_ps;
     }
     return integrate;
 }
 
 namespace {
-    template<typename Function>
-    class RotAcfParallelBody {
-    public:
-        const std::vector<std::vector<std::tuple<double, double, double>>> &rots;
-        std::vector<double, tbb::tbb_allocator<double>> acf;
+template <typename Function>
+class RotAcfParallelBody {
+public:
+    const std::vector<std::vector<std::tuple<double, double, double>>> &rots;
+    std::vector<double, tbb::tbb_allocator<double>> acf;
 
-        size_t array_length;
-        size_t max_time_grap_step;
-        Function f;
+    size_t array_length;
+    size_t max_time_grap_step;
+    Function f;
 
-        explicit RotAcfParallelBody(const std::vector<std::vector<std::tuple<double, double, double>>> &rots,
-                                    size_t max_time_grap_step, size_t array_length, Function f)
-                : rots(rots), acf(array_length),
-                  array_length(array_length),
-                  max_time_grap_step(max_time_grap_step), f(f) {}
+    explicit RotAcfParallelBody(const std::vector<std::vector<std::tuple<double, double, double>>> &rots,
+                                size_t max_time_grap_step, size_t array_length, Function f)
+        : rots(rots), acf(array_length), array_length(array_length), max_time_grap_step(max_time_grap_step), f(f) {}
 
-        RotAcfParallelBody(const RotAcfParallelBody &rhs, tbb::split)
-                : rots(rhs.rots), acf(rhs.array_length),
-                  array_length(rhs.array_length),
-                  max_time_grap_step(rhs.max_time_grap_step), f(rhs.f) {}
+    RotAcfParallelBody(const RotAcfParallelBody &rhs, tbb::split)
+        : rots(rhs.rots),
+          acf(rhs.array_length),
+          array_length(rhs.array_length),
+          max_time_grap_step(rhs.max_time_grap_step),
+          f(rhs.f) {}
 
-        void join(const RotAcfParallelBody &rhs) {
-            for (size_t i = 1; i < array_length; i++) {
-                acf[i] += rhs.acf[i];
-            }
+    void join(const RotAcfParallelBody &rhs) {
+        for (size_t i = 1; i < array_length; i++) {
+            acf[i] += rhs.acf[i];
         }
+    }
 
-        void operator()(const tbb::blocked_range<std::size_t> &range) {
-            for (auto index = range.begin(); index != range.end(); index++) {
-                auto &_vector = rots[index];
-                auto total_size = _vector.size();
+    void operator()(const tbb::blocked_range<std::size_t> &range) {
+        for (auto index = range.begin(); index != range.end(); index++) {
+            auto &_vector = rots[index];
+            auto total_size = _vector.size();
 
-                for (size_t i = 0; i < total_size - 1; i++) {
-                    for (size_t j = i + 1; j < std::min(total_size, max_time_grap_step + i); j++) {
-                        auto m = j - i;
+            for (size_t i = 0; i < total_size - 1; i++) {
+                for (size_t j = i + 1; j < std::min(total_size, max_time_grap_step + i); j++) {
+                    auto m = j - i;
 
-                        assert(i < _vector.size());
-                        assert(j < _vector.size());
+                    assert(i < _vector.size());
+                    assert(j < _vector.size());
 
-                        double cos = dot_multiplication(_vector[i], _vector[j]);
+                    double cos = dot_multiplication(_vector[i], _vector[j]);
 
-                        acf[m] += f(cos);
-                    }
+                    acf[m] += f(cos);
                 }
             }
         }
-    };
-}
+    }
+};
+}  // namespace
 
-template<typename Function>
+template <typename Function>
 std::vector<double> RotAcf::calculate(Function f) const {
     size_t max_time_grap_step = std::ceil(max_time_grap / time_increment_ps) + 1;
 
@@ -132,7 +131,6 @@ std::vector<double> RotAcf::calculate(Function f) const {
 }
 
 void RotAcf::readInfo() {
-
     vectorSelector = VectorSelectorFactory::getVectorSelector();
     vectorSelector->readInfo();
     std::cout << "Legendre Polynomial\n";
@@ -141,15 +139,14 @@ void RotAcf::readInfo() {
 
     LegendrePolynomial = choose<int>(1, LegendreStr.size(), "select > ");
 
-    time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
-                               "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
+    time_increment_ps =
+        choose(0.0, std::numeric_limits<double>::max(), "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
 
     max_time_grap = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Grap in Picoseconds :");
 }
 
 void RotAcf::setParameters(const std::shared_ptr<VectorSelector> &vector, int LegendrePolynomial,
                            double time_increment_ps, double max_time_grap_ps, const std::string &outfilename) {
-
     vectorSelector = vector;
     if (!(LegendrePolynomial >= 1 and LegendrePolynomial <= LegendreStr.size())) {
         throw std::runtime_error("legendre polynomial must be in the rang ef 1.." + std::to_string(LegendreStr.size()));
@@ -189,4 +186,3 @@ std::string RotAcf::description() {
     ss << std::string(title_line.size(), '-') << '\n';
     return ss.str();
 }
-

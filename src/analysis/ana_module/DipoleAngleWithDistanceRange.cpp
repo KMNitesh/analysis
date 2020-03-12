@@ -1,9 +1,11 @@
 
-#include <boost/range/algorithm.hpp>
 #include "DipoleAngleWithDistanceRange.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
-#include "utils/ThrowAssert.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
 DipoleAngleWithDistanceRange::DipoleAngleWithDistanceRange() {
@@ -12,16 +14,15 @@ DipoleAngleWithDistanceRange::DipoleAngleWithDistanceRange() {
 }
 
 void DipoleAngleWithDistanceRange::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](std::shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+    });
 }
 
 void DipoleAngleWithDistanceRange::process(std::shared_ptr<Frame> &frame) {
     for (auto &ref : group1) {
-        for (auto &atom: group2) {
+        for (auto &atom : group2) {
             auto mol = atom->molecule.lock();
 
             double xr = atom->x - ref->x;
@@ -33,8 +34,7 @@ void DipoleAngleWithDistanceRange::process(std::shared_ptr<Frame> &frame) {
             double distance = sqrt(xr * xr + yr * yr + zr * zr);
 
             if (cutoff1 <= distance and distance < cutoff2) {
-
-                auto[dipole_x, dipole_y, dipole_z] = mol->calc_dipole(frame);
+                auto [dipole_x, dipole_y, dipole_z] = mol->calc_dipole(frame);
 
                 double dipole_scalar = std::sqrt(dipole_x * dipole_x + dipole_y * dipole_y + dipole_z * dipole_z);
 
@@ -53,7 +53,6 @@ void DipoleAngleWithDistanceRange::process(std::shared_ptr<Frame> &frame) {
 }
 
 void DipoleAngleWithDistanceRange::print(std::ostream &os) {
-
     os << std::string(50, '#') << '\n';
     os << "# " << DipoleAngleWithDistanceRange::title() << '\n';
     os << "# Group1 > " << ids1 << '\n';
@@ -79,7 +78,6 @@ void DipoleAngleWithDistanceRange::printData(std::ostream &os) const {
     for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
         os << format("%15.3f %15.3f\n", (i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width);
     }
-
 }
 
 void DipoleAngleWithDistanceRange::readInfo() {
@@ -97,5 +95,4 @@ void DipoleAngleWithDistanceRange::readInfo() {
     for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
         hist[i_angle] = 0;
     }
-
 }

@@ -3,10 +3,10 @@
 //
 
 #include "DipoleAngle2Gibbs.hpp"
+
 #include "utils/common.hpp"
 
 void DipoleAngle2Gibbs::print(std::ostream &os) {
-
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
     os << "# Group1 > " << mask1 << '\n';
@@ -36,10 +36,8 @@ void DipoleAngle2Gibbs::printData(std::ostream &os) const {
         double dv = pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3);
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
             double pop = double(hist.at(std::make_pair(i_distance, i_angle))) / (max_value * dv);
-            os << boost::format("%15.3f %15.3f %15.6f\n")
-                  % ((i_distance - 0.5) * distance_width)
-                  % ((i_angle - 0.5) * angle_width)
-                  % (pop == 0.0 ? 100.0 : factor * log(pop));
+            os << boost::format("%15.3f %15.3f %15.6f\n") % ((i_distance - 0.5) * distance_width) %
+                      ((i_angle - 0.5) * angle_width) % (pop == 0.0 ? 100.0 : factor * log(pop));
         }
     }
 }
@@ -48,4 +46,3 @@ void DipoleAngle2Gibbs::readInfo() {
     DipoleAngle::readInfo();
     temperature = choose(0.0, 10000.0, "Temperature [298] (K):", Default(298.0));
 }
-

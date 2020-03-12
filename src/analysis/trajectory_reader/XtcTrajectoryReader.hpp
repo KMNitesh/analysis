@@ -8,8 +8,7 @@ namespace gmx {
 #include "gromacs/fileio/xtcio.h"
 #include "gromacs/utility/smalloc.h"
 
-}
-
+}  // namespace gmx
 
 class XtcTrajectoryReader : public TrajectoryInterface {
 public:
@@ -23,14 +22,11 @@ protected:
     bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
 
 private:
-
     gmx::t_fileio *fio = nullptr;
 
     int natoms, step;
     gmx::rvec *x = nullptr;
     gmx::real prec, time;
-
 };
 
-
-#endif //TINKER_XTCTRAJECTORYREADER_HPP
+#endif  // TINKER_XTCTRAJECTORYREADER_HPP

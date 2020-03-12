@@ -1,93 +1,83 @@
-#include <boost/spirit/include/qi.hpp>
-#include <boost/phoenix/function/adapt_function.hpp>
-#include <boost/xpressive/xpressive_static.hpp>
-#include <boost/iostreams/device/mapped_file.hpp>
+#include "GromosReader.hpp"
+
 #include <boost/algorithm/string.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/phoenix/function/adapt_function.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
-#include <boost/range/numeric.hpp>
 #include <boost/range/irange.hpp>
+#include <boost/range/numeric.hpp>
 #include <boost/spirit/include/karma.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <boost/xpressive/xpressive_static.hpp>
 #include <pugixml.hpp>
+
 #include "config.h"
-#include "GromosReader.hpp"
 #include "utils/common.hpp"
 
 namespace bf = boost::fusion;
 
 namespace {
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim, 1)
+BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim, 1)
 
-    struct Validator : boost::static_visitor<bool> {
-        Validator(std::size_t maxTotalEnergyGroupNum, std::size_t maxEnergyGroupNum)
-                : max_total_energy_group_num(maxTotalEnergyGroupNum), max_energy_group_num(maxEnergyGroupNum) {}
+struct Validator : boost::static_visitor<bool> {
+    Validator(std::size_t maxTotalEnergyGroupNum, std::size_t maxEnergyGroupNum)
+        : max_total_energy_group_num(maxTotalEnergyGroupNum), max_energy_group_num(maxEnergyGroupNum) {}
 
-        bool operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
-            auto g1 = bf::at_c<1>(i).first;
-            auto g2 = bf::at_c<1>(i).second;
+    bool operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
+        auto g1 = bf::at_c<1>(i).first;
+        auto g2 = bf::at_c<1>(i).second;
 
-            return g1 >= 1 and g1 <= max_energy_group_num and g2 >= 1 and g2 <= max_energy_group_num;
-        }
+        return g1 >= 1 and g1 <= max_energy_group_num and g2 >= 1 and g2 <= max_energy_group_num;
+    }
 
-        bool operator()(const uint &i) const {
-            return i >= 1 and i < max_total_energy_group_num;
-        }
+    bool operator()(const uint &i) const { return i >= 1 and i < max_total_energy_group_num; }
 
-    private:
-        std::size_t max_total_energy_group_num;
-        std::size_t max_energy_group_num;
-    };
+private:
+    std::size_t max_total_energy_group_num;
+    std::size_t max_energy_group_num;
+};
 
-    struct TitlePrinter : boost::static_visitor<std::string> {
+struct TitlePrinter : boost::static_visitor<std::string> {
+    TitlePrinter(const std::vector<std::string> &menuStrings, const std::array<std::string, 3> &energyNames,
+                 const std::vector<std::string> &groupNames)
+        : menuStrings(menuStrings), energy_names(energyNames), group_names(groupNames) {}
 
-        TitlePrinter(const std::vector<std::string> &menuStrings,
-                     const std::array<std::string, 3> &energyNames,
-                     const std::vector<std::string> &groupNames) :
-                menuStrings(menuStrings),
-                energy_names(energyNames),
-                group_names(groupNames) {}
+    std::string operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
+        auto g1 = bf::at_c<1>(i).first;
+        auto g2 = bf::at_c<1>(i).second;
 
-        std::string operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
-            auto g1 = bf::at_c<1>(i).first;
-            auto g2 = bf::at_c<1>(i).second;
+        return energy_names[bf::at_c<0>(i) - 'a'] + "(" + group_names[g1 - 1] + "," + group_names[g2 - 1] + ")";
+    }
 
-            return energy_names[bf::at_c<0>(i) - 'a'] + "(" + group_names[g1 - 1] + "," + group_names[g2 - 1] + ")";
-        }
+    std::string operator()(const uint &i) const { return menuStrings[i - 1]; }
 
-        std::string operator()(const uint &i) const {
-            return menuStrings[i - 1];
-        }
+private:
+    const std::vector<std::string> &menuStrings;
+    const std::array<std::string, 3> &energy_names;
+    const std::vector<std::string> &group_names;
+};
 
-    private:
-        const std::vector<std::string> &menuStrings;
-        const std::array<std::string, 3> &energy_names;
-        const std::vector<std::string> &group_names;
-    };
+struct EnergyPrinter : boost::static_visitor<double> {
+    EnergyPrinter(const GromosReader::Energy &e, size_t groupNums) : e(e), group_nums(groupNums) {}
 
-    struct EnergyPrinter : boost::static_visitor<double> {
+    double operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
+        auto g1 = bf::at_c<1>(i).first;
+        auto g2 = bf::at_c<1>(i).second;
 
-        EnergyPrinter(const GromosReader::Energy &e, size_t groupNums) : e(e), group_nums(groupNums) {}
+        auto index = ((group_nums + 1) * group_nums - (group_nums + 2 - g1) * (group_nums + 1 - g1)) / 2 + g2 - 1;
+        return e.intergroups[bf::at_c<0>(i) - 'a'][index];
+    }
 
-        double operator()(const bf::vector<char, std::pair<uint, uint>> &i) const {
-            auto g1 = bf::at_c<1>(i).first;
-            auto g2 = bf::at_c<1>(i).second;
+    double operator()(const uint &i) const { return e.energies[i - 1]; }
 
-            auto index = ((group_nums + 1) * group_nums - (group_nums + 2 - g1) * (group_nums + 1 - g1)) / 2 + g2 - 1;
-            return e.intergroups[bf::at_c<0>(i) - 'a'][index];
-        }
-
-        double operator()(const uint &i) const {
-            return e.energies[i - 1];
-        }
-
-    private:
-        const GromosReader::Energy &e;
-        std::size_t group_nums;
-    };
-}
+private:
+    const GromosReader::Energy &e;
+    std::size_t group_nums;
+};
+}  // namespace
 
 void GromosReader::process() {
-
     std::string filename = choose_file("GROMOS omd/xml file > ").isExist(true);
 
     Bundle bundle;
@@ -101,7 +91,7 @@ void GromosReader::process() {
         throw std::runtime_error("Error file extension [must be one of xml/omd]");
     }
 
-    auto&[energies, menuStrings, energy_names, group_names] = bundle;
+    auto &[energies, menuStrings, energy_names, group_names] = bundle;
 
     if (extension == "omd" and choose_bool("Save to xml ? ", Default(false))) {
         std::ofstream ofstream;
@@ -118,7 +108,6 @@ void GromosReader::process() {
         std::exit(EXIT_SUCCESS);
     }
     printEnergies(energies, menuStrings, energy_names, group_names);
-
 }
 
 void GromosReader::printMenu(const std::vector<std::string> &menuStrings, std::size_t width) {
@@ -130,12 +119,9 @@ void GromosReader::printMenu(const std::vector<std::string> &menuStrings, std::s
     if (menuStrings.size() % 4 != 0) std::cout << '\n';
 }
 
-void GromosReader::save2Xml(const std::vector<Energy> &energies,
-                            const std::vector<std::string> &menuStrings,
-                            const std::array<std::string, 3> &energy_names,
-                            const std::vector<std::string> &group_names,
+void GromosReader::save2Xml(const std::vector<Energy> &energies, const std::vector<std::string> &menuStrings,
+                            const std::array<std::string, 3> &energy_names, const std::vector<std::string> &group_names,
                             std::ostream &os) {
-
     pugi::xml_document doc;
 
     auto decl = doc.prepend_child(pugi::node_declaration);
@@ -219,7 +205,7 @@ GromosReader::Bundle GromosReader::readXml(std::istream &is) {
     }
     auto energy_group_node = meta_data_node.child("energy_group");
 
-    for (const auto &element :  energy_group_node.children("energy") | boost::adaptors::indexed()) {
+    for (const auto &element : energy_group_node.children("energy") | boost::adaptors::indexed()) {
         auto index = element.index();
         auto &node = element.value();
 
@@ -245,7 +231,7 @@ GromosReader::Bundle GromosReader::readXml(std::istream &is) {
         std::vector<std::string> values = split(value_string, ",");
 
         auto it = std::begin(values);
-        for ([[maybe_unused]] auto i: boost::irange(menuStrings.size())) {
+        for ([[maybe_unused]] auto i : boost::irange(menuStrings.size())) {
             e.energies.push_back(std::stod(*it));
             ++it;
         }
@@ -253,7 +239,7 @@ GromosReader::Bundle GromosReader::readXml(std::istream &is) {
         auto left = (values.size() - menuStrings.size()) / 3;
 
         for (auto &array : e.intergroups) {
-            for ([[maybe_unused]] auto i: boost::irange(left)) {
+            for ([[maybe_unused]] auto i : boost::irange(left)) {
                 array.push_back(std::stod(*it));
                 ++it;
             }
@@ -265,7 +251,6 @@ GromosReader::Bundle GromosReader::readXml(std::istream &is) {
 }
 
 GromosReader::Bundle GromosReader::readOmd(const std::string &filename) {
-
     // mmap all content from file
     boost::iostreams::mapped_file_source file;
     file.open(filename);
@@ -278,49 +263,41 @@ GromosReader::Bundle GromosReader::readOmd(const std::string &filename) {
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
 
-    auto timestep_parser = copy("TIMESTEP" >> eol >>
-                                           uint_ >> double_ >> eol
-                                           >> "END" >> eol);
+    auto timestep_parser = copy("TIMESTEP" >> eol >> uint_ >> double_ >> eol >> "END" >> eol);
 
-    auto energies_parser = copy("ENERGIES" >> eol
-                                           >> +(as_string[lexeme[+(char_ - ':')]][trim(_1)]
-                                                   >> ':' >> double_ >> eol)
-                                           >> eol);
+    auto energies_parser =
+        copy("ENERGIES" >> eol >> +(as_string[lexeme[+(char_ - ':')]][trim(_1)] >> ':' >> double_ >> eol) >> eol);
 
     auto parser = copy(timestep_parser >> energies_parser);
 
     auto energy_group_parser =
-            copy(repeat(3)[as_string[lexeme[+(char_ - char_("0-9"))]][trim(_1)]
-                    >> +as_string[lexeme[+char_("0-9") >> char_('-') >> +char_("0-9")]]
-                    >> eol >> +(omit[lexeme[+char_("0-9") >> char_('-') >> +char_("0-9")]] >> +double_ >> eol)
-                    >> eol]);
+        copy(repeat(3)[as_string[lexeme[+(char_ - char_("0-9"))]][trim(_1)] >>
+                       +as_string[lexeme[+char_("0-9") >> char_('-') >> +char_("0-9")]] >> eol >>
+                       +(omit[lexeme[+char_("0-9") >> char_('-') >> +char_("0-9")]] >> +double_ >> eol) >> eol]);
 
     using namespace boost::xpressive;
-    auto rex = (s1 = "TIMESTEP" >> -*_ >> _n >> _n)
-            >> (s2 = -*_ >> _n >> _n)
-            >> (s3 = boost::xpressive::repeat<3, 3>(-*_ >> _n >> _n));
+    auto rex = (s1 = "TIMESTEP" >> -*_ >> _n >> _n) >> (s2 = -*_ >> _n >> _n) >>
+               (s3 = boost::xpressive::repeat<3, 3>(-*_ >> _n >> _n));
 
     bool bFilled = false;
 
     std::vector<std::string> menuStrings;
 
-
     std::array<std::string, 3> energy_names;
     std::vector<std::string> group_names;
 
     for (cregex_iterator pos(file.begin(), file.end(), rex), end; pos != end; ++pos) {
-
         bf::vector<uint, double, std::vector<bf::vector<std::string, double>>> attribute;
         if (auto it = (*pos)[1].first;
-                !(phrase_parse(it, (*pos)[1].second, parser, ascii::space - boost::spirit::eol, attribute) &&
-                  it == (*pos)[1].second)) {
+            !(phrase_parse(it, (*pos)[1].second, parser, ascii::space - boost::spirit::eol, attribute) &&
+              it == (*pos)[1].second)) {
             throw std::runtime_error("omd file is ill-formed !");
         }
 
         std::vector<bf::vector<std::string, std::vector<std::string>, std::vector<double>>> energy_group_attribute;
-        if (auto it = (*pos)[3].first;
-                !(phrase_parse(it, (*pos)[3].second, energy_group_parser, ascii::space - boost::spirit::eol,
-                               energy_group_attribute) && it == (*pos)[3].second)) {
+        if (auto it = (*pos)[3].first; !(phrase_parse(it, (*pos)[3].second, energy_group_parser,
+                                                      ascii::space - boost::spirit::eol, energy_group_attribute) &&
+                                         it == (*pos)[3].second)) {
             throw std::runtime_error("omd file is ill-formed !");
         }
 
@@ -348,11 +325,9 @@ GromosReader::Bundle GromosReader::readOmd(const std::string &filename) {
     return {energies, menuStrings, energy_names, group_names};
 }
 
-void GromosReader::printEnergies(const std::vector<Energy> &energies,
-                                 const std::vector<std::string> &menuStrings,
+void GromosReader::printEnergies(const std::vector<Energy> &energies, const std::vector<std::string> &menuStrings,
                                  const std::array<std::string, 3> &energy_names,
                                  const std::vector<std::string> &group_names) {
-
     std::size_t max_length = boost::accumulate(menuStrings, std::size_t(0),
                                                [](auto init, const auto &s) { return std::max(init, s.size()); });
 
@@ -371,23 +346,22 @@ void GromosReader::printEnergies(const std::vector<Energy> &energies,
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
 
-    boost::spirit::qi::rule<std::string::iterator, std::pair<uint, uint>(), ascii::space_type>
-            pair_parser_ = (uint_ >> ',' >> uint_)[_val = construct<std::pair<uint, uint>>(_1, _2)];
+    boost::spirit::qi::rule<std::string::iterator, std::pair<uint, uint>(), ascii::space_type> pair_parser_ =
+        (uint_ >> ',' >> uint_)[_val = construct<std::pair<uint, uint>>(_1, _2)];
+
+    boost::spirit::qi::rule<std::string::iterator, bf::vector<char, std::pair<uint, uint>>(), ascii::space_type>
+        sel_paser_ = char_("a-c") >> '(' >> pair_parser_ >> ')';
+
+    boost::spirit::qi::rule<std::string::iterator, boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>(),
+                            ascii::space_type>
+        item_parser_ = uint_ | sel_paser_;
 
     boost::spirit::qi::rule<std::string::iterator,
-            bf::vector<char, std::pair<uint, uint>>(), ascii::space_type>
-            sel_paser_ = char_("a-c") >> '(' >> pair_parser_ >> ')';
-
-    boost::spirit::qi::rule<std::string::iterator,
-            boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>(), ascii::space_type>
-            item_parser_ = uint_ | sel_paser_;
-
-    boost::spirit::qi::rule<std::string::iterator,
-            std::vector<boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>>(), ascii::space_type>
-            input_parser = +item_parser_;
+                            std::vector<boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>>(),
+                            ascii::space_type>
+        input_parser = +item_parser_;
 
     for (;;) {
-
         std::cout << "Select Items > ";
         std::string line;
         std::getline(std::cin, line);
@@ -395,7 +369,7 @@ void GromosReader::printEnergies(const std::vector<Energy> &energies,
         std::vector<boost::variant<uint, bf::vector<char, std::pair<uint, uint>>>> attribute;
 
         if (auto it = begin(line);
-                !(phrase_parse(it, end(line), input_parser, ascii::space, attribute) && it == end(line))) {
+            !(phrase_parse(it, end(line), input_parser, ascii::space, attribute) && it == end(line))) {
             std::cerr << "Paser Error !\n" << line << '\n';
             for (auto iter = line.begin(); iter != it; ++iter) std::cout << " ";
             std::cout << "^\n";
@@ -405,8 +379,8 @@ void GromosReader::printEnergies(const std::vector<Energy> &energies,
         Validator validator(menuStrings.size(), group_names.size());
 
         if (!boost::accumulate(attribute, true, [&validator](bool init, auto &v) {
-            return init && boost::apply_visitor(validator, v);
-        })) {
+                return init && boost::apply_visitor(validator, v);
+            })) {
             std::cerr << "number out of range\n";
             continue;
         }
@@ -433,7 +407,6 @@ void GromosReader::printEnergies(const std::vector<Energy> &energies,
         }
         break;
     }
-
 }
 
 GromosReader::Bundle GromosReader::readXml(const std::string &filename) {

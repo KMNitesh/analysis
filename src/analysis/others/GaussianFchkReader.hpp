@@ -5,7 +5,6 @@
 
 class GaussianFchkReader {
 public:
-
     static std::vector<double> readCartesian(std::istream &is);
 
     static std::tuple<double, double, double> getCoordinateOfAtom(std::size_t index /* low bound 1*/,
@@ -23,8 +22,7 @@ public:
     [[nodiscard]] std::size_t getTotalAtomNumbers() const { return cartesians.size() / 3; }
 
 private:
-
     std::vector<double> cartesians;
 };
 
-#endif //TINKER_GAUSSIANFCHKREADER_HPP
+#endif  // TINKER_GAUSSIANFCHKREADER_HPP

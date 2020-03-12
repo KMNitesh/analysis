@@ -1,12 +1,14 @@
 //
 // Created by xiamr on 6/14/19.
 //
+#include "Diffuse.hpp"
+
 #include <tbb/tbb.h>
 
-#include "Diffuse.hpp"
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
-#include <boost/range/algorithm.hpp>
 
 Diffuse::Diffuse() {
     enable_forcefield = true;
@@ -36,7 +38,6 @@ void Diffuse::process(std::shared_ptr<Frame> &frame) {
 }
 
 void Diffuse::print(std::ostream &os) {
-
     class Body {
     public:
         int total_frame_number;
@@ -46,15 +47,14 @@ void Diffuse::print(std::ostream &os) {
         Eigen::Matrix<std::tuple<double, double, double>, Eigen::Dynamic, Eigen::Dynamic> &xyzcm;
 
         Body(int total_frame_number, int total_mol,
-             Eigen::Matrix<std::tuple<double, double, double>, Eigen::Dynamic, Eigen::Dynamic> &xyzcm) :
-                total_frame_number(total_frame_number),
-                msd(total_frame_number - 1),
-                total_mol(total_mol), xyzcm(xyzcm) {}
+             Eigen::Matrix<std::tuple<double, double, double>, Eigen::Dynamic, Eigen::Dynamic> &xyzcm)
+            : total_frame_number(total_frame_number), msd(total_frame_number - 1), total_mol(total_mol), xyzcm(xyzcm) {}
 
-        Body(const Body &body, tbb::split) :
-                total_frame_number(body.total_frame_number),
-                msd(body.total_frame_number - 1),
-                total_mol(body.total_mol), xyzcm(body.xyzcm) {}
+        Body(const Body &body, tbb::split)
+            : total_frame_number(body.total_frame_number),
+              msd(body.total_frame_number - 1),
+              total_mol(body.total_mol),
+              xyzcm(body.xyzcm) {}
 
         void join(const Body &body) {
             for (int i = 0; i < total_frame_number - 1; i++) {
@@ -67,7 +67,7 @@ void Diffuse::print(std::ostream &os) {
                 for (int j = i + 1; j < total_frame_number; j++) {
                     int m = j - i - 1;
                     for (int k = 0; k < total_mol; k++) {
-                        auto[xr, yr, zr] = xyzcm(j, k) - xyzcm(i, k);
+                        auto [xr, yr, zr] = xyzcm(j, k) - xyzcm(i, k);
                         msd[m] += std::make_tuple(xr * xr, yr * yr, zr * zr);
                     }
                 }
@@ -76,7 +76,6 @@ void Diffuse::print(std::ostream &os) {
     } body(total_frame_number, mols.size(), xyzcm);
 
     tbb::parallel_reduce(tbb::blocked_range<int>(0, total_frame_number - 1), body);
-
 
     constexpr double dunits = 10.0;
 
@@ -93,26 +92,23 @@ void Diffuse::print(std::ostream &os) {
 
     for (int i = 0; i < total_frame_number - 1; i++) {
         double delta = time_increment_ps * (i + 1);
-        auto[xvalue, yvalue, zvalue] = body.msd[i];
+        auto [xvalue, yvalue, zvalue] = body.msd[i];
         double rvalue = xvalue + yvalue + zvalue;
         double dvalue = dunits * rvalue / delta / 6.0;
-        os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") %
-              delta % xvalue % yvalue % zvalue % rvalue % dvalue;
+        os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") % delta % xvalue % yvalue % zvalue % rvalue %
+                  dvalue;
     }
     os << "*********************************************************\n";
-
 }
 
 void Diffuse::setParameters(const AmberMask &mask, double time_increment_ps, int total_frames,
                             const std::string &outfilename) {
-
     this->mask = mask;
 
     if (time_increment_ps <= 0) {
         throw std::runtime_error("`time_increment_ps' must great than zero");
     }
     this->time_increment_ps = time_increment_ps;
-
 
     if (total_frames <= 0) {
         throw std::runtime_error("`total_frames' must great than zero");
@@ -133,10 +129,9 @@ void Diffuse::readInfo() {
 }
 
 void Diffuse::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, mask)) mols.insert(atom->molecule.lock());
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, mask)) mols.insert(atom->molecule.lock());
+    });
 }
 
 std::string Diffuse::description() {
@@ -150,4 +145,3 @@ std::string Diffuse::description() {
     ss << std::string(title_line.size(), '-') << '\n';
     return ss.str();
 }
-

@@ -13,9 +13,7 @@ public:
     static void process_interactive();
 
 private:
-
     static void process(const std::string &file, const std::vector<std::pair<int, int>> &bonds);
 };
 
-
-#endif //TINKER_DELOCALIZATIONINDEX_HPP
+#endif  // TINKER_DELOCALIZATIONINDEX_HPP

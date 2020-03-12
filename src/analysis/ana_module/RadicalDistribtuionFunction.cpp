@@ -3,15 +3,13 @@
 //
 
 #include "RadicalDistribtuionFunction.hpp"
+
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
 
-RadicalDistribtuionFunction::RadicalDistribtuionFunction() {
-    enable_outfile = true;
-}
+RadicalDistribtuionFunction::RadicalDistribtuionFunction() { enable_outfile = true; }
 
 void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
-
     nframe++;
     volume = frame->volume();
 
@@ -41,10 +39,9 @@ void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 }
 
 void RadicalDistribtuionFunction::readInfo() {
-
     Atom::select2group(ids1, ids2);
-    rmax = choose(0.0, std::numeric_limits<double>::max(), "Enter Maximum Distance to Accumulate[10.0 Ang]:",
-                  Default(10.0));
+    rmax = choose(0.0, std::numeric_limits<double>::max(),
+                  "Enter Maximum Distance to Accumulate[10.0 Ang]:", Default(10.0));
     width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:", Default(0.01));
     intramol = choose_bool("Include Intramolecular Pairs in Distribution[N]:", Default(false));
     nbin = int(rmax / width);
@@ -52,7 +49,6 @@ void RadicalDistribtuionFunction::readInfo() {
         hist[i] = 0;
         gr[i] = gs[i] = 0.0;
     }
-
 }
 
 void RadicalDistribtuionFunction::print(std::ostream &os) {
@@ -71,24 +67,21 @@ void RadicalDistribtuionFunction::print(std::ostream &os) {
                 integral[i] = hist[i] / double(nframe) + integral[i - 1];
             }
         }
-
     }
 
-//     find the 5th degree polynomial smoothed distribution function
+    //     find the 5th degree polynomial smoothed distribution function
 
     if (nbin >= 5) {
         gs[1] = (69.0 * gr[1] + 4.0 * gr[2] - 6.0 * gr[3] + 4.0 * gr[4] - gr[5]) / 70.0;
         gs[2] = (2.0 * gr[1] + 27.0 * gr[2] + 12.0 * gr[3] - 8.0 * gr[4] + 2.0 * gr[5]) / 35.0;
         for (int i = 3; i <= nbin - 2; i++) {
-            gs[i] = (-3.0 * gr[i - 2] + 12.0 * gr[i - 1] +
-                     17.0 * gr[i] + 12.0 * gr[i + 1] - 3.0 * gr[i + 2]) / 35.0;
+            gs[i] = (-3.0 * gr[i - 2] + 12.0 * gr[i - 1] + 17.0 * gr[i] + 12.0 * gr[i + 1] - 3.0 * gr[i + 2]) / 35.0;
         }
         gs[nbin - 1] =
-                (2.0 * gr[nbin - 4] - 8.0 * gr[nbin - 3] +
-                 12.0 * gr[nbin - 2] + 27.0 * gr[nbin - 1] + 2.0 * gr[nbin]) / 35.0;
+            (2.0 * gr[nbin - 4] - 8.0 * gr[nbin - 3] + 12.0 * gr[nbin - 2] + 27.0 * gr[nbin - 1] + 2.0 * gr[nbin]) /
+            35.0;
         gs[nbin] =
-                (-gr[nbin - 4] + 4.0 * gr[nbin - 3] - 6.0 * gr[nbin - 2]
-                 + 4.0 * gr[nbin - 1] + 69.0 * gr[nbin]) / 70.0;
+            (-gr[nbin - 4] + 4.0 * gr[nbin - 3] - 6.0 * gr[nbin - 2] + 4.0 * gr[nbin - 1] + 69.0 * gr[nbin]) / 70.0;
         for (int i = 1; i <= nbin; i++) {
             gs[i] = std::max(0.0, gs[i]);
         }
@@ -103,27 +96,24 @@ void RadicalDistribtuionFunction::print(std::ostream &os) {
     os << "Bin    Counts    Distance    Raw g(r)  Smooth g(r)   Integral\n";
 
     for (int i = 1; i <= nbin; i++) {
-        os << boost::format("%d        %d      %.4f      %.4f     %.4f      %.4f\n") %
-              i % hist[i] % ((i - 0.5) * width) % gr[i] % gs[i] % integral[i];
+        os << boost::format("%d        %d      %.4f      %.4f     %.4f      %.4f\n") % i % hist[i] %
+                  ((i - 0.5) * width) % gr[i] % gs[i] % integral[i];
     }
 
     os << "************************************************\n";
 }
 
 void RadicalDistribtuionFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](std::shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+    });
     numj = group1.size();
     numk = group2.size();
 }
 
-void
-RadicalDistribtuionFunction::setParameters(const Atom::Node &id1, const Atom::Node &id2,
-                                           double max_dist, double width, bool intramol,
-                                           std::string outfilename) {
+void RadicalDistribtuionFunction::setParameters(const Atom::Node &id1, const Atom::Node &id2, double max_dist,
+                                                double width, bool intramol, std::string outfilename) {
     this->ids1 = id1;
     this->ids2 = id2;
     if (max_dist <= 0) {
@@ -146,6 +136,4 @@ RadicalDistribtuionFunction::setParameters(const Atom::Node &id1, const Atom::No
         hist[i] = 0;
         gr[i] = gs[i] = 0.0;
     }
-
 }
-

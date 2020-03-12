@@ -1,5 +1,7 @@
-#include <boost/spirit/include/qi.hpp>
 #include "ITS_PostProcess.hpp"
+
+#include <boost/spirit/include/qi.hpp>
+
 #include "utils/common.hpp"
 
 void ITS_PostProcess::process() {
@@ -47,5 +49,3 @@ void ITS_PostProcess::print(std::ofstream &ofs, bool change_log_base, int step, 
     for (auto v : values) ofs << std::setw(15) << (change_log_base ? (v / log_base) : v);
     ofs << '\n';
 }
-
-

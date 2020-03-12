@@ -1,12 +1,12 @@
 #ifndef TINKER_XTC_WRITER_HPP
 #define TINKER_XTC_WRITER_HPP
 
-#include <string>
 #include <memory>
+#include <string>
 
-#include "TrajectoryFormatWriter.hpp"
-#include "GromacsInterface.hpp"
 #include "GromacsImpl.hpp"
+#include "GromacsInterface.hpp"
+#include "TrajectoryFormatWriter.hpp"
 
 class Frame;
 
@@ -14,6 +14,7 @@ class XTCWriter : public TrajectoryFormatWriter {
     gmx::t_fileio *xd = nullptr;
     int step;
     gmx::real prec, time;
+
 public:
     void open(const std::string &filename) override;
 
@@ -23,14 +24,12 @@ public:
 
 protected:
     /*
- *  Interface for Mock
- */
+     *  Interface for Mock
+     */
     virtual GromacsInterface *getGromacsImpl() {
         static GromacsImpl impl;
         return &impl;
     }
 };
 
-
-
-#endif //TINKER_XTC_WRITER_HPP
+#endif  // TINKER_XTC_WRITER_HPP

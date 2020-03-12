@@ -5,13 +5,13 @@
 #ifndef TINKER_DIPOLEANGLE_HPP
 #define TINKER_DIPOLEANGLE_HPP
 
-
-#include <memory>
-#include <unordered_set>
-#include <string>
-#include <map>
 #include <list>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_set>
 #include <utility>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 
@@ -19,7 +19,6 @@ class Frame;
 
 class DipoleAngle : public AbstractAnalysis {
 public:
-
     DipoleAngle();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -33,7 +32,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Dipole Angle"; }
 
 protected:
-
     Atom::AmberMask mask1;
     Atom::AmberMask ids2;
 
@@ -49,5 +47,4 @@ protected:
     std::map<std::pair<int, int>, size_t> hist;
 };
 
-
-#endif //TINKER_DIPOLEANGLE_HPP
+#endif  // TINKER_DIPOLEANGLE_HPP

@@ -3,13 +3,12 @@
 
 #include "TrajectoryInterface.hpp"
 
-
 namespace gmx {
 
 #include "gromacs/fileio/xtcio.h"
 #include "gromacs/utility/smalloc.h"
 
-}
+}  // namespace gmx
 
 class TrrTrajectoryReader : public TrajectoryInterface {
 public:
@@ -26,5 +25,4 @@ private:
     gmx::t_fileio *fio = nullptr;
 };
 
-
-#endif //TINKER_TRRTRAJECTORYREADER_HPP
+#endif  // TINKER_TRRTRAJECTORYREADER_HPP

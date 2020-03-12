@@ -1,8 +1,10 @@
 //
 // Created by xiamr on 6/14/19.
 //
-#include <tbb/tbb.h>
 #include "GreenKubo.hpp"
+
+#include <tbb/tbb.h>
+
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
 
@@ -15,7 +17,6 @@ GreenKubo::GreenKubo() {
 }
 
 void GreenKubo::print(std::ostream &os) {
-
     if (steps < 2) {
         cerr << "Too few frame number :" << steps << endl;
         exit(1);
@@ -41,15 +42,12 @@ void GreenKubo::print(std::ostream &os) {
         int *numbers = nullptr;
         size_t steps;
 
-        Body(double *vecx, double *vecy, double *vecz, size_t steps) :
-                vecx(vecx), vecy(vecy), vecz(vecz), steps(steps) {
+        Body(double *vecx, double *vecy, double *vecz, size_t steps)
+            : vecx(vecx), vecy(vecy), vecz(vecz), steps(steps) {
             allocate();
         }
 
-        Body(const Body &c, tbb::split) :
-                vecx(c.vecx), vecy(c.vecy), vecz(c.vecz), steps(c.steps) {
-            allocate();
-        }
+        Body(const Body &c, tbb::split) : vecx(c.vecx), vecy(c.vecy), vecz(c.vecz), steps(c.steps) { allocate(); }
 
         void allocate() {
             cxx = new double[steps];
@@ -89,11 +87,9 @@ void GreenKubo::print(std::ostream &os) {
             }
         }
 
-
     } body(vecx, vecy, vecz, steps);
 
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, steps - 1), body, tbb::auto_partitioner());
-
 
     for (unsigned int i = 0; i < steps; i++) {
         int no = body.numbers[i];
@@ -117,12 +113,10 @@ void GreenKubo::print(std::ostream &os) {
     delete[] vecz;
 }
 
-
 void GreenKubo::readInfo() {
     Atom::select1group(ids, "Please enter atom group");
-    this->timestep = choose(0.0, static_cast<double>(numeric_limits<int>::max()),
-                            "Please enter time step for each frame(ps):");
-
+    this->timestep =
+        choose(0.0, static_cast<double>(numeric_limits<int>::max()), "Please enter time step for each frame(ps):");
 }
 
 void GreenKubo::process(std::shared_ptr<Frame> &frame) {
@@ -135,12 +129,10 @@ void GreenKubo::process(std::shared_ptr<Frame> &frame) {
     double xv, yv, zv;
     xv = yv = zv = 0.0;
     for (auto &atom_ptr : group) {
-
         xv += atom_ptr->vx;
         yv += atom_ptr->vy;
         zv += atom_ptr->vz;
         break;
-
     }
 
     auto atom_nums = group.size();
@@ -151,12 +143,10 @@ void GreenKubo::process(std::shared_ptr<Frame> &frame) {
     vecx_map[steps] = xv;
     vecy_map[steps] = yv;
     vecz_map[steps] = zv;
-
 }
 
 void GreenKubo::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
+    });
 }

@@ -5,15 +5,14 @@
 #ifndef TINKER_HBONDLIFETIME_HPP
 #define TINKER_HBONDLIFETIME_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class HBondLifeTime : public AbstractAnalysis {
 public:
-
     HBondLifeTime();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -29,7 +28,6 @@ public:
     }
 
 protected:
-
     Atom::Node water_mask;
 
     double dist_R_cutoff;
@@ -48,5 +46,4 @@ protected:
     void printData(std::ostream &os, const std::vector<double> &acf, std::string_view title) const;
 };
 
-
-#endif //TINKER_HBONDLIFETIME_HPP
+#endif  // TINKER_HBONDLIFETIME_HPP

@@ -5,14 +5,12 @@
 #ifndef TINKER_TRR_WRITER_HPP
 #define TINKER_TRR_WRITER_HPP
 
-
-#include <string>
 #include <memory>
+#include <string>
 
-#include "GromacsInterface.hpp"
 #include "GromacsImpl.hpp"
+#include "GromacsInterface.hpp"
 #include "TrajectoryFormatWriter.hpp"
-
 
 class Frame;
 
@@ -21,6 +19,7 @@ class TRRWriter : public TrajectoryFormatWriter {
     int step;
     float time;
     bool writeVelocities = false;
+
 public:
     void open(const std::string &filename) override;
 
@@ -28,20 +27,13 @@ public:
 
     void close() override;
 
-    virtual void setWriteVelocities(bool writeVelocities) {
-        this->writeVelocities = writeVelocities;
-    }
+    virtual void setWriteVelocities(bool writeVelocities) { this->writeVelocities = writeVelocities; }
 
-    [[nodiscard]] bool isWriteVelocities() const {
-        return writeVelocities;
-    }
+    [[nodiscard]] bool isWriteVelocities() const { return writeVelocities; }
 
-    virtual void setCurrentTime(gmx::real t) {
-        this->time = t;
-    }
+    virtual void setCurrentTime(gmx::real t) { this->time = t; }
 
 protected:
-
     /*
      *  Interface for Mock
      */
@@ -49,7 +41,6 @@ protected:
         static GromacsImpl impl;
         return &impl;
     }
-
 };
 
-#endif //TINKER_TRR_WRITER_HPP
+#endif  // TINKER_TRR_WRITER_HPP

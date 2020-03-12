@@ -5,23 +5,21 @@
 #ifndef TINKER_DEMIXINDEXOFTWOGROUP_HPP
 #define TINKER_DEMIXINDEXOFTWOGROUP_HPP
 
-
-#include <memory>
-#include <unordered_set>
-#include <string>
-#include <map>
 #include <list>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_set>
 #include <utility>
 
-#include "utils/common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/common.hpp"
 
 class Frame;
 
 class DemixIndexOfTwoGroup : public AbstractAnalysis {
 public:
-
     DemixIndexOfTwoGroup();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -37,7 +35,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Calculate demix index of two groups"; }
 
 private:
-
     [[nodiscard]] auto calculate_grid_index(const std::shared_ptr<Atom> &atom, const std::shared_ptr<Frame> &frame);
 
     AmberMask mask1;
@@ -51,8 +48,6 @@ private:
     int grid_z;
 
     std::deque<std::tuple<double, double>> demix_index_list;
-
 };
 
-
-#endif //TINKER_DEMIXINDEXOFTWOGROUP_HPP
+#endif  // TINKER_DEMIXINDEXOFTWOGROUP_HPP

@@ -2,11 +2,13 @@
 // Created by xiamr on 9/4/19.
 //
 
-#include <boost/range/algorithm.hpp>
 #include "OrientationResolvedRadialDistributionFunction.hpp"
-#include "utils/common.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
 #include "utils/VectorSelectorFactory.hpp"
+#include "utils/common.hpp"
 
 OrientationResolvedRadialDistributionFunction::OrientationResolvedRadialDistributionFunction() {
     enable_outfile = true;
@@ -15,7 +17,8 @@ OrientationResolvedRadialDistributionFunction::OrientationResolvedRadialDistribu
 void OrientationResolvedRadialDistributionFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {
     water_OW_atoms.reserve(frame->atom_list.size() / 3);
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, water_Ow_atom_mask)) water_OW_atoms.push_back(atom);
+        if (Atom::is_match(atom, water_Ow_atom_mask))
+            water_OW_atoms.push_back(atom);
         else if (Atom::is_match(atom, reference_atom_mask)) {
             if (reference_atom) {
                 std::cerr << "ERROR !! Only one reference atom allowed for module <" << title() << ">\n";
@@ -69,11 +72,8 @@ void OrientationResolvedRadialDistributionFunction::print(std::ostream &os) {
     for (int i = 0; i < distance_bins; ++i) {
         for (int j = 0; j < angle_bins; ++j) {
             double pop = hist[j][i] / max_value;
-            os << boost::format("%15.6f %15.6f %15.6f %15.6f\n")
-                  % ((i + 0.5) * distance_width)
-                  % ((j + 0.5) * 180.0 * angle_width / M_PI)
-                  % hist[j][i]
-                  % (pop == 0.0 ? 100.0 : factor * log(pop));
+            os << boost::format("%15.6f %15.6f %15.6f %15.6f\n") % ((i + 0.5) * distance_width) %
+                      ((j + 0.5) * 180.0 * angle_width / M_PI) % hist[j][i] % (pop == 0.0 ? 100.0 : factor * log(pop));
         }
     }
 }
@@ -109,7 +109,6 @@ void OrientationResolvedRadialDistributionFunction::normalize() {
 }
 
 void OrientationResolvedRadialDistributionFunction::readInfo() {
-
     Atom::select1group(reference_atom_mask, "Eneter mask for reference atom > ");
     Atom::select1group(water_Ow_atom_mask, "Enter mask for OW atoms > ");
 

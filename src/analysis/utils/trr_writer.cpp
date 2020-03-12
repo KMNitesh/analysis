@@ -2,12 +2,13 @@
 // Created by xiamr on 3/19/19.
 //
 
+#include "trr_writer.hpp"
+
 #include <boost/range/adaptors.hpp>
 
-#include "trr_writer.hpp"
-#include "data_structure/frame.hpp"
-#include "data_structure/atom.hpp"
 #include "ThrowAssert.hpp"
+#include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 
 void TRRWriter::open(const std::string &filename) {
     // First Time

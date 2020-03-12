@@ -2,18 +2,18 @@
 // Created by xiamr on 8/6/19.
 //
 
-#include <cmath>
 #include "HBondLifeTime.hpp"
-#include "data_structure/frame.hpp"
-#include "data_structure/molecule.hpp"
-#include "utils/common.hpp"
-#include "utils/ThrowAssert.hpp"
+
+#include <cmath>
+
 #include "HBond.hpp"
 #include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
+#include "data_structure/molecule.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/common.hpp"
 
-HBondLifeTime::HBondLifeTime() {
-    enable_outfile = true;
-}
+HBondLifeTime::HBondLifeTime() { enable_outfile = true; }
 
 void HBondLifeTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &atom : frame->atom_list) {
@@ -41,7 +41,6 @@ void HBondLifeTime::process(std::shared_ptr<Frame> &frame) {
         int hbond_dest_oxygen_num = 0;
         for (auto &o2 : oxygens) {
             if (o2 != o1 and atom_distance(o2, o1, frame) <= dist_R_cutoff) {
-
                 auto o1_h_vector = hydrogen->getCoordinate() - o1->getCoordinate();
                 auto o1_o2_vector = o2->getCoordinate() - o1->getCoordinate();
 
@@ -56,7 +55,6 @@ void HBondLifeTime::process(std::shared_ptr<Frame> &frame) {
                 if (angle <= angle_HOO_cutoff) {
                     hbond_dest_oxygen_num = o2->seq;
                     break;
-
                 }
             }
         }

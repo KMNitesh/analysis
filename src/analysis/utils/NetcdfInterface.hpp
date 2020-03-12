@@ -18,4 +18,4 @@ public:
     virtual ~NetcdfInterface() = default;
 };
 
-#endif //TINKER_NETCDFINTERFACE_HPP
+#endif  // TINKER_NETCDFINTERFACE_HPP

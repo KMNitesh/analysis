@@ -5,16 +5,14 @@
 #ifndef TINKER_ANGLEWAT_HPP
 #define TINKER_ANGLEWAT_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
-
+#include "utils/std.hpp"
 
 class Frame;
 
 class AngleWat : public AbstractAnalysis {
 public:
-
     AngleWat();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -45,5 +43,4 @@ protected:
     void printData(std::ostream &os) const;
 };
 
-
-#endif //TINKER_ANGLEWAT_HPP
+#endif  // TINKER_ANGLEWAT_HPP

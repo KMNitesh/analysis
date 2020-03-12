@@ -2,13 +2,15 @@
 // Created by xiamr on 6/14/19.
 //
 
-#include <boost/range/algorithm.hpp>
 #include "RotAcfCutoff.hpp"
-#include "data_structure/frame.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/atom.hpp"
-#include "utils/VectorSelectorFactory.hpp"
+#include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/LegendrePolynomial.hpp"
+#include "utils/VectorSelectorFactory.hpp"
 #include "utils/common.hpp"
 
 using namespace std;
@@ -31,7 +33,7 @@ auto RotAcfCutoff::find_in(int seq) {
 
 void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
     for (auto &ref : group1) {
-        for (auto &atom2: group2) {
+        for (auto &atom2 : group2) {
             auto mol = atom2->molecule.lock();
             auto it = find_in(mol->seq());
             if (atom_distance2(ref, atom2, frame) < cutoff2) {
@@ -54,7 +56,6 @@ void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
 }
 
 void RotAcfCutoff::readInfo() {
-
     Atom::select2group(ids1, ids2);
 
     vectorSelector = VectorSelectorFactory::getVectorSelector();
@@ -67,11 +68,9 @@ void RotAcfCutoff::readInfo() {
     double cutoff = choose(0.0, std::numeric_limits<double>::max(), "Please enter distance cutoff:");
     this->cutoff2 = cutoff * cutoff;
 
-    this->time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
-                                     "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
-    this->max_time_grap = choose(0.0, std::numeric_limits<double>::max(),
-                                 "Enter the Max Time Grap in Picoseconds :");
-
+    this->time_increment_ps =
+        choose(0.0, std::numeric_limits<double>::max(), "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
+    this->max_time_grap = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Grap in Picoseconds :");
 }
 
 void RotAcfCutoff::setParameters(const AmberMask &M, const AmberMask &L, std::shared_ptr<VectorSelector> vector,
@@ -116,7 +115,6 @@ void RotAcfCutoff::setParameters(const AmberMask &M, const AmberMask &L, std::sh
         throw runtime_error("outfilename cannot empty");
     }
 }
-
 
 tuple<double, double, double> RotAcfCutoff::calVector(shared_ptr<Molecule> &mol, shared_ptr<Frame> &frame) {
     return vectorSelector->calculateVector(mol, frame);
@@ -168,14 +166,12 @@ void RotAcfCutoff::print(std::ostream &os) {
     os << "      (ps)                    (ps)" << endl;
 
     for (std::size_t t = 0; t < acf.size(); t++) {
-        os << boost::format("%12.2f%18.14f%15.5f") % (t * time_increment_ps) % acf[t].second % integrate[t]
-           << endl;
+        os << boost::format("%12.2f%18.14f%15.5f") % (t * time_increment_ps) % acf[t].second % integrate[t] << endl;
     }
     os << "*********************************************************" << endl;
-
 }
 
-template<typename Function>
+template <typename Function>
 void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long long, double>> &acf, Function f) const {
     size_t max_time_grap_step = ceil(max_time_grap / time_increment_ps);
     for (auto list_ptr : rots) {
@@ -200,11 +196,10 @@ void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long lon
 }
 
 void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+    });
     if (group1.size() > 1) {
         cerr << "the reference(metal cation) atom for RotAcfCutoff function can only have one\n";
         exit(EXIT_FAILURE);
@@ -230,4 +225,3 @@ string RotAcfCutoff::description() {
 RotAcfCutoff::~RotAcfCutoff() {
     boost::for_each(rots, std::default_delete<std::list<std::tuple<double, double, double>>>());
 }
-

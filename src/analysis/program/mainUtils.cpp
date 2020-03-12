@@ -827,4 +827,3 @@ std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<Abstra
     }
     return {};
 }
-

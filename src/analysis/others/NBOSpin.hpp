@@ -17,9 +17,8 @@ public:
 
     [[nodiscard]] static double total_spin(std::string_view line);
 
-    [[nodiscard]] static std::map<int, std::pair<std::string, std::array<double, 3>>>
-    getElectronSpin(std::istream &ifs);
+    [[nodiscard]] static std::map<int, std::pair<std::string, std::array<double, 3>>> getElectronSpin(
+        std::istream &ifs);
 };
 
-
-#endif //TINKER_NBOSPIN_HPP
+#endif  // TINKER_NBOSPIN_HPP

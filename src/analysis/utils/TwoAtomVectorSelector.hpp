@@ -6,6 +6,7 @@
 #define TINKER_TWOATOMVECTORSELECTOR_HPP
 
 #include <list>
+
 #include "VectorSelector.hpp"
 #include "data_structure/atom.hpp"
 
@@ -21,26 +22,23 @@ public:
 
     void print(std::ostream &os) override;
 
-    [[nodiscard]] static std::string_view
-    title() { return "Two Atom vector (define by two atoms in same molecule) selector"; }
+    [[nodiscard]] static std::string_view title() {
+        return "Two Atom vector (define by two atoms in same molecule) selector";
+    }
 
     std::string description() override;
 
-    std::tuple<double, double, double>
-    calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
+    std::tuple<double, double, double> calculateVector(const std::shared_ptr<Molecule> &mol,
+                                                       const std::shared_ptr<Frame> &frame) override;
 
 protected:
-
     AmberMask mask1;
     AmberMask mask2;
 
     std::vector<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
-
     static std::tuple<double, double, double> calVector(
-            const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
-            const std::shared_ptr<Frame> &frame);
+        const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms, const std::shared_ptr<Frame> &frame);
 };
 
-
-#endif //TINKER_TWOATOMVECTORSELECTOR_HPP
+#endif  // TINKER_TWOATOMVECTORSELECTOR_HPP

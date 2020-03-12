@@ -2,19 +2,18 @@
 // Created by xiamr on 8/11/19.
 //
 
+#include "HBondSpread.hpp"
+
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 
-#include "HBondSpread.hpp"
-#include "utils/common.hpp"
 #include "HBond.hpp"
 #include "data_structure/frame.hpp"
-#include "utils/ThrowAssert.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/common.hpp"
 
-HBondSpread::HBondSpread() {
-    enable_outfile = true;
-}
+HBondSpread::HBondSpread() { enable_outfile = true; }
 
 void HBondSpread::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
@@ -35,13 +34,11 @@ void HBondSpread::processFirstFrame(std::shared_ptr<Frame> &frame) {
     throw_assert(metal.size() == 1, "Only one metal atom is allowed!");
 }
 
-
 void HBondSpread::process(std::shared_ptr<Frame> &frame) {
     for (auto &hydrogen : hydrogens) {
         auto o1 = frame->atom_map[hydrogen->con_list.front()];
         for (auto &o2 : Ow) {
             if (o2 != o1 and atom_distance(o2, o1, frame) <= dist_R_cutoff) {
-
                 auto o1_h_vector = hydrogen->getCoordinate() - o1->getCoordinate();
                 auto o1_o2_vector = o2->getCoordinate() - o1->getCoordinate();
 
@@ -67,9 +64,9 @@ void HBondSpread::process(std::shared_ptr<Frame> &frame) {
     for (auto &atom : Ow) {
         if (atom_distance2(m, atom, frame) < cutoff2) {
             MyVisitor vis(hbond_connected);
-            boost::depth_first_visit(g, Ow_mapping[atom->seq], vis,
-                                     boost::make_vector_property_map<boost::default_color_type>(
-                                             boost::get(boost::vertex_index, g)));
+            boost::depth_first_visit(
+                g, Ow_mapping[atom->seq], vis,
+                boost::make_vector_property_map<boost::default_color_type>(boost::get(boost::vertex_index, g)));
             // std::cout << atom->seq << '\n';
         }
     }
@@ -83,7 +80,6 @@ void HBondSpread::process(std::shared_ptr<Frame> &frame) {
     hbond_connected_num_and_max_distance.emplace_back(hbond_connected.size(), std::sqrt(max_distance2));
 
     boost::remove_edge_if([](auto) { return true; }, g);
-
 }
 
 void HBondSpread::print(std::ostream &os) {

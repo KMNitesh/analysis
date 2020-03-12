@@ -3,30 +3,27 @@
 //
 
 #include "EquatorialAngle.hpp"
+
 #include "data_structure/frame.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
 using namespace std;
 
-EquatorialAngle::EquatorialAngle() {
-    enable_outfile = true;
-}
+EquatorialAngle::EquatorialAngle() { enable_outfile = true; }
 
 void EquatorialAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                      if (Atom::is_match(atom, this->ids3)) this->group3.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+        if (Atom::is_match(atom, this->ids3)) this->group3.insert(atom);
+    });
 }
 
 void EquatorialAngle::process(std::shared_ptr<Frame> &frame) {
     for (auto &vec1_atom1 : group1) {
-        for (auto &vec1_atom2: group2) {
+        for (auto &vec1_atom2 : group2) {
             if (vec1_atom1->molecule.lock() == vec1_atom2->molecule.lock()) {
-
                 double xr = vec1_atom2->x - vec1_atom1->x;
                 double yr = vec1_atom2->y - vec1_atom1->y;
                 double zr = vec1_atom2->z - vec1_atom1->z;
@@ -36,7 +33,6 @@ void EquatorialAngle::process(std::shared_ptr<Frame> &frame) {
                 double leng1 = sqrt(xr * xr + yr * yr + zr * zr);
 
                 for (auto &atom3 : group3) {
-
                     double xr2 = atom3->x - vec1_atom1->x;
                     double yr2 = atom3->y - vec1_atom1->y;
                     double zr2 = atom3->z - vec1_atom1->z;
@@ -46,7 +42,6 @@ void EquatorialAngle::process(std::shared_ptr<Frame> &frame) {
                     double distance = sqrt(xr2 * xr2 + yr2 * yr2 + zr2 * zr2);
 
                     if (cutoff1 <= distance and distance < cutoff2) {
-
                         double _cos = (xr * xr2 + yr * yr2 + zr * zr2) / (distance * leng1);
 
                         double angle = acos(_cos) * radian;
@@ -74,7 +69,6 @@ void EquatorialAngle::print(std::ostream &os) {
     printData(os);
 
     os << string(50, '#') << '\n';
-
 }
 
 void EquatorialAngle::readInfo() {
@@ -94,7 +88,7 @@ void EquatorialAngle::readInfo() {
 }
 
 void EquatorialAngle::printData(std::ostream &os) const {
-    for (auto[grid, value] : hist.getDistribution()) {
+    for (auto [grid, value] : hist.getDistribution()) {
         os << format("%15.3f %15.3f\n", grid, 100 * value);
     }
 }

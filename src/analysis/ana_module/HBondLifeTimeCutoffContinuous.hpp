@@ -9,7 +9,6 @@
 
 class HBondLifeTimeCutoffContinuous : public HBondLifeTimeCutoff {
 public:
-
     void print(std::ostream &os) override;
 
     [[nodiscard]] static std::string_view title() {
@@ -17,9 +16,7 @@ public:
     }
 
 protected:
-
     [[nodiscard]] std::vector<double> calculateAcf() const override;
 };
 
-
-#endif //TINKER_HBONDLIFETIMECUTOFFCONTINUOUS_HPP
+#endif  // TINKER_HBONDLIFETIMECUTOFFCONTINUOUS_HPP

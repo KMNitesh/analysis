@@ -1,16 +1,17 @@
 //
 // Created by xiamr on 3/17/19.
 //
-#include "config.h"
-#include <memory>
-#include <iostream>
-#include <fstream>
-#include <boost/algorithm/string.hpp>
 #include "forcefield.hpp"
-#include "utils/common.hpp"
+
+#include <boost/algorithm/string.hpp>
+#include <fstream>
+#include <iostream>
+#include <memory>
+
+#include "config.h"
 #include "data_structure/frame.hpp"
 #include "utils/ThrowAssert.hpp"
-
+#include "utils/common.hpp"
 
 void Forcefield::read(const std::string &filename) {
     if (getFileType(filename) == FileType::PRM) {
@@ -23,8 +24,7 @@ void Forcefield::read(const std::string &filename) {
 }
 
 void Forcefield::read_tinker_prm(const std::string &filename) {
-    if (!mapping.empty())
-        return;
+    if (!mapping.empty()) return;
 
     std::fstream f;
     f.open(filename, std::ios::in);
@@ -62,7 +62,6 @@ void Forcefield::read_tinker_prm(const std::string &filename) {
     }
 }
 
-
 double Forcefield::find_mass(const std::shared_ptr<Atom> &atom) {
     if (atom->mass) return atom->mass.value();
     auto it = mapping.find(atom->typ);
@@ -82,6 +81,3 @@ void Forcefield::assign_forcefield(std::shared_ptr<Frame> &frame) {
         atom->residue_name = it->second.res;
     }
 }
-
-
-

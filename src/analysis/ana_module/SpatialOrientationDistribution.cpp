@@ -3,9 +3,10 @@
 //
 
 #include "SpatialOrientationDistribution.hpp"
+
 #include "data_structure/frame.hpp"
-#include "utils/ThrowAssert.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
 using namespace std;
@@ -16,10 +17,9 @@ SpatialOrientationDistribution::SpatialOrientationDistribution() {
 }
 
 void SpatialOrientationDistribution::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
+    });
 }
 
 void SpatialOrientationDistribution::process(std::shared_ptr<Frame> &frame) {
@@ -37,19 +37,16 @@ void SpatialOrientationDistribution::print(std::ostream &os) {
     os << string(50, '#') << '\n';
     os << format("#%15s %15s %15s\n", "X", "Y", "Z");
 
-    for (auto[x, y, z] : normal_vectors) {
+    for (auto [x, y, z] : normal_vectors) {
         os << format("%15.3f %15.3f %15.3f\n", x, y, z);
     }
 
     os << string(50, '#') << '\n';
 }
 
-void SpatialOrientationDistribution::readInfo() {
-    Atom::select1group(ids);
-}
+void SpatialOrientationDistribution::readInfo() { Atom::select1group(ids); }
 
 double SpatialOrientationDistribution::calculatePhiAngle(const std::tuple<double, double, double> &vector) {
-
     constexpr std::tuple<double, double, double> z_axis = {0.0, 0.0, 1.0};
 
     auto norm = vector_norm(vector);
@@ -78,7 +75,3 @@ double SpatialOrientationDistribution::calculateThetaAngle(const std::tuple<doub
     }
     return angle_with_xaxis;
 }
-
-
-
-

@@ -2,8 +2,9 @@
 // Created by xiamr on 9/10/19.
 //
 
-#include "utils/std.hpp"
 #include "HBondLifeTimeContinuous.hpp"
+
+#include "utils/std.hpp"
 
 void HBondLifeTimeContinuous::print(std::ostream &os) {
     auto acf = calculateAcf();
@@ -23,8 +24,8 @@ std::vector<double> HBondLifeTimeContinuous::calculateAcf() const {
                 ++ntime[n];
                 if (sample[i] != 0 and sample[i] == sample[j]) {
                     bool bFailed = false;
-                    //Brute-force algorithm
-                    //TODO: Optimize this loop
+                    // Brute-force algorithm
+                    // TODO: Optimize this loop
                     for (std::size_t k = i + 1; k < j; ++k) {
                         if (sample[i] != sample[k]) {
                             bFailed = true;

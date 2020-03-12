@@ -11,7 +11,6 @@ class Frame;
 
 class GQuadruplexPdb2gmx {
 public:
-
     [[nodiscard]] static std::string_view title() { return "Convert 3dnus G-Quadruplex pdb for gmx pdb2gmx"; }
 
     static void convert();
@@ -21,5 +20,4 @@ public:
     static void renumberAtomAndResidueNum();
 };
 
-
-#endif //TINKER_GQUADRUPLEXPDB2GMX_HPP
+#endif  // TINKER_GQUADRUPLEXPDB2GMX_HPP

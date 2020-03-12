@@ -7,11 +7,11 @@
 
 namespace gmx {
 
-#include "gromacs/fileio/xtcio.h"
 #include "gromacs/fileio/trnio.h"
+#include "gromacs/fileio/xtcio.h"
 #include "gromacs/utility/smalloc.h"
 
-}
+}  // namespace gmx
 
 class GromacsInterface {
 public:
@@ -21,10 +21,9 @@ public:
     /* Close it */
     virtual void close_trn(gmx::t_fileio *fio) = 0;
 
-
     /* Write a trn frame to file fp, box, x, v, f may be NULL */
-    virtual void fwrite_trn(gmx::t_fileio *fio, int step, gmx::real t, gmx::real lambda,
-                            gmx::rvec *box, int natoms, gmx::rvec *x, gmx::rvec *v, gmx::rvec *f) = 0;
+    virtual void fwrite_trn(gmx::t_fileio *fio, int step, gmx::real t, gmx::real lambda, gmx::rvec *box, int natoms,
+                            gmx::rvec *x, gmx::rvec *v, gmx::rvec *f) = 0;
 
     /* Open a file for xdr I/O */
     virtual gmx::t_fileio *open_xtc(const char *filename, const char *mode) = 0;
@@ -33,13 +32,10 @@ public:
     virtual void close_xtc(gmx::t_fileio *fio) = 0;
 
     /* Write a frame to xtc file */
-    virtual int write_xtc(gmx::t_fileio *fio,
-                          int natoms, int step, gmx::real time,
-                          gmx::matrix box, gmx::rvec *x, gmx::real prec) = 0;
-
+    virtual int write_xtc(gmx::t_fileio *fio, int natoms, int step, gmx::real time, gmx::matrix box, gmx::rvec *x,
+                          gmx::real prec) = 0;
 
     virtual ~GromacsInterface() = default;
 };
 
-
-#endif //TINKER_GROMACSINTERFACE_HPP
+#endif  // TINKER_GROMACSINTERFACE_HPP

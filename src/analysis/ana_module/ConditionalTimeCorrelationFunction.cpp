@@ -2,29 +2,30 @@
 // Created by xiamr on 9/6/19.
 //
 
+#include "ConditionalTimeCorrelationFunction.hpp"
+
 #include <boost/range/algorithm.hpp>
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/irange.hpp>
 
-#include "ConditionalTimeCorrelationFunction.hpp"
-#include "utils/common.hpp"
 #include "data_structure/frame.hpp"
-#include "utils/VectorSelectorFactory.hpp"
 #include "utils/LegendrePolynomial.hpp"
+#include "utils/VectorSelectorFactory.hpp"
+#include "utils/common.hpp"
 
-ConditionalTimeCorrelationFunction::ConditionalTimeCorrelationFunction() : func_mapping{
-        {1, [this] { calculateFrame(LegendrePolynomialLevel1()); }},
-        {2, [this] { calculateFrame(LegendrePolynomialLevel2()); }},
-        {3, [this] { calculateFrame(LegendrePolynomialLevel3()); }},
-        {4, [this] { calculateFrame(LegendrePolynomialLevel4()); }}
-} {
+ConditionalTimeCorrelationFunction::ConditionalTimeCorrelationFunction()
+    : func_mapping{{1, [this] { calculateFrame(LegendrePolynomialLevel1()); }},
+                   {2, [this] { calculateFrame(LegendrePolynomialLevel2()); }},
+                   {3, [this] { calculateFrame(LegendrePolynomialLevel3()); }},
+                   {4, [this] { calculateFrame(LegendrePolynomialLevel4()); }}} {
     enable_outfile = true;
 }
 
 void ConditionalTimeCorrelationFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {
     water_Ow_atoms.reserve(frame->atom_list.size() / 3);
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, water_Ow_atoms_mask)) water_Ow_atoms.push_back(atom);
+        if (Atom::is_match(atom, water_Ow_atoms_mask))
+            water_Ow_atoms.push_back(atom);
         else if (Atom::is_match(atom, reference_atom_mask)) {
             if (reference_atom) {
                 std::cerr << "ERROR !! Only one reference atom allowed for module <" << title() << ">\n";
@@ -48,7 +49,6 @@ void ConditionalTimeCorrelationFunction::processFirstFrame(std::shared_ptr<Frame
 }
 
 void ConditionalTimeCorrelationFunction::process(std::shared_ptr<Frame> &frame) {
-
     auto it1 = water_Ow_atoms.begin();
     auto it2 = cb_vector.begin();
     cache_x.push_back(std::vector<double>());
@@ -63,7 +63,7 @@ void ConditionalTimeCorrelationFunction::process(std::shared_ptr<Frame> &frame) 
     func_mapping.at(LegendrePolynomial)();
 }
 
-template<typename Function>
+template <typename Function>
 void ConditionalTimeCorrelationFunction::calculateFrame(Function f) {
     if (cb_vector.at(0).full()) {
         for (std::size_t i = 0; i < water_Ow_atoms.size(); ++i) {
@@ -98,10 +98,7 @@ void ConditionalTimeCorrelationFunction::print(std::ostream &os) {
     const boost::format fmt("%15.5f %15.5f %15.5f\n");
     for (int t = 0; t < max_time_gap_frame; ++t) {
         for (int rbin = 0; rbin < distance_bins; ++rbin) {
-            os << boost::format(fmt)
-                  % (t * time_increment_ps)
-                  % ((rbin + 0.5) * distance_width)
-                  % ctcf[rbin][t];
+            os << boost::format(fmt) % (t * time_increment_ps) % ((rbin + 0.5) * distance_width) % ctcf[rbin][t];
         }
     }
 }
@@ -132,13 +129,10 @@ void ConditionalTimeCorrelationFunction::readInfo() {
 
     distance_bins = static_cast<int>(max_distance / distance_width);
 
-    time_increment_ps = choose(0.0, std::numeric_limits<double>::max(),
-                               "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
+    time_increment_ps =
+        choose(0.0, std::numeric_limits<double>::max(), "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
 
     max_time_gap_ps = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Gap in Picoseconds :");
 
     max_time_gap_frame = std::ceil(max_time_gap_ps / time_increment_ps);
-
-
 }
-

@@ -3,12 +3,12 @@
 //
 
 #include "HBondLifeTimeCutoff.hpp"
-#include "utils/common.hpp"
-#include "data_structure/frame.hpp"
-#include "HBond.hpp"
-#include "utils/ThrowAssert.hpp"
-#include "data_structure/molecule.hpp"
 
+#include "HBond.hpp"
+#include "data_structure/frame.hpp"
+#include "data_structure/molecule.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/common.hpp"
 
 bool operator==(const HBondLifeTimeCutoff::InnerAtom &i1, const HBondLifeTimeCutoff::InnerAtom &i2) {
     return i1.index == i2.index and i1.list_ptr1 == i2.list_ptr1 and i1.list_ptr2 == i2.list_ptr2;
@@ -18,9 +18,7 @@ auto HBondLifeTimeCutoff::find_in(int seq) {
     return std::find_if(inner_atoms.begin(), inner_atoms.end(), [seq](auto &i) { return i.index == seq; });
 }
 
-HBondLifeTimeCutoff::HBondLifeTimeCutoff() {
-    enable_outfile = true;
-}
+HBondLifeTimeCutoff::HBondLifeTimeCutoff() { enable_outfile = true; }
 
 void HBondLifeTimeCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
@@ -39,7 +37,6 @@ void HBondLifeTimeCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
         }
     }
     throw_assert(metal.size() == 1, "Only one metal atom is allowed!");
-
 }
 
 void HBondLifeTimeCutoff::process(std::shared_ptr<Frame> &frame) {
@@ -77,7 +74,6 @@ int HBondLifeTimeCutoff::find_hbond(const std::shared_ptr<Atom> &o1, const std::
     for (auto &ele : water_struct) {
         auto &o2 = ele.first;
         if (o2 != o1 and atom_distance(o2, o1, frame) <= dist_R_cutoff) {
-
             auto o1_h_vector = hydrogen->getCoordinate() - o1->getCoordinate();
             auto o1_o2_vector = o2->getCoordinate() - o1->getCoordinate();
 
@@ -92,13 +88,11 @@ int HBondLifeTimeCutoff::find_hbond(const std::shared_ptr<Atom> &o1, const std::
             if (angle <= angle_HOO_cutoff) {
                 hbond_dest_oxygen_num = o2->seq;
                 break;
-
             }
         }
     }
     return hbond_dest_oxygen_num;
 }
-
 
 void HBondLifeTimeCutoff::printData(std::ostream &os, const std::vector<double> &acf, std::string_view title) const {
     os << std::string(50, '#') << '\n';

@@ -2,16 +2,18 @@
 // Created by xiamr on 9/20/19.
 //
 
-
 #include "CoordinationStructureClassification.hpp"
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
-#include <boost/range/irange.hpp>
+
 #include <tbb/tbb.h>
 #include <tbb/tick_count.h>
+
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/irange.hpp>
+
+#include "RMSDCal.hpp"
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
-#include "RMSDCal.hpp"
 
 CoordinationStructureClassification::CoordinationStructureClassification() {
     enable_outfile = true;
@@ -19,17 +21,17 @@ CoordinationStructureClassification::CoordinationStructureClassification() {
 }
 
 void CoordinationStructureClassification::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, metal_mask)) metal = atom;
-                        else if (Atom::is_match(atom, Ow_atom_mask)) Ow_atoms.push_back(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, metal_mask))
+            metal = atom;
+        else if (Atom::is_match(atom, Ow_atom_mask))
+            Ow_atoms.push_back(atom);
+    });
     assert(metal);
     assert(Ow_atoms.size() > 2);
 }
 
 void CoordinationStructureClassification::process(std::shared_ptr<Frame> &frame) {
-
     std::vector<std::tuple<double, double, double>> coord;
     for (auto &atom : Ow_atoms) {
         auto r = atom->getCoordinate() - metal->getCoordinate();
@@ -56,13 +58,11 @@ void CoordinationStructureClassification::print(std::ostream &os) {
 
     std::list<Cluster::rmsd_matrix> rmsd_list;
 
-    boost::for_each(rmsd_list_map,
-                    [&rmsd_list](auto &element) {
-                        rmsd_list.merge(element.second,
-                                        [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
-                                            return (m1.rms < m2.rms);
-                                        });
-                    });
+    boost::for_each(rmsd_list_map, [&rmsd_list](auto &element) {
+        rmsd_list.merge(element.second, [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
+            return (m1.rms < m2.rms);
+        });
+    });
 
     if (output_rms_matrix) {
         for (auto &element : rmsd_list) {
@@ -83,8 +83,8 @@ void CoordinationStructureClassification::print(std::ostream &os) {
 
     // do statistics
     std::unordered_map<int, std::vector<int>> mm = do_find_frames_in_same_clust(c);
-    os << format("#%-10s %-5s %-13s %-13s %-13s %-13s",
-                 "Clust No.", "C.N.", "Frame Count", "MediumFrame", "AvgRMSD", "Frames enumeration");
+    os << format("#%-10s %-5s %-13s %-13s %-13s %-13s", "Clust No.", "C.N.", "Frame Count", "MediumFrame", "AvgRMSD",
+                 "Frames enumeration");
     std::unordered_map<int, std::pair<int, double>> mm2 = do_find_medium_in_clust(c, rmsd_list);
     for (auto i_clust : range(1, cid + 1)) {
         auto &s = mm[i_clust];
@@ -117,18 +117,21 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
         Body(std::deque<std::pair<int, std::vector<std::tuple<double, double, double>>>> &tables,
              CoordinationStructureClassification *parent, std::atomic<std::size_t> &current_completed_compute_amount,
              std::size_t &total_compute_amount)
-                : tables(tables), parent(parent), current_completed_compute_amount(current_completed_compute_amount),
-                  total_compute_amount(total_compute_amount) {};
+            : tables(tables),
+              parent(parent),
+              current_completed_compute_amount(current_completed_compute_amount),
+              total_compute_amount(total_compute_amount){};
 
-        Body(Body &c, tbb::split) : tables(c.tables), parent(c.parent),
-                                    current_completed_compute_amount(c.current_completed_compute_amount),
-                                    total_compute_amount(c.total_compute_amount) {}
+        Body(Body &c, tbb::split)
+            : tables(c.tables),
+              parent(c.parent),
+              current_completed_compute_amount(c.current_completed_compute_amount),
+              total_compute_amount(c.total_compute_amount) {}
 
         void join(Body &c) {
-            local_rms_list.merge(c.local_rms_list,
-                                 [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
-                                     return (m1.rms < m2.rms);
-                                 });
+            local_rms_list.merge(c.local_rms_list, [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
+                return (m1.rms < m2.rms);
+            });
         }
 
         void operator()(const tbb::blocked_range<std::size_t> &range) {
@@ -139,9 +142,8 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
                     auto &item1 = tables[index1];
                     auto &item2 = tables[index2];
                     local_rms_list.emplace_back(
-                            item1.first, item2.first,
-                            CoordinationStructureClassification::calculateRmsdOfTwoStructs(
-                                    item1.second, item2.second));
+                        item1.first, item2.first,
+                        CoordinationStructureClassification::calculateRmsdOfTwoStructs(item1.second, item2.second));
                 }
                 current_com_amount += tables.size() - index1 - 1;
                 if (current_com_amount >= report_amount or (index1 + 1) == range.end()) {
@@ -152,9 +154,7 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
                 }
             }
             local_rms_list.sort(
-                    [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) {
-                        return (m1.rms < m2.rms);
-                    });
+                [](const Cluster::rmsd_matrix &m1, const Cluster::rmsd_matrix &m2) { return (m1.rms < m2.rms); });
         }
     };
 
@@ -166,10 +166,10 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
     tbb::task_group taskGroup;
     for (auto &element : systems) {
         bodys.insert(
-                {element.first, Body(element.second, this, current_completed_compute_amount, total_compute_amount)});
+            {element.first, Body(element.second, this, current_completed_compute_amount, total_compute_amount)});
         auto b = &bodys.at(element.first);
         taskGroup.run(
-                [b, &element] { tbb::parallel_reduce(tbb::blocked_range<std::size_t>(0, element.second.size()), *b); });
+            [b, &element] { tbb::parallel_reduce(tbb::blocked_range<std::size_t>(0, element.second.size()), *b); });
         total_compute_amount += element.second.size() * (element.second.size() - 1) / 2;
     }
     total_compute_amount /= 100;
@@ -189,37 +189,33 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
 }
 
 namespace {
-    int rms_max_index(double x1[], double y1[], double z1[],
-                      double x2[], double y2[], double z2[], int n_rms_calc) {
-
-        double xr, yr, zr, dist2;
-        double rms2 = 0.0;
-        int index = 0;
-        for (int i = 0; i < n_rms_calc; ++i) {
-            xr = x1[i] - x2[i];
-            yr = y1[i] - y2[i];
-            zr = z1[i] - z2[i];
-            dist2 = xr * xr + yr * yr + zr * zr;
-            if (dist2 > rms2) {
-                index = i;
-                rms2 = dist2;
-            }
+int rms_max_index(double x1[], double y1[], double z1[], double x2[], double y2[], double z2[], int n_rms_calc) {
+    double xr, yr, zr, dist2;
+    double rms2 = 0.0;
+    int index = 0;
+    for (int i = 0; i < n_rms_calc; ++i) {
+        xr = x1[i] - x2[i];
+        yr = y1[i] - y2[i];
+        zr = z1[i] - z2[i];
+        dist2 = xr * xr + yr * yr + zr * zr;
+        if (dist2 > rms2) {
+            index = i;
+            rms2 = dist2;
         }
-        return index;
     }
+    return index;
 }
+}  // namespace
 
-double
-CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::tuple<double, double, double>> &c1,
-                                                               std::vector<std::tuple<double, double, double>> &c2) {
-
+double CoordinationStructureClassification::calculateRmsdOfTwoStructs(
+    std::vector<std::tuple<double, double, double>> &c1, std::vector<std::tuple<double, double, double>> &c2) {
     assert(c1.size() == c2.size());
     assert(c1.size() > 2);
 
     double x1[c1.size() + 1], y1[c1.size() + 1], z1[c1.size() + 1];
     double x2[c1.size() + 1], y2[c1.size() + 1], z2[c1.size() + 1];
 
-    auto[c1_index1, c1_index2] = find_min_distance_pair(c1);
+    auto [c1_index1, c1_index2] = find_min_distance_pair(c1);
 
     double rmsd_value2 = std::numeric_limits<double>::max();
 
@@ -232,7 +228,7 @@ CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::
             fill_coord(x1, y1, z1, c1_index1, c1_index2, c1);
             fill_coord(x2, y2, z2, c2_index1, c2_index2, c2);
 
-            //superpose with 3 atoms
+            // superpose with 3 atoms
             RMSDCal::quatfit(c1.size() + 1, x1, y1, z1, c1.size() + 1, x2, y2, z2, 3);
 
             //排列index >=3 之后的原子，使相对应的距离最小
@@ -261,9 +257,8 @@ CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::
     return std::sqrt(rmsd_value2);
 }
 
-std::pair<int, int>
-CoordinationStructureClassification::find_min_distance_pair(std::vector<std::tuple<double, double, double>> &c) {
-
+std::pair<int, int> CoordinationStructureClassification::find_min_distance_pair(
+    std::vector<std::tuple<double, double, double>> &c) {
     double min_distance2 = std::numeric_limits<double>::max();
     int index1, index2;
     index1 = index2 = std::numeric_limits<int>::max();
@@ -283,7 +278,6 @@ CoordinationStructureClassification::find_min_distance_pair(std::vector<std::tup
 
 void CoordinationStructureClassification::fill_coord(double x[], double y[], double z[], int index1, int index2,
                                                      std::vector<std::tuple<double, double, double>> &c) {
-
     std::tie(x[1], y[1], z[1]) = c[index1];
     std::tie(x[2], y[2], z[2]) = c[index2];
 
@@ -296,10 +290,8 @@ void CoordinationStructureClassification::fill_coord(double x[], double y[], dou
     }
 }
 
-void CoordinationStructureClassification::permutation(double x1[], double y1[], double z1[],
-                                                      double x2[], double y2[], double z2[],
-                                                      int start, int end/*not included*/) {
-
+void CoordinationStructureClassification::permutation(double x1[], double y1[], double z1[], double x2[], double y2[],
+                                                      double z2[], int start, int end /*not included*/) {
     for (auto i : boost::irange(start, end)) {
         double min_distance2 = std::numeric_limits<double>::max();
         int min_index;
@@ -323,7 +315,6 @@ void CoordinationStructureClassification::permutation(double x1[], double y1[], 
     }
 }
 
-
 void CoordinationStructureClassification::readInfo() {
     Atom::select2group(metal_mask, Ow_atom_mask, "Enter mask for center metal > ",
                        "Enter mask for coordination atom > ");
@@ -334,5 +325,3 @@ void CoordinationStructureClassification::readInfo() {
 
     output_rms_matrix = choose_bool("Output RMS Matrix [N] > ", Default(false));
 }
-
-

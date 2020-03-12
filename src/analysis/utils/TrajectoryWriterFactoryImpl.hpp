@@ -6,6 +6,7 @@
 #define TINKER_TRAJECTORYWRITERFACTORYIMPL_HPP
 
 #include <memory>
+
 #include "TrajectoryWriterFactoryInterface.hpp"
 #include "utils/common.hpp"
 
@@ -14,5 +15,4 @@ public:
     std::shared_ptr<TrajectoryFormatWriter> make_instance(FileType t) override;
 };
 
-
-#endif //TINKER_TRAJECTORYWRITERFACTORYIMPL_HPP
+#endif  // TINKER_TRAJECTORYWRITERFACTORYIMPL_HPP

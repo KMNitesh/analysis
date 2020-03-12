@@ -7,21 +7,22 @@
 #ifndef TINKER_FORCEFIELD_HPP
 #define TINKER_FORCEFIELD_HPP
 
-#include "config.h"
-#include <string>
-#include <memory>
-#include <list>
-#include <utility>
-#include <unordered_map>
 #include <boost/optional.hpp>
+#include <list>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
+#include "config.h"
 #include "data_structure/atom.hpp"
 
 class Frame;
 
 class AtomItem {
 public:
-    AtomItem(int typ, int classNum, std::string name, std::string res, int at_no, double mass) :
-            typ(typ), class_num(classNum), name(std::move(name)), res(std::move(res)), at_no(at_no), mass(mass) {}
+    AtomItem(int typ, int classNum, std::string name, std::string res, int at_no, double mass)
+        : typ(typ), class_num(classNum), name(std::move(name)), res(std::move(res)), at_no(at_no), mass(mass) {}
 
     int typ;
     int class_num;
@@ -35,7 +36,6 @@ public:
 
 class Forcefield {
 public:
-
     void read(const std::string &filename);
 
     void read_tinker_prm(const std::string &filename);
@@ -47,11 +47,9 @@ public:
     bool isValid() { return isvalid; }
 
 private:
-
     std::unordered_map<int, AtomItem> mapping;
 
     bool isvalid = false;
 };
 
-
-#endif //TINKER_FORCEFIELD_HPP
+#endif  // TINKER_FORCEFIELD_HPP

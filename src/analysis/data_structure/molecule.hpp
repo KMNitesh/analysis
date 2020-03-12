@@ -20,7 +20,7 @@ typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
     Graph;
 
 class Molecule {
-   public:
+public:
     double mass;  // molecular mass
     std::list<std::shared_ptr<Atom>> atom_list;
     boost::graph_traits<Graph>::vertex_descriptor vertex_descriptor;
@@ -52,7 +52,7 @@ class Molecule {
     graph_t g;
     void build_graph(const std::shared_ptr<Frame> &frame);
 
-    std::tuple<double,double,double> inplace_geometry_center;
+    std::tuple<double, double, double> inplace_geometry_center;
 };
 
 std::pair<double, std::array<std::shared_ptr<Atom>, 2>> min_distance(const std::shared_ptr<Molecule> &mol1,

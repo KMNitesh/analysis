@@ -1,6 +1,8 @@
 
-#include <boost/range/algorithm.hpp>
 #include "DiffuseCutoff.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/common.hpp"
@@ -101,7 +103,6 @@ void DiffuseCutoff::print(std::ostream &os) {
 }
 
 void DiffuseCutoff::readInfo() {
-
     Atom::select2group(mask1, mask2);
 
     double cutoff = choose(0.0, std::numeric_limits<double>::max(), "Please enter distance cutoff:");
@@ -120,11 +121,10 @@ void DiffuseCutoff::readInfo() {
         }
         break;
     }
-
 }
 
-void DiffuseCutoff::setParameters(const AmberMask &M, const AmberMask &L,
-                                  double cutoff, double time_increment_ps, const std::string &outfilename) {
+void DiffuseCutoff::setParameters(const AmberMask &M, const AmberMask &L, double cutoff, double time_increment_ps,
+                                  const std::string &outfilename) {
     this->mask1 = M;
     this->mask2 = L;
 
@@ -146,11 +146,10 @@ void DiffuseCutoff::setParameters(const AmberMask &M, const AmberMask &L,
 }
 
 void DiffuseCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-                        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+    });
     if (group1.size() > 1) {
         std::cerr << "the reference(metal cation) atom for DiffuseCutoff function can only have one\n";
         exit(EXIT_FAILURE);

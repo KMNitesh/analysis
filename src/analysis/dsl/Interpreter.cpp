@@ -2,11 +2,12 @@
 // Created by xiamr on 7/15/19.
 //
 
-#include <unordered_set>
-#include <boost/spirit/include/karma.hpp>
 #include "dsl/Interpreter.hpp"
-#include "utils/ThrowAssert.hpp"
 
+#include <boost/spirit/include/karma.hpp>
+#include <unordered_set>
+
+#include "utils/ThrowAssert.hpp"
 
 using namespace std;
 
@@ -51,26 +52,27 @@ Interpreter::Interpreter() {
         throw InterpreterException("operation not permitted");
     }).addArgument<double, int>("value");
 
-    registerFunction("pow", [this](auto &args) -> boost::any {
-        auto arg1 = evalRightValue(get<3>(args.at(0)));
-        auto arg2 = evalRightValue(get<3>(args.at(1)));
-        if (arg1.type() == typeid(int)) {
-            if (arg2.type() == typeid(int)) {
-                return std::pow(boost::any_cast<int>(arg1), boost::any_cast<int>(arg2));
-            } else if (arg2.type() == typeid(double)) {
-                return std::pow(boost::any_cast<int>(arg1), boost::any_cast<double>(arg1));
-            }
-        } else if (arg1.type() == typeid(double)) {
-            if (arg2.type() == typeid(int)) {
-                return std::pow(boost::any_cast<double>(arg1), boost::any_cast<int>(arg2));
-            } else if (arg2.type() == typeid(double)) {
-                return std::pow(boost::any_cast<double>(arg1), boost::any_cast<double>(arg1));
-            }
-        }
-        throw InterpreterException("operation not permitted");
-
-    }).addArgument<double, int>("value1").addArgument<double, int>("value2");
-
+    registerFunction("pow",
+                     [this](auto &args) -> boost::any {
+                         auto arg1 = evalRightValue(get<3>(args.at(0)));
+                         auto arg2 = evalRightValue(get<3>(args.at(1)));
+                         if (arg1.type() == typeid(int)) {
+                             if (arg2.type() == typeid(int)) {
+                                 return std::pow(boost::any_cast<int>(arg1), boost::any_cast<int>(arg2));
+                             } else if (arg2.type() == typeid(double)) {
+                                 return std::pow(boost::any_cast<int>(arg1), boost::any_cast<double>(arg1));
+                             }
+                         } else if (arg1.type() == typeid(double)) {
+                             if (arg2.type() == typeid(int)) {
+                                 return std::pow(boost::any_cast<double>(arg1), boost::any_cast<int>(arg2));
+                             } else if (arg2.type() == typeid(double)) {
+                                 return std::pow(boost::any_cast<double>(arg1), boost::any_cast<double>(arg1));
+                             }
+                         }
+                         throw InterpreterException("operation not permitted");
+                     })
+        .addArgument<double, int>("value1")
+        .addArgument<double, int>("value2");
 
     registerFunction("print", [this](auto &args) -> boost::any {
         boost::any arg = evalRightValue(get<3>(args.at(0)));
@@ -123,7 +125,6 @@ Interpreter::Interpreter() {
         }
         throw InterpreterException("operation not permitted");
     }).addArgument<bool, int, double>("value");
-
 }
 
 boost::any Interpreter::evalRightValue(boost::any ast) {
@@ -154,33 +155,49 @@ boost::any Interpreter::evalRightValue(boost::any ast) {
     } else if (ast.type() == typeid(ForStmt)) {
         auto for_stmt = boost::any_cast<ForStmt>(ast);
         for (evalRightValue(for_stmt.expr1); condtion(evalRightValue(for_stmt.expr2)); evalRightValue(for_stmt.expr3)) {
-            try { evalRightValue(for_stmt.stmt_block); }
-            catch (BreakStmt &) { break; }
-            catch (ContinueStmt &) { continue; }
+            try {
+                evalRightValue(for_stmt.stmt_block);
+            } catch (BreakStmt &) {
+                break;
+            } catch (ContinueStmt &) {
+                continue;
+            }
         }
         return {};
     } else if (ast.type() == typeid(WhileStmt)) {
         auto while_stmt = boost::any_cast<WhileStmt>(ast);
         while (condtion(evalRightValue(while_stmt.condition))) {
-            try { evalRightValue(while_stmt.stmt_block); }
-            catch (BreakStmt &) { break; }
-            catch (ContinueStmt &) { continue; }
+            try {
+                evalRightValue(while_stmt.stmt_block);
+            } catch (BreakStmt &) {
+                break;
+            } catch (ContinueStmt &) {
+                continue;
+            }
         }
         return {};
     } else if (ast.type() == typeid(DoUntilStmt)) {
         auto do_until_stmt = boost::any_cast<DoUntilStmt>(ast);
         do {
-            try { evalRightValue(do_until_stmt.stmt_block); }
-            catch (BreakStmt &) { break; }
-            catch (ContinueStmt &) { continue; }
+            try {
+                evalRightValue(do_until_stmt.stmt_block);
+            } catch (BreakStmt &) {
+                break;
+            } catch (ContinueStmt &) {
+                continue;
+            }
         } while (!condtion(evalRightValue(do_until_stmt.condition)));
         return {};
     } else if (ast.type() == typeid(DoWhileStmt)) {
         auto do_while_stmt = boost::any_cast<DoWhileStmt>(ast);
         do {
-            try { evalRightValue(do_while_stmt.stmt_block); }
-            catch (BreakStmt &) { break; }
-            catch (ContinueStmt &) { continue; }
+            try {
+                evalRightValue(do_while_stmt.stmt_block);
+            } catch (BreakStmt &) {
+                break;
+            } catch (ContinueStmt &) {
+                continue;
+            }
         } while (condtion(evalRightValue(do_while_stmt.condition)));
         return {};
     } else if (ast.type() == typeid(BreakStmt)) {
@@ -372,7 +389,6 @@ boost::any Interpreter::evalArithmeticOperation(const ArithmeticOperation &op) {
             break;
         default:
             break;
-
     }
 }
 
@@ -382,13 +398,11 @@ boost::any Interpreter::evalBitwiseOperation(const BitwiseOperation &op) {
     if (lhs.type() == typeid(Atom::Node) && rhs.type() == typeid(Atom::Node)) {
         switch (op.op) {
             case BitwiseOp::And:
-                return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::AND,
-                                                                   boost::any_cast<Atom::Node>(lhs),
+                return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::AND, boost::any_cast<Atom::Node>(lhs),
                                                                    boost::any_cast<Atom::Node>(rhs)));
                 break;
             case BitwiseOp::Or:
-                return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::OR,
-                                                                   boost::any_cast<Atom::Node>(lhs),
+                return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::OR, boost::any_cast<Atom::Node>(lhs),
                                                                    boost::any_cast<Atom::Node>(rhs)));
                 break;
         }
@@ -405,16 +419,12 @@ inline ostream &operator<<(ostream &os, const vector<string> &vect) {
 
 boost::any FunctionObject::invoke(vector<boost::any> &arguments,
                                   vector<pair<boost::any, boost::any>> &optional_arguments) {
-    vector<tuple<
-            string,
-            function<bool(const boost::any)>,
-            function<vector<string>()>,
-            boost::any>
-    > args(argument_mapping);
+    vector<tuple<string, function<bool(const boost::any)>, function<vector<string>()>, boost::any>> args(
+        argument_mapping);
 
     if (arguments.size() > args.size()) {
-        std::cerr << "function(" << name << ") too may arguments, except "
-                  << args.size() << " , actual " << arguments.size() << '\n';
+        std::cerr << "function(" << name << ") too may arguments, except " << args.size() << " , actual "
+                  << arguments.size() << '\n';
         exit(EXIT_FAILURE);
     }
 
@@ -423,7 +433,7 @@ boost::any FunctionObject::invoke(vector<boost::any> &arguments,
     }
 
     std::unordered_set<std::string> s;
-    for (const auto &p: optional_arguments) {
+    for (const auto &p : optional_arguments) {
         auto arg_name = boost::any_cast<Identifer>(p.first).name;
         bool bFound = false;
         for (auto &arg : args) {
@@ -449,8 +459,8 @@ boost::any FunctionObject::invoke(vector<boost::any> &arguments,
         std::get<3>(arg) = iterpreter->evalRightValue(std::get<3>(arg));
         throw_assert(!std::get<3>(arg).empty(), "argment name (" + std::get<0>(arg) + "do not have value");
         throw_assert(std::get<1>(arg)(std::get<3>(arg)),
-                     "argument (" << std::get<0>(arg) << ") type not match , except "
-                                  << std::get<2>(arg)() << " Actul" << getPrettyName(std::get<3>(arg)));
+                     "argument (" << std::get<0>(arg) << ") type not match , except " << std::get<2>(arg)() << " Actul"
+                                  << getPrettyName(std::get<3>(arg)));
     }
 
     return f(args);
@@ -580,8 +590,8 @@ boost::any Interpreter::evalLogicalOperation(const LogicalOperation &op) {
             } else if (lhs.type() == typeid(Atom::Node)) {
                 return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::NOT, boost::any_cast<Atom::Node>(lhs)));
             } else {
-                throw InterpreterException(
-                        std::string("Logical Not operation not permitted for type : ") + lhs.type().name());
+                throw InterpreterException(std::string("Logical Not operation not permitted for type : ") +
+                                           lhs.type().name());
             }
             break;
     }
@@ -682,10 +692,7 @@ boost::any Interpreter::evalFunction(const std::string &name, std::vector<boost:
     }
 }
 
-
-Function::Function(boost::any name, boost::any arguments)
-        : name(std::move(name)) {
-
+Function::Function(boost::any name, boost::any arguments) : name(std::move(name)) {
     auto args = boost::any_cast<std::vector<boost::any>>(arguments);
 
     bool postional = true;
@@ -713,10 +720,10 @@ Function::Function(boost::any name, boost::any arguments)
                 optional_arguments.emplace_back(a.var, a.rhs);
             } else {
                 std::cerr << "Function Argurment order error, named arguments must after position arguments"
-                             "function name :" << boost::any_cast<Identifer>(name).name << '\n';
+                             "function name :"
+                          << boost::any_cast<Identifer>(name).name << '\n';
                 exit(EXIT_FAILURE);
             }
         }
     }
-
 }

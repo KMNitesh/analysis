@@ -2,18 +2,16 @@
 // Created by xiamr on 6/14/19.
 //
 
-#include "utils/common.hpp"
 #include "Trajconv.hpp"
 
-#include "data_structure/molecule.hpp"
-#include "data_structure/frame.hpp"
 #include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
+#include "data_structure/molecule.hpp"
 #include "utils/PBCUtils.hpp"
+#include "utils/common.hpp"
 
-Trajconv::Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory) :
-        factory(std::move(factory)),
-        pbc_utils(std::make_shared<PBCUtils>()) {}
-
+Trajconv::Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory)
+    : factory(std::move(factory)), pbc_utils(std::make_shared<PBCUtils>()) {}
 
 void Trajconv::process(std::shared_ptr<Frame> &frame) {
     pbc_utils->doPBC(pbc_type, mask, frame);
@@ -24,13 +22,10 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
     step++;
 }
 
-
-void Trajconv::print(std::ostream &) {
-    CleanUp();
-}
+void Trajconv::print(std::ostream &) { CleanUp(); }
 
 void Trajconv::CleanUp() {
-    for (auto &[name, w]: writers) {
+    for (auto &[name, w] : writers) {
         w->close();
     }
 }
@@ -112,6 +107,3 @@ void Trajconv::processFirstFrame(std::shared_ptr<Frame> &) {
         w->open(name);
     }
 }
-
-
-

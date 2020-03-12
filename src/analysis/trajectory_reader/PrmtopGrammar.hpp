@@ -2,83 +2,55 @@
 #define TINKER_PRMTOPGRAMMAR_HPP
 
 #include <boost/algorithm/string.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/fusion/include/io.hpp>
 #include <boost/fusion/adapted/adt/adapt_adt.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>
+#include <boost/fusion/include/io.hpp>
 #include <boost/phoenix.hpp>
-#include "trajectory_reader/PrmtopParser.hpp"
+#include <boost/spirit/include/qi.hpp>
 
+#include "trajectory_reader/PrmtopParser.hpp"
 
 BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim, 1)
 
 BOOST_PHOENIX_ADAPT_FUNCTION(int, stoi, std::stoi, 1)
 
 struct field_f {
-    template<typename... A>
-    struct result {
-        typedef int type;
-    };
+    template <typename... A> struct result { typedef int type; };
 
-    int operator()(const PrmtopStruct &v, int i) const {
-        return v.pointers[i];
-    }
+    int operator()(const PrmtopStruct &v, int i) const { return v.pointers[i]; }
 };
 
-
-template<typename... _Args>
-inline auto field_(_Args &&... __args) {
+template <typename... _Args> inline auto field_(_Args &&... __args) {
     return boost::phoenix::function<field_f>()(std::forward<_Args>(__args)...);
 }
 
 using Optional = boost::optional<boost::fusion::vector<std::vector<int>, std::vector<int>, std::vector<double>>>;
 
-BOOST_FUSION_ADAPT_STRUCT(PrmtopStruct, (std::string, version)
-        (std::string, title)
-        (std::vector<int>, pointers)
-        (std::vector<std::string>, atom_name)
-        (std::vector<double>, charge)
-        (std::vector<int>, atomic_number)
-        (std::vector<double>, mass)
-        (std::vector<int>, atom_type_index)
-        (std::vector<int>, number_excluded_atoms)
-        (std::vector<int>, nonbonded_parm_index)
-        (std::vector<std::string>, residue_label)
-        (std::vector<int>, residue_pointer)
-        (std::vector<double>, bond_force_constant)
-        (std::vector<double>, bond_equil_value)
-        (std::vector<double>, angle_force_constant)
-        (std::vector<double>, angle_equil_value)
-        (std::vector<double>, dihedral_force_constant)
-        (std::vector<double>, dihedral_periodicity)
-        (std::vector<double>, dihedral_phase)
-        (std::vector<double>, scee_scale_factor)
-        (std::vector<double>, scnb_scale_factor)
-        (std::vector<double>, solty)
-        (std::vector<double>, lennard_jones_acoef)
-        (std::vector<double>, lennard_jones_bcoef)
-        (std::vector<int>, bonds_inc_hydrogen)
-        (std::vector<int>, bonds_without_hydrogen)
-        (std::vector<int>, angles_inc_hydrogen)
-        (std::vector<int>, angles_without_hydrogen)
-        (std::vector<int>, dihedrals_inc_hydrogen)
-        (std::vector<int>, dihedrals_without_hydrogen)
-        (std::vector<int>, excluded_atoms_list)
-        (std::vector<double>, hbond_acoef)
-        (std::vector<double>, hbond_bcoef)
-        (std::vector<std::string>, amber_atom_type)
-        (std::vector<std::string>, tree_chain_classification)
-        (std::vector<int>, join_array)
-        (std::vector<int>, irotat)
-        (Optional, solvent_pointers_atoms_per_molecule_box_dimensions)
-        (std::string, radius_set)
-        (std::vector<double>, radii)
-        (std::vector<double>, screen)
-        (int, ipol)
-)
+BOOST_FUSION_ADAPT_STRUCT(
+    PrmtopStruct,
+    (std::string, version)(std::string, title)(std::vector<int>, pointers)(std::vector<std::string>, atom_name)(
+        std::vector<double>, charge)(std::vector<int>, atomic_number)(std::vector<double>, mass)(
+        std::vector<int>, atom_type_index)(std::vector<int>, number_excluded_atoms)(
+        std::vector<int>, nonbonded_parm_index)(std::vector<std::string>,
+                                                residue_label)(std::vector<int>, residue_pointer)(std::vector<double>,
+                                                                                                  bond_force_constant)(
+        std::vector<double>, bond_equil_value)(std::vector<double>, angle_force_constant)(std::vector<double>,
+                                                                                          angle_equil_value)(
+        std::vector<double>, dihedral_force_constant)(std::vector<double>, dihedral_periodicity)(std::vector<double>,
+                                                                                                 dihedral_phase)(
+        std::vector<double>, scee_scale_factor)(std::vector<double>, scnb_scale_factor)(std::vector<double>, solty)(
+        std::vector<double>, lennard_jones_acoef)(std::vector<double>, lennard_jones_bcoef)(std::vector<int>,
+                                                                                            bonds_inc_hydrogen)(
+        std::vector<int>, bonds_without_hydrogen)(std::vector<int>, angles_inc_hydrogen)(std::vector<int>,
+                                                                                         angles_without_hydrogen)(
+        std::vector<int>, dihedrals_inc_hydrogen)(std::vector<int>, dihedrals_without_hydrogen)(std::vector<int>,
+                                                                                                excluded_atoms_list)(
+        std::vector<double>, hbond_acoef)(std::vector<double>, hbond_bcoef)(std::vector<std::string>, amber_atom_type)(
+        std::vector<std::string>, tree_chain_classification)(std::vector<int>, join_array)(std::vector<int>, irotat)(
+        Optional, solvent_pointers_atoms_per_molecule_box_dimensions)(std::string, radius_set)(
+        std::vector<double>, radii)(std::vector<double>, screen)(int, ipol))
 
-
-template<typename Iterator, typename Skipper>
+template <typename Iterator, typename Skipper>
 struct PrmtopGrammar : boost::spirit::qi::grammar<Iterator, PrmtopStruct(), Skipper> {
     PrmtopGrammar();
 
@@ -127,9 +99,9 @@ struct PrmtopGrammar : boost::spirit::qi::grammar<Iterator, PrmtopStruct(), Skip
     boost::spirit::qi::rule<Iterator, std::vector<int>(int), Skipper> atoms_per_molecule;
     boost::spirit::qi::rule<Iterator, std::vector<double>(int), Skipper> box_dimensions;
 
-    boost::spirit::qi::rule<Iterator,
-            boost::fusion::vector<std::vector<int>, std::vector<int>, std::vector<double>>(),
-            Skipper> solvent_pointers_atoms_per_molecule_box_dimensions;
+    boost::spirit::qi::rule<Iterator, boost::fusion::vector<std::vector<int>, std::vector<int>, std::vector<double>>(),
+                            Skipper>
+        solvent_pointers_atoms_per_molecule_box_dimensions;
 
     boost::spirit::qi::rule<Iterator, std::string(), Skipper> radius_set;
     boost::spirit::qi::rule<Iterator, std::vector<double>(int), Skipper> radii;
@@ -139,24 +111,23 @@ struct PrmtopGrammar : boost::spirit::qi::grammar<Iterator, PrmtopStruct(), Skip
     boost::spirit::qi::rule<Iterator, PrmtopStruct(), Skipper> root;
 };
 
-
-template<typename Iterator, typename Skipper>
+template <typename Iterator, typename Skipper>
 inline PrmtopGrammar<Iterator, Skipper>::PrmtopGrammar() : PrmtopGrammar::base_type(root, "prmtop") {
     using namespace boost::spirit;
-    using qi::lexeme;
+    using qi::_1;
+    using qi::_r1;
+    using qi::_val;
+    using qi::as_string;
     using qi::char_;
     using qi::eol;
+    using qi::lexeme;
     using qi::repeat;
-    using qi::uint_;
     using qi::skip;
-    using qi::_1;
-    using qi::_val;
-    using qi::_r1;
-    using qi::as_string;
+    using qi::uint_;
 
-    using boost::phoenix::ref;
-    using boost::phoenix::at_c;
     using boost::phoenix::at;
+    using boost::phoenix::at_c;
+    using boost::phoenix::ref;
     using boost::phoenix::val;
 
     using Prmtop = PrmtopStruct;
@@ -164,25 +135,21 @@ inline PrmtopGrammar<Iterator, Skipper>::PrmtopGrammar() : PrmtopGrammar::base_t
     version %= eps > "%VERSION" > lexeme[+(char_ - eol)][trim(_1)] > eol;
     version.name("VERSION");
 
-    title %= eps > "%FLAG TITLE"
-             > eol
-             > "%FORMAT(20a4)" > eol
-             > lexeme[+(char_ - eol)][trim(_1)] > eol;
+    title %= eps > "%FLAG TITLE" > eol > "%FORMAT(20a4)" > eol > lexeme[+(char_ - eol)][trim(_1)] > eol;
     title.name("TITLE");
 
     fix_int = as_string[no_skip[-eol > repeat(_r1)[char_]]][_val = stoi(_1)];
     fix_int.name("integer");
 
-    pointers = eps > "%FLAG POINTERS"
-               > eol
-               > "%FORMAT(10I8)" > eol
-               > skip(ascii::space)[repeat(31)[fix_int(8)]] > eol;
+    pointers = eps > "%FLAG POINTERS" > eol > "%FORMAT(10I8)" > eol > skip(ascii::space)[repeat(31)[fix_int(8)]] > eol;
     pointers.name("POINTERS");
 
     string_ %= no_skip[-eol > repeat(_r1)[char_]][trim(_1)];
     string_.name("string");
 
-#define SECTION(L, X, Y, Z) L = eps > "%FLAG " X > eol > Y > eol > skip(ascii::space)[repeat(_r1)[Z]] > eol; L.name(X)
+#define SECTION(L, X, Y, Z)                                                                                            \
+    L = eps > "%FLAG " X > eol > Y > eol > skip(ascii::space)[repeat(_r1)[Z]] > eol;                                   \
+    L.name(X)
 
     SECTION(atom_name, "ATOM_NAME", "%FORMAT(20a4)", string_(4));
     SECTION(charge, "CHARGE", "%FORMAT(5E16.8)", double_);
@@ -224,7 +191,7 @@ inline PrmtopGrammar<Iterator, Skipper>::PrmtopGrammar() : PrmtopGrammar::base_t
     SECTION(box_dimensions, "BOX_DIMENSIONS", "%FORMAT(5E16.8)", double_);
 
     solvent_pointers_atoms_per_molecule_box_dimensions %=
-            solvent_pointers(3) > atoms_per_molecule(at(at_c<0>(ref(_val)), 1)) > box_dimensions(4);
+        solvent_pointers(3) > atoms_per_molecule(at(at_c<0>(ref(_val)), 1)) > box_dimensions(4);
 
     radius_set = eps > "%FLAG RADIUS_SET" > eol > "%FORMAT(1a80)" > eol > no_skip[repeat(80)[char_]] > eol;
     radius_set.name("RADIUS_SET");
@@ -235,52 +202,36 @@ inline PrmtopGrammar<Iterator, Skipper>::PrmtopGrammar() : PrmtopGrammar::base_t
     ipol = eps > "%FLAG IPOL" > eol > "%FORMAT(1I8)" > eol > int_ > eol;
     ipol.name("IPOL");
 
-    root = eps
-           > version
-           > title > pointers
-           > atom_name(field_(ref(_val), Prmtop::NATOM))
-           > charge(field_(ref(_val), Prmtop::NATOM))
-           > atomic_number(field_(ref(_val), Prmtop::NATOM))
-           > mass(field_(ref(_val), Prmtop::NATOM))
-           > atom_type_index(field_(ref(_val), Prmtop::NATOM))
-           > number_excluded_atoms(field_(ref(_val), Prmtop::NATOM))
-           > nonbonded_parm_index(field_(ref(_val), Prmtop::NTYPES) * field_(ref(_val), Prmtop::NTYPES))
-           > residue_label(field_(ref(_val), Prmtop::NRES))
-           > residue_pointer(field_(ref(_val), Prmtop::NRES))
-           > bond_force_constant(field_(ref(_val), Prmtop::NUMBND))
-           > bond_equil_value(field_(ref(_val), Prmtop::NUMBND))
-           > angle_force_constant(field_(ref(_val), Prmtop::NUMANG))
-           > angle_equil_value(field_(ref(_val), Prmtop::NUMANG))
-           > dihedral_force_constant(field_(ref(_val), Prmtop::NPTRA))
-           > dihedral_periodicity(field_(ref(_val), Prmtop::NPTRA))
-           > dihedral_phase(field_(ref(_val), Prmtop::NPTRA))
-           > scee_scale_factor(field_(ref(_val), Prmtop::NPTRA))
-           > scnb_scale_factor(field_(ref(_val), Prmtop::NPTRA))
-           > solty(field_(ref(_val), Prmtop::NATYP))
-           > lennard_jones_acoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2)
-           > lennard_jones_bcoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2)
-           > bonds_inc_hydrogen(3 * field_(ref(_val), Prmtop::NBONH))
-           > bonds_without_hydrogen(3 * field_(ref(_val), Prmtop::NBONA))
-           > angles_inc_hydrogen(4 * field_(ref(_val), Prmtop::NTHETH))
-           > angles_without_hydrogen(4 * field_(ref(_val), Prmtop::NTHETA))
-           > dihedrals_inc_hydrogen(5 * field_(ref(_val), Prmtop::NPHIH))
-           > dihedrals_without_hydrogen(5 * field_(ref(_val), Prmtop::NPHIA))
-           > excluded_atoms_list(field_(ref(_val), Prmtop::NNB))
-           > hbond_acoef(field_(ref(_val), Prmtop::NPHB))
-           > hbond_bcoef(field_(ref(_val), Prmtop::NPHB))
-           > omit[hbcut(field_(ref(_val), Prmtop::NPHB))]
-           > amber_atom_type(field_(ref(_val), Prmtop::NATOM))
-           > tree_chain_classification(field_(ref(_val), Prmtop::NATOM))
-           > join_array(field_(ref(_val), Prmtop::NATOM))
-           > irotat(field_(ref(_val), Prmtop::NATOM))
-           > ((eps(field_(ref(_val), Prmtop::IFBOX) > 0) > solvent_pointers_atoms_per_molecule_box_dimensions) | eps)
-           > radius_set
-           > radii(field_(ref(_val), Prmtop::NATOM))
-           > screen(field_(ref(_val), Prmtop::NATOM))
-           > ipol;
+    root =
+        eps > version > title > pointers > atom_name(field_(ref(_val), Prmtop::NATOM)) >
+        charge(field_(ref(_val), Prmtop::NATOM)) > atomic_number(field_(ref(_val), Prmtop::NATOM)) >
+        mass(field_(ref(_val), Prmtop::NATOM)) > atom_type_index(field_(ref(_val), Prmtop::NATOM)) >
+        number_excluded_atoms(field_(ref(_val), Prmtop::NATOM)) >
+        nonbonded_parm_index(field_(ref(_val), Prmtop::NTYPES) * field_(ref(_val), Prmtop::NTYPES)) >
+        residue_label(field_(ref(_val), Prmtop::NRES)) > residue_pointer(field_(ref(_val), Prmtop::NRES)) >
+        bond_force_constant(field_(ref(_val), Prmtop::NUMBND)) > bond_equil_value(field_(ref(_val), Prmtop::NUMBND)) >
+        angle_force_constant(field_(ref(_val), Prmtop::NUMANG)) > angle_equil_value(field_(ref(_val), Prmtop::NUMANG)) >
+        dihedral_force_constant(field_(ref(_val), Prmtop::NPTRA)) >
+        dihedral_periodicity(field_(ref(_val), Prmtop::NPTRA)) > dihedral_phase(field_(ref(_val), Prmtop::NPTRA)) >
+        scee_scale_factor(field_(ref(_val), Prmtop::NPTRA)) > scnb_scale_factor(field_(ref(_val), Prmtop::NPTRA)) >
+        solty(field_(ref(_val), Prmtop::NATYP)) >
+        lennard_jones_acoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2) >
+        lennard_jones_bcoef(field_(ref(_val), Prmtop::NTYPES) * (field_(ref(_val), Prmtop::NTYPES) + 1) / 2) >
+        bonds_inc_hydrogen(3 * field_(ref(_val), Prmtop::NBONH)) >
+        bonds_without_hydrogen(3 * field_(ref(_val), Prmtop::NBONA)) >
+        angles_inc_hydrogen(4 * field_(ref(_val), Prmtop::NTHETH)) >
+        angles_without_hydrogen(4 * field_(ref(_val), Prmtop::NTHETA)) >
+        dihedrals_inc_hydrogen(5 * field_(ref(_val), Prmtop::NPHIH)) >
+        dihedrals_without_hydrogen(5 * field_(ref(_val), Prmtop::NPHIA)) >
+        excluded_atoms_list(field_(ref(_val), Prmtop::NNB)) > hbond_acoef(field_(ref(_val), Prmtop::NPHB)) >
+        hbond_bcoef(field_(ref(_val), Prmtop::NPHB)) > omit[hbcut(field_(ref(_val), Prmtop::NPHB))] >
+        amber_atom_type(field_(ref(_val), Prmtop::NATOM)) >
+        tree_chain_classification(field_(ref(_val), Prmtop::NATOM)) > join_array(field_(ref(_val), Prmtop::NATOM)) >
+        irotat(field_(ref(_val), Prmtop::NATOM)) >
+        ((eps(field_(ref(_val), Prmtop::IFBOX) > 0) > solvent_pointers_atoms_per_molecule_box_dimensions) | eps) >
+        radius_set > radii(field_(ref(_val), Prmtop::NATOM)) > screen(field_(ref(_val), Prmtop::NATOM)) > ipol;
 
     root.name("prmtop");
 }
 
-
-#endif //TINKER_PRMTOPGRAMMAR_HPP
+#endif // TINKER_PRMTOPGRAMMAR_HPP

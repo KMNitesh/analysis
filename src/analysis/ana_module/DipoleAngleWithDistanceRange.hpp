@@ -5,18 +5,17 @@
 #ifndef TINKER_DIPOLEANGLEWITHDISTANCERANGE_HPP
 #define TINKER_DIPOLEANGLEWITHDISTANCERANGE_HPP
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
-
 
 class Frame;
 
 class DipoleAngleWithDistanceRange : public AbstractAnalysis {
 public:
-
     DipoleAngleWithDistanceRange();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -30,13 +29,11 @@ public:
     [[nodiscard]] static std::string_view title() { return "Dipole Angle Distribution with cutoff"; }
 
 protected:
-
     AmberMask ids1;
     AmberMask ids2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
-
 
     double angle_width;
 
@@ -49,5 +46,4 @@ protected:
     void printData(std::ostream &os) const;
 };
 
-
-#endif //TINKER_DIPOLEANGLEWITHDISTANCERANGE_HPP
+#endif  // TINKER_DIPOLEANGLEWITHDISTANCERANGE_HPP

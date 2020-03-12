@@ -10,5 +10,4 @@ public:
     static void process();
 };
 
-
-#endif //TINKER_GAUSSIANLOGCOORDINATEFORMAT_HPP
+#endif  // TINKER_GAUSSIANLOGCOORDINATEFORMAT_HPP

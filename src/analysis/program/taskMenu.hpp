@@ -12,4 +12,4 @@
 
 std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks();
 
-#endif //TINKER_TASKMENU_HPP
+#endif  // TINKER_TASKMENU_HPP

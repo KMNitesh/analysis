@@ -11,12 +11,12 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
 #include "utils/xtc_writer.hpp"
-#include "utils/PBCUtils.hpp"
 
 class RMSDCal : public AbstractAnalysis {
-   public:
+public:
     RMSDCal();
 
     ~RMSDCal() override;
@@ -42,7 +42,7 @@ class RMSDCal : public AbstractAnalysis {
 
     static void center(int n1, double x1[], double y1[], double z1[], double mid[], int nfit);
 
-   private:
+private:
     std::deque<double> rmsds;
     bool first_frame = true;
 

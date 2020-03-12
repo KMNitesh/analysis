@@ -22,13 +22,11 @@ public:
     [[nodiscard]] static std::string_view title() { return "Coplane index"; }
 
 private:
-
     std::vector<std::array<AmberMask, 3>> mask_arrays;
 
     std::vector<std::array<std::shared_ptr<Atom>, 3>> atom_arrays;
 
-    std::deque<std::pair<double, double>> coplaneIndex; // mean and std
+    std::deque<std::pair<double, double>> coplaneIndex;  // mean and std
 };
 
-
-#endif //TINKER_COPLANEINDEX_HPP
+#endif  // TINKER_COPLANEINDEX_HPP

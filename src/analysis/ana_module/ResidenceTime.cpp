@@ -2,10 +2,13 @@
 // Created by xiamr on 6/14/19.
 //
 
+#include "ResidenceTime.hpp"
+
 #include <tbb/tbb.h>
+
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
-#include "ResidenceTime.hpp"
+
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
 
@@ -17,7 +20,6 @@ ResidenceTime::ResidenceTime() : timeStarMode(TimeStarMode::Loose) {
 }
 
 void ResidenceTime::calculate() {
-
     std::vector<std::vector<int>> atom_star_map(atom_num);
     for (int atom = 0; atom < atom_num; atom++) {
         int count1 = 0;
@@ -65,13 +67,19 @@ void ResidenceTime::calculate() {
         std::vector<std::vector<std::pair<int, int>>> &hydrationed_atoms;
 
         Body(int steps, Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> &mark,
-             std::vector<std::vector<std::pair<int, int>>> &hydrationed_atoms) :
-                steps(steps), mark(mark),
-                time_array(steps - 1), Rt_array(steps - 1), hydrationed_atoms(hydrationed_atoms) {}
+             std::vector<std::vector<std::pair<int, int>>> &hydrationed_atoms)
+            : steps(steps),
+              mark(mark),
+              time_array(steps - 1),
+              Rt_array(steps - 1),
+              hydrationed_atoms(hydrationed_atoms) {}
 
-        Body(Body &body, tbb::split) :
-                steps(body.steps), mark(body.mark),
-                time_array(body.steps - 1), Rt_array(body.steps - 1), hydrationed_atoms(body.hydrationed_atoms) {}
+        Body(Body &body, tbb::split)
+            : steps(body.steps),
+              mark(body.mark),
+              time_array(body.steps - 1),
+              Rt_array(body.steps - 1),
+              hydrationed_atoms(body.hydrationed_atoms) {}
 
         void join(const Body &rhs) {
             for (int step = 0; step < steps - 1; step++) {
@@ -91,7 +99,7 @@ void ResidenceTime::calculate() {
                 for (int j = i + 1; j < steps; j++) {
                     int value = 0.0;
                     auto n = j - i - 1;
-                    for (auto[atom, outframe] : hydrationed_atoms[i]) {
+                    for (auto [atom, outframe] : hydrationed_atoms[i]) {
                         if (mark(j, atom) and j < outframe) value++;
                     }
                     ++time_array[n];
@@ -101,15 +109,12 @@ void ResidenceTime::calculate() {
         }
     } body(steps, mark, hydrationed_atoms);
     tbb::parallel_reduce(tbb::blocked_range<int>(0, steps - 1), body);
-    for (int i = 0; i < steps - 1; i++)
-        body.Rt_array[i] /= body.time_array[i];
+    for (int i = 0; i < steps - 1; i++) body.Rt_array[i] /= body.time_array[i];
 
     Rt_array = std::move(body.Rt_array);
 }
 
-
 void ResidenceTime::process(std::shared_ptr<Frame> &frame) {
-
     steps++;
     int atom_no = 0;
     for (auto &atom1 : center_atom_group) {
@@ -169,14 +174,13 @@ void ResidenceTime::readBasicSetting() {
 
 void ResidenceTime::readTimeStarSetting() {
     time_star = choose(0, "Please enter t*: ( unit: frame) : ");
-    timeStarMode = static_cast<TimeStarMode >(choose(0, 1, "t* mode\n(0) Loose\n(1) Strict\nchoose : "));
+    timeStarMode = static_cast<TimeStarMode>(choose(0, 1, "t* mode\n(0) Loose\n(1) Strict\nchoose : "));
 }
 
-void ResidenceTime::setParameters(const Atom::Node &id1, const Atom::Node &id2,
-                                  double cutoff, int t_star, const std::string &outfilename) {
+void ResidenceTime::setParameters(const Atom::Node &id1, const Atom::Node &id2, double cutoff, int t_star,
+                                  const std::string &outfilename) {
     this->center_atom_mask = id1;
     this->Ow_atom_mask = id2;
-
 
     if (cutoff <= 0) {
         throw runtime_error("cutoff must large than zero");
@@ -194,15 +198,11 @@ void ResidenceTime::setParameters(const Atom::Node &id1, const Atom::Node &id2,
     if (this->outfilename.empty()) {
         throw runtime_error("outfilename cannot empty");
     }
-
 }
 
 void ResidenceTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->center_atom_mask)) this->center_atom_group.insert(atom);
-                        if (Atom::is_match(atom, this->Ow_atom_mask)) this->Ow_atom_group.insert(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->center_atom_mask)) this->center_atom_group.insert(atom);
+        if (Atom::is_match(atom, this->Ow_atom_mask)) this->Ow_atom_group.insert(atom);
+    });
 }
-
-

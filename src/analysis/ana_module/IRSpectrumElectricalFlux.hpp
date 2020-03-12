@@ -5,15 +5,14 @@
 #ifndef TINKER_IRSPECTRUMELECTRICALFLUX_HPP
 #define TINKER_IRSPECTRUMELECTRICALFLUX_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class IRSpectrumElectricalFlux : public AbstractAnalysis {
 public:
-
     IRSpectrumElectricalFlux();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -27,7 +26,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Infrared radiation (IR) Spectrum from Electrical Flux"; }
 
 protected:
-
     double time_increment_ps;
 
     std::deque<std::tuple<double, double, double>> electricalFlux;
@@ -37,5 +35,4 @@ protected:
     std::unordered_set<std::shared_ptr<Molecule>> selected_mols;
 };
 
-
-#endif //TINKER_IRSPECTRUMELECTRICALFLUX_HPP
+#endif  // TINKER_IRSPECTRUMELECTRICALFLUX_HPP

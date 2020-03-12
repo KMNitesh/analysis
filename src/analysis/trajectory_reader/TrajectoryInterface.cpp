@@ -1,8 +1,8 @@
-#include "data_structure/frame.hpp"
 #include "TrajectoryInterface.hpp"
 
-void TrajectoryInterface::apply_box(std::shared_ptr<Frame> &frame) {
-}
+#include "data_structure/frame.hpp"
+
+void TrajectoryInterface::apply_box(std::shared_ptr<Frame> &frame) {}
 
 bool TrajectoryInterface::readOneFrame(std::shared_ptr<Frame> &frame) {
     frame->has_velocity = false;

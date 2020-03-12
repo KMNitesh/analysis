@@ -5,17 +5,16 @@
 #ifndef TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP
 #define TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "utils/Histogram.hpp"
 #include "utils/VectorSelector.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class AngleDistributionBetweenTwoVectorWithCutoff : public AbstractAnalysis {
 public:
-
     AngleDistributionBetweenTwoVectorWithCutoff();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -30,18 +29,11 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Angle Distribution Between Two Vector with Cutoff"; }
 
-    void setParameters(const AmberMask &M,
-                       const AmberMask &L,
-                       std::shared_ptr<VectorSelector> vector1,
-                       std::shared_ptr<VectorSelector> vector2,
-                       double angle_max,
-                       double angle_width,
-                       double cutoff1,
-                       double cutoff2,
-                       const std::string &outfilename);
+    void setParameters(const AmberMask &M, const AmberMask &L, std::shared_ptr<VectorSelector> vector1,
+                       std::shared_ptr<VectorSelector> vector2, double angle_max, double angle_width, double cutoff1,
+                       double cutoff2, const std::string &outfilename);
 
 protected:
-
     Atom::AmberMask metal_mask;
     Atom::AmberMask ligand_mask;
 
@@ -64,5 +56,4 @@ protected:
     void saveJson(std::ostream &os) const;
 };
 
-
-#endif //TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP
+#endif  // TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP

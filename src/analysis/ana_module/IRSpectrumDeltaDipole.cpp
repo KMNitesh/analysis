@@ -3,6 +3,7 @@
 //
 
 #include "IRSpectrumDeltaDipole.hpp"
+
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
 
@@ -24,7 +25,6 @@ void IRSpectrumDeltaDipole::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
     IRSpectrum::print(os);
 }
-
 
 void IRSpectrumDeltaDipole::calculateSpectrum(const std::string &out) {
     auto time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.001 ps] :", Default(0.001));

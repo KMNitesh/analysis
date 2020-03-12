@@ -1,7 +1,9 @@
 #ifndef TINKER_TRAJCONVERTER_HPP
 #define TINKER_TRAJCONVERTER_HPP
 
-#include <string_view>
+#include <boost/fusion/sequence.hpp>
+
+#include "utils/std.hpp"
 
 class TrajConverter {
 public:
@@ -14,5 +16,4 @@ public:
     static boost::fusion::vector<std::string, double, double, double> parse_atom(const std::string &line);
 };
 
-
-#endif //TINKER_TRAJCONVERTER_HPP
+#endif  // TINKER_TRAJCONVERTER_HPP

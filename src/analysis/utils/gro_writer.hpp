@@ -2,20 +2,20 @@
 #ifndef TINKER_GRO_WRITER_HPP
 #define TINKER_GRO_WRITER_HPP
 
-#include <utility>
-#include <string>
-#include <memory>
 #include <fstream>
+#include <memory>
+#include <string>
+#include <utility>
 
-#include "TrajectoryFormatWriter.hpp"
-#include "FileInterface.hpp"
 #include "FileImpl.hpp"
+#include "FileInterface.hpp"
+#include "TrajectoryFormatWriter.hpp"
 
 class Frame;
 
 class GROWriter : public TrajectoryFormatWriter {
-
     std::shared_ptr<FileInterface> os;
+
 public:
     explicit GROWriter(std::shared_ptr<FileInterface> f = std::make_shared<FileImpl>()) : os(std::move(f)) {}
 
@@ -24,8 +24,6 @@ public:
     void close() override;
 
     void write(const std::shared_ptr<Frame> &frame) override;
-
 };
 
-
-#endif //TINKER_GRO_WRITER_HPP
+#endif  // TINKER_GRO_WRITER_HPP

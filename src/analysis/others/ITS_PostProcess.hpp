@@ -1,7 +1,7 @@
 #ifndef TINKER_ITS_POSTPROCESS_HPP
 #define TINKER_ITS_POSTPROCESS_HPP
 
-#include <string_view>
+#include "utils/std.hpp"
 
 class ITS_PostProcess {
 public:
@@ -14,5 +14,4 @@ public:
     inline static const auto log_base = log(10.0);
 };
 
-
-#endif //TINKER_ITS_POSTPROCESS_HPP
+#endif  // TINKER_ITS_POSTPROCESS_HPP

@@ -2,29 +2,27 @@
 // Created by xiamr on 8/11/19.
 //
 
+#include "IRSpectrum.hpp"
+
 #include <tbb/tbb.h>
+
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>
-#include "IRSpectrum.hpp"
-#include "utils/common.hpp"
+
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/common.hpp"
 
 IRSpectrum::IRSpectrum() {
     enable_outfile = true;
     enable_tbb = true;
 }
 
-void IRSpectrum::process(std::shared_ptr<Frame> &frame) {
-    dipole_evolution.emplace_back(getDipole(frame));
-}
+void IRSpectrum::process(std::shared_ptr<Frame> &frame) { dipole_evolution.emplace_back(getDipole(frame)); }
 
-void IRSpectrum::print(std::ostream &os) {
-    printData(os, dipole_evolution, time_increment_ps, selected_mols_mask);
-}
+void IRSpectrum::print(std::ostream &os) { printData(os, dipole_evolution, time_increment_ps, selected_mols_mask); }
 
-void IRSpectrum::printData(std::ostream &os,
-                           const std::deque<std::tuple<double, double, double>> &dipole_evolution,
+void IRSpectrum::printData(std::ostream &os, const std::deque<std::tuple<double, double, double>> &dipole_evolution,
                            double time_increment_ps, boost::optional<AmberMask> mask) {
     auto acf = calculateAcf(dipole_evolution);
     os << std::string(50, '#') << '\n';
@@ -73,36 +71,33 @@ std::vector<double> IRSpectrum::calculateIntense(const std::vector<double> &acf,
     return intense;
 }
 
-
-template<typename Container>
+template <typename Container>
 std::vector<double> IRSpectrum::calculateAcf(const Container &evolution) {
-
     auto max_calc_length = evolution.size() / 3;
 
-    auto[acf, ntime] = tbb::parallel_reduce(
-            tbb::blocked_range(std::size_t(0), evolution.size()),
-            std::make_pair(std::vector<double>(max_calc_length), std::vector<long>(max_calc_length)),
-            [&evolution, max_calc_length](const tbb::blocked_range<size_t> &range, auto init) {
-                auto &[acf, ntime] = init;
-                for (size_t i = range.begin(); i != range.end(); ++i) {
-                    for (size_t j = i; j < std::min(evolution.size(), i + max_calc_length); ++j) {
-                        auto n = j - i;
-                        ++ntime[n];
-                        acf[n] += dot_multiplication(evolution[i], evolution[j]);
-                    }
+    auto [acf, ntime] = tbb::parallel_reduce(
+        tbb::blocked_range(std::size_t(0), evolution.size()),
+        std::make_pair(std::vector<double>(max_calc_length), std::vector<long>(max_calc_length)),
+        [&evolution, max_calc_length](const tbb::blocked_range<size_t> &range, auto init) {
+            auto &[acf, ntime] = init;
+            for (size_t i = range.begin(); i != range.end(); ++i) {
+                for (size_t j = i; j < std::min(evolution.size(), i + max_calc_length); ++j) {
+                    auto n = j - i;
+                    ++ntime[n];
+                    acf[n] += dot_multiplication(evolution[i], evolution[j]);
                 }
-                return init;
-            },
-            [](const auto &lhs, const auto &rhs) {
-                auto &[lhs_acf, lhs_ntime] = lhs;
-                auto &[rhs_acf, rhs_ntime] = rhs;
-                std::vector<double> acf(lhs_acf.size());
-                std::vector<long> ntime(lhs_ntime.size());
-                boost::transform(lhs_acf, rhs_acf, acf.begin(), std::plus<>());
-                boost::transform(lhs_ntime, rhs_ntime, ntime.begin(), std::plus<>());
-                return std::make_pair(acf, ntime);
             }
-    );
+            return init;
+        },
+        [](const auto &lhs, const auto &rhs) {
+            auto &[lhs_acf, lhs_ntime] = lhs;
+            auto &[rhs_acf, rhs_ntime] = rhs;
+            std::vector<double> acf(lhs_acf.size());
+            std::vector<long> ntime(lhs_ntime.size());
+            boost::transform(lhs_acf, rhs_acf, acf.begin(), std::plus<>());
+            boost::transform(lhs_ntime, rhs_ntime, ntime.begin(), std::plus<>());
+            return std::make_pair(acf, ntime);
+        });
 
     acf[0] /= ntime[0];
 
@@ -140,18 +135,14 @@ void IRSpectrum::calculateSpectrum(const std::string &out) {
 }
 
 void IRSpectrum::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, selected_mols_mask)) {
-                            selected_mols.insert(atom->molecule.lock());
-                        }
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, selected_mols_mask)) {
+            selected_mols.insert(atom->molecule.lock());
+        }
+    });
 }
 
 std::tuple<double, double, double> IRSpectrum::getDipole(std::shared_ptr<Frame> &frame) {
-
     return boost::accumulate(selected_mols, std::tuple<double, double, double>{},
-                             [&frame](const auto &init, auto &mol) {
-                                 return init + mol->calc_dipole(frame);
-                             });
+                             [&frame](const auto &init, auto &mol) { return init + mol->calc_dipole(frame); });
 }

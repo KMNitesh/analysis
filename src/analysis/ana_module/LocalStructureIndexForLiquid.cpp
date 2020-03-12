@@ -2,23 +2,24 @@
 // Created by xiamr on 9/24/19.
 //
 
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
-#include <boost/range/numeric.hpp>
-#include <boost/range/irange.hpp>
 #include "LocalStructureIndexForLiquid.hpp"
-#include "data_structure/frame.hpp"
-#include "utils/common.hpp"
-#include "utils/Histogram2D.hpp"
-#include "data_structure/molecule.hpp"
+
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/irange.hpp>
+#include <boost/range/numeric.hpp>
+
 #include "LocalStructureIndex.hpp"
+#include "data_structure/frame.hpp"
+#include "data_structure/molecule.hpp"
 #include "utils/Histogram.hpp"
+#include "utils/Histogram2D.hpp"
+#include "utils/common.hpp"
 
 LocalStructureIndexForLiquid::LocalStructureIndexForLiquid() {
     enable_outfile = true;
     enable_forcefield = true;
 }
-
 
 void LocalStructureIndexForLiquid::process(std::shared_ptr<Frame> &frame) {
     std::vector<double> distance_square_vector;
@@ -57,34 +58,32 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
     os << "# index for ri = " << r_index << '\n';
     os << std::string(50, '#') << '\n';
 
-    auto[Ri_min_iter, Ri_max_iter] = std::minmax_element(
-            std::begin(localStructureIndices), std::end(localStructureIndices),
-            [](auto &lhs, auto &rhs) { return std::get<0>(lhs) < std::get<0>(rhs); });
-    auto[LSI_min_iter, LSI_max_iter] = std::minmax_element(
-            std::begin(localStructureIndices), std::end(localStructureIndices),
-            [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); });
+    auto [Ri_min_iter, Ri_max_iter] =
+        std::minmax_element(std::begin(localStructureIndices), std::end(localStructureIndices),
+                            [](auto &lhs, auto &rhs) { return std::get<0>(lhs) < std::get<0>(rhs); });
+    auto [LSI_min_iter, LSI_max_iter] =
+        std::minmax_element(std::begin(localStructureIndices), std::end(localStructureIndices),
+                            [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); });
 
-    Histogram2D histogram2D(
-            {LSI_min_iter->second, LSI_max_iter->second}, (LSI_max_iter->second - LSI_min_iter->second) / 100,
-            {Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
+    Histogram2D histogram2D({LSI_min_iter->second, LSI_max_iter->second},
+                            (LSI_max_iter->second - LSI_min_iter->second) / 100,
+                            {Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
 
     Histogram histogram({Ri_min_iter->first, Ri_max_iter->first}, (Ri_max_iter->first - Ri_min_iter->first) / 100);
 
-    for (auto[ri, lsi] : localStructureIndices) {
+    for (auto [ri, lsi] : localStructureIndices) {
         histogram2D.update(lsi, ri);
         histogram.update(ri);
     }
 
-    os << boost::format("%15s %15s %15s\n")
-          % "LSI(Ang^2)"
-          % ("R" + std::to_string(r_index) + "(Ang)")
-          % "Normalized Probability Density";
+    os << boost::format("%15s %15s %15s\n") % "LSI(Ang^2)" % ("R" + std::to_string(r_index) + "(Ang)") %
+              "Normalized Probability Density";
 
     auto distribution = histogram2D.getDistribution();
-    auto max_population = std::get<2>(*boost::max_element(
-            distribution, [](auto &lhs, auto &rhs) { return std::get<2>(lhs) < std::get<2>(rhs); }));
+    auto max_population = std::get<2>(
+        *boost::max_element(distribution, [](auto &lhs, auto &rhs) { return std::get<2>(lhs) < std::get<2>(rhs); }));
 
-    for (auto[ri, lsi, population] : distribution) {
+    for (auto [ri, lsi, population] : distribution) {
         os << boost::format("%15.6f %15.6f %15.6f\n") % ri % lsi % (population / max_population);
     }
 
@@ -92,13 +91,11 @@ void LocalStructureIndexForLiquid::print(std::ostream &os) {
 
     auto ri_distribution = histogram.getDistribution();
 
-    auto ri_max_population = std::get<1>(*boost::max_element(
-            ri_distribution, [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); }));
+    auto ri_max_population = std::get<1>(
+        *boost::max_element(ri_distribution, [](auto &lhs, auto &rhs) { return std::get<1>(lhs) < std::get<1>(rhs); }));
 
-    os << boost::format("%15s %15s\n")
-          % ("R" + std::to_string(r_index) + "(Ang)")
-          % "Normalized Probability Density";
-    for (auto[ri, population] : ri_distribution) {
+    os << boost::format("%15s %15s\n") % ("R" + std::to_string(r_index) + "(Ang)") % "Normalized Probability Density";
+    for (auto [ri, population] : ri_distribution) {
         os << boost::format("%15.6f %15.6f\n") % ri % (population / ri_max_population);
     }
 }
@@ -108,6 +105,3 @@ void LocalStructureIndexForLiquid::readInfo() {
     cutoff2 = cutoff * cutoff;
     r_index = choose(1, "Enter i for ri [5] > ", Default(5));
 }
-
-
-

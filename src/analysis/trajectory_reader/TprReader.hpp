@@ -3,14 +3,13 @@
 
 #include "TopologyInterface.hpp"
 
-
 namespace gmx {
 
-#include "gromacs/fileio/xtcio.h"
 #include "gromacs/fileio/trnio.h"
+#include "gromacs/fileio/xtcio.h"
 #include "gromacs/utility/smalloc.h"
 
-}
+}  // namespace gmx
 
 class TprReader : public TopologyInterface {
 public:
@@ -21,8 +20,6 @@ private:
     int natoms, step;
     gmx::rvec *x = nullptr;
     gmx::real prec, time;
-
 };
 
-
-#endif //TINKER_TPRREADER_HPP
+#endif  // TINKER_TPRREADER_HPP

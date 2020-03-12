@@ -2,27 +2,22 @@
 // Created by xiamr on 7/24/19.
 //
 
-#include <boost/range/combine.hpp>
+#include "DynFrameFind.hpp"
+
 #include <boost/phoenix/phoenix.hpp>
 #include <boost/phoenix/stl/algorithm.hpp>
-#include "DynFrameFind.hpp"
-#include "data_structure/frame.hpp"
+#include <boost/range/combine.hpp>
+
 #include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 
-
-static bool
-double_tuple_equal(const std::tuple<double, double, double> &v1,
-                   const std::tuple<double, double, double> &v2,
-                   double eps) {
-    return std::abs(std::get<0>(v1) - std::get<0>(v2)) < eps
-           and std::abs(std::get<1>(v1) - std::get<1>(v2)) < eps
-           and std::abs(std::get<2>(v1) - std::get<2>(v2)) < eps;
-
+static bool double_tuple_equal(const std::tuple<double, double, double> &v1,
+                               const std::tuple<double, double, double> &v2, double eps) {
+    return std::abs(std::get<0>(v1) - std::get<0>(v2)) < eps and std::abs(std::get<1>(v1) - std::get<1>(v2)) < eps and
+           std::abs(std::get<2>(v1) - std::get<2>(v2)) < eps;
 }
 
-static bool double_equal(double v1, double v2, double eps) {
-    return std::abs(v1 - v2) < eps;
-}
+static bool double_equal(double v1, double v2, double eps) { return std::abs(v1 - v2) < eps; }
 
 void DynFrameFind::process(std::shared_ptr<Frame> &frame) {
     nframe++;
@@ -58,7 +53,7 @@ void DynFrameFind::print([[maybe_unused]] std::ostream &os) {
 
 void DynFrameFind::readInfo() {
     reader = std::make_shared<TinkerDynReader>(
-            std::make_shared<std::fstream>(choose_file("Enter dyn file :").isExist(true).extension("dyn")));
+        std::make_shared<std::fstream>(choose_file("Enter dyn file :").isExist(true).extension("dyn")));
     reader->readContent();
     eps = choose<double>(0, 0.1, "Enter eps [ 0.0001 ] : ", Default(0.0001));
 }

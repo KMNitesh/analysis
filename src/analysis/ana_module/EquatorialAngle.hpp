@@ -5,19 +5,18 @@
 #ifndef TINKER_EQUATORIALANGLE_HPP
 #define TINKER_EQUATORIALANGLE_HPP
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "utils/Histogram.hpp"
-
 
 class Frame;
 
 class EquatorialAngle : public AbstractAnalysis {
 public:
-
     EquatorialAngle();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -31,7 +30,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Over Plane Angle Distribution with cutoff"; }
 
 protected:
-
     Atom::AmberMask ids1, ids2, ids3;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
@@ -41,8 +39,6 @@ protected:
     double cutoff1, cutoff2;
 
     void printData(std::ostream &os) const;
-
 };
 
-
-#endif //TINKER_EQUATORIALANGLE_HPP
+#endif  // TINKER_EQUATORIALANGLE_HPP

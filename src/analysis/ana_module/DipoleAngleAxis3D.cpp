@@ -1,6 +1,8 @@
 
-#include <boost/range/algorithm.hpp>
 #include "DipoleAngleAxis3D.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/common.hpp"
@@ -11,15 +13,14 @@ DipoleAngleAxis3D::DipoleAngleAxis3D() {
 }
 
 void DipoleAngleAxis3D::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->amberMask)) this->group.insert(atom->molecule.lock());
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->amberMask)) this->group.insert(atom->molecule.lock());
+    });
 }
 
 void DipoleAngleAxis3D::process(std::shared_ptr<Frame> &frame) {
     constexpr std::tuple<double, double, double> xaxis = {1, 0, 0}, yaxis = {0, 1, 0}, zaxis = {0, 0, 1};
-    for (auto &mol: group) {
+    for (auto &mol : group) {
         auto dipole = mol->calc_dipole(frame);
         dipole /= vector_norm(dipole);
 
@@ -43,13 +44,11 @@ void DipoleAngleAxis3D::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
 }
 
-void DipoleAngleAxis3D::readInfo() {
-    Atom::select1group(amberMask);
-}
+void DipoleAngleAxis3D::readInfo() { Atom::select1group(amberMask); }
 
 void DipoleAngleAxis3D::printData(std::ostream &os) const {
     const boost::format fmt("%15.3f %15.3f %15.3f\n");
-    for (auto[angle_x, angle_y, angle_z] : distributions) {
+    for (auto [angle_x, angle_y, angle_z] : distributions) {
         os << boost::format(fmt) % angle_x % angle_y % angle_z;
     }
 }

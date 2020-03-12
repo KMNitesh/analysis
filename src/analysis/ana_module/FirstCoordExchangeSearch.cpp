@@ -3,15 +3,13 @@
 //
 
 #include "FirstCoordExchangeSearch.hpp"
+
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
 
-FirstCoordExchangeSearch::FirstCoordExchangeSearch() {
-    enable_outfile = true;
-}
+FirstCoordExchangeSearch::FirstCoordExchangeSearch() { enable_outfile = true; }
 
 void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
-
     step++;
 
     for (auto &atom1 : group1) {
@@ -44,7 +42,6 @@ void FirstCoordExchangeSearch::process(std::shared_ptr<Frame> &frame) {
                 }
             }
         }
-
     }
 }
 
@@ -65,10 +62,8 @@ void FirstCoordExchangeSearch::print(std::ostream &os) {
 
     os << "** seq **  direction ***** exchange frame *****" << '\n';
     for (auto it = exchange_list.begin(); it != exchange_list.end(); it++) {
-        os << boost::format("%10d%6s%15d   !   ")
-              % it->seq
-              % (it->direction == Direction::IN ? "IN" : "OUT")
-              % it->exchange_frame;
+        os << boost::format("%10d%6s%15d   !   ") % it->seq % (it->direction == Direction::IN ? "IN" : "OUT") %
+                  it->exchange_frame;
         if (it->direction == Direction::IN) {
             init_seq_in_shell.insert(it->seq);
         } else {
@@ -80,8 +75,6 @@ void FirstCoordExchangeSearch::print(std::ostream &os) {
         os << '\n';
     }
     os << "***************************\n";
-
-
 }
 
 void FirstCoordExchangeSearch::readInfo() {
@@ -92,9 +85,8 @@ void FirstCoordExchangeSearch::readInfo() {
 }
 
 void FirstCoordExchangeSearch::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](std::shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+    });
 }

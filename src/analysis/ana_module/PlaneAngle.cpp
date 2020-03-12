@@ -3,28 +3,26 @@
 //
 
 #include "PlaneAngle.hpp"
+
 #include "data_structure/frame.hpp"
+#include "nlohmann/json.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
-#include "nlohmann/json.hpp"
 
 using namespace std;
 
-PlaneAngle::PlaneAngle() {
-    enable_outfile = true;
-}
+PlaneAngle::PlaneAngle() { enable_outfile = true; }
 
 void PlaneAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-                      if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
-                      if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
-                      if (Atom::is_match(atom, this->mask4)) this->group4.insert(atom);
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+        if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
+        if (Atom::is_match(atom, this->mask4)) this->group4.insert(atom);
+    });
 
     for (auto &vec1_atom1 : group1) {
-        for (auto &vec1_atom2: group2) {
+        for (auto &vec1_atom2 : group2) {
             if (vec1_atom1->molecule.lock() == vec1_atom2->molecule.lock()) {
                 for (auto &vec1_atom3 : group3) {
                     if (vec1_atom1->molecule.lock() == vec1_atom3->molecule.lock()) {
@@ -37,9 +35,7 @@ void PlaneAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
 }
 
 void PlaneAngle::process(std::shared_ptr<Frame> &frame) {
-
-    for (auto&[vec1_atom1, vec1_atom2, vec1_atom3] : pairs) {
-
+    for (auto &[vec1_atom1, vec1_atom2, vec1_atom3] : pairs) {
         double u1 = vec1_atom2->x - vec1_atom1->x;
         double u2 = vec1_atom2->y - vec1_atom1->y;
         double u3 = vec1_atom2->z - vec1_atom1->z;
@@ -51,7 +47,6 @@ void PlaneAngle::process(std::shared_ptr<Frame> &frame) {
         frame->image(u1, u2, u3);
         frame->image(v1, v2, v3);
 
-
         auto xr = u2 * v3 - u3 * v2;
         auto yr = u1 * v3 - u3 * v1;
         auto zr = u1 * v2 - u2 * v1;
@@ -59,7 +54,6 @@ void PlaneAngle::process(std::shared_ptr<Frame> &frame) {
         double leng1 = sqrt(xr * xr + yr * yr + zr * zr);
 
         for (auto &atom4 : group4) {
-
             double xr2 = atom4->x - vec1_atom1->x;
             double yr2 = atom4->y - vec1_atom1->y;
             double zr2 = atom4->z - vec1_atom1->z;
@@ -69,7 +63,6 @@ void PlaneAngle::process(std::shared_ptr<Frame> &frame) {
             double distance = sqrt(xr2 * xr2 + yr2 * yr2 + zr2 * zr2);
 
             if (cutoff1 <= distance and distance < cutoff2) {
-
                 double _cos = (xr * xr2 + yr * yr2 + zr * zr2) / (distance * leng1);
 
                 double angle = acos(_cos) * radian;
@@ -140,7 +133,6 @@ void PlaneAngle::printData(std::ostream &os) const {
 }
 
 void PlaneAngle::saveJson(std::ostream &os) const {
-
     nlohmann::json json;
 
     json["title"] = title();
@@ -148,21 +140,13 @@ void PlaneAngle::saveJson(std::ostream &os) const {
     json["group2"] = to_string(mask2);
     json["group3"] = to_string(mask3);
     json["group4"] = to_string(mask4);
-    json["angle_width"] = {{"value", angle_width},
-                           {"unit",  "degree"}};
+    json["angle_width"] = {{"value", angle_width}, {"unit", "degree"}};
 
-    json["cutoff1"] = {{"value", cutoff1},
-                       {"unit",  "Ang"}};
+    json["cutoff1"] = {{"value", cutoff1}, {"unit", "Ang"}};
 
-    json["cutoff2"] = {{"value", cutoff2},
-                       {"unit",  "Ang"}};
+    json["cutoff2"] = {{"value", cutoff2}, {"unit", "Ang"}};
 
-    json["Probability Density"] = {
-            {"meta", {
-                             {"X", "Angle(degree)"},
-                             {"Y", "Probability Density(degree-1)"}
-                     }}
-    };
+    json["Probability Density"] = {{"meta", {{"X", "Angle(degree)"}, {"Y", "Probability Density(degree-1)"}}}};
 
     double total = 0.0;
     for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
@@ -171,7 +155,7 @@ void PlaneAngle::saveJson(std::ostream &os) const {
 
     for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
         json["Probability Density"]["values"].push_back(
-                {(i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width});
+            {(i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width});
     }
 
     os << json;

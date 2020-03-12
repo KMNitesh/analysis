@@ -2,7 +2,6 @@
 #define TINKER_NETCDFTRAJECTORYREADER_HPP
 
 #include "TrajectoryInterface.hpp"
-
 #include "utils/AmberNetcdf.h"
 #include "utils/amber_netcdf.h"
 
@@ -21,5 +20,4 @@ private:
     std::unique_ptr<struct AmberNetcdf> NC;
 };
 
-
-#endif //TINKER_NETCDFTRAJECTORYREADER_HPP
+#endif  // TINKER_NETCDFTRAJECTORYREADER_HPP

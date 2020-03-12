@@ -229,4 +229,3 @@ void RMSFCal::allocate_array_memory() {
 
     acc.resize(nfit2 + n);
 }
-

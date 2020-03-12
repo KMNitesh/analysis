@@ -5,7 +5,6 @@
 #ifndef TINKER_VECTORSELECTORFACTORY_HPP
 #define TINKER_VECTORSELECTORFACTORY_HPP
 
-
 #include "VectorSelector.hpp"
 
 class VectorSelectorFactory {
@@ -16,5 +15,4 @@ private:
     VectorSelectorFactory() = default;
 };
 
-
-#endif //TINKER_VECTORSELECTORFACTORY_HPP
+#endif  // TINKER_VECTORSELECTORFACTORY_HPP

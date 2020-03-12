@@ -5,11 +5,12 @@
 #ifndef TINKER_CONDITIONALTIMECORRELATIONFUNCTION_HPP
 #define TINKER_CONDITIONALTIMECORRELATIONFUNCTION_HPP
 
-#include "utils/std.hpp"
 #include <boost/circular_buffer.hpp>
 #include <boost/multi_array.hpp>
-#include "data_structure/atom.hpp"
+
 #include "AbstractAnalysis.hpp"
+#include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
@@ -17,7 +18,6 @@ class VectorSelector;
 
 class ConditionalTimeCorrelationFunction : public AbstractAnalysis {
 public:
-
     ConditionalTimeCorrelationFunction();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -33,14 +33,12 @@ public:
     }
 
 protected:
-
     void normalize();
 
-    template<typename Function>
+    template <typename Function>
     void calculateFrame(Function f);
 
     const std::unordered_map<int, std::function<void()>> func_mapping;
-
 
     AmberMask reference_atom_mask;
     AmberMask water_Ow_atoms_mask;
@@ -67,8 +65,6 @@ protected:
     int LegendrePolynomial;
 
     boost::multi_array<double, 2> ctcf;
-
 };
 
-
-#endif //TINKER_CONDITIONALTIMECORRELATIONFUNCTION_HPP
+#endif  // TINKER_CONDITIONALTIMECORRELATIONFUNCTION_HPP

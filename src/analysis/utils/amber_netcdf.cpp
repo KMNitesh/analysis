@@ -1,6 +1,6 @@
-#include <fstream>
-#include <cstring>
 #include <cmath>
+#include <cstring>
+#include <fstream>
 #include <iostream>
 
 #include "AmberNetcdf.h"
@@ -30,9 +30,8 @@ void netcdf_open_(const char *fn, int *leng, struct AmberNetcdf **handle, int *r
     *handle = nc;
 }
 
-void netcdf_read_next_(struct AmberNetcdf **handle,
-                       double *xbox, double *ybox, double *zbox, double *alpha, double *beta, double *gamma,
-                       double *x, double *y, double *z, int *ret) {
+void netcdf_read_next_(struct AmberNetcdf **handle, double *xbox, double *ybox, double *zbox, double *alpha,
+                       double *beta, double *gamma, double *x, double *y, double *z, int *ret) {
     auto nc = *handle;
     auto coord = new double[nc->ncatom3];
     double box[6];
@@ -53,9 +52,8 @@ void netcdf_read_next_(struct AmberNetcdf **handle,
     delete[] coord;
 }
 
-void netcdf_append_box_x_(const char *fn, int *leng,
-                          double *xbox, double *ybox, double *zbox, double *alpha, double *beta, double *gamma,
-                          int *natoms, double *x, double *y, double *z) {
+void netcdf_append_box_x_(const char *fn, int *leng, double *xbox, double *ybox, double *zbox, double *alpha,
+                          double *beta, double *gamma, int *natoms, double *x, double *y, double *z) {
     char filename[256];
     strncpy(filename, fn, *leng);
     filename[*leng] = '\0';
@@ -98,7 +96,6 @@ void netcdf_append_box_x_(const char *fn, int *leng,
         exit(1);
     }
     delete[] coord;
-
 }
 void netcdf_append_x_(const char *fn, int *leng, int *natoms, double *x, double *y, double *z) {
     char filename[256];

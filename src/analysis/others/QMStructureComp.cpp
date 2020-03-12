@@ -1,15 +1,16 @@
+#include "QMStructureComp.hpp"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/xpressive/xpressive_static.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/irange.hpp>
-#include "QMStructureComp.hpp"
-#include "utils/common.hpp"
+#include <boost/spirit/include/qi.hpp>
+#include <boost/xpressive/xpressive_static.hpp>
+
 #include "ana_module/RMSDCal.hpp"
+#include "utils/common.hpp"
 
 void QMStructureComp::process() {
-
     std::string _47file = choose_file("Enter .47 file > ").isExist(true).extension("47");
     std::string log_file = choose_file("Enter log fle > ").isExist(true).extension("log");
 
@@ -59,7 +60,6 @@ void QMStructureComp::process() {
         auto rms_avg = RMSDCal::rmsfit(x1, y1, z1, x2, y2, z2, n);
         auto rms_max = RMSDCal::rms_max(x1, y1, z1, x2, y2, z2, n);
 
-
         std::cout << "RMS AVG = " << rms_avg << " RMS MAX = " << rms_max << '\n';
         if (rms_avg < 0.01 and rms_max < 0.02) std::cout << "Structure is Same! Congratulations @^_^@\n";
 
@@ -69,9 +69,7 @@ void QMStructureComp::process() {
     }
 }
 
-
-std::vector<boost::fusion::vector<uint, double, double, double>>
-QMStructureComp::read_47_file(std::istream &is) {
+std::vector<boost::fusion::vector<uint, double, double, double>> QMStructureComp::read_47_file(std::istream &is) {
     std::vector<boost::fusion::vector<uint, double, double, double>> coord;
 
     std::string line;
@@ -83,8 +81,7 @@ QMStructureComp::read_47_file(std::istream &is) {
             while (std::getline(is, line)) {
                 boost::fusion::vector<uint, double, double, double> attr;
                 if (auto it = std::begin(line);
-                        !(phrase_parse(it, std::end(line), parser, ascii::space, attr) and
-                          it == std::end(line))) {
+                    !(phrase_parse(it, std::end(line), parser, ascii::space, attr) and it == std::end(line))) {
                     return coord;
                 }
                 coord.push_back(std::move(attr));
@@ -94,8 +91,8 @@ QMStructureComp::read_47_file(std::istream &is) {
     throw std::runtime_error("Parse .47 file error!");
 }
 
-std::vector<boost::fusion::vector<std::string, double, double, double>>
-QMStructureComp::read_log_file(std::istream &is) {
+std::vector<boost::fusion::vector<std::string, double, double, double>> QMStructureComp::read_log_file(
+    std::istream &is) {
     std::vector<std::string> line_buffer;
     using namespace boost::xpressive;
     // (Enter /public/home/xiamr/prog/g09-c01/g09/l9999.exe)
@@ -119,12 +116,12 @@ QMStructureComp::read_log_file(std::istream &is) {
     boost::split_regex(fields, contracte_line, boost::regex(R"=(\\\\)="));
     line = fields.at(3);
     using namespace boost::spirit::qi;
-    const auto parser = copy(
-            omit[double_ >> double_] >> +(R"=(\)=" >> lexeme[+ascii::alpha] >> double_ >> double_ >> double_));
+    const auto parser =
+        copy(omit[double_ >> double_] >> +(R"=(\)=" >> lexeme[+ascii::alpha] >> double_ >> double_ >> double_));
     std::vector<boost::fusion::vector<std::string, double, double, double>> coord;
 
-    if (auto it = std::begin(line); phrase_parse(it, std::end(line), parser, char_(','), coord) and
-                                    it == std::end(line)) {
+    if (auto it = std::begin(line);
+        phrase_parse(it, std::end(line), parser, char_(','), coord) and it == std::end(line)) {
         return coord;
     }
 

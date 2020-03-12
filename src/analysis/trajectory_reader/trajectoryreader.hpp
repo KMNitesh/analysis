@@ -9,7 +9,7 @@
 #include "TrajectoryInterface.hpp"
 
 class TrajectoryReader {
-   public:
+public:
     void add_trajectoy_file(const std::string &filename);
 
     void set_topology(const std::string &filename);
@@ -18,9 +18,9 @@ class TrajectoryReader {
 
     std::shared_ptr<Frame> readTopology();
 
-   private:
+private:
     class TrajectoryFile {
-       public:
+    public:
         TrajectoryFile() = default;
         TrajectoryFile(std::string name, std::size_t start = 1, std::size_t end = 0)
             : name(std::move(name)), start(start), end(end) {}
@@ -36,10 +36,10 @@ class TrajectoryReader {
     std::size_t current_frame_pos;
 
     boost::optional<std::string> topology_filename;
-    std::queue<TrajectoryFile> traj_filenames;  // the continuous trajectory files
+    std::queue<TrajectoryFile> traj_filenames; // the continuous trajectory files
 
     std::shared_ptr<Frame> frame;
     std::shared_ptr<TrajectoryInterface> traj_reader;
 };
 
-#endif  // TINKER_TRAJECTORYREADER_HPP
+#endif // TINKER_TRAJECTORYREADER_HPP

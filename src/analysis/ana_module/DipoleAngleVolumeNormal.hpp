@@ -9,11 +9,9 @@
 
 class DipoleAngleVolumeNormal : public DipoleAngle {
 public:
-
     void print(std::ostream &os) override;
 
     [[nodiscard]] static std::string_view title() { return "Dipole Angle of volume normal"; }
 };
 
-
-#endif //TINKER_DIPOLEANGLEVOLUMENORMAL_HPP
+#endif  // TINKER_DIPOLEANGLEVOLUMENORMAL_HPP

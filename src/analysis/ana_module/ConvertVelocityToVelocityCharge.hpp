@@ -5,16 +5,15 @@
 #ifndef TINKER_CONVERTVELOCITYTOVELOCITYCHARGE_HPP
 #define TINKER_CONVERTVELOCITYTOVELOCITYCHARGE_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
-#include "utils/trr_writer.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/std.hpp"
+#include "utils/trr_writer.hpp"
 
 class Frame;
 
 class ConvertVelocityToVelocityCharge : public AbstractAnalysis {
 public:
-
     ConvertVelocityToVelocityCharge(std::unique_ptr<TRRWriter> writer = std::make_unique<TRRWriter>());
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -30,7 +29,6 @@ public:
     }
 
 protected:
-
     virtual void do_select_mol(std::shared_ptr<Frame> &frame);
 
     std::unique_ptr<TRRWriter> writer;
@@ -42,5 +40,4 @@ protected:
     std::unordered_set<std::shared_ptr<Molecule>> selected_mols;
 };
 
-
-#endif //TINKER_CONVERTVELOCITYTOVELOCITYCHARGE_HPP
+#endif  // TINKER_CONVERTVELOCITYTOVELOCITYCHARGE_HPP

@@ -1,11 +1,13 @@
 
+#include "ArcTrajectoryReader.hpp"
+
 #include <filesystem>
-#include "utils/common.hpp"
+
+#include "TrajectoryInterface.hpp"
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
 #include "topology_utils.hpp"
-#include "ArcTrajectoryReader.hpp"
-#include "TrajectoryInterface.hpp"
+#include "utils/common.hpp"
 
 bool ArcTrajectoryReader::open(const std::string &file) {
     ifs.open(file);
@@ -20,7 +22,6 @@ bool ArcTrajectoryReader::open(const std::string &file) {
     }
     return static_cast<bool>(ifs);
 }
-
 
 bool ArcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     std::getline(ifs, line);
@@ -43,7 +44,6 @@ bool ArcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     return true;
 }
 
-
 std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
     open(filename);
 
@@ -54,7 +54,6 @@ std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
     atom_num = std::stoi(field[0]);
     frame->title = line.substr(line.rfind(field[0]) + field[0].size());
     boost::trim(frame->title);
-
 
     if (frame->enable_bound) {
         std::getline(ifs, line);
@@ -73,7 +72,8 @@ std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
                 frame->enable_bound = true;
                 i--;
                 continue;
-            } catch (...) {}
+            } catch (...) {
+            }
         }
 
         auto atom = std::make_shared<Atom>();
@@ -101,8 +101,8 @@ void ArcTrajectoryReader::parse_coord(std::shared_ptr<Atom> &atom) {
 }
 
 void ArcTrajectoryReader::parse_box(std::shared_ptr<Frame> &frame) {
-    frame->box = PBCBox(std::stod(field[0]), std::stod(field[1]), std::stod(field[2]),
-                        std::stod(field[3]), std::stod(field[4]), std::stod(field[5]));
+    frame->box = PBCBox(std::stod(field[0]), std::stod(field[1]), std::stod(field[2]), std::stod(field[3]),
+                        std::stod(field[4]), std::stod(field[5]));
 }
 
 void ArcTrajectoryReader::readOneFrameVelocity(std::shared_ptr<Frame> &frame) {

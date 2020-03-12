@@ -5,15 +5,14 @@
 #ifndef TINKER_COORDINATIONSTRUCTUREMATCH_HPP
 #define TINKER_COORDINATIONSTRUCTUREMATCH_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class CoordinationStructureMatch : public AbstractAnalysis {
 public:
-
     CoordinationStructureMatch();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -44,5 +43,4 @@ protected:
     std::deque<std::pair<double, double>> r_list;
 };
 
-
-#endif //TINKER_COORDINATIONSTRUCTUREMATCH_HPP
+#endif  // TINKER_COORDINATIONSTRUCTUREMATCH_HPP

@@ -6,9 +6,9 @@
 #define TINKER_NORMALVECTORSELECTOR_HPP
 
 #include <list>
-#include "utils/VectorSelector.hpp"
-#include "data_structure/atom.hpp"
 
+#include "data_structure/atom.hpp"
+#include "utils/VectorSelector.hpp"
 
 class NormalVectorSelector : public VectorSelector {
 public:
@@ -20,8 +20,8 @@ public:
 
     void setParameters(const Atom::Node &id1, const Atom::Node &id2, const Atom::Node &id3);
 
-    std::tuple<double, double, double>
-    calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) override;
+    std::tuple<double, double, double> calculateVector(const std::shared_ptr<Molecule> &mol,
+                                                       const std::shared_ptr<Frame> &frame) override;
 
     std::string description() override;
 
@@ -36,12 +36,9 @@ protected:
 
     std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 
-
     std::tuple<double, double, double> calVector(
-            const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
-            const std::shared_ptr<Frame> &frame);
-
+        const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
+        const std::shared_ptr<Frame> &frame);
 };
 
-
-#endif //TINKER_NORMALVECTORSELECTOR_HPP
+#endif  // TINKER_NORMALVECTORSELECTOR_HPP

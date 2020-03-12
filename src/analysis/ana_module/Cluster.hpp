@@ -5,17 +5,15 @@
 #ifndef TINKER_CLUSTER_HPP
 #define TINKER_CLUSTER_HPP
 
-
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
-#include "data_structure/atom.hpp"
 #include "RMSDCal.hpp"
+#include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class Cluster : public AbstractAnalysis {
 public:
-
     Cluster();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -39,25 +37,22 @@ public:
 
     class conf_clust {
     public:
-        conf_clust(int conf, int clust) : conf(conf), clust(clust) {};
+        conf_clust(int conf, int clust) : conf(conf), clust(clust){};
         int conf;
         int clust;
     };
 
-
-    template<typename ForwardRange>
+    template <typename ForwardRange>
     static std::vector<Cluster::conf_clust> do_cluster(const ForwardRange &rmsd_list, int conf_size, double cutoff);
 
     static int do_sort_and_renumber_parallel(std::vector<conf_clust> &conf_clust_vector);
 
 protected:
-
     AmberMask ids;
     std::vector<std::shared_ptr<Atom>> group;
 
-
     double cutoff = 0.0;
-    int steps = 0; // current frame number
+    int steps = 0;  // current frame number
     std::map<std::pair<int, int>, double> rmsd_map;
 
     std::vector<std::vector<std::tuple<double, double, double>>> coords;
@@ -80,6 +75,6 @@ protected:
 std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std::vector<Cluster::conf_clust> &clusts);
 
 std::unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
-        const std::vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list);
+    const std::vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list);
 
-#endif //TINKER_CLUSTER_HPP
+#endif  // TINKER_CLUSTER_HPP

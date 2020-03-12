@@ -1,16 +1,18 @@
 //
 // Created by xiamr on 6/14/19.
 //
-#include <type_traits>
+#include "Cluster.hpp"
+
 #include <tbb/tbb.h>
+
 #include <boost/container_hash/hash.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>
+#include <type_traits>
 
-#include "utils/ThrowAssert.hpp"
-#include "Cluster.hpp"
 #include "data_structure/frame.hpp"
+#include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
 Cluster::Cluster() {
@@ -19,7 +21,6 @@ Cluster::Cluster() {
 }
 
 void Cluster::process(std::shared_ptr<Frame> &frame) {
-
     std::vector<std::tuple<double, double, double>> coord;
     coord.reserve(group.size());
 
@@ -33,7 +34,8 @@ void Cluster::process(std::shared_ptr<Frame> &frame) {
         }
     }
     auto center = boost::accumulate(coord, std::tuple<double, double, double>{},
-                                    [](const auto &init, const auto &rhs) { return init + rhs; }) / coord.size();
+                                    [](const auto &init, const auto &rhs) { return init + rhs; }) /
+                  coord.size();
     for (auto &element : coord) {
         element -= center;
     }
@@ -66,7 +68,7 @@ std::list<Cluster::rmsd_matrix> Cluster::do_calculate_rmsd_list_parallel() {
 
         Cluster *parent;
 
-        CalCore(int steps, double cutoff, Cluster *parent) : steps(steps), cutoff(cutoff), parent(parent) {};
+        CalCore(int steps, double cutoff, Cluster *parent) : steps(steps), cutoff(cutoff), parent(parent){};
 
         CalCore(CalCore &c, tbb::split) {
             steps = c.steps;
@@ -93,12 +95,10 @@ std::list<Cluster::rmsd_matrix> Cluster::do_calculate_rmsd_list_parallel() {
 
     tbb::parallel_reduce(tbb::blocked_range<int>(0, steps - 1), core, tbb::auto_partitioner());
 
-
     return core.local_rms_list;
 }
 
 void Cluster::print(std::ostream &os) {
-
     auto rmsd_list = do_calculate_rmsd_list_parallel();
 
     int n = 0;
@@ -128,7 +128,6 @@ void Cluster::print(std::ostream &os) {
     auto mm = do_find_frames_in_same_clust(c);
     os << "# Clust No.   Count      Frames";
     for (auto i_clust : range(1, cid + 1)) {
-
         auto &s = mm[i_clust];
         int index = 0;
         auto seq = s | boost::adaptors::transformed([](auto i) { return i + 1; });
@@ -149,8 +148,8 @@ void Cluster::print(std::ostream &os) {
     auto mm2 = do_find_medium_in_clust(c, rmsd_list);
     os << boost::format("#%15s %15s %15s %15s\n") % "Clust No." % "Fame Count" % "Medium_Frame" % "AvgRMSD";
     for (int i_clust : range(1, cid + 1)) {
-        os << format(" %15d %15d %15d %15g\n",
-                     i_clust, mm[i_clust].size(), mm2[i_clust].first + 1, mm2[i_clust].second);
+        os << format(" %15d %15d %15d %15g\n", i_clust, mm[i_clust].size(), mm2[i_clust].first + 1,
+                     mm2[i_clust].second);
     }
     os << std::string(50, '#') << '\n';
 }
@@ -199,7 +198,7 @@ void Cluster::do_sort_clust_parallel(std::vector<Cluster::conf_clust> &conf_clus
  *
  */
 
-template<typename ForwardRange>
+template <typename ForwardRange>
 std::vector<Cluster::conf_clust> Cluster::do_cluster(const ForwardRange &rmsd_list, int conf_size, double cutoff) {
     std::vector<Cluster::conf_clust> c = initialize_conf_clust_vector(conf_size);
 
@@ -241,10 +240,9 @@ void Cluster::readInfo() {
 }
 
 void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->ids)) this->group.push_back(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids)) this->group.push_back(atom);
+    });
 }
 
 void Cluster::setSetting(const Atom::AmberMask &atomIndenter, double cutoff) {
@@ -260,7 +258,6 @@ void Cluster::setSetting(const Atom::AmberMask &atomIndenter, double cutoff) {
  * clust start from 1
  */
 
-
 std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std::vector<Cluster::conf_clust> &clusts) {
     std::unordered_map<int, std::vector<int>> ret;
     for (const auto &ct : clusts) {
@@ -269,9 +266,8 @@ std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std
     return ret;
 }
 
-
 std::unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
-        const std::vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list) {
+    const std::vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list) {
     std::unordered_map<int, std::pair<int, double>> ret;
     assert(!clusts.empty());
     std::vector<double> rmsd_sum(clusts.size(), 0.0);
@@ -293,10 +289,8 @@ std::unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
         }
     }
     for (auto &j : s) {
-        auto min = *boost::min_element(j.second,
-                                       [&rmsd_sum](auto &lhs, auto &rhs) {
-                                           return rmsd_sum[lhs] < rmsd_sum[rhs];
-                                       });
+        auto min =
+            *boost::min_element(j.second, [&rmsd_sum](auto &lhs, auto &rhs) { return rmsd_sum[lhs] < rmsd_sum[rhs]; });
         ret[j.first] = {min, j.second.size() == 1 ? NAN : (rmsd_sum[min] / (j.second.size() - 1))};
     }
     return ret;

@@ -1,8 +1,9 @@
 
-#include "utils/common.hpp"
+#include "XtcTrajectoryReader.hpp"
+
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
-#include "XtcTrajectoryReader.hpp"
+#include "utils/common.hpp"
 
 bool XtcTrajectoryReader::open(const std::string &file) {
     fio = gmx::open_xtc(file.c_str(), "r");
@@ -38,8 +39,7 @@ bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
         }
         return true;
     }
-    std::cerr << "\nWARNING: Incomplete frame at time "
-              << std::scientific << time << std::defaultfloat << "\n";
+    std::cerr << "\nWARNING: Incomplete frame at time " << std::scientific << time << std::defaultfloat << "\n";
     return false;
 }
 
@@ -54,6 +54,4 @@ void XtcTrajectoryReader::close() {
     }
 }
 
-XtcTrajectoryReader::~XtcTrajectoryReader() {
-    XtcTrajectoryReader::close();
-}
+XtcTrajectoryReader::~XtcTrajectoryReader() { XtcTrajectoryReader::close(); }

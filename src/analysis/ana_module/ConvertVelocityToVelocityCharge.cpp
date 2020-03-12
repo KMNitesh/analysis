@@ -2,16 +2,18 @@
 // Created by xiamr on 8/16/19.
 //
 
-#include <boost/range/algorithm.hpp>
 #include "ConvertVelocityToVelocityCharge.hpp"
-#include "utils/common.hpp"
-#include "data_structure/frame.hpp"
-#include "utils/trr_writer.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/common.hpp"
+#include "utils/trr_writer.hpp"
 
 ConvertVelocityToVelocityCharge::ConvertVelocityToVelocityCharge(std::unique_ptr<TRRWriter> writer)
-        : writer(std::move(writer)) {
+    : writer(std::move(writer)) {
     enable_read_velocity = true;
 }
 
@@ -20,16 +22,14 @@ void ConvertVelocityToVelocityCharge::processFirstFrame(std::shared_ptr<Frame> &
     writer->setWriteVelocities(true);
 
     do_select_mol(frame);
-
 }
 
 void ConvertVelocityToVelocityCharge::do_select_mol(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, selected_mols_mask)) {
-                            selected_mols.insert(atom->molecule.lock());
-                        }
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, selected_mols_mask)) {
+            selected_mols.insert(atom->molecule.lock());
+        }
+    });
 }
 
 void ConvertVelocityToVelocityCharge::process(std::shared_ptr<Frame> &frame) {
@@ -60,5 +60,3 @@ void ConvertVelocityToVelocityCharge::readInfo() {
     trr_vq_outfilename = choose_file("Enter trr output filename > ").isExist(false).extension("trr");
     Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }
-
-

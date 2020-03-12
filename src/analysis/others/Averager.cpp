@@ -1,10 +1,11 @@
 
-#include <boost/range/algorithm.hpp>
 #include "Averager.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "utils/common.hpp"
 
 void Averager::process() {
-
     std::string input_file = choose_file("Input xvg file > ").isExist(true);
     std::string output_file = choose_file("Output file > ").isExist(false);
 
@@ -23,18 +24,15 @@ void Averager::process() {
     int range = choose(2, "Enter range (line) > ");
 
     process_file(ifs, ofs, range);
-
 }
 
 void Averager::process_file(std::ifstream &ifs, std::ofstream &ofs, const int range) {
-
     std::vector<std::vector<double>> lines = readfile(ifs);
 
     output_average(ofs, range, lines);
 }
 
 void Averager::output_average(std::ostream &os, int range, const std::vector<std::vector<double>> &lines) {
-
     std::vector<double> avg;
     avg.resize(lines.front().size());
     for (std::size_t i = 0; i < lines.size(); ++i) {
@@ -54,7 +52,6 @@ void Averager::output_average(std::ostream &os, int range, const std::vector<std
 }
 
 std::vector<std::vector<double>> Averager::readfile(std::ifstream &ifs) {
-
     std::vector<std::vector<double>> lines;
     std::string line;
 

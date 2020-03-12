@@ -5,10 +5,10 @@
 #ifndef TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP
 #define TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP
 
-#include <memory>
 #include <boost/optional.hpp>
-#include "data_structure/atom.hpp"
+#include <memory>
 
+#include "data_structure/atom.hpp"
 
 struct MassCenterRuleNode {
     Atom::Node SelectionMask;
@@ -28,19 +28,12 @@ struct NoopRuleNode {
     NoopRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
 };
 
-struct QuitRuleNode {
-};
+struct QuitRuleNode {};
 
-struct HelpRuleNode {
-};
+struct HelpRuleNode {};
 
-using CenterRuleNode = boost::variant<
-        std::shared_ptr<MassCenterRuleNode>,
-        std::shared_ptr<GeomCenterRuleNode>,
-        std::shared_ptr<NoopRuleNode>,
-        std::shared_ptr<QuitRuleNode>,
-        std::shared_ptr<HelpRuleNode>
->;
+using CenterRuleNode =
+    boost::variant<std::shared_ptr<MassCenterRuleNode>, std::shared_ptr<GeomCenterRuleNode>,
+                   std::shared_ptr<NoopRuleNode>, std::shared_ptr<QuitRuleNode>, std::shared_ptr<HelpRuleNode> >;
 
-
-#endif //TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP
+#endif  // TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP

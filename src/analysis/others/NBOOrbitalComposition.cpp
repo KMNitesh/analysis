@@ -1,13 +1,14 @@
-#include <string>
+#include "NBOOrbitalComposition.hpp"
+
 #include <boost/algorithm/string.hpp>
-#include <boost/xpressive/xpressive.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/karma.hpp>
 #include <boost/phoenix/function/adapt_function.hpp>
 #include <boost/process.hpp>
-#include "NBOOrbitalComposition.hpp"
-#include "utils/common.hpp"
+#include <boost/spirit/include/karma.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <boost/xpressive/xpressive.hpp>
+#include <string>
 
+#include "utils/common.hpp"
 
 void NBOOrbitalComposition::process() {
     std::string file = choose_file("NBO output file > ").isExist(true);
@@ -20,15 +21,14 @@ void NBOOrbitalComposition::process() {
     driveMultiwfn(file, alpha_orbitals, beta_orbitals);
 }
 
-
 int NBOOrbitalComposition::findOccupancy(std::istream &is) {
     std::string line;
     int occupancy_number{};
     while (std::getline(is, line)) {
         if (boost::contains(line, "------------------ Lewis ------------------------------------------------------")) {
             while (std::getline(is, line),
-                    !boost::contains(line,
-                                     "---------------- non-Lewis ----------------------------------------------------")) {
+                   !boost::contains(
+                       line, "---------------- non-Lewis ----------------------------------------------------")) {
                 if (match(line)) ++occupancy_number;
             }
             return occupancy_number;
@@ -44,9 +44,8 @@ bool NBOOrbitalComposition::match(const std::string &line) {
 }
 
 namespace {
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim, 1)
+BOOST_PHOENIX_ADAPT_FUNCTION(void, trim, boost::trim, 1)
 }
-
 
 void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orbitals, int beta_orbitals) {
     namespace bp = boost::process;
@@ -55,34 +54,26 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
 
     bp::child c(bp::search_path("Multiwfn"), file, bp::std_out > is, bp::std_in < os);
 
-    os << 8 << std::endl; // Orbital composition analysis
-    os << 7 << std::endl; // Orbital composition analysis by natural atomic orbital (NAO) method
+    os << 8 << std::endl;  // Orbital composition analysis
+    os << 7 << std::endl;  // Orbital composition analysis by natural atomic orbital (NAO) method
 
-    os << 0 << std::endl; // Show composition of an orbital
+    os << 0 << std::endl;  // Show composition of an orbital
 
     for (int orbital = alpha_orbitals; orbital > 0; --orbital) {
         os << orbital << std::endl;
     }
-    os << 0 << std::endl; // return
-    os << 3 << std::endl; // Switch spin type to Beta
-    os << 0 << std::endl; // Show composition of an orbital
+    os << 0 << std::endl;  // return
+    os << 3 << std::endl;  // Switch spin type to Beta
+    os << 0 << std::endl;  // Show composition of an orbital
 
     for (int orbital = beta_orbitals; orbital > 0; --orbital) {
         os << orbital << std::endl;
     }
 
     std::vector<
-            boost::fusion::vector<
-                    std::vector<
-                            boost::fusion::vector<int, boost::optional<int>>
-                    >,
-                    boost::optional<std::string>,
-                    boost::variant<
-                            std::vector<std::string>,
-                            std::string
-                    >
-            >
-    > attrs;
+        boost::fusion::vector<std::vector<boost::fusion::vector<int, boost::optional<int>>>,
+                              boost::optional<std::string>, boost::variant<std::vector<std::string>, std::string>>>
+        attrs;
 
     for (std::string line;;) {
         std::cout << "<atom, orbital> : ";
@@ -91,11 +82,11 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
         using namespace boost::spirit::qi;
         using namespace boost::phoenix;
         if (auto it = std::begin(line);
-                phrase_parse(
-                        it, std::end(line),
-                        +('<' >> ((int_ >> -('-' >> int_)) % ',') >> ':' >> -(as_string[lexeme[+alpha]]) >> ':'
-                              >> ((as_string[lexeme[+alnum]] % ',') | string("*")) >> '>'),
-                        ascii::space, attrs) and it == std::end(line)) {
+            phrase_parse(it, std::end(line),
+                         +('<' >> ((int_ >> -('-' >> int_)) % ',') >> ':' >> -(as_string[lexeme[+alpha]]) >> ':' >>
+                           ((as_string[lexeme[+alnum]] % ',') | string("*")) >> '>'),
+                         ascii::space, attrs) and
+            it == std::end(line)) {
             break;
         }
         std::cerr << "Syntax Error !\n";
@@ -104,26 +95,18 @@ void NBOOrbitalComposition::driveMultiwfn(const std::string &file, int alpha_orb
     auto alpha_contributions = read_contributions(is, alpha_orbitals);
     auto beta_contributions = read_contributions(is, beta_orbitals);
 
-
-    auto[alpha_filter_contributions, alpha_column_names] = filter(attrs, alpha_contributions);
+    auto [alpha_filter_contributions, alpha_column_names] = filter(attrs, alpha_contributions);
     print_contributions("Alpha", alpha_filter_contributions, alpha_column_names);
 
-    auto[beta_filter_contributions, beta_column_names] = filter(attrs, beta_contributions);
+    auto [beta_filter_contributions, beta_column_names] = filter(attrs, beta_contributions);
     print_contributions("Beta", beta_filter_contributions, beta_column_names);
-
 }
 
-std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::string>>
-NBOOrbitalComposition::filter(
-        const std::vector<
-                boost::fusion::vector<
-                        std::vector<boost::fusion::vector<int, boost::optional<int>>>,
-                        boost::optional<std::string>,
-                        boost::variant<std::vector<std::string>, std::string>
-                >
-        > &attrs,
-        const std::map<int, std::vector<AtomComposition>, std::greater<>> &contributions) {
-
+std::pair<std::map<int, std::vector<double>, std::greater<>>, std::vector<std::string>> NBOOrbitalComposition::filter(
+    const std::vector<boost::fusion::vector<std::vector<boost::fusion::vector<int, boost::optional<int>>>,
+                                            boost::optional<std::string>,
+                                            boost::variant<std::vector<std::string>, std::string>>> &attrs,
+    const std::map<int, std::vector<AtomComposition>, std::greater<>> &contributions) {
     std::map<int, std::vector<double>, std::greater<>> contr;
     std::vector<std::string> column_names;
 
@@ -146,7 +129,6 @@ NBOOrbitalComposition::filter(
     };
 
     auto orbital_name_matchaer = [](const AtomComposition &atom, auto &bf_vector) -> bool {
-
         struct name_visitor : boost::static_visitor<bool> {
             bool operator()(const std::vector<std::string> &bv) const {
                 for (auto &v : bv) {
@@ -169,7 +151,6 @@ NBOOrbitalComposition::filter(
     };
 
     auto matcher = [&](const AtomComposition &atom, auto &bf_vector) -> bool {
-
         return orbital_name_matchaer(atom, bf_vector) and type_matcher(atom, bf_vector) and
                atom_no_matcher(atom, bf_vector);
     };
@@ -179,8 +160,9 @@ NBOOrbitalComposition::filter(
         std::back_insert_iterator<std::string> sink{generated};
 
         using namespace boost::spirit::karma;
-        generate(sink, '<' << ((int_ << -('-' << int_)) % ',')
-                           << ':' << -string << ':' << ((string % ',') | string) << '>', bf_vector);
+        generate(sink,
+                 '<' << ((int_ << -('-' << int_)) % ',') << ':' << -string << ':' << ((string % ',') | string) << '>',
+                 bf_vector);
         column_names.emplace_back(std::move(generated));
 
         for (auto &[orbital, comp] : contributions) {
@@ -196,29 +178,24 @@ NBOOrbitalComposition::filter(
     return {contr, column_names};
 }
 
-
 std::optional<boost::fusion::vector<int, std::string, std::string, std::string, double>>
 NBOOrbitalComposition::parseLine(const std::string &line) {
-
     using namespace boost::spirit::qi;
     static const auto line_parser =
-            copy(omit[int_] >> int_ >> '(' >> as_string[lexeme[+alpha]] >> ')'
-                            >> omit[lexeme[+(char_ - ascii::space)]] >> lexeme[+alpha]
-                            >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')' >> double_ >> '%');
+        copy(omit[int_] >> int_ >> '(' >> as_string[lexeme[+alpha]] >> ')' >> omit[lexeme[+(char_ - ascii::space)]] >>
+             lexeme[+alpha] >> '(' >> as_string[lexeme[+(char_ - ')')]][trim(_1)] >> ')' >> double_ >> '%');
 
     boost::fusion::vector<int, std::string, std::string, std::string, double> attribute;
     if (auto it = std::begin(line);
-            phrase_parse(it, std::end(line), line_parser, ascii::space, attribute) and it == std::end(line)) {
+        phrase_parse(it, std::end(line), line_parser, ascii::space, attribute) and it == std::end(line)) {
         return attribute;
     }
     return {};
 }
 
-void NBOOrbitalComposition::print_contributions(
-        std::string_view descriptions,
-        std::map<int, std::vector<double>, std::greater<>> &contributions,
-        const std::vector<std::string> &column_names) {
-
+void NBOOrbitalComposition::print_contributions(std::string_view descriptions,
+                                                std::map<int, std::vector<double>, std::greater<>> &contributions,
+                                                const std::vector<std::string> &column_names) {
     std::cout << "NAO contributions <percentage(%)> for " << descriptions << " orbital\n";
     std::cout << std::setw(10) << "orbital" << std::setw(5) << "n";
 
@@ -228,7 +205,7 @@ void NBOOrbitalComposition::print_contributions(
     std::cout << '\n' << std::setprecision(6) << std::fixed;
 
     int current_shift{};
-    for (auto[orbital, contribution] : contributions) {
+    for (auto [orbital, contribution] : contributions) {
         std::cout << std::setw(10) << orbital << std::setw(5) << current_shift--;
         for (auto val : contribution) {
             std::cout << std::setw(15) << val;
@@ -239,7 +216,6 @@ void NBOOrbitalComposition::print_contributions(
 
 std::map<int, std::vector<NBOOrbitalComposition::AtomComposition>, std::greater<>>
 NBOOrbitalComposition::read_contributions(std::istream &is, int orbital_number) {
-
     std::map<int, std::vector<AtomComposition>, std::greater<>> contributions;
     std::string line;
     while (std::getline(is, line)) {
@@ -247,11 +223,9 @@ NBOOrbitalComposition::read_contributions(std::istream &is, int orbital_number) 
             while (std::getline(is, line) and !boost::contains(line, "Summing up the compositions listed above:")) {
                 if (auto attribute = parseLine(line); attribute.has_value()) {
                     contributions[orbital_number].emplace_back(
-                            AtomComposition{boost::fusion::at_c<0>(*attribute),
-                                            boost::fusion::at_c<1>(*attribute),
-                                            boost::fusion::at_c<2>(*attribute),
-                                            boost::fusion::at_c<3>(*attribute),
-                                            boost::fusion::at_c<4>(*attribute)});
+                        AtomComposition{boost::fusion::at_c<0>(*attribute), boost::fusion::at_c<1>(*attribute),
+                                        boost::fusion::at_c<2>(*attribute), boost::fusion::at_c<3>(*attribute),
+                                        boost::fusion::at_c<4>(*attribute)});
                 }
             }
             if (--orbital_number == 0) break;
@@ -259,7 +233,3 @@ NBOOrbitalComposition::read_contributions(std::istream &is, int orbital_number) 
     }
     return contributions;
 }
-
-
-
-

@@ -1,23 +1,22 @@
 
-#include <boost/range/algorithm.hpp>
 #include "AngleWat.hpp"
+
+#include <boost/range/algorithm.hpp>
+
 #include "data_structure/frame.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
-AngleWat::AngleWat() {
-    enable_outfile = true;
-}
+AngleWat::AngleWat() { enable_outfile = true; }
 
 void AngleWat::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-                        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
-                        if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
+        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+        if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
+    });
     for (auto &vec1_atom1 : group2) {
-        for (auto &vec1_atom2: group3) {
+        for (auto &vec1_atom2 : group3) {
             if (vec1_atom1->molecule.lock() == vec1_atom2->molecule.lock()) {
                 pairs.emplace_back(vec1_atom1, vec1_atom2);
             }
@@ -26,9 +25,7 @@ void AngleWat::processFirstFrame(std::shared_ptr<Frame> &frame) {
 }
 
 void AngleWat::process(std::shared_ptr<Frame> &frame) {
-
     for (auto &[vec1_atom1, vec1_atom2] : pairs) {
-
         double xr = vec1_atom2->x - vec1_atom1->x;
         double yr = vec1_atom2->y - vec1_atom1->y;
         double zr = vec1_atom2->z - vec1_atom1->z;
@@ -38,7 +35,6 @@ void AngleWat::process(std::shared_ptr<Frame> &frame) {
         double leng1 = sqrt(xr * xr + yr * yr + zr * zr);
 
         for (auto &atom3 : group1) {
-
             double xr2 = vec1_atom1->x - atom3->x;
             double yr2 = vec1_atom1->y - atom3->y;
             double zr2 = vec1_atom1->z - atom3->z;
@@ -48,7 +44,6 @@ void AngleWat::process(std::shared_ptr<Frame> &frame) {
             double distance = sqrt(xr2 * xr2 + yr2 * yr2 + zr2 * zr2);
 
             if (cutoff1 <= distance and distance < cutoff2) {
-
                 double _cos = (xr * xr2 + yr * yr2 + zr * zr2) / (distance * leng1);
 
                 double angle = acos(_cos) * radian;
@@ -111,5 +106,3 @@ void AngleWat::printData(std::ostream &os) const {
         os << format("%15.3f %15.3f\n", (i_angle - 0.5) * angle_width, 100 * (hist.at(i_angle) / total) / angle_width);
     }
 }
-
-

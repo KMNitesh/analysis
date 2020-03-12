@@ -2,19 +2,19 @@
 // Created by xiamr on 8/19/19.
 //
 
-#include <tbb/tbb.h>
-#include <boost/range/algorithm.hpp>
 #include "RamanSpectrum.hpp"
-#include "utils/common.hpp"
-#include "data_structure/atom.hpp"
-#include "ana_module/IRSpectrum.hpp"
 
-RamanSpectrum::RamanSpectrum() {
-    enable_tbb = true;
-}
+#include <tbb/tbb.h>
+
+#include <boost/range/algorithm.hpp>
+
+#include "ana_module/IRSpectrum.hpp"
+#include "data_structure/atom.hpp"
+#include "utils/common.hpp"
+
+RamanSpectrum::RamanSpectrum() { enable_tbb = true; }
 
 void RamanSpectrum::calculateSpectrum(const std::string &out) {
-
     auto time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.001 ps] :", Default(0.001));
     std::string file = choose_file("Enter Polarizable Tensor Evolution Data File : ").isExist(true);
 
@@ -53,7 +53,6 @@ void RamanSpectrum::calculateSpectrum(const std::string &out) {
                          [&acf, &polarTensor] { acf[1] = IRSpectrum::calculateAcf(polarTensor[1]); },
                          [&acf, &polarTensor] { acf[2] = IRSpectrum::calculateAcf(polarTensor[2]); });
 
-
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
     os << "# time_increment_ps > " << time_increment_ps << '\n';
@@ -62,12 +61,11 @@ void RamanSpectrum::calculateSpectrum(const std::string &out) {
     os << boost::format("%15s %15s %15s %15s\n") % "Time(ps)" % "ACF(Pxx)" % "ACF(Pyy)" % "ACF(Pzz)";
 
     for (std::size_t i = 0; i < acf[0].size(); ++i) {
-        os << boost::format("%15.4f %15.5f %15.5f %15.5f\n")
-              % (time_increment_ps * i) % acf[0][i] % acf[1][i] % acf[2][i];
+        os << boost::format("%15.4f %15.5f %15.5f %15.5f\n") % (time_increment_ps * i) % acf[0][i] % acf[1][i] %
+                  acf[2][i];
     }
 
     os << std::string(50, '#') << '\n';
-
 
     std::array<std::vector<double>, 3> intense;
 
@@ -75,13 +73,11 @@ void RamanSpectrum::calculateSpectrum(const std::string &out) {
         intense[i] = IRSpectrum::calculateIntense(acf[i], time_increment_ps);
     }
 
-
-    os << boost::format("%15s %15s %15s %15s\n")
-          % "Frequency (cm-1)" % "Intensity(Pxx)" % "Intensity(Pyy)" % "Intensity(Pzz)";
+    os << boost::format("%15s %15s %15s %15s\n") % "Frequency (cm-1)" % "Intensity(Pxx)" % "Intensity(Pyy)" %
+              "Intensity(Pzz)";
 
     for (std::size_t i = 0; i < intense[0].size(); ++i) {
-        os << boost::format("%15.3f %15.5f %15.5f %15.5f\n")
-              % (i + 1) % intense[0][i] % intense[1][i] % intense[2][i];
+        os << boost::format("%15.3f %15.5f %15.5f %15.5f\n") % (i + 1) % intense[0][i] % intense[1][i] % intense[2][i];
     }
 
     os << std::string(50, '#') << '\n';

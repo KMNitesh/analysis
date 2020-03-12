@@ -2,14 +2,16 @@
 // Created by xiamr on 8/13/19.
 //
 
+#include "IRSpectrumElectricalFlux.hpp"
+
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>
-#include "IRSpectrumElectricalFlux.hpp"
-#include "utils/common.hpp"
-#include "data_structure/frame.hpp"
-#include "VelocityAutocorrelationFunction.hpp"
+
 #include "IRSpectrum.hpp"
+#include "VelocityAutocorrelationFunction.hpp"
+#include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/common.hpp"
 
 IRSpectrumElectricalFlux::IRSpectrumElectricalFlux() {
     enable_outfile = true;
@@ -61,7 +63,6 @@ void IRSpectrumElectricalFlux::print(std::ostream &os) {
     }
 
     os << std::string(50, '#') << '\n';
-
 }
 
 void IRSpectrumElectricalFlux::readInfo() {
@@ -70,10 +71,9 @@ void IRSpectrumElectricalFlux::readInfo() {
 }
 
 void IRSpectrumElectricalFlux::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list,
-                    [this](std::shared_ptr<Atom> &atom) {
-                        if (Atom::is_match(atom, selected_mols_mask)) {
-                            selected_mols.insert(atom->molecule.lock());
-                        }
-                    });
+    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, selected_mols_mask)) {
+            selected_mols.insert(atom->molecule.lock());
+        }
+    });
 }

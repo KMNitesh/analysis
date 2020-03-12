@@ -5,12 +5,13 @@
 #ifndef TINKER_FINDMINBETWEENTWOGROUPS_HPP
 #define TINKER_FINDMINBETWEENTWOGROUPS_HPP
 
-#include <memory>
-#include <unordered_set>
-#include <string>
-#include <map>
 #include <list>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_set>
 #include <utility>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 
@@ -19,7 +20,6 @@ class Molecule;
 
 class FindMinBetweenTwoGroups : public AbstractAnalysis {
 public:
-
     FindMinBetweenTwoGroups();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -33,7 +33,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Find Min distance between two groups"; }
 
 private:
-
     Atom::AmberMask amberMask;
 
     int total_frames = 0;
@@ -43,4 +42,4 @@ private:
     std::list<std::vector<double>> results;
 };
 
-#endif //TINKER_FINDMINBETWEENTWOGROUPS_HPP
+#endif  // TINKER_FINDMINBETWEENTWOGROUPS_HPP

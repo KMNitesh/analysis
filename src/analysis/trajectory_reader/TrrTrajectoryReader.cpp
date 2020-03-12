@@ -1,8 +1,9 @@
 
-#include "utils/common.hpp"
+#include "TrrTrajectoryReader.hpp"
+
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
-#include "TrrTrajectoryReader.hpp"
+#include "utils/common.hpp"
 
 namespace gmx {
 
@@ -64,7 +65,6 @@ bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
         }
     }
     return false;
-
 }
 
 void TrrTrajectoryReader::close() {
@@ -74,7 +74,4 @@ void TrrTrajectoryReader::close() {
     }
 }
 
-
-TrrTrajectoryReader::~TrrTrajectoryReader() {
-    TrrTrajectoryReader::close();
-}
+TrrTrajectoryReader::~TrrTrajectoryReader() { TrrTrajectoryReader::close(); }

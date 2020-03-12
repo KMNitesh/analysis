@@ -1,16 +1,16 @@
 #ifndef TINKER_TRAJECTORYINTERFACE_HPP
 #define TINKER_TRAJECTORYINTERFACE_HPP
 
-#include <fstream>
 #include <filesystem>
-#include "data_structure/frame.hpp"
+#include <fstream>
+
 #include "TopologyInterface.hpp"
-#include "utils/common.hpp"
 #include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 #include "topology_utils.hpp"
+#include "utils/common.hpp"
 
 class TrajectoryInterface {
-
 public:
     virtual bool open(const std::string &file) = 0;
 
@@ -26,4 +26,4 @@ protected:
     static void apply_box(std::shared_ptr<Frame> &frame);
 };
 
-#endif //TINKER_TRAJECTORYINTERFACE_HPP
+#endif  // TINKER_TRAJECTORYINTERFACE_HPP

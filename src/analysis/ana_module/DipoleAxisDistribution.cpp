@@ -3,6 +3,7 @@
 //
 
 #include "DipoleAxisDistribution.hpp"
+
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/common.hpp"
@@ -13,14 +14,13 @@ DipoleAxisDistribution::DipoleAxisDistribution() {
 }
 
 void DipoleAxisDistribution::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    std::for_each(frame->atom_list.begin(), frame->atom_list.end(),
-                  [this](std::shared_ptr<Atom> &atom) {
-                      if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
-                  });
+    std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
+        if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
+    });
 }
 
 void DipoleAxisDistribution::process(std::shared_ptr<Frame> &frame) {
-    for (auto &mol: group) {
+    for (auto &mol : group) {
         auto dipole = mol->calc_dipole(frame);
         dipole /= vector_norm(dipole);
         auto angle = acos(dot_multiplication(dipole, axis_vector)) * radian;
@@ -33,11 +33,7 @@ void DipoleAxisDistribution::print(std::ostream &os) {
     os << "# " << title() << '\n';
     os << "# Group > " << ids << '\n';
     os << "# angle_width(degree) > " << hist.getWidth() << '\n';
-    const std::unordered_map<int, std::string> mapping{
-            {1, "X-Axis"},
-            {2, "Y-Axis"},
-            {3, "Z-Axis"}
-    };
+    const std::unordered_map<int, std::string> mapping{{1, "X-Axis"}, {2, "Y-Axis"}, {3, "Z-Axis"}};
     os << "# " << mapping.at(axis_num) << '\n';
     os << std::string(50, '#') << '\n';
     os << format("#%15s %15s\n", "Angle(degree)", "Probability Density(% degree-1)");
@@ -62,10 +58,7 @@ void DipoleAxisDistribution::readInfo() {
     };
 
     const std::unordered_map<int, std::tuple<double, double, double>> mapping{
-            {1, xaxis_vector},
-            {2, yaxis_vector},
-            {3, zaxis_vector}
-    };
+        {1, xaxis_vector}, {2, yaxis_vector}, {3, zaxis_vector}};
     axis_num = menu();
     axis_vector = mapping.at(axis_num);
     hist.initialize(angle_max, angle_width);
@@ -73,7 +66,7 @@ void DipoleAxisDistribution::readInfo() {
 
 void DipoleAxisDistribution::printData(std::ostream &os) const {
     const boost::format fmt("%15.3f %15.3f\n");
-    for (auto[grid, value] : hist.getDistribution()) {
+    for (auto [grid, value] : hist.getDistribution()) {
         os << boost::format(fmt) % grid % (100 * value);
     }
 }

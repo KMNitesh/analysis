@@ -1,10 +1,11 @@
-#include <boost/spirit/include/qi.hpp>
 #include "ITS_Reweight.hpp"
-#include "utils/common.hpp"
+
+#include <boost/spirit/include/qi.hpp>
+
 #include "dsl/Interpreter.hpp"
+#include "utils/common.hpp"
 
 void ITS_Reweight::process() {
-
     std::string fb_filename = choose_file("Enter fb.dat file > ").isExist(true).extension("dat");
     std::ifstream fb_ifs(fb_filename);
     if (!fb_ifs) {
@@ -28,13 +29,13 @@ void ITS_Reweight::process() {
         exit(EXIT_FAILURE);
     }
 
-    auto[ok, fb_data] = read_fb(fb_ifs);
+    auto [ok, fb_data] = read_fb(fb_ifs);
     if (!ok) {
         std::cerr << "ERROR! the fb file is ill-formed !\n";
         exit(EXIT_FAILURE);
     }
 
-    auto[is_ok, pot_data] = read_pot(pot_ifs);
+    auto [is_ok, pot_data] = read_pot(pot_ifs);
     if (!is_ok) {
         std::cerr << "ERROR! the pot file is ill-formed !\n";
         exit(EXIT_FAILURE);
@@ -62,7 +63,7 @@ void ITS_Reweight::process() {
 
     double gfsum;
     auto it = std::begin(fb_data);
-    for (auto[time, v] : pot_data) {
+    for (auto [time, v] : pot_data) {
         while (std::abs(boost::fusion::at_c<0>(*it) * integrate_step - time) > std::numeric_limits<double>::epsilon()) {
             ++it;
         }
@@ -82,16 +83,12 @@ void ITS_Reweight::process() {
 
         auto factor = std::exp(-beta0 * v - gfsum);
 
-        factor_os << std::setw(10) << std::fixed << time
-                  << std::setw(10) << v
-                  << std::setw(15) << std::scientific << factor
-                  << '\n';
+        factor_os << std::setw(10) << std::fixed << time << std::setw(10) << v << std::setw(15) << std::scientific
+                  << factor << '\n';
     }
-
 }
 
 std::pair<bool, std::vector<boost::fusion::vector<int, std::vector<double>>>> ITS_Reweight::read_fb(std::istream &is) {
-
     is.unsetf(std::ios::skipws);
     std::vector<boost::fusion::vector<int, std::vector<double>>> fb_data;
 
@@ -108,17 +105,15 @@ std::pair<bool, std::vector<boost::fusion::vector<int, std::vector<double>>>> IT
 }
 
 std::pair<bool, std::vector<std::pair<double, double>>> ITS_Reweight::read_pot(std::istream &is) {
-
     is.unsetf(std::ios::skipws);
     std::vector<std::pair<double, double>> sequences;
 
     using namespace boost::spirit::qi;
     using namespace boost::phoenix;
 
-
     qi::rule<boost::spirit::istream_iterator, std::pair<double, double>(),
-            decltype(SkipperGrammar<boost::spirit::istream_iterator>() - eol)>
-            item = (double_ >> double_)[_val = construct<std::pair<double, double>>(_1, _2)];
+             decltype(SkipperGrammar<boost::spirit::istream_iterator>() - eol)>
+        item = (double_ >> double_)[_val = construct<std::pair<double, double>>(_1, _2)];
 
     auto parser = copy((item % eol) >> *eol);
 

@@ -2,29 +2,29 @@
 // Created by xiamr on 7/4/19.
 //
 
-#include <iostream>
 #include "NormalVectorSelector.hpp"
-#include "utils/ThrowAssert.hpp"
+
+#include <iostream>
+
 #include "data_structure/frame.hpp"
-#include "utils/common.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/ThrowAssert.hpp"
+#include "utils/common.hpp"
 
 using namespace std;
 
-std::vector<std::tuple<double, double, double>>
-NormalVectorSelector::calculateVectors(const std::shared_ptr<Frame> &frame) {
+std::vector<std::tuple<double, double, double>> NormalVectorSelector::calculateVectors(
+    const std::shared_ptr<Frame> &frame) {
     std::vector<std::tuple<double, double, double>> vectors;
     for (auto &pair : pairs) {
         vectors.push_back(calVector(pair, frame));
     }
     return vectors;
-
 }
 
 std::tuple<double, double, double> NormalVectorSelector::calVector(
-        const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
-        const std::shared_ptr<Frame> &frame) {
-
+    const std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>> &atoms,
+    const std::shared_ptr<Frame> &frame) {
     auto &[atom_i, atom_j, atom_k] = atoms;
 
     auto u = atom_i->getCoordinate() - atom_j->getCoordinate();
@@ -39,7 +39,6 @@ std::tuple<double, double, double> NormalVectorSelector::calVector(
 
     return n;
 }
-
 
 void NormalVectorSelector::readInfo() {
     std::cout << "# " << title() << " #\n";
@@ -77,8 +76,8 @@ int NormalVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
     return pairs.size();
 }
 
-tuple<double, double, double>
-NormalVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol, const std::shared_ptr<Frame> &frame) {
+tuple<double, double, double> NormalVectorSelector::calculateVector(const std::shared_ptr<Molecule> &mol,
+                                                                    const std::shared_ptr<Frame> &frame) {
     shared_ptr<Atom> atom1, atom2, atom3;
     for (auto &atom : mol->atom_list) {
         if (Atom::is_match(atom, ids1)) {

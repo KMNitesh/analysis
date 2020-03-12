@@ -1,8 +1,9 @@
 
 #include "xtc_writer.hpp"
-#include "data_structure/frame.hpp"
-#include "data_structure/atom.hpp"
+
 #include "ThrowAssert.hpp"
+#include "data_structure/atom.hpp"
+#include "data_structure/frame.hpp"
 
 void XTCWriter::open(const std::string &filename) {
     // First Time
@@ -12,7 +13,6 @@ void XTCWriter::open(const std::string &filename) {
     step = 0;
     time = 0.0;
     prec = 1000.0;
-
 }
 
 void XTCWriter::write(const std::shared_ptr<Frame> &frame) {

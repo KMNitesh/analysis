@@ -5,13 +5,12 @@
 #ifndef TINKER_DYNFRAMEFIND_HPP
 #define TINKER_DYNFRAMEFIND_HPP
 
-#include "utils/common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "TinkerDynReader.hpp"
+#include "utils/common.hpp"
 
 class DynFrameFind : public AbstractAnalysis {
 public:
-
     void process(std::shared_ptr<Frame> &frame) override;
 
     void print(std::ostream &os) override;
@@ -21,7 +20,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Find Frame Index base on Atomic Position of dyn file"; }
 
 protected:
-
     std::shared_ptr<TinkerDynReader> reader;
     double eps;
 
@@ -29,5 +27,4 @@ protected:
     std::list<int> matched_frames;
 };
 
-
-#endif //TINKER_DYNFRAMEFIND_HPP
+#endif  // TINKER_DYNFRAMEFIND_HPP

@@ -2,15 +2,17 @@
 // Created by xiamr on 9/9/19.
 //
 
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
+#include "RadiusOfGyration.hpp"
+
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
-#include "RadiusOfGyration.hpp"
-#include "utils/common.hpp"
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+
+#include "HBond.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
-#include "HBond.hpp"
+#include "utils/common.hpp"
 
 RadiusOfGyration::RadiusOfGyration() {
     enable_outfile = true;
@@ -28,7 +30,6 @@ void RadiusOfGyration::processFirstFrame(std::shared_ptr<Frame> &frame) {
 }
 
 void RadiusOfGyration::process(std::shared_ptr<Frame> &frame) {
-
     using namespace boost::accumulators;
     accumulator_set<double, features<tag::mean, tag::variance>> acc;
 

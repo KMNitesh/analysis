@@ -6,12 +6,12 @@
 #include "TrajectoryInterface.hpp"
 
 class GroTrajectoryReader : public TrajectoryInterface {
-   public:
+public:
     bool open(const std::string &file) override;
 
     void close() override;
 
-   protected:
+protected:
     bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
 
     std::ifstream ifs;

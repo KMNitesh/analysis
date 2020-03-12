@@ -1,13 +1,15 @@
-#include "PrmtopParser.hpp"
-#include "trajectory_reader/PrmtopGrammar.hpp"
+
 #include "utils/common.hpp"
-#include <boost/spirit/include/support_line_pos_iterator.hpp>
-#include <boost/spirit/repository/include/qi_iter_pos.hpp>
+#include "trajectory_reader/PrmtopGrammar.hpp"
+
 #include <printf.h>
+
+#include <boost/spirit/repository/include/qi_iter_pos.hpp>
+#include <boost/spirit/include/support_line_pos_iterator.hpp>
+#include "PrmtopParser.hpp"
 
 
 boost::optional<PrmtopStruct> PrmtopParser::parse(std::istream &is) {
-
     std::string content{std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>()};
     using namespace boost::spirit;
     PrmtopGrammar<line_pos_iterator<std::string::iterator>, decltype(ascii::space - qi::eol)> parser;
@@ -28,5 +30,3 @@ boost::optional<PrmtopStruct> PrmtopParser::parse(std::istream &is) {
     }
     return {};
 }
-
-

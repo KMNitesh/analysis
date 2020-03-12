@@ -5,9 +5,10 @@
 #ifndef TINKER_PLANEANGLE_HPP
 #define TINKER_PLANEANGLE_HPP
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 
@@ -15,7 +16,6 @@ class Frame;
 
 class PlaneAngle : public AbstractAnalysis {
 public:
-
     PlaneAngle();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -29,7 +29,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "Plane Angle Distribution with cutoff"; }
 
 protected:
-
     AmberMask mask1, mask2, mask3, mask4;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3, group4;
@@ -49,5 +48,4 @@ protected:
     void saveJson(std::ostream &os) const;
 };
 
-
-#endif //TINKER_PLANEANGLE_HPP
+#endif  // TINKER_PLANEANGLE_HPP

@@ -107,4 +107,3 @@ double Distance2Plane::dis_pt2panel(Point pt, std::tuple<double, double, double,
     auto &[a, b, c, d] = parameter;
     return std::abs(a * pt.x + b * pt.y + c * pt.z + d) / std::sqrt(a * a + b * b + c * c);
 }
-

@@ -5,19 +5,17 @@
 #ifndef TINKER_DIFFUSE_HPP
 #define TINKER_DIFFUSE_HPP
 
-#include "utils/std.hpp"
-
 #include <Eigen/Eigen>
 
-#include "utils/common.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/common.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class Diffuse : public AbstractAnalysis {
 public:
-
     Diffuse();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -30,15 +28,14 @@ public:
 
     [[nodiscard]] std::string description() override;
 
-    void
-    setParameters(const AmberMask &mask, double time_increment_ps, int total_frames, const std::string &outfilename);
+    void setParameters(const AmberMask &mask, double time_increment_ps, int total_frames,
+                       const std::string &outfilename);
 
     [[nodiscard]] static std::string_view title() {
         return "Self-Diffusion Coefficient Calculation based on Einstein Equation";
     }
 
 private:
-
     AmberMask mask;
 
     std::set<std::shared_ptr<Molecule>> mols;
@@ -48,8 +45,6 @@ private:
     double time_increment_ps = 0.1;
 
     Eigen::Matrix<std::tuple<double, double, double>, Eigen::Dynamic, Eigen::Dynamic> xyzcm;
-
 };
 
-
-#endif //TINKER_DIFFUSE_HPP
+#endif  // TINKER_DIFFUSE_HPP

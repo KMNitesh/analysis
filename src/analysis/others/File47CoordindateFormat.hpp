@@ -8,8 +8,6 @@ public:
     [[nodiscard]] static std::string_view title() { return "File .47 Coordinate Format"; }
 
     static void process();
-
 };
 
-
-#endif //TINKER_FILE47COORDINDATEFORMAT_HPP
+#endif  // TINKER_FILE47COORDINDATEFORMAT_HPP

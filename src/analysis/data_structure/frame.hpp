@@ -24,7 +24,7 @@ class Molecule;
 class Frame : public std::enable_shared_from_this<Frame> {
     std::optional<float> current_time;
 
-   public:
+public:
     const std::optional<float> &getCurrentTime() const { return current_time; }
 
     void setCurrentTime(const std::optional<float> &currentTime) { current_time = currentTime; }

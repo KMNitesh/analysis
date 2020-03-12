@@ -3,6 +3,7 @@
 //
 
 #include "DipoleAngleSingleDistanceNormal.hpp"
+
 #include "utils/common.hpp"
 
 void DipoleAngleSingleDistanceNormal::print(std::ostream &os) {
@@ -16,10 +17,9 @@ void DipoleAngleSingleDistanceNormal::print(std::ostream &os) {
         }
         double dv = factor * (pow(i_distance * distance_width, 3) - pow((i_distance - 1) * distance_width, 3));
         for (int i_angle = 1; i_angle <= angle_bins; i_angle++) {
-            os << boost::format(fmt)
-                  % ((i_distance - 0.5) * distance_width)
-                  % ((i_angle - 0.5) * angle_width)
-                  % (total == 0 ? 0.0 : double(hist[std::make_pair(i_distance, i_angle)]) / (total * dv * angle_width));
+            os << boost::format(fmt) % ((i_distance - 0.5) * distance_width) % ((i_angle - 0.5) * angle_width) %
+                      (total == 0 ? 0.0
+                                  : double(hist[std::make_pair(i_distance, i_angle)]) / (total * dv * angle_width));
         }
     }
 }

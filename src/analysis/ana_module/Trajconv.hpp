@@ -5,13 +5,13 @@
 #ifndef TINKER_TRAJCONV_HPP
 #define TINKER_TRAJCONV_HPP
 
+#include <data_structure/atom.hpp>
 #include <memory>
 #include <string>
-#include <data_structure/atom.hpp>
 
 #include "ana_module/AbstractAnalysis.hpp"
-#include "utils/TrajectoryWriterFactoryImpl.hpp"
 #include "utils/TrajectoryFormatWriter.hpp"
+#include "utils/TrajectoryWriterFactoryImpl.hpp"
 
 class PBCUtils;
 
@@ -19,7 +19,6 @@ class Frame;
 
 class Trajconv : public AbstractAnalysis {
 public:
-
     void processFirstFrame(std::shared_ptr<Frame> &) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -30,29 +29,18 @@ public:
 
     void readInfo() override;
 
-    static const std::string title() {
-        return "Gromacs XTC & TRR & GRO & NetCDF & ARC Output";
-    }
+    static const std::string title() { return "Gromacs XTC & TRR & GRO & NetCDF & ARC Output"; }
 
-    explicit Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory
-    = std::make_shared<TrajectoryWriterFactoryImpl>());
+    explicit Trajconv(
+        std::shared_ptr<TrajectoryWriterFactoryInterface> factory = std::make_shared<TrajectoryWriterFactoryImpl>());
 
     void fastConvertTo(std::string target) noexcept(false);
 
-    enum class PBCType {
-        None,
-        OneAtom,
-        OneMol,
-        AtomGroup,
-        AllIntoBox
-    };
+    enum class PBCType { None, OneAtom, OneMol, AtomGroup, AllIntoBox };
 
-    const auto &getWriters() const {
-        return writers;
-    }
+    const auto &getWriters() const { return writers; }
 
 private:
-
     PBCType pbc_type;
 
     int step = 0;
@@ -62,12 +50,11 @@ private:
     std::vector<std::pair<std::string, std::shared_ptr<TrajectoryFormatWriter>>> writers;
 
     std::shared_ptr<PBCUtils> pbc_utils;
+
 protected:
     void selectPBCMode();
 
     void inputOutputFiles(std::istream &in = std::cin, std::ostream &out = std::cout);
-
-
 };
 
-#endif //TINKER_TRAJCONV_HPP
+#endif  // TINKER_TRAJCONV_HPP

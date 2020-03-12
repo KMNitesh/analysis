@@ -11,5 +11,4 @@ public:
     [[nodiscard]] static std::shared_ptr<TrajectoryInterface> getTrajectory(const std::string &filename);
 };
 
-
-#endif //TINKER_READERFACTORY_HPP
+#endif  // TINKER_READERFACTORY_HPP

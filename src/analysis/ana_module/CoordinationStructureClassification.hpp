@@ -5,16 +5,15 @@
 #ifndef TINKER_COORDINATIONSTRUCTURECLASSIFICATION_HPP
 #define TINKER_COORDINATIONSTRUCTURECLASSIFICATION_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
-#include "data_structure/atom.hpp"
 #include "Cluster.hpp"
+#include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class CoordinationStructureClassification : public AbstractAnalysis {
 public:
-
     CoordinationStructureClassification();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -31,14 +30,13 @@ public:
                                                           std::vector<std::tuple<double, double, double>> &c2);
 
 protected:
-
     static std::pair<int, int> find_min_distance_pair(std::vector<std::tuple<double, double, double>> &c);
 
     static void fill_coord(double x[], double y[], double z[], int index1, int index2,
                            std::vector<std::tuple<double, double, double>> &c);
 
-    static void permutation(double x1[], double y1[], double z1[],
-                            double x2[], double y2[], double z2[], int start, int end/*not included*/);
+    static void permutation(double x1[], double y1[], double z1[], double x2[], double y2[], double z2[], int start,
+                            int end /*not included*/);
 
     [[nodiscard]] std::map<int, std::list<Cluster::rmsd_matrix>> do_calculate_rmsd_list_parallel();
 
@@ -55,8 +53,6 @@ protected:
     std::unordered_map<int, int> frame_cn_mapping;
 
     bool output_rms_matrix = false;
-
 };
 
-
-#endif //TINKER_COORDINATIONSTRUCTURECLASSIFICATION_HPP
+#endif  // TINKER_COORDINATIONSTRUCTURECLASSIFICATION_HPP

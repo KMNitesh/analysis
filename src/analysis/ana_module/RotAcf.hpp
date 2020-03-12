@@ -15,7 +15,6 @@ class Molecule;
 
 class RotAcf : public AbstractAnalysis {
 public:
-
     explicit RotAcf();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -28,14 +27,13 @@ public:
 
     void readInfo() override;
 
-    void setParameters(const std::shared_ptr<VectorSelector> &vector, int LegendrePolynomial,
-                       double time_increment_ps, double max_time_grap_ps, const std::string &outfilename);
+    void setParameters(const std::shared_ptr<VectorSelector> &vector, int LegendrePolynomial, double time_increment_ps,
+                       double max_time_grap_ps, const std::string &outfilename);
 
     [[nodiscard]] static std::string_view title() { return "Rotational Autocorrelation Function"; }
 
 protected:
-
-    template<typename Function>
+    template <typename Function>
     [[nodiscard]] std::vector<double> calculate(Function f) const;
 
     [[nodiscard]] std::vector<double> integrate(const std::vector<double> &acf) const;
@@ -51,5 +49,4 @@ protected:
     double max_time_grap;
 };
 
-
-#endif //TINKER_ROTACF_HPP
+#endif  // TINKER_ROTACF_HPP

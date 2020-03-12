@@ -8,5 +8,4 @@ public:
     std::shared_ptr<Frame> read(const std::string &filename) override;
 };
 
-
-#endif //TINKER_MOL2READER_HPP
+#endif  // TINKER_MOL2READER_HPP

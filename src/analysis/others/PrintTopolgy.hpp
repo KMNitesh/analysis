@@ -7,13 +7,11 @@
 
 #include <string>
 
-
 class PrintTopolgy {
 public:
-
     static void action(const std::string &topology_filename);
 
     [[nodiscard]] static std::string_view title() { return "Print Selected Atoms in Topolgoy File"; }
 };
 
-#endif //TINKER_PRINTTOPOLGY_HPP
+#endif  // TINKER_PRINTTOPOLGY_HPP

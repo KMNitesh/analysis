@@ -1,13 +1,15 @@
 
 
+#include "Mol2Reader.hpp"
+
 #include <boost/algorithm/string_regex.hpp>
 #include <boost/lexical_cast.hpp>
+
 #include "data_structure/atom.hpp"
-#include "data_structure/molecule.hpp"
 #include "data_structure/frame.hpp"
-#include "utils/common.hpp"
-#include "Mol2Reader.hpp"
+#include "data_structure/molecule.hpp"
 #include "topology_utils.hpp"
+#include "utils/common.hpp"
 
 std::shared_ptr<Frame> Mol2Reader::read(const std::string &filename) {
     std::string line;
@@ -15,9 +17,7 @@ std::shared_ptr<Frame> Mol2Reader::read(const std::string &filename) {
 
     std::ifstream position_file(filename);
 
-    enum class State {
-        NONE, MOLECULE, ATOM, BOND, SUBSTRUCTURE
-    } state;
+    enum class State { NONE, MOLECULE, ATOM, BOND, SUBSTRUCTURE } state;
     state = State::NONE;
     auto whitespace_regex = boost::regex("\\s+");
 
@@ -60,8 +60,7 @@ std::shared_ptr<Frame> Mol2Reader::read(const std::string &filename) {
                     atom->x = boost::lexical_cast<double>(fields[2]);
                     atom->y = boost::lexical_cast<double>(fields[3]);
                     atom->z = boost::lexical_cast<double>(fields[4]);
-                }
-                    break;
+                } break;
                 case State::BOND: {
                     boost::regex_split(std::back_inserter(fields), line, whitespace_regex);
                     int atom_num1 = boost::lexical_cast<int>(fields[1]);
@@ -72,8 +71,7 @@ std::shared_ptr<Frame> Mol2Reader::read(const std::string &filename) {
 
                     atom1->con_list.push_back(atom_num2);
                     atom2->con_list.push_back(atom_num1);
-                }
-                    break;
+                } break;
                 case State::SUBSTRUCTURE:
                     break_loop = true;
                     break;

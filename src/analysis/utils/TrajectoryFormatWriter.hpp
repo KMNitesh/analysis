@@ -5,14 +5,13 @@
 #ifndef TINKER_TRAJECTORYFORMATWRITER_HPP
 #define TINKER_TRAJECTORYFORMATWRITER_HPP
 
-#include <string>
 #include <memory>
+#include <string>
 
 class Frame;
 
 class TrajectoryFormatWriter {
 public:
-
     virtual void open(const std::string &filename) = 0;
 
     virtual void close() = 0;
@@ -22,4 +21,4 @@ public:
     virtual ~TrajectoryFormatWriter() = default;
 };
 
-#endif //TINKER_TRAJECTORYFORMATWRITER_HPP
+#endif  // TINKER_TRAJECTORYFORMATWRITER_HPP

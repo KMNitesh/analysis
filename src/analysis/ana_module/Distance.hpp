@@ -5,17 +5,17 @@
 #ifndef TINKER_DISTANCE_HPP
 #define TINKER_DISTANCE_HPP
 
-#include "utils/std.hpp"
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class Distance : public AbstractAnalysis {
 public:
-
     Distance();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -29,8 +29,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Distance between two groups (mass-weighted)"; }
 
 protected:
-
-    template<typename SinglePassRange>
+    template <typename SinglePassRange>
     [[nodiscard]] static std::tuple<double, double, double> calculate_mass_center(const SinglePassRange &atoms_group);
 
     void saveJson(std::ostream &os) const;
@@ -44,12 +43,8 @@ protected:
     std::unordered_set<std::shared_ptr<Atom>> atoms_for_group2;
 
     boost::accumulators::accumulator_set<
-            double,
-            boost::accumulators::features<
-                    boost::accumulators::tag::mean,
-                    boost::accumulators::tag::variance
-            >
-    > acc;
+        double, boost::accumulators::features<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
+        acc;
 };
 
-#endif //TINKER_DISTANCE_HPP
+#endif  // TINKER_DISTANCE_HPP

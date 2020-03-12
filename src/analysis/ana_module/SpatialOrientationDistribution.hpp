@@ -5,8 +5,9 @@
 #ifndef TINKER_SPATIALORIENTATIONDISTRIBUTION_HPP
 #define TINKER_SPATIALORIENTATIONDISTRIBUTION_HPP
 
-#include <unordered_set>
 #include <deque>
+#include <unordered_set>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 
@@ -16,7 +17,6 @@ class Molecule;
 
 class SpatialOrientationDistribution : public AbstractAnalysis {
 public:
-
     SpatialOrientationDistribution();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -36,7 +36,6 @@ public:
     static double calculateThetaAngle(const std::tuple<double, double, double> &vector);
 
 protected:
-
     Atom::AmberMask ids;
 
     std::unordered_set<std::shared_ptr<Molecule>> group;
@@ -44,5 +43,4 @@ protected:
     std::deque<std::tuple<double, double, double>> normal_vectors;
 };
 
-
-#endif //TINKER_SPATIALORIENTATIONDISTRIBUTION_HPP
+#endif  // TINKER_SPATIALORIENTATIONDISTRIBUTION_HPP

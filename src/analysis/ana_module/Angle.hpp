@@ -8,13 +8,13 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
-#include "utils/std.hpp"
 #include "utils/PBCUtils.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class Angle : public AbstractAnalysis {
-   public:
+public:
     Angle();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -27,7 +27,7 @@ class Angle : public AbstractAnalysis {
 
     [[nodiscard]] static std::string_view title() { return "Angle between two groups (mass-weighted)"; }
 
-   protected:
+protected:
     enum class AxisType { MIN, MAX };
 
     Eigen::Matrix3d calculate_inertia(std::shared_ptr<Frame> &frame,

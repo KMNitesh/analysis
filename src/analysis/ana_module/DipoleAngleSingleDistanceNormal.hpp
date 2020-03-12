@@ -12,7 +12,6 @@ public:
     void print(std::ostream &os) override;
 
     [[nodiscard]] static std::string_view title() { return "Dipole Angle of single distance normal"; };
-
 };
 
-#endif //TINKER_DIPOLEANGLESINGLEDISTANCENORMAL_HPP
+#endif  // TINKER_DIPOLEANGLESINGLEDISTANCENORMAL_HPP

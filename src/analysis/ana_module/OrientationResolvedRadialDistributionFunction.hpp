@@ -5,17 +5,17 @@
 #ifndef TINKER_ORIENTATIONRESOLVEDRADIALDISTRIBUTIONFUNCTION_HPP
 #define TINKER_ORIENTATIONRESOLVEDRADIALDISTRIBUTIONFUNCTION_HPP
 
-#include "utils/std.hpp"
 #include <boost/multi_array.hpp>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "utils/VectorSelector.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class OrientationResolvedRadialDistributionFunction : public AbstractAnalysis {
 public:
-
     OrientationResolvedRadialDistributionFunction();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -31,7 +31,6 @@ public:
     }
 
 protected:
-
     AmberMask reference_atom_mask;
     AmberMask water_Ow_atom_mask;
 
@@ -40,13 +39,12 @@ protected:
 
     std::shared_ptr<VectorSelector> vectorSelector;
 
-
     double distance_width;
     double angle_width;
 
     double max_distance;
 
-    boost::multi_array<double,2> hist;
+    boost::multi_array<double, 2> hist;
 
     int distance_bins;
     int angle_bins;
@@ -56,8 +54,6 @@ protected:
     void normalize();
 
     double temperature;  // unit: K
-
 };
 
-
-#endif //TINKER_ORIENTATIONRESOLVEDRADIALDISTRIBUTIONFUNCTION_HPP
+#endif  // TINKER_ORIENTATIONRESOLVEDRADIALDISTRIBUTIONFUNCTION_HPP

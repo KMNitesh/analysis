@@ -5,17 +5,16 @@
 #ifndef TINKER_HBONDLIFETIMECUTOFF_HPP
 #define TINKER_HBONDLIFETIMECUTOFF_HPP
 
-#include "utils/std.hpp"
 #include <boost/container_hash/hash.hpp>
+
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
-
 class HBondLifeTimeCutoff : public AbstractAnalysis {
 public:
-
     HBondLifeTimeCutoff();
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
@@ -36,7 +35,7 @@ public:
         std::deque<int> *list_ptr2 = nullptr;
 
         InnerAtom(int index, std::deque<int> *list_ptr1, std::deque<int> *list_ptr2)
-                : index(index), list_ptr1(list_ptr1), list_ptr2(list_ptr2) {}
+            : index(index), list_ptr1(list_ptr1), list_ptr2(list_ptr2) {}
     };
 
     struct InnerAtomHasher {
@@ -54,9 +53,7 @@ public:
 
     ~HBondLifeTimeCutoff() override;
 
-
 protected:
-
     AmberMask center_Metal_atom_mask;
     AmberMask Ow_atom_mask;
 
@@ -87,5 +84,4 @@ protected:
                    std::shared_ptr<Frame> &frame) const;
 };
 
-
-#endif //TINKER_HBONDLIFETIMECUTOFF_HPP
+#endif  // TINKER_HBONDLIFETIMECUTOFF_HPP

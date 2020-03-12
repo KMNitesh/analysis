@@ -8,13 +8,13 @@ namespace gmx {
 #include "gromacs/math/vectypes.h"
 #include "gromacs/pbcutil/pbc.h"
 
-}
+}  // namespace gmx
 
 class PBCUtils;
 
 class PBCBox {
 public:
- enum class Type { orthogonal, octahedron, other };
+    enum class Type { orthogonal, octahedron, other };
 
     PBCBox() = default;
 
@@ -37,7 +37,6 @@ public:
     Type get_box_type() { return box_type; }
 
 private:
-
     bool numeric_near(double value, double target, double difference = 0.01) const {
         return std::abs(value - target) <= difference;
     }
@@ -54,5 +53,4 @@ private:
     mutable bool dirty = true;
 };
 
-
-#endif //TINKER_PBCBOX_HPP
+#endif  // TINKER_PBCBOX_HPP

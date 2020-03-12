@@ -3,23 +3,23 @@
 //
 
 #include "NBOSpin.hpp"
-#include "utils/common.hpp"
-#include <boost/xpressive/xpressive.hpp>
-#include <boost/xpressive/regex_actions.hpp>
-#include <boost/algorithm/string.hpp>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/xpressive/regex_actions.hpp>
+#include <boost/xpressive/xpressive.hpp>
+
+#include "utils/common.hpp"
 
 double NBOSpin::total_spin(std::string_view line) {
     using namespace boost::xpressive;
     placeholder<double> _result;
     double total = 0.0;
     static cregex rex =
-            bos >> +(*~(set = '(') >> '(' >> *blank >> (+~(set = ')'))[_result += as<double>(_)] >> ')') >> eos;
+        bos >> +(*~(set = '(') >> '(' >> *blank >> (+~(set = ')'))[_result += as<double>(_)] >> ')') >> eos;
     cmatch what;
     what.let(_result = total);
 
-    if (!regex_match(line, what, rex))
-        throw std::runtime_error("Regex not match");
+    if (!regex_match(line, what, rex)) throw std::runtime_error("Regex not match");
     return total;
 }
 
@@ -32,15 +32,14 @@ void NBOSpin::do_process(const std::string &filename) {
 
     std::map<int, std::pair<std::string, std::array<double, 3>>> table = getElectronSpin(ifs);
 
-    std::cout << boost::format("%6s %4s %6s %6s %6s %6s\n")
-                 % "Atom" % "No" % "Total" % "Alpha" % "Beta" % "Alpha-Beta";
+    std::cout << boost::format("%6s %4s %6s %6s %6s %6s\n") % "Atom" % "No" % "Total" % "Alpha" % "Beta" % "Alpha-Beta";
 
     const auto fmt = boost::format("%6s %4d %6.2f %6.2f %6.2f %6.2f  %s\n");
     for (auto &[atomNo, content] : table) {
         auto &[name, spins] = content;
         auto diff = spins[1] - spins[2];
-        std::cout << boost::format(fmt)
-                     % name % atomNo % spins[0] % spins[1] % spins[2] % diff % (std::abs(diff) >= 0.1 ? '*' : ' ');
+        std::cout << boost::format(fmt) % name % atomNo % spins[0] % spins[1] % spins[2] % diff %
+                         (std::abs(diff) >= 0.1 ? '*' : ' ');
     }
 }
 

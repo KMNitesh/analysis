@@ -1,17 +1,17 @@
 
-#include "utils/std.hpp"
-#include <boost/range/algorithm.hpp>
-#include <boost/range/adaptors.hpp>
+#include "CoplaneIndex.hpp"
+
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
-#include "CoplaneIndex.hpp"
-#include "data_structure/frame.hpp"
-#include "utils/common.hpp"
-#include "nlohmann/json.hpp"
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
 
-CoplaneIndex::CoplaneIndex() {
-    enable_outfile = true;
-}
+#include "data_structure/frame.hpp"
+#include "nlohmann/json.hpp"
+#include "utils/common.hpp"
+#include "utils/std.hpp"
+
+CoplaneIndex::CoplaneIndex() { enable_outfile = true; }
 
 void CoplaneIndex::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
@@ -100,10 +100,8 @@ void CoplaneIndex::readInfo() {
 
     for (std::size_t i = 0; i < num; ++i) {
         for (std::size_t j = 0; j < 3; ++j) {
-            Atom::select1group(mask_arrays[i][j], "Enter mark for atom (" + std::to_string(j + 1)
-                                                  + ") of plane (" + std::to_string(i + 1) + ") > ");
+            Atom::select1group(mask_arrays[i][j], "Enter mark for atom (" + std::to_string(j + 1) + ") of plane (" +
+                                                      std::to_string(i + 1) + ") > ");
         }
     }
 }
-
-

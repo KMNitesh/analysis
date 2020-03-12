@@ -2,18 +2,19 @@
 // Created by xiamr on 8/29/19.
 //
 
-#include <boost/range/adaptors.hpp>
-#include <boost/format.hpp>
-#include <boost/algorithm/string.hpp>
 #include "GmxTopologyPrinter.hpp"
-#include "trajectory_reader/trajectoryreader.hpp"
-#include "data_structure/frame.hpp"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
+#include <boost/range/adaptors.hpp>
+
 #include "data_structure/atom.hpp"
 #include "data_structure/forcefield.hpp"
+#include "data_structure/frame.hpp"
+#include "trajectory_reader/trajectoryreader.hpp"
 #include "utils/common.hpp"
 
 void GmxTopologyPrinter::print(const std::string &topolgy, const std::string &prm, const std::string &out) {
-
     TrajectoryReader reader;
     reader.add_trajectoy_file(topolgy);
     auto frame = reader.readOneFrame();
@@ -23,7 +24,6 @@ void GmxTopologyPrinter::print(const std::string &topolgy, const std::string &pr
     std::ofstream os(out);
 
     printFrame(frame, os);
-
 }
 
 void GmxTopologyPrinter::printFrame(const std::shared_ptr<Frame> &frame, std::ofstream &os) {
@@ -44,11 +44,8 @@ void GmxTopologyPrinter::printFrame(const std::shared_ptr<Frame> &frame, std::of
     }
 
     for (auto &types : atomtypes) {
-        os << boost::format(" %-6s  %-6s %10.5f %10.5f ")
-              % types.first
-              % std::get<0>(types.second)
-              % std::get<1>(types.second)
-              % std::get<2>(types.second)
+        os << boost::format(" %-6s  %-6s %10.5f %10.5f ") % types.first % std::get<0>(types.second) %
+                  std::get<1>(types.second) % std::get<2>(types.second)
            << "  A       0.295   0.530\n";
     }
 
@@ -74,16 +71,9 @@ void GmxTopologyPrinter::printFrame(const std::shared_ptr<Frame> &frame, std::of
         } else {
             resname = split(atom->residue_name.value()).back();
         }
-        os << boost::format("%6d %4s %5d %5s %5s %4d %10.6f %11.6f\n")
-              % atom->seq
-              % (std::string("A") + std::to_string(atom->typ))
-              % mol_index
-              % resname
-              % atom->atom_name
-              % atom->seq
-              % atom->charge.value()
-              % atom->mass.value();
-
+        os << boost::format("%6d %4s %5d %5s %5s %4d %10.6f %11.6f\n") % atom->seq %
+                  (std::string("A") + std::to_string(atom->typ)) % mol_index % resname % atom->atom_name % atom->seq %
+                  atom->charge.value() % atom->mass.value();
     }
 
     os << "\n[ bonds ]\n"
@@ -92,12 +82,11 @@ void GmxTopologyPrinter::printFrame(const std::shared_ptr<Frame> &frame, std::of
     for (auto &atom : frame->atom_list) {
         for (auto i : atom->con_list) {
             if (i > atom->seq) {
-                os << "   " << atom->seq << "  " << i << "      1    1.0100e-01    3.6317e+05 ; "
-                   << atom->atom_name << " - " << frame->atom_map[i]->atom_name << '\n';
+                os << "   " << atom->seq << "  " << i << "      1    1.0100e-01    3.6317e+05 ; " << atom->atom_name
+                   << " - " << frame->atom_map[i]->atom_name << '\n';
             }
         }
     }
-
 
     os << "\n[ system ]\n"
           " TinkerMOL\n"

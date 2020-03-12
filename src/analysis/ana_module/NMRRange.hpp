@@ -5,21 +5,21 @@
 #ifndef TINKER_NMRRANGE_HPP
 #define TINKER_NMRRANGE_HPP
 
-#include <memory>
-#include <unordered_set>
-#include <string>
-#include <map>
 #include <list>
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_set>
 #include <utility>
+
 #include "AbstractAnalysis.hpp"
-#include "data_structure/atom.hpp"
 #include "AminoTop.hpp"
+#include "data_structure/atom.hpp"
 
 class Frame;
 
 class NMRRange : public AbstractAnalysis {
 public:
-
     NMRRange();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -31,16 +31,13 @@ public:
     [[nodiscard]] static std::string_view title() { return "NMRRange Analysis"; }
 
 private:
-
     void recognize_amino_acid(std::shared_ptr<Frame> &frame);
 
-    bool recognize_walk(std::shared_ptr<Atom> atom, std::shared_ptr<AminoTop::AminoItem> item,
-                        AminoTop &top, std::shared_ptr<Frame> &frame,
-                        std::list<std::shared_ptr<Atom>> &atom_list,
+    bool recognize_walk(std::shared_ptr<Atom> atom, std::shared_ptr<AminoTop::AminoItem> item, AminoTop &top,
+                        std::shared_ptr<Frame> &frame, std::list<std::shared_ptr<Atom>> &atom_list,
                         std::list<std::shared_ptr<AminoTop::AminoItem>> &item_list);
 
     bool first_frame = true;
-
 
     void loadTop() {
         std::string path = std::getenv("ANALYSIS_TOP_PATH");
@@ -50,7 +47,6 @@ private:
             top.type = t.left;
             amino_top_list.push_back(top);
         }
-
     }
 
     std::list<AminoTop> amino_top_list;
@@ -62,5 +58,4 @@ private:
     std::map<int, std::string> name_map;
 };
 
-
-#endif //TINKER_NMRRANGE_HPP
+#endif  // TINKER_NMRRANGE_HPP

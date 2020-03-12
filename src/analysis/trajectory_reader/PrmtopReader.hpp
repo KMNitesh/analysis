@@ -8,5 +8,4 @@ public:
     std::shared_ptr<Frame> read(const std::string &filename) override;
 };
 
-
-#endif //TINKER_PRMTOPREADER_HPP
+#endif  // TINKER_PRMTOPREADER_HPP

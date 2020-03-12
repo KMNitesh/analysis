@@ -5,9 +5,9 @@
 #ifndef TINKER_HISTOGRAM_HPP
 #define TINKER_HISTOGRAM_HPP
 
+#include <map>
 #include <utility>
 #include <vector>
-#include <map>
 
 class Histogram {
 public:
@@ -19,14 +19,13 @@ public:
 
     std::vector<std::pair<double, double>> getDistribution() const;
 
-
     double getWidth() const { return dimension_width; }
 
     void initialize(const std::pair<double, double> &range, double width);
 
     void initialize(double range_max, double width);
 
-//protected:
+    // protected:
     std::pair<double, double> dimension_range;
     double dimension_width;
     int dimension_bins;
@@ -34,5 +33,4 @@ public:
     std::map<int, size_t> hist;
 };
 
-
-#endif //TINKER_HISTOGRAM_HPP
+#endif  // TINKER_HISTOGRAM_HPP

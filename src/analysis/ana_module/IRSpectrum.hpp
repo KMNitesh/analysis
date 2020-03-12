@@ -5,15 +5,14 @@
 #ifndef TINKER_IRSPECTRUM_HPP
 #define TINKER_IRSPECTRUM_HPP
 
-#include "utils/std.hpp"
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 
 class IRSpectrum : public AbstractAnalysis {
 public:
-
     IRSpectrum();
 
     void process(std::shared_ptr<Frame> &frame) override;
@@ -28,18 +27,15 @@ public:
 
     [[nodiscard]] static std::vector<double> calculateIntense(const std::vector<double> &acf, double time_increment_ps);
 
-    template<typename Container>
+    template <typename Container>
     [[nodiscard]] static std::vector<double> calculateAcf(const Container &evolution);
 
     static void calculateSpectrum(const std::string &out);
 
-    static void printData(std::ostream &os,
-                          const std::deque<std::tuple<double, double, double>> &dipole_evolution,
-                          double time_increment_ps,
-                          boost::optional<AmberMask> mask = boost::optional<AmberMask>{});
+    static void printData(std::ostream &os, const std::deque<std::tuple<double, double, double>> &dipole_evolution,
+                          double time_increment_ps, boost::optional<AmberMask> mask = boost::optional<AmberMask>{});
 
 protected:
-
     [[nodiscard]] std::tuple<double, double, double> getDipole(std::shared_ptr<Frame> &frame);
 
     double time_increment_ps;
@@ -51,5 +47,4 @@ protected:
     std::unordered_set<std::shared_ptr<Molecule>> selected_mols;
 };
 
-
-#endif //TINKER_IRSPECTRUM_HPP
+#endif  // TINKER_IRSPECTRUM_HPP
