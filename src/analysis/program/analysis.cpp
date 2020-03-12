@@ -1,46 +1,43 @@
-#include "config.h"
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include <iostream>
-#include <vector>
 #include <list>
 #include <memory>
 #include <string>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
+#include <vector>
 
-#include "utils/common.hpp"
-
-#include "mainUtils.hpp"
 #include "ana_module/IRSpectrum.hpp"
 #include "ana_module/IRSpectrumDeltaDipole.hpp"
-#include "others/RamanSpectrum.hpp"
-#include "others/CrossCorrelation.hpp"
-#include "others/GmxTopologyPrinter.hpp"
-#include "others/GQuadruplexPdb2gmx.hpp"
-#include "others/NBOSpin.hpp"
+#include "config.h"
+#include "mainUtils.hpp"
+#include "others/ADCHCharge.hpp"
 #include "others/Averager.hpp"
+#include "others/CrossCorrelation.hpp"
+#include "others/DelocalizationIndex.hpp"
+#include "others/File47CoordindateFormat.hpp"
+#include "others/GQuadruplexPdb2gmx.hpp"
+#include "others/GaussianLogCoordinateFormat.hpp"
+#include "others/GmxTopologyPrinter.hpp"
+#include "others/GroRenumber.hpp"
+#include "others/GromosReader.hpp"
+#include "others/HOOH_Calculator.hpp"
 #include "others/ITS_PostProcess.hpp"
 #include "others/ITS_Reweight.hpp"
-#include "others/GromosReader.hpp"
 #include "others/MultiwfnAIMDriver.hpp"
 #include "others/NBOOrbitalComposition.hpp"
-#include "others/DelocalizationIndex.hpp"
-#include "others/ADCHCharge.hpp"
-#include "others/TrajConverter.hpp"
+#include "others/NBOSpin.hpp"
 #include "others/QMStructureComp.hpp"
-#include "others/File47CoordindateFormat.hpp"
-#include "others/GaussianLogCoordinateFormat.hpp"
-#include "others/HOOH_Calculator.hpp"
+#include "others/RamanSpectrum.hpp"
+#include "others/TrajConverter.hpp"
+#include "utils/common.hpp"
 
 void printDSLDetails() {
-
     std::cout << "\nAuthor : " << CACANA_AUTHOR << "\n\n";
 
     std::cout << SCRIPT_SYNTAX_SUMMARY;
 }
 
-
 int main(int argc, char *argv[]) {
-
     std::cout << "Build DateTime : " << __DATE__ << " " << __TIME__ << '\n';
 
     std::cout << "current work dir : " << boost::filesystem::current_path() << '\n';
@@ -61,8 +58,7 @@ int main(int argc, char *argv[]) {
     auto desc = make_program_options();
     boost::program_options::variables_map vm;
     try {
-        boost::program_options::store(
-                boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
     } catch (std::exception &e) {
         std::cerr << e.what() << '\n';
         std::cout << desc;
@@ -110,7 +106,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
     }
 
-
     /*
      * Enter script execution, for non-interactive mode
      */
@@ -140,34 +135,34 @@ int main(int argc, char *argv[]) {
      */
 
     std::vector<std::function<void()>> actions{
-            [&] { processTrajectory(desc, vm, xyzfiles, argc, argv); },
-            [&] { printTopolgy(vm); },
-            [&] { IRSpectrum::calculateSpectrum(getOutputFilename(vm)); },
-            [&] { IRSpectrumDeltaDipole::calculateSpectrum(getOutputFilename(vm)); },
-            [&] { RamanSpectrum::calculateSpectrum(getOutputFilename(vm)); },
-            [&] { CrossCorrelation::calculate(getOutputFilename(vm)); },
-            [&] { GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm)); },
-            [] { GQuadruplexPdb2gmx::convert(); },
-            [] { GQuadruplexPdb2gmx::superpose_and_move(); },
-            [] { NBOSpin::process(); },
-            [] { GQuadruplexPdb2gmx::renumberAtomAndResidueNum(); },
-            [] { Averager::process(); },
-            [] { ITS_PostProcess::process(); },
-            [] { ITS_Reweight::process(); },
-            [] { GromosReader::process(); },
-            [] { MultiwfnAIMDriver::process_interactive(); },
-            [] { NBOOrbitalComposition::process(); },
-            [] { DelocalizationIndex::process_interactive(); },
-            [&] {
-                ADCHCharge::process_interactive(
-                        vm.count("fchk") ? vm["fchk"].as<std::string>() : boost::optional<std::string>{});
-            },
-            [] { TrajConverter::process(); },
-            [] { QMStructureComp::process(); },
-            [] { File47CoordindateFormat::process(); },
-            [] { GaussianLogCoordinateFormat::process(); },
-            [] { HOOH_Calculator::process(); }
-    };
+        [&] { processTrajectory(desc, vm, xyzfiles, argc, argv); },
+        [&] { printTopolgy(vm); },
+        [&] { IRSpectrum::calculateSpectrum(getOutputFilename(vm)); },
+        [&] { IRSpectrumDeltaDipole::calculateSpectrum(getOutputFilename(vm)); },
+        [&] { RamanSpectrum::calculateSpectrum(getOutputFilename(vm)); },
+        [&] { CrossCorrelation::calculate(getOutputFilename(vm)); },
+        [&] { GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm)); },
+        [] { GQuadruplexPdb2gmx::convert(); },
+        [] { GQuadruplexPdb2gmx::superpose_and_move(); },
+        [] { NBOSpin::process(); },
+        [] { GQuadruplexPdb2gmx::renumberAtomAndResidueNum(); },
+        [] { Averager::process(); },
+        [] { ITS_PostProcess::process(); },
+        [] { ITS_Reweight::process(); },
+        [] { GromosReader::process(); },
+        [] { MultiwfnAIMDriver::process_interactive(); },
+        [] { NBOOrbitalComposition::process(); },
+        [] { DelocalizationIndex::process_interactive(); },
+        [&] {
+            ADCHCharge::process_interactive(vm.count("fchk") ? vm["fchk"].as<std::string>()
+                                                             : boost::optional<std::string>{});
+        },
+        [] { TrajConverter::process(); },
+        [] { QMStructureComp::process(); },
+        [] { File47CoordindateFormat::process(); },
+        [] { GaussianLogCoordinateFormat::process(); },
+        [] { HOOH_Calculator::process(); },
+        [] { GroRenumber::process(); }};
 
     auto mainMenu = [&] {
         std::cout << "Main Menu\n";
@@ -179,7 +174,8 @@ int main(int argc, char *argv[]) {
         std::cout << " (5) " << CrossCorrelation::title() << '\n';
         std::cout << " (6) " << GmxTopologyPrinter::title() << '\n';
         std::cout << " (7) " << GQuadruplexPdb2gmx::title() << '\n';
-        std::cout << " (8) " << "Superpose and move for Residues" << '\n';
+        std::cout << " (8) "
+                  << "Superpose and move for Residues" << '\n';
         std::cout << " (9) " << NBOSpin::title() << '\n';
         std::cout << "(10) Renumber atom and residue num\n";
         std::cout << "(11) " << Averager::title() << '\n';
@@ -195,6 +191,7 @@ int main(int argc, char *argv[]) {
         std::cout << "(21) " << File47CoordindateFormat::title() << '\n';
         std::cout << "(22) " << GaussianLogCoordinateFormat::title() << '\n';
         std::cout << "(23) " << HOOH_Calculator::title() << '\n';
+        std::cout << "(24) " << GroRenumber::title() << '\n';
         return choose<int>(0, actions.size() - 1, "select : ");
     };
 
@@ -202,7 +199,3 @@ int main(int argc, char *argv[]) {
 
     return EXIT_SUCCESS;
 }
-
-
-
-
