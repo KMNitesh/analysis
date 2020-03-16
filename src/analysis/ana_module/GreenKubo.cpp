@@ -99,7 +99,7 @@ void GreenKubo::print(std::ostream &os) {
     }
     os << "Green-Kubo self-diffuse " << endl;
     os << "selected group : " << ids << endl;
-    os << "Time (ps)             DA(10^-9 m2/s)" << endl;
+    os << "Time (ps)             D(10^-5 cm**2/sec)" << endl;
     double pre_c = body.cxx[0] + body.cyy[0] + body.czz[0];
     double integral = 0.0;
     for (unsigned int i = 1; i < steps; i++) {

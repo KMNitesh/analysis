@@ -19,6 +19,10 @@
 
 class Molecule;
 
+struct lj_t {
+    double c6,c12;
+};
+
 class Atom {
     boost::optional<int> at_no;
 
@@ -45,6 +49,8 @@ public:
     boost::optional<double> charge;
 
     boost::optional<double> mass;
+
+    boost::optional<lj_t>  lj_param;
 
     std::list<std::size_t> con_list;  // atom num that connect to
 

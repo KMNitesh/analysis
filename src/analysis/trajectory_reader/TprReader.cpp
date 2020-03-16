@@ -24,7 +24,7 @@ namespace gmx {
 #include "gromacs/topology/topology.h"
 #include "gromacs/utility/smalloc.h"
 
-}  // namespace gmx
+} // namespace gmx
 
 std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
     auto frame = std::make_shared<Frame>();
@@ -48,6 +48,11 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         exit(EXIT_FAILURE);
     }
 
+    frame->title = *top.name;
+    frame->box = PBCBox(state.box);
+
+    const auto &ffparams = mtop.ffparams;
+
     for (int i = 0; i < atoms.nr; i++) {
         auto atom = std::make_shared<Atom>();
         atom->seq = i + 1;
@@ -55,6 +60,10 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         atom->type_name = (*(atoms.atomtype[i]));
         atom->charge = atoms.atom[i].q;
         atom->mass = atoms.atom[i].m;
+        atom->typ = atoms.atom[i].type;
+
+        const auto &lj = ffparams.iparams[atom->typ * (ffparams.atnr + 1)].lj;
+        atom->lj_param = lj_t{lj.c6, lj.c12};
 
         atom->x = 10 * state.x[i][XX];
         atom->y = 10 * state.x[i][YY];

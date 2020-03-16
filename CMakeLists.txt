@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(Tinker LANGUAGES Fortran CXX)
+project(Tinker LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,14 +20,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
     string(APPEND CMAKE_CXX_FLAGS_RELEASE " -ffast-math")
     if (ENABLE_NATIVE)
         string(APPEND CMAKE_CXX_FLAGS_RELEASE " -march=native")
-    endif()
-endif()
-
-if (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    string(APPEND CMAKE_Fortran_FLAGS_DEBUG " -Wall -Wextra")
-    string(APPEND CMAKE_Fortran_FLAGS_RELEASE " -ffast-math")
-    if (ENABLE_NATIVE)
-        string(APPEND CMAKE_Fortran_FLAGS_RELEASE " -march=native")
     endif()
 endif()
 
