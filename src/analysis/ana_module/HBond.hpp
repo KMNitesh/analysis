@@ -60,8 +60,6 @@ private:
     double donor_acceptor_dist_cutoff;
     double angle_cutoff;
 
-    std::deque<double> hbonds;
-
     std::deque<std::map<std::array<std::shared_ptr<Atom>, 2>, double>> hbdist;
 
     inline static const std::set<Symbol> donor_acceptor_symbols{Symbol::Oxygen, Symbol::Nitrogen, Symbol::Sulfur};

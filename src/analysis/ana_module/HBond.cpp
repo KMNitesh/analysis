@@ -59,8 +59,8 @@ void HBond::print(std::ostream &os) {
     os << "#angle cutoff : " << angle_cutoff << '\n';
     os << std::string(20, '#') << '\n';
     os << boost::format("#%14s %14s\n") % "Frame" % "Mumber";
-    for (const auto &element : hbonds | boost::adaptors::indexed(1)) {
-        os << boost::format("%15d %14d\n") % element.index() % element.value();
+    for (const auto &element : hbdist | boost::adaptors::indexed(1)) {
+        os << boost::format("%15d %14d\n") % element.index() % element.value().size();
     }
     os << std::string(20, '#') << '\n';
     output_distance_statistics(os);
@@ -68,7 +68,6 @@ void HBond::print(std::ostream &os) {
 
 void HBond::process(std::shared_ptr<Frame> &frame) {
     hbdist.emplace_back();
-    hbonds.push_back(0);
     if (mode == Selector::Both)
         Selector_Both(frame);
     else
@@ -96,8 +95,7 @@ void HBond::readInfo() {
 void HBond::Selector_Donor_Acceptor(const std::shared_ptr<Frame> &frame) {
     for (const auto &[donor, hydrogen] : donor_hydrogens) {
         for (const auto &acceptor : acceptors) {
-            if (check_hbond(donor, hydrogen, acceptor, frame))
-                ++hbonds.back();
+            check_hbond(donor, hydrogen, acceptor, frame);
         }
     }
 }
@@ -105,8 +103,8 @@ void HBond::Selector_Donor_Acceptor(const std::shared_ptr<Frame> &frame) {
 void HBond::Selector_Both(const std::shared_ptr<Frame> &frame) {
     for (const auto &[donor, hydrogen] : donor_hydrogens) {
         for (const auto &acceptor : acceptors) {
-            if (donor not_eq acceptor and check_hbond(donor, hydrogen, acceptor, frame))
-                ++hbonds.back();
+            if (donor not_eq acceptor)
+                check_hbond(donor, hydrogen, acceptor, frame);
         }
     }
 }
