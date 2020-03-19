@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
@@ -38,26 +39,34 @@ public:
     [[nodiscard]] static std::string_view title() { return "Hydrogen Bond"; }
 
 private:
-    std::map<int, int> hbonds;
+    void Selector_Both(const std::shared_ptr<Frame> &frame);
+
+    void Selector_Donor_Acceptor(const std::shared_ptr<Frame> &frame);
+
+    bool check_hbond(const std::shared_ptr<Atom> &donor, const std::shared_ptr<Atom> &hydrogen,
+                     const std::shared_ptr<Atom> &acceptor, const std::shared_ptr<Frame> &frame);
+
+    void record_hbond(const std::shared_ptr<Atom> &hydrogen, const std::shared_ptr<Atom> &acceptor,
+                      const std::shared_ptr<Frame> &frame);
+
+    AmberMask mask1, mask2;
+
+    std::vector<std::array<std::shared_ptr<Atom>, 2>> donor_hydrogens;
+    std::vector<std::shared_ptr<Atom>> acceptors;
 
     HBondType hbond_type = HBondType::VMDVerion;
-
-    void Selector_Both(std::shared_ptr<Frame> &frame);
-
-    void Selector_Donor(std::shared_ptr<Frame> &frame);
-
-    void Selector_Acceptor(std::shared_ptr<Frame> &frame);
-
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
-
-    std::unordered_set<std::shared_ptr<Atom>> group1;
-    std::unordered_set<std::shared_ptr<Atom>> group2;
 
     Selector mode;
     double donor_acceptor_dist_cutoff;
     double angle_cutoff;
-    int steps = 0;
+
+    std::deque<double> hbonds;
+
+    std::deque<std::map<std::array<std::shared_ptr<Atom>, 2>, double>> hbdist;
+
+    inline static const std::set<Symbol> donor_acceptor_symbols{Symbol::Oxygen, Symbol::Nitrogen, Symbol::Sulfur};
+
+    void output_distance_statistics(std::ostream &os);
 };
 
-#endif  // TINKER_HBOND_HPP
+#endif // TINKER_HBOND_HPP
