@@ -244,151 +244,151 @@ boost::any Interpreter::evalLeftValue(boost::any ast) {
 boost::any Interpreter::evalArithmeticOperation(const ArithmeticOperation &op) {
     auto lhs = evalLeftValue(op.operand1);
     switch (op.op) {
-        case ArithmeticOp::PostIncrement:
-            if (lhs.type() == typeid(Identifer)) {
-                auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
-                if (value.type() == typeid(int)) {
-                    variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<int>(value) + 1};
-                } else if (value.type() == typeid(double)) {
-                    variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<double>(value) + 1};
-                } else {
-                    throw InterpreterException("PostIncremnt for this type is not permitted");
-                }
-                return value;
+    case ArithmeticOp::PostIncrement:
+        if (lhs.type() == typeid(Identifer)) {
+            auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
+            if (value.type() == typeid(int)) {
+                variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<int>(value) + 1};
+            } else if (value.type() == typeid(double)) {
+                variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<double>(value) + 1};
             } else {
-                throw InterpreterException("not Support");
+                throw InterpreterException("PostIncremnt for this type is not permitted");
             }
-            break;
+            return value;
+        } else {
+            throw InterpreterException("not Support");
+        }
+        break;
 
-        case ArithmeticOp::PostDecrement:
-            if (lhs.type() == typeid(Identifer)) {
-                auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
-                if (value.type() == typeid(int)) {
-                    variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<int>(value) - 1};
-                } else if (value.type() == typeid(double)) {
-                    variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<double>(value) - 1};
-                } else {
-                    throw InterpreterException("PostDecremnt for this type is not permitted");
-                }
-                return value;
+    case ArithmeticOp::PostDecrement:
+        if (lhs.type() == typeid(Identifer)) {
+            auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
+            if (value.type() == typeid(int)) {
+                variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<int>(value) - 1};
+            } else if (value.type() == typeid(double)) {
+                variables[boost::any_cast<Identifer>(lhs).name] = boost::any{boost::any_cast<double>(value) - 1};
             } else {
-                throw InterpreterException("not Support");
+                throw InterpreterException("PostDecremnt for this type is not permitted");
             }
-            break;
+            return value;
+        } else {
+            throw InterpreterException("not Support");
+        }
+        break;
 
-        case ArithmeticOp::PreIncrement:
-            if (lhs.type() == typeid(Identifer)) {
-                auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
-                boost::any ret;
-                if (value.type() == typeid(int)) {
-                    ret = boost::any_cast<int>(value) + 1;
-                } else if (value.type() == typeid(double)) {
-                    ret = boost::any_cast<double>(value) + 1;
-                } else {
-                    throw InterpreterException("PostIncremnt for this type is not permitted");
-                }
-                variables[boost::any_cast<Identifer>(lhs).name] = ret;
-                return lhs;
+    case ArithmeticOp::PreIncrement:
+        if (lhs.type() == typeid(Identifer)) {
+            auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
+            boost::any ret;
+            if (value.type() == typeid(int)) {
+                ret = boost::any_cast<int>(value) + 1;
+            } else if (value.type() == typeid(double)) {
+                ret = boost::any_cast<double>(value) + 1;
             } else {
-                throw InterpreterException("not Support");
+                throw InterpreterException("PostIncremnt for this type is not permitted");
             }
-            break;
+            variables[boost::any_cast<Identifer>(lhs).name] = ret;
+            return lhs;
+        } else {
+            throw InterpreterException("not Support");
+        }
+        break;
 
-        case ArithmeticOp::PreDecrement:
-            if (lhs.type() == typeid(Identifer)) {
-                auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
-                boost::any ret;
-                if (value.type() == typeid(int)) {
-                    ret = boost::any_cast<int>(value) - 1;
-                } else if (value.type() == typeid(double)) {
-                    ret = boost::any_cast<double>(value) - 1;
-                } else {
-                    throw InterpreterException("PostIncremnt for this type is not permitted");
-                }
-                variables[boost::any_cast<Identifer>(lhs).name] = ret;
-                return lhs;
+    case ArithmeticOp::PreDecrement:
+        if (lhs.type() == typeid(Identifer)) {
+            auto value = variables.at(boost::any_cast<Identifer>(lhs).name);
+            boost::any ret;
+            if (value.type() == typeid(int)) {
+                ret = boost::any_cast<int>(value) - 1;
+            } else if (value.type() == typeid(double)) {
+                ret = boost::any_cast<double>(value) - 1;
             } else {
-                throw InterpreterException("not Support ");
+                throw InterpreterException("PostIncremnt for this type is not permitted");
             }
-            break;
-        default:
-            break;
+            variables[boost::any_cast<Identifer>(lhs).name] = ret;
+            return lhs;
+        } else {
+            throw InterpreterException("not Support ");
+        }
+        break;
+    default:
+        break;
     }
 
     lhs = evalRightValue(lhs);
     auto rhs = evalRightValue(op.operand2);
     switch (op.op) {
-        case ArithmeticOp::Plus:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else if (lhs.type() == typeid(std::string)) {
-                    if (rhs.type() == typeid(int)) {
-                        rhs = std::to_string(boost::any_cast<int>(rhs));
-                    };
-                } else if (rhs.type() == typeid(std::string)) {
-                    if (lhs.type() == typeid(int)) {
-                        lhs = std::to_string(boost::any_cast<int>(lhs));
-                    };
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return evalArithmeticAdd(lhs, rhs);
-            break;
-        case ArithmeticOp::Minus:
-            return evalArithmeticMinus(lhs);
-            break;
-        case ArithmeticOp::Multiply:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return evalArithmeticMultiply(lhs, rhs);
-            break;
-        case ArithmeticOp::Divide:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return evalArithmeticDivide(lhs, rhs);
-            break;
-        case ArithmeticOp::Subtract:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return evalArithmeticSubtract(lhs, rhs);
-            break;
-
-        case ArithmeticOp::Mod:
-            if (lhs.type() != rhs.type()) {
+    case ArithmeticOp::Plus:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else if (lhs.type() == typeid(std::string)) {
+                if (rhs.type() == typeid(int)) {
+                    rhs = std::to_string(boost::any_cast<int>(rhs));
+                };
+            } else if (rhs.type() == typeid(std::string)) {
+                if (lhs.type() == typeid(int)) {
+                    lhs = std::to_string(boost::any_cast<int>(lhs));
+                };
+            } else {
                 throw InterpreterException("Type not same");
             }
-            if (lhs.type() != typeid(int)) {
-                throw InterpreterException("Only integer can do %");
+        }
+        return evalArithmeticAdd(lhs, rhs);
+        break;
+    case ArithmeticOp::Minus:
+        return evalArithmeticMinus(lhs);
+        break;
+    case ArithmeticOp::Multiply:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
             }
-            return boost::any_cast<int>(lhs) % boost::any_cast<int>(rhs);
-            break;
-        default:
-            break;
+        }
+        return evalArithmeticMultiply(lhs, rhs);
+        break;
+    case ArithmeticOp::Divide:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
+            }
+        }
+        return evalArithmeticDivide(lhs, rhs);
+        break;
+    case ArithmeticOp::Subtract:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
+            }
+        }
+        return evalArithmeticSubtract(lhs, rhs);
+        break;
+
+    case ArithmeticOp::Mod:
+        if (lhs.type() != rhs.type()) {
+            throw InterpreterException("Type not same");
+        }
+        if (lhs.type() != typeid(int)) {
+            throw InterpreterException("Only integer can do %");
+        }
+        return boost::any_cast<int>(lhs) % boost::any_cast<int>(rhs);
+        break;
+    default:
+        break;
     }
 }
 
@@ -397,25 +397,26 @@ boost::any Interpreter::evalBitwiseOperation(const BitwiseOperation &op) {
     auto rhs = evalRightValue(op.operand2);
     if (lhs.type() == typeid(Atom::Node) && rhs.type() == typeid(Atom::Node)) {
         switch (op.op) {
-            case BitwiseOp::And:
-                return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::AND, boost::any_cast<Atom::Node>(lhs),
-                                                                   boost::any_cast<Atom::Node>(rhs)));
-                break;
-            case BitwiseOp::Or:
-                return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::OR, boost::any_cast<Atom::Node>(lhs),
-                                                                   boost::any_cast<Atom::Node>(rhs)));
-                break;
+        case BitwiseOp::And:
+            return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::AND, boost::any_cast<Atom::Node>(lhs),
+                                                               boost::any_cast<Atom::Node>(rhs)));
+            break;
+        case BitwiseOp::Or:
+            return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::OR, boost::any_cast<Atom::Node>(lhs),
+                                                               boost::any_cast<Atom::Node>(rhs)));
+            break;
         }
     } else {
         throw InterpreterException("Bitwise operation only for AmbberMask");
     }
 }
-
+namespace {
 inline ostream &operator<<(ostream &os, const vector<string> &vect) {
     boost::spirit::karma::generate(boost::spirit::karma::ostream_iterator<char>(os),
                                    "vector(" << boost::spirit::karma::string % ',' << ')', vect);
     return os;
 }
+} // namespace
 
 boost::any FunctionObject::invoke(vector<boost::any> &arguments,
                                   vector<pair<boost::any, boost::any>> &optional_arguments) {
@@ -462,7 +463,7 @@ boost::any FunctionObject::invoke(vector<boost::any> &arguments,
                      "argument (" << std::get<0>(arg) << ") type not match , except " << std::get<2>(arg)() << " Actul"
                                   << getPrettyName(std::get<3>(arg)));
     }
-
+    std::cout << std::vector<std::string>();
     return f(args);
 }
 
@@ -470,130 +471,130 @@ boost::any Interpreter::evalLogicalOperation(const LogicalOperation &op) {
     auto lhs = evalRightValue(op.operand1);
     auto rhs = evalRightValue(op.operand2);
     switch (op.op) {
-        case LogicalOp::Equal:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return evalLogicalOperationEqual(lhs, rhs);
-            break;
-        case LogicalOp::NotEqual:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return !evalLogicalOperationEqual(lhs, rhs);
-            break;
-        case LogicalOp::And:
-            if (lhs.type() == typeid(int)) {
-                lhs = static_cast<bool>(boost::any_cast<int>(lhs));
-            } else if (lhs.type() == typeid(double)) {
-                lhs = static_cast<bool>(boost::any_cast<double>(lhs));
-            }
-
-            if (rhs.type() == typeid(int)) {
-                rhs = static_cast<bool>(boost::any_cast<int>(rhs));
-            } else if (lhs.type() == typeid(double)) {
-                rhs = static_cast<bool>(boost::any_cast<double>(rhs));
-            }
-
-            if (lhs.type() != typeid(bool) || rhs.type() != typeid(bool)) {
-                throw InterpreterException("only bool can do &&");
-            }
-            return boost::any_cast<bool>(lhs) && boost::any_cast<bool>(rhs);
-            break;
-        case LogicalOp::Or:
-            if (lhs.type() == typeid(int)) {
-                lhs = static_cast<bool>(boost::any_cast<int>(lhs));
-            } else if (lhs.type() == typeid(double)) {
-                lhs = static_cast<bool>(boost::any_cast<double>(lhs));
-            }
-
-            if (rhs.type() == typeid(int)) {
-                rhs = static_cast<bool>(boost::any_cast<int>(rhs));
-            } else if (lhs.type() == typeid(double)) {
-                rhs = static_cast<bool>(boost::any_cast<double>(rhs));
-            }
-
-            if (lhs.type() != typeid(bool) || rhs.type() != typeid(bool)) {
-                throw InterpreterException("only bool can do ||");
-            }
-            return boost::any_cast<bool>(lhs) || boost::any_cast<bool>(rhs);
-            break;
-        case LogicalOp::LessEqual:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return evalLogicalOperationLess(lhs, rhs) || evalLogicalOperationEqual(lhs, rhs);
-            break;
-        case LogicalOp::Less:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return evalLogicalOperationLess(lhs, rhs);
-            break;
-        case LogicalOp::GreatEqual:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return !evalLogicalOperationLess(lhs, rhs);
-            break;
-        case LogicalOp::Great:
-            if (lhs.type() != rhs.type()) {
-                if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
-                    lhs = static_cast<double>(boost::any_cast<int>(lhs));
-                } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
-                    rhs = static_cast<double>(boost::any_cast<int>(rhs));
-                } else {
-                    throw InterpreterException("Type not same");
-                }
-            }
-            return !(evalLogicalOperationLess(lhs, rhs) || evalLogicalOperationEqual(lhs, rhs));
-            break;
-        case LogicalOp::Not:
-            if (lhs.type() == typeid(int)) {
-                lhs = static_cast<bool>(boost::any_cast<int>(lhs));
-            } else if (lhs.type() == typeid(double)) {
-                lhs = static_cast<bool>(boost::any_cast<double>(lhs));
-            }
-
-            if (lhs.type() == typeid(bool)) {
-                return !boost::any_cast<bool>(lhs);
-            } else if (lhs.type() == typeid(Atom::Node)) {
-                return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::NOT, boost::any_cast<Atom::Node>(lhs)));
+    case LogicalOp::Equal:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
             } else {
-                throw InterpreterException(std::string("Logical Not operation not permitted for type : ") +
-                                           lhs.type().name());
+                throw InterpreterException("Type not same");
             }
-            break;
+        }
+        return evalLogicalOperationEqual(lhs, rhs);
+        break;
+    case LogicalOp::NotEqual:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
+            }
+        }
+        return !evalLogicalOperationEqual(lhs, rhs);
+        break;
+    case LogicalOp::And:
+        if (lhs.type() == typeid(int)) {
+            lhs = static_cast<bool>(boost::any_cast<int>(lhs));
+        } else if (lhs.type() == typeid(double)) {
+            lhs = static_cast<bool>(boost::any_cast<double>(lhs));
+        }
+
+        if (rhs.type() == typeid(int)) {
+            rhs = static_cast<bool>(boost::any_cast<int>(rhs));
+        } else if (lhs.type() == typeid(double)) {
+            rhs = static_cast<bool>(boost::any_cast<double>(rhs));
+        }
+
+        if (lhs.type() != typeid(bool) || rhs.type() != typeid(bool)) {
+            throw InterpreterException("only bool can do &&");
+        }
+        return boost::any_cast<bool>(lhs) && boost::any_cast<bool>(rhs);
+        break;
+    case LogicalOp::Or:
+        if (lhs.type() == typeid(int)) {
+            lhs = static_cast<bool>(boost::any_cast<int>(lhs));
+        } else if (lhs.type() == typeid(double)) {
+            lhs = static_cast<bool>(boost::any_cast<double>(lhs));
+        }
+
+        if (rhs.type() == typeid(int)) {
+            rhs = static_cast<bool>(boost::any_cast<int>(rhs));
+        } else if (lhs.type() == typeid(double)) {
+            rhs = static_cast<bool>(boost::any_cast<double>(rhs));
+        }
+
+        if (lhs.type() != typeid(bool) || rhs.type() != typeid(bool)) {
+            throw InterpreterException("only bool can do ||");
+        }
+        return boost::any_cast<bool>(lhs) || boost::any_cast<bool>(rhs);
+        break;
+    case LogicalOp::LessEqual:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
+            }
+        }
+        return evalLogicalOperationLess(lhs, rhs) || evalLogicalOperationEqual(lhs, rhs);
+        break;
+    case LogicalOp::Less:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
+            }
+        }
+        return evalLogicalOperationLess(lhs, rhs);
+        break;
+    case LogicalOp::GreatEqual:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
+            }
+        }
+        return !evalLogicalOperationLess(lhs, rhs);
+        break;
+    case LogicalOp::Great:
+        if (lhs.type() != rhs.type()) {
+            if (lhs.type() == typeid(int) && rhs.type() == typeid(double)) {
+                lhs = static_cast<double>(boost::any_cast<int>(lhs));
+            } else if (lhs.type() == typeid(double) && rhs.type() == typeid(int)) {
+                rhs = static_cast<double>(boost::any_cast<int>(rhs));
+            } else {
+                throw InterpreterException("Type not same");
+            }
+        }
+        return !(evalLogicalOperationLess(lhs, rhs) || evalLogicalOperationEqual(lhs, rhs));
+        break;
+    case LogicalOp::Not:
+        if (lhs.type() == typeid(int)) {
+            lhs = static_cast<bool>(boost::any_cast<int>(lhs));
+        } else if (lhs.type() == typeid(double)) {
+            lhs = static_cast<bool>(boost::any_cast<double>(lhs));
+        }
+
+        if (lhs.type() == typeid(bool)) {
+            return !boost::any_cast<bool>(lhs);
+        } else if (lhs.type() == typeid(Atom::Node)) {
+            return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::NOT, boost::any_cast<Atom::Node>(lhs)));
+        } else {
+            throw InterpreterException(std::string("Logical Not operation not permitted for type : ") +
+                                       lhs.type().name());
+        }
+        break;
     }
     return {};
 }

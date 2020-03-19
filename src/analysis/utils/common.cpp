@@ -69,10 +69,20 @@ FileType getFileType(const std::string &filename) {
     boost::to_lower(extension);
 
     const std::unordered_map<std::string, FileType> mapping = {
-        {".xtc", FileType::XTC},      {".trr", FileType::TRR},   {".nc", FileType::NC},   {".mdcrd", FileType::NC},
-        {".xyz", FileType::ARC},      {".arc", FileType::ARC},   {".tpr", FileType::TPR}, {".prmtop", FileType::PRMTOP},
-        {".parm7", FileType::PRMTOP}, {".mol2", FileType::MOL2}, {".prm", FileType::PRM}, {".gro", FileType::GRO},
-        {".traj", FileType::TRAJ},    {".json", FileType::JSON}};
+        {".xtc",    FileType::XTC},
+        {".trr",    FileType::TRR},
+        {".nc",     FileType::NC},
+        {".mdcrd",  FileType::NC},
+        {".xyz",    FileType::ARC},
+        {".arc",    FileType::ARC},
+        {".tpr",    FileType::TPR},
+        {".prmtop", FileType::PRMTOP},
+        {".parm7",  FileType::PRMTOP},
+        {".mol2",   FileType::MOL2},
+        {".prm",    FileType::PRM},
+        {".gro",    FileType::GRO},
+        {".traj",   FileType::TRAJ},
+        {".json",   FileType::JSON}};
 
     auto it = mapping.find(extension);
     return it != mapping.end() ? it->second : FileType::UnKnown;
@@ -83,7 +93,8 @@ bool choose_bool(const std::string &prompt, Default<bool> defaultValue, std::ist
         std::string input_line = input(prompt, in, out);
         boost::trim(input_line);
         if (input_line.empty()) {
-            if (defaultValue) return defaultValue.getValue();
+            if (defaultValue)
+                return defaultValue.getValue();
         }
         boost::to_lower(input_line);
 
@@ -109,28 +120,29 @@ double atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<A
 
 double atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
                       const std::shared_ptr<Frame> &frame) {
-    auto xr = atom1->x - atom2->x;
-    auto yr = atom1->y - atom2->y;
-    auto zr = atom1->z - atom2->z;
-    frame->image(xr, yr, zr);
-    return xr * xr + yr * yr + zr * zr;
+    auto r = atom1->getCoordinate() - atom2->getCoordinate();
+    frame->image(r);
+    return vector_norm2(r);
 }
 
 boost::program_options::options_description make_program_options() {
     namespace po = boost::program_options;
     po::options_description desc("Allowed options");
-    desc.add_options()("help,h", "show this help message")(
-        "topology,p", po::value<std::string>()->value_name("topology-file-name"), "topology file")(
-        "file,f", po::value<std::vector<std::string>>()->multitoken()->composing()->value_name("trajectory-file-name"),
-        "trajectory file")("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")(
-        "prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")(
-        "target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")(
-        "script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")(
-        "script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")(
-        "aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")(
-        "di", "Delocalization Index based on Multiwfn")("adch",
-                                                        "Atomic dipole corrected Hirshfeld population (ADCH) Charge")(
-        "fchk", po::value<std::string>()->value_name("file-name"), "Gaussian Fchk File");
+    desc.add_options()
+        ("help,h", "show this help message")
+        ("topology,p", po::value<std::string>()->value_name("topology-file-name"), "topology file")
+        ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing()->value_name("trajectory-file-name"),
+         "trajectory file")
+        ("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")
+        ("prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")
+        ("target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")
+        ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")
+        ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")
+        ("aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")
+        ("di", "Delocalization Index based on Multiwfn")
+        ("adch", "Atomic dipole corrected Hirshfeld population (ADCH) Charge")
+        ("fchk", po::value<std::string>()->value_name("file-name"), "Gaussian Fchk File")
+        ("silent", po::bool_switch()->default_value(false), "Dont show the main menu");
 
     return desc;
 }

@@ -1,6 +1,9 @@
 
 #include "Averager.hpp"
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm.hpp>
 
 #include "utils/common.hpp"
@@ -33,12 +36,17 @@ void Averager::process_file(std::ifstream &ifs, std::ofstream &ofs, const int ra
 }
 
 void Averager::output_average(std::ostream &os, int range, const std::vector<std::vector<double>> &lines) {
-    std::vector<double> avg;
-    avg.resize(lines.front().size());
+    using namespace boost::accumulators;
+
+    std::vector<accumulator_set<double, features<tag::mean, tag::variance>>> statics(lines.front().size());
+
+    std::vector<double> avg(lines.front().size());
+
     for (std::size_t i = 0; i < lines.size(); ++i) {
         const auto &v = lines[i];
         for (std::size_t j = 0; j < v.size(); ++j) {
             avg[j] += v[j];
+            statics[j](v[j]);
         }
 
         if ((i + 1) % range == 0) {
@@ -49,6 +57,15 @@ void Averager::output_average(std::ostream &os, int range, const std::vector<std
             boost::fill(avg, 0.0);
         }
     }
+    std::cout << "Mean : ";
+    for (auto &s : statics)
+        std::cout << std::setw(15) << mean(s) << "  ";
+    std::cout << '\n';
+
+    std::cout << "STD  : ";
+    for (auto &s : statics)
+        std::cout << std::setw(15) << std::sqrt(variance(s)) << "  ";
+    std::cout << '\n';
 }
 
 std::vector<std::vector<double>> Averager::readfile(std::ifstream &ifs) {
@@ -57,7 +74,11 @@ std::vector<std::vector<double>> Averager::readfile(std::ifstream &ifs) {
 
     while (!ifs.eof()) {
         std::getline(ifs, line);
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
+        if (boost::starts_with(line, "#") or boost::starts_with(line, "@"))
+            continue;
+
         auto field = split(line);
 
         std::vector<double> item;

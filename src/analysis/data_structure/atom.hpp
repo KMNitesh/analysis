@@ -20,7 +20,7 @@
 class Molecule;
 
 struct lj_t {
-    double c6,c12;
+    double c6, c12;
 };
 
 class Atom {
@@ -35,24 +35,32 @@ public:
 
     void setAtNo(const boost::optional<int> &atNo) { at_no = atNo; }
 
-    double x, y, z;  // position
+    double x, y, z; // position
 
     std::tuple<double, double, double> getCoordinate() const { return {x, y, z}; }
 
     std::tuple<double, double, double> getVelocities() const { return {vx, vy, vz}; }
 
-    double vx = 0.0, vy = 0.0, vz = 0.0;  // velocity
+    double vx = 0.0, vy = 0.0, vz = 0.0; // velocity
 
-    int typ;  // atom type
+    int typ; // atom type
     std::string type_name;
 
     boost::optional<double> charge;
 
     boost::optional<double> mass;
 
-    boost::optional<lj_t>  lj_param;
+    boost::optional<lj_t> lj_param;
 
-    std::list<std::size_t> con_list;  // atom num that connect to
+    std::array<double, 2> get_lj_p() const {
+        const auto c6 = (*lj_param).c6;
+        const auto c12 = (*lj_param).c12;
+        const auto sigma = c6 != 0.0 ? std::pow(c12 / c6, 1.0 / 6) : 0.0;
+        const auto epsilon = c12 != 0.0 ? c6 * c6 / (4 * c12) : 0.0;
+        return {sigma, epsilon};
+    }
+
+    std::list<std::size_t> con_list; // atom num that connect to
 
     std::weak_ptr<Molecule> molecule;
 
@@ -61,11 +69,12 @@ public:
 
     boost::optional<std::string> atom_symbol;
 
-    bool mark = false;  // used in NMR analysis
+    bool mark = false; // used in NMR analysis
 
     bool adj(const std::shared_ptr<Atom> &atom) {
         for (auto i : con_list) {
-            if (atom->seq == i) return true;
+            if (atom->seq == i)
+                return true;
         }
         return false;
     }
@@ -240,4 +249,4 @@ inline bool operator==(const std::shared_ptr<Atom::Operator> &op1, const std::sh
 
 std::string to_string(const AmberMask &mask);
 
-#endif  // TINKER_ATOM_HPP
+#endif // TINKER_ATOM_HPP

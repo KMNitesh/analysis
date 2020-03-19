@@ -33,13 +33,11 @@
 
 void printDSLDetails() {
     std::cout << "\nAuthor : " << CACANA_AUTHOR << "\n\n";
-
     std::cout << SCRIPT_SYNTAX_SUMMARY;
 }
 
 int main(int argc, char *argv[]) {
     std::cout << "Build DateTime : " << __DATE__ << " " << __TIME__ << '\n';
-
     std::cout << "current work dir : " << boost::filesystem::current_path() << '\n';
 
 #ifndef NDEBUG
@@ -48,11 +46,8 @@ int main(int argc, char *argv[]) {
         std::cout << "argv[" << i << "] = " << argv[i] << '\n';
     }
     std::cout << " > Program Arugments  \n";
-
     std::cout << "Envirment Variables :\n";
-
     std::cout << "ANALYSIS_VECTOR_RESERVE = " << getDefaultVectorReserve() << '\n';
-
 #endif
 
     auto desc = make_program_options();
@@ -70,6 +65,8 @@ int main(int argc, char *argv[]) {
         printDSLDetails();
         exit(EXIT_SUCCESS);
     }
+
+    bool keep_silent = vm["silent"].as<bool>();
 
     /*
      * examine all input files are already exist
@@ -154,8 +151,8 @@ int main(int argc, char *argv[]) {
         [] { NBOOrbitalComposition::process(); },
         [] { DelocalizationIndex::process_interactive(); },
         [&] {
-            ADCHCharge::process_interactive(vm.count("fchk") ? vm["fchk"].as<std::string>()
-                                                             : boost::optional<std::string>{});
+            ADCHCharge::process_interactive(
+                vm.count("fchk") ? vm["fchk"].as<std::string>() : boost::optional<std::string>{});
         },
         [] { TrajConverter::process(); },
         [] { QMStructureComp::process(); },
@@ -165,33 +162,34 @@ int main(int argc, char *argv[]) {
         [] { GroRenumber::process(); }};
 
     auto mainMenu = [&] {
-        std::cout << "Main Menu\n";
-        std::cout << " (0) Trajectory Analysis\n";
-        std::cout << " (1) Print Topology\n";
-        std::cout << " (2) Infrared radiation (IR) Spectrum\n";
-        std::cout << " (3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
-        std::cout << " (4) " << RamanSpectrum::title() << '\n';
-        std::cout << " (5) " << CrossCorrelation::title() << '\n';
-        std::cout << " (6) " << GmxTopologyPrinter::title() << '\n';
-        std::cout << " (7) " << GQuadruplexPdb2gmx::title() << '\n';
-        std::cout << " (8) "
-                  << "Superpose and move for Residues" << '\n';
-        std::cout << " (9) " << NBOSpin::title() << '\n';
-        std::cout << "(10) Renumber atom and residue num\n";
-        std::cout << "(11) " << Averager::title() << '\n';
-        std::cout << "(12) " << ITS_PostProcess::title() << '\n';
-        std::cout << "(13) " << ITS_Reweight::title() << '\n';
-        std::cout << "(14) " << GromosReader::title() << '\n';
-        std::cout << "(15) " << MultiwfnAIMDriver::title() << '\n';
-        std::cout << "(16) " << NBOOrbitalComposition::title() << '\n';
-        std::cout << "(17) " << DelocalizationIndex::title() << '\n';
-        std::cout << "(18) " << ADCHCharge::title() << '\n';
-        std::cout << "(19) " << TrajConverter::title() << '\n';
-        std::cout << "(20) " << QMStructureComp::title() << '\n';
-        std::cout << "(21) " << File47CoordindateFormat::title() << '\n';
-        std::cout << "(22) " << GaussianLogCoordinateFormat::title() << '\n';
-        std::cout << "(23) " << HOOH_Calculator::title() << '\n';
-        std::cout << "(24) " << GroRenumber::title() << '\n';
+        if (!keep_silent) {
+            std::cout << "Main Menu\n";
+            std::cout << " (0) Trajectory Analysis\n";
+            std::cout << " (1) Print Topology\n";
+            std::cout << " (2) Infrared radiation (IR) Spectrum\n";
+            std::cout << " (3) Infrared radiation (IR) Spectrum from DeltaDipole\n";
+            std::cout << " (4) " << RamanSpectrum::title() << '\n';
+            std::cout << " (5) " << CrossCorrelation::title() << '\n';
+            std::cout << " (6) " << GmxTopologyPrinter::title() << '\n';
+            std::cout << " (7) " << GQuadruplexPdb2gmx::title() << '\n';
+            std::cout << " (8) " << "Superpose and move for Residues" << '\n';
+            std::cout << " (9) " << NBOSpin::title() << '\n';
+            std::cout << "(10) Renumber atom and residue num\n";
+            std::cout << "(11) " << Averager::title() << '\n';
+            std::cout << "(12) " << ITS_PostProcess::title() << '\n';
+            std::cout << "(13) " << ITS_Reweight::title() << '\n';
+            std::cout << "(14) " << GromosReader::title() << '\n';
+            std::cout << "(15) " << MultiwfnAIMDriver::title() << '\n';
+            std::cout << "(16) " << NBOOrbitalComposition::title() << '\n';
+            std::cout << "(17) " << DelocalizationIndex::title() << '\n';
+            std::cout << "(18) " << ADCHCharge::title() << '\n';
+            std::cout << "(19) " << TrajConverter::title() << '\n';
+            std::cout << "(20) " << QMStructureComp::title() << '\n';
+            std::cout << "(21) " << File47CoordindateFormat::title() << '\n';
+            std::cout << "(22) " << GaussianLogCoordinateFormat::title() << '\n';
+            std::cout << "(23) " << HOOH_Calculator::title() << '\n';
+            std::cout << "(24) " << GroRenumber::title() << '\n';
+        }
         return choose<int>(0, actions.size() - 1, "select : ");
     };
 

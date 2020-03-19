@@ -86,17 +86,15 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
     using qi::alpha;
     using qi::as_string;
     using qi::eps;
-    using qi::fail;
     using qi::int_;
     using qi::lexeme;
-    using qi::on_error;
     using qi::uint_;
     using qi::ascii::char_;
 
     str_with_wildcard = as_string[lexeme[+(alnum | char_("*?="))]][_val = replace_all_copy(_1, "=", "*")];
 
     select_item_rule =
-        (str_with_wildcard >> -("-" >> uint_ >> -("#" >> int_)))[([](auto &attr, auto &context, bool &pass) {
+        (str_with_wildcard >> -("-" > uint_ >> -("#" > int_)))[([](auto &attr, auto &context, bool &pass) {
             try {
                 uint num = boost::lexical_cast<uint>(fusion::at_c<0>(attr));
 
@@ -127,13 +125,13 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
             }
         })];
 
-    residue_select_rule = ':' >> (select_item_rule % ',')[_val = make_shared_<Atom::residue_name_nums>(_1)];
+    residue_select_rule = ':' > (select_item_rule % ',')[_val = make_shared_<Atom::residue_name_nums>(_1)];
 
     molecule_select_rule =
-        '$' >> ((uint_ >> -('-' >> uint_ >> -('#' >> int_))) % ',')[_val = make_shared_<Atom::molecule_nums>(_1)];
+        '$' > ((uint_ >> -('-' > uint_ >> -('#' > int_))) % ',')[_val = make_shared_<Atom::molecule_nums>(_1)];
 
-    nametype_select_rule = '@' >> ('%' >> (select_item_rule % ',')[_val = make_shared_<Atom::atom_types>(_1)] |
-                                   '/' >> (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)] |
+    nametype_select_rule = '@' > ('%' > (select_item_rule % ',')[_val = make_shared_<Atom::atom_types>(_1)] |
+                                   '/' > (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)] |
                                    (select_item_rule % ',')[_val = make_shared_<Atom::atom_name_nums>(_1)]);
 
 #define DISTINCT(x) distinct(char_("a-zA-Z_0-9") | char_("-+"))[x]
@@ -205,13 +203,13 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
 
     select_rule = macro_rule | residue_select_rule | molecule_select_rule | nametype_select_rule;
 
-    factor = "(" >> maskParser >> ")" | select_rule;
+    factor = ("(" > maskParser > ")") | select_rule;
 
-    term = "!" >> factor[_val = make_shared_<Atom::Operator>(Atom::Op::NOT, _1)] | factor[_val = _1];
+    term = ("!" > factor[_val = make_shared_<Atom::Operator>(Atom::Op::NOT, _1)]) | factor[_val = _1];
 
-    expr = term[_val = _1] >> *("&" >> term[_val = make_shared_<Atom::Operator>(Atom::Op::AND, _val, _1)]);
+    expr = term[_val = _1] > *("&" > term[_val = make_shared_<Atom::Operator>(Atom::Op::AND, _val, _1)]);
 
-    maskParser = expr[_val = _1] >> *("|" >> expr[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
+    maskParser = eps > expr[_val = _1] > *("|" > expr[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]) > qi::eoi;
 
     str_with_wildcard.name("str_with_wildcard");
     select_item_rule.name("select_item_rule");
@@ -224,8 +222,6 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
     expr.name("expr");
     maskParser.name("mask");
 
-    on_error<fail>(maskParser, std::cout << val("Error! Expecting") << _4 << val(" here: \"")
-                                         << phoenix::construct<std::string>(_3, _2) << val("\"") << std::endl);
 }
 
 #endif  // TINKER_GRAMMER_HPP

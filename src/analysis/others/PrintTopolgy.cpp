@@ -10,6 +10,7 @@
 #include "data_structure/molecule.hpp"
 #include "dsl/center_selection_grammar.hpp"
 #include "trajectory_reader/trajectoryreader.hpp"
+#include "utils/EnergyCalculator.hpp"
 
 namespace qi = boost::spirit::qi;
 
@@ -51,22 +52,30 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         } else if (auto ret = boost::get<std::shared_ptr<NoopRuleNode>>(&r)) {
             ast = (*ret)->SelectionMask;
             mode = Mode::Noop;
+        } else if (auto ret = boost::get<std::shared_ptr<EDARuleNode>>(&r)) {
+            EnergyCalculator calculator;
+            calculator.setMask((*ret)->mask1, (*ret)->mask2, frame);
+            auto [ele, lj] = calculator.calculate_energy(frame);
+            std::cout << "E(ele) = " << ele << " (kcal/mole)\n"
+                      << "E(vdW) = " << lj << " (kcal/mole)\n";
+            continue;
         } else if (boost::get<std::shared_ptr<QuitRuleNode>>(&r)) {
             break;
         } else if (boost::get<std::shared_ptr<HelpRuleNode>>(&r)) {
             std::cout << "Help : \n"
-                      << " 1. com  of ambermask\n"
-                      << " 2. geom of ambermask\n"
-                      << " 3. ambermask\n"
-                      << " 4. help\n"
-                      << " 5. quit\n";
+                      << " 1. com mask\n"
+                      << " 2. geom mask\n"
+                      << " 3. mask\n"
+                      << " 4. eda mask1 mask2\n"
+                      << " 5. help\n"
+                      << " 6. quit\n";
             continue;
         }
 
         std::cout << boost::format("%-6s %-7s %4s %-7s %4s %-6s  %8s %8s  %8s%8s%8s") % "#Atom" % "Name" % "#Res" %
                          "Name" % "#Mol" % "Type" % "Charge" % "Mass" % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
         if (frame->atom_list.front()->lj_param.has_value())
-            std::cout << boost::format("%14s%14s%14s%14s") % "LJ_SR c6" % "LJ_SR c12" % "sigma(nm)" % "eps(kJ/mol)";
+            std::cout << boost::format("%14s%14s%14s%14s") % "LJ c6" % "LJ c12" % "sigma(nm)" % "eps(kJ/mol)";
         std::cout << '\n';
 
         double weight = 0;
@@ -87,8 +96,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                 if (atom->lj_param.has_value()) {
                     const auto c6 = (*atom->lj_param).c6;
                     const auto c12 = (*atom->lj_param).c12;
-                    const auto sigma = c6 != 0.0 ? std::pow(c12 / c6, 1.0 / 6) : 0.0;
-                    const auto epsilon = c12 != 0.0 ? c6 * c6 / (4 * c12) : 0.0;
+                    const auto &[sigma, epsilon] = atom->get_lj_p();
                     std::cout << boost::format("%14e%14e%14e%14e") % c6 % c12 % sigma % epsilon;
                 }
                 std::cout << '\n';

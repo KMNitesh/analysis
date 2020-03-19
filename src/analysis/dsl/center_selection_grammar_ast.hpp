@@ -28,12 +28,17 @@ struct NoopRuleNode {
     NoopRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
 };
 
+struct EDARuleNode {
+    Atom::Node mask1, mask2;
+    EDARuleNode(const Atom::Node &mask1, const Atom::Node &mask2) : mask1(mask1), mask2(mask2) {}
+};
+
 struct QuitRuleNode {};
 
 struct HelpRuleNode {};
 
 using CenterRuleNode =
     boost::variant<std::shared_ptr<MassCenterRuleNode>, std::shared_ptr<GeomCenterRuleNode>,
-                   std::shared_ptr<NoopRuleNode>, std::shared_ptr<QuitRuleNode>, std::shared_ptr<HelpRuleNode> >;
+                   std::shared_ptr<NoopRuleNode>,std::shared_ptr<EDARuleNode>, std::shared_ptr<QuitRuleNode>, std::shared_ptr<HelpRuleNode> >;
 
 #endif  // TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP

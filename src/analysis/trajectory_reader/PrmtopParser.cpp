@@ -1,13 +1,10 @@
 
-#include "utils/common.hpp"
 #include "trajectory_reader/PrmtopGrammar.hpp"
+#include "utils/common.hpp"
 
-#include <printf.h>
-
-#include <boost/spirit/repository/include/qi_iter_pos.hpp>
-#include <boost/spirit/include/support_line_pos_iterator.hpp>
 #include "PrmtopParser.hpp"
-
+#include <boost/spirit/include/support_line_pos_iterator.hpp>
+#include <boost/spirit/repository/include/qi_iter_pos.hpp>
 
 boost::optional<PrmtopStruct> PrmtopParser::parse(std::istream &is) {
     std::string content{std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>()};

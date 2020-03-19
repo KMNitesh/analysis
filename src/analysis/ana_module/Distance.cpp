@@ -58,7 +58,7 @@ void Distance::print(std::ostream &os) {
 
     os << ">>>JSON<<<\n";
     saveJson(os);
-    os << "<<<JSON>>>\n";
+    os << "\n<<<JSON>>>\n";
 }
 
 void Distance::readInfo() { Atom::select2group(mask_for_group1, mask_for_group2); }
