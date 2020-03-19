@@ -1,0 +1,12 @@
+#ifndef TINKER_ENERGYCALCULATOR_HPP
+#define TINKER_ENERGYCALCULATOR_HPP
+
+
+
+class EnergyCalculator {
+
+};
+
+
+
+#endif //TINKER_ENERGYCALCULATOR_HPP
