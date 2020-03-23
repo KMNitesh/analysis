@@ -57,6 +57,7 @@ namespace mpl = boost::mpl;
 #include "ana_module/NMRRange.hpp"
 #include "ana_module/OrientationResolvedRadialDistributionFunction.hpp"
 #include "ana_module/PlaneAngle.hpp"
+#include "ana_module/ProteinDihedral.hpp"
 #include "ana_module/RMSDCal.hpp"
 #include "ana_module/RMSFCal.hpp"
 #include "ana_module/RadicalDistribtuionFunction.hpp"
@@ -96,7 +97,9 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> subMenu(const std:
         return choose<int>(0, mpl::size<components>::value, "select : ");
     };
     int num = menu1();
-    if (num == 0) return task_list;
+    if (num == 0)
+        return task_list;
+
     shared_ptr<AbstractAnalysis> task = task_vec[num - 1]();
 
     string line(item_menu[num - 1].size() + 6, '-');
@@ -108,7 +111,7 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> subMenu(const std:
     task_list->push_back(task);
     return task_list;
 }
-}  // namespace
+} // namespace
 
 std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
     auto task_list = make_shared<list<shared_ptr<AbstractAnalysis>>>();
@@ -117,7 +120,7 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
         mpl::vector<DipoleAngle, DipoleAngle2Gibbs, DipoleAngleSingleDistanceNormal, DipoleAngleVolumeNormal,
                     DipoleAngleWithDistanceRange, DipoleAxisDistribution, EquatorialAngle, PlaneAngle, AngleWat,
                     DistanceAngle, DipoleAngleAxis3D, SpatialOrientationDistribution,
-                    AngleDistributionBetweenTwoVectorWithCutoff, CoplaneIndex>;
+                    AngleDistributionBetweenTwoVectorWithCutoff, CoplaneIndex, ProteinDihedral>;
 
     using structurePropertyMenu =
         mpl::vector<Distance, Angle, Distance2Plane, CoordinateNumPerFrame, RadicalDistribtuionFunction, RMSDCal,
