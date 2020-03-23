@@ -32,10 +32,10 @@ public:
     PBCBox box;
     std::string title;
 
-    std::list<std::shared_ptr<Atom>> atom_list;
+    std::vector<std::shared_ptr<Atom>> atom_list;
     std::unordered_map<int, std::shared_ptr<Atom>> atom_map;
 
-    std::list<std::shared_ptr<Molecule>> molecule_list;
+    std::vector<std::shared_ptr<Molecule>> molecule_list;
 
     bool enable_bound = false;
 

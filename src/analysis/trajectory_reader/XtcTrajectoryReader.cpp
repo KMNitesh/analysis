@@ -20,22 +20,24 @@ bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
     } else {
         ret = gmx::read_next_xtc(fio, natoms, &step, &time, box, x, &prec, &bOK);
     }
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     if (bOK) {
-        if (natoms != static_cast<int>(frame->atom_list.size())) {
-            std::cerr << "ERROR! the atom number do not match" << std::endl;
-            exit(1);
+        static bool has_Warning_d = false;
+        if (!has_Warning_d and natoms != static_cast<int>(frame->atom_list.size())) {
+            std::cerr << boost::format("WARNING: topology has %d atoms, whereas trajectory has %d\n") %
+                             frame->atom_list.size() % natoms;
+            has_Warning_d = true;
         }
         if (frame->enable_bound) {
             frame->box = PBCBox(box);
         }
-        int i = 0;
-        for (auto &atom : frame->atom_list) {
+        for (auto i : boost::irange(0, natoms)) {
+            auto &atom = frame->atom_list[i];
             atom->x = x[i][0] * 10;
             atom->y = x[i][1] * 10;
             atom->z = x[i][2] * 10;
-            i++;
         }
         return true;
     }
