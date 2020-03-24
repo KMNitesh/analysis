@@ -56,7 +56,7 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
     using qi::uint_;
     using qi::ascii::char_;
 
-    mask = (("[" > maskParser > "]") | maskParser)[_val = _1];
+    mask = (("[" >> maskParser >> "]") | maskParser)[_val = _1];
     mask.name("mask");
 
     expr = (DISTINCT("com") > mask[_val = make_shared_<MassCenterRuleNode>(_1)]) |
@@ -64,7 +64,7 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
            ((DISTINCT("eda") > mask > mask)[_val = make_shared_<EDARuleNode>(_1, _2)]) |
            DISTINCT("quit")[_val = make_shared_<QuitRuleNode>()] |
            DISTINCT("help")[_val = make_shared_<HelpRuleNode>()] | mask[_val = make_shared_<NoopRuleNode>(_1)];
-    root = expr > eoi;
+    root = eps > expr;
 }
 
 std::tuple<CenterRuleNode, std::string>

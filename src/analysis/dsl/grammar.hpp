@@ -208,7 +208,7 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
 
     maskParser = expr[_val = _1] > *("|" > expr[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
 
-    root = eps > maskParser > qi::eoi;
+    root = eps > maskParser;
 
     str_with_wildcard.name("str_with_wildcard");
     select_item_rule.name("select_item_rule");

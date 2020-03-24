@@ -1,16 +1,16 @@
 
-#include <gmock/gmock.h>
 #include "dsl/center_selection_grammar.hpp"
+#include <gmock/gmock.h>
 
 using namespace testing;
 
 TEST(test_center_selection_grammer, test_com) {
     CenterGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    std::string input_string = "com of :1 ";
+    std::string input_string = "com :1 ";
     CenterRuleNode ast;
     auto it = input_string.begin();
-    bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, ast);
+    bool status = qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast);
 
     auto ret = boost::get<std::shared_ptr<MassCenterRuleNode>>(&ast);
 
@@ -20,23 +20,19 @@ TEST(test_center_selection_grammer, test_com) {
 TEST(test_center_selection_grammer, test_not_com) {
     CenterGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    std::string input_string = "comdd of :1 ";
+    std::string input_string = "comdd :1 ";
     CenterRuleNode ast;
     auto it = input_string.begin();
-    bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, ast);
-
-    auto ret = boost::get<std::shared_ptr<MassCenterRuleNode>>(&ast);
-
-    ASSERT_TRUE(!(status && it == input_string.end() && ret));
+    ASSERT_ANY_THROW(qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast));
 }
 
 TEST(test_center_selection_grammer, test_geom) {
     CenterGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    std::string input_string = "geom of :1& @O ";
+    std::string input_string = "geom  :1&@O ";
     CenterRuleNode ast;
     auto it = input_string.begin();
-    bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, ast);
+    bool status = qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast);
 
     auto ret = boost::get<std::shared_ptr<GeomCenterRuleNode>>(&ast);
 
@@ -46,14 +42,18 @@ TEST(test_center_selection_grammer, test_geom) {
 TEST(test_center_selection_grammer, test_not_geom) {
     CenterGrammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    std::string input_string = "com of :1& @O ";
+    std::string input_string = "com [:1&@O] ";
     CenterRuleNode ast;
     auto it = input_string.begin();
-    bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, ast);
-
-    auto ret = boost::get<std::shared_ptr<GeomCenterRuleNode>>(&ast);
-
-    ASSERT_TRUE(!(status && it == input_string.end() && ret));
+    try {
+        qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast);
+    } catch (qi::expectation_failure<std::string::iterator> &x) {
+        std::cerr << "Grammar Parse Failure ! Expecting : " << x.what_ << '\n';
+        auto column = boost::spirit::get_column(std::begin(input_string), x.first);
+        std::string pos = " (column: " + std::to_string(column) + ")";
+        std::cerr << pos << ">>>>" << input_string << "<<<<\n";
+        std::cerr << std::string(column + pos.size() + 3, ' ') << "^~~~ here\n";
+    }
 }
 
 TEST(test_center_selection_grammer, test_noop) {
@@ -62,7 +62,7 @@ TEST(test_center_selection_grammer, test_noop) {
     std::string input_string = ":1& @O ";
     CenterRuleNode ast;
     auto it = input_string.begin();
-    bool status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, ast);
+    bool status = qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast);
 
     auto ret = boost::get<std::shared_ptr<NoopRuleNode>>(&ast);
 
