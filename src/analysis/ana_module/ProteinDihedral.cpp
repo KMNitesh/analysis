@@ -16,14 +16,7 @@ void ProteinDihedral::process(std::shared_ptr<Frame> &frame) {
         const auto &atom2 = atom_sequence[index + 1];
         const auto &atom3 = atom_sequence[index + 2];
 
-        auto v2_1 = atom1->getCoordinate() - atom2->getCoordinate();
-        auto v2_3 = atom3->getCoordinate() - atom2->getCoordinate();
-
-        frame->image(v2_1);
-        frame->image(v2_3);
-
-        auto angle =
-            radian * std::acos(dot_multiplication(v2_1, v2_3) / std::sqrt(vector_norm2(v2_1) * vector_norm2(v2_3)));
+        auto angle = atom_angle(atom1, atom2, atom3, frame);
 
         angles[index](angle);
     }
@@ -35,19 +28,7 @@ void ProteinDihedral::process(std::shared_ptr<Frame> &frame) {
         const auto &atom3 = atom_sequence[index + 2];
         const auto &atom4 = atom_sequence[index + 3];
 
-        auto v1_2 = atom2->getCoordinate() - atom1->getCoordinate();
-        auto v2_3 = atom3->getCoordinate() - atom2->getCoordinate();
-        auto v3_4 = atom4->getCoordinate() - atom3->getCoordinate();
-
-        frame->image(v1_2);
-        frame->image(v2_3);
-        frame->image(v3_4);
-
-        auto cv1 = cross_multiplication(v1_2, v2_3);
-        auto cv2 = cross_multiplication(v2_3, v3_4);
-
-        auto angle =
-            radian * std::acos(dot_multiplication(cv1, cv2) / std::sqrt(vector_norm2(cv1) * vector_norm2(cv2)));
+        auto angle = atom_dihedral(atom1, atom2, atom3, atom4, frame);
 
         dihedrals[index](angle);
     }
