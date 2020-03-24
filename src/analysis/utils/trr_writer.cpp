@@ -19,10 +19,10 @@ void TRRWriter::open(const std::string &filename) {
     time = 0.0;
 }
 
-void TRRWriter::write(const std::shared_ptr<Frame> &frame) {
+void TRRWriter::write(const std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) {
     throw_assert(xd != nullptr, "Gromacs Trr File handle invalid");
-    auto x = std::make_unique<gmx::rvec[]>(frame->atom_list.size());
-    for (const auto &ele : frame->atom_list | boost::adaptors::indexed()) {
+    auto x = std::make_unique<gmx::rvec[]>(atoms.size());
+    for (const auto &ele : atoms | boost::adaptors::indexed()) {
         auto i = ele.index();
         auto &atom = ele.value();
         x[i][0] = atom->x / 10.0;
@@ -31,8 +31,8 @@ void TRRWriter::write(const std::shared_ptr<Frame> &frame) {
     }
     std::unique_ptr<gmx::rvec[]> v;
     if (writeVelocities) {
-        v = std::make_unique<gmx::rvec[]>(frame->atom_list.size());
-        for (const auto &ele : frame->atom_list | boost::adaptors::indexed()) {
+        v = std::make_unique<gmx::rvec[]>(atoms.size());
+        for (const auto &ele : atoms| boost::adaptors::indexed()) {
             auto i = ele.index();
             auto &atom = ele.value();
             v[i][0] = atom->vx / 10.0;

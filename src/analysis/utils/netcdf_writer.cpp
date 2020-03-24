@@ -15,9 +15,9 @@ void NetCDFWriter::close() {
     }
 }
 
-void NetCDFWriter::write(const std::shared_ptr<Frame> &frame) {
+void NetCDFWriter::write(const std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) {
     if (!_is_open) {
-        if (getNetcdfImpl()->netcdfCreate(&NC, filename.c_str(), frame->atom_list.size(), 1)) {
+        if (getNetcdfImpl()->netcdfCreate(&NC, filename.c_str(), atoms.size(), 1)) {
             throw std::runtime_error("Error open " + filename);
         }
         _is_open = true;
@@ -26,7 +26,7 @@ void NetCDFWriter::write(const std::shared_ptr<Frame> &frame) {
     double x[NC.ncatom3];
     auto box = frame->box.getBoxParameter();
     double *p = x;
-    for (auto &atom : frame->atom_list) {
+    for (auto &atom : atoms) {
         *p = atom->x;
         p++;
         *p = atom->y;

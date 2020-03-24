@@ -22,11 +22,11 @@ void GROWriter::open(const std::string &filename) { os->open(filename, std::ios:
 
 void GROWriter::close() { os->close(); }
 
-void GROWriter::write(const std::shared_ptr<Frame> &frame) {
+void GROWriter::write(const std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) {
     *os << frame->title << '\n';
     *os << frame->atom_list.size() << '\n';
     const boost::format fmt("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n");
-    for (auto &atom : frame->atom_list) {
+    for (auto &atom : atoms) {
         const auto &mol = atom->molecule.lock();
         *os << boost::format(fmt) %
                    ((atom->residue_num.has_value() ? atom->residue_num.get() : mol->sequence) % 100000) %

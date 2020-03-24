@@ -126,7 +126,7 @@ public:
 
     struct Operator;
 
-    using Node = boost::variant<std::shared_ptr<Operator>, std::shared_ptr<residue_name_nums>,
+    using Node = boost::variant<boost::blank, std::shared_ptr<Operator>, std::shared_ptr<residue_name_nums>,
                                 std::shared_ptr<molecule_nums>, std::shared_ptr<atom_name_nums>,
                                 std::shared_ptr<atom_types>, std::shared_ptr<atom_element_names>>;
 
@@ -148,7 +148,10 @@ public:
                              const std::string &prompt1 = "Enter mask for atom1 : ",
                              const std::string &prompt2 = "Enter mask for atom2 : ");
 
-    static void select1group(AmberMask &ids, const std::string &prompt = "Enter mask for atom : ");
+    static void select1group(AmberMask &ids,
+                             const std::string &prompt = "Enter mask for atom : ", bool allow_empty = false);
+
+    static bool isBlank(const AmberMask &mask) { return mask.which() == 0; }
 };
 
 using AmberMask = Atom::AmberMask;
@@ -159,6 +162,8 @@ struct print : boost::static_visitor<> {
     explicit print(int space_num = 0) : space_num(space_num) {}
 
     void indent(int space_num) const;
+
+    void operator()(const boost::blank &) const {};
 
     void operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const;
 
@@ -175,6 +180,8 @@ struct print : boost::static_visitor<> {
 
 struct AtomEqual : boost::static_visitor<bool> {
     explicit AtomEqual(const std::shared_ptr<Atom> &atom) : atom(atom) {}
+
+    bool operator()(const boost::blank &) const { return false; };
 
     bool operator()(const std::shared_ptr<Atom::residue_name_nums> &residues) const;
 

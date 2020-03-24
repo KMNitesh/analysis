@@ -23,7 +23,9 @@ class TRRWriter : public TrajectoryFormatWriter {
 public:
     void open(const std::string &filename) override;
 
-    void write(const std::shared_ptr<Frame> &frame) override;
+    using TrajectoryFormatWriter::write;
+
+    void write(const std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) override;
 
     void close() override;
 

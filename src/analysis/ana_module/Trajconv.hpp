@@ -5,11 +5,13 @@
 #ifndef TINKER_TRAJCONV_HPP
 #define TINKER_TRAJCONV_HPP
 
-#include <data_structure/atom.hpp>
 #include <memory>
 #include <string>
 
+#include <boost/optional.hpp>
+
 #include "ana_module/AbstractAnalysis.hpp"
+#include "data_structure/atom.hpp"
 #include "utils/TrajectoryFormatWriter.hpp"
 #include "utils/TrajectoryWriterFactoryImpl.hpp"
 
@@ -19,7 +21,7 @@ class Frame;
 
 class Trajconv : public AbstractAnalysis {
 public:
-    void processFirstFrame(std::shared_ptr<Frame> &) override;
+    void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void process(std::shared_ptr<Frame> &frame) override;
 
@@ -51,10 +53,13 @@ private:
 
     std::shared_ptr<PBCUtils> pbc_utils;
 
+    AmberMask mask_for_writetraj;
+    std::vector<std::shared_ptr<Atom>> atoms_for_writetraj;
+
 protected:
     void selectPBCMode();
 
     void inputOutputFiles(std::istream &in = std::cin, std::ostream &out = std::cout);
 };
 
-#endif  // TINKER_TRAJCONV_HPP
+#endif // TINKER_TRAJCONV_HPP

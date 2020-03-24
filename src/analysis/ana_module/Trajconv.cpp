@@ -9,6 +9,7 @@
 #include "data_structure/molecule.hpp"
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
+#include <boost/range/algorithm.hpp>
 
 Trajconv::Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory)
     : factory(std::move(factory)), pbc_utils(std::make_shared<PBCUtils>()) {}
@@ -17,7 +18,7 @@ void Trajconv::process(std::shared_ptr<Frame> &frame) {
     pbc_utils->doPBC(pbc_type, mask, frame);
 
     for (auto &[name, w] : writers) {
-        w->write(frame);
+        w->write(frame, atoms_for_writetraj);
     }
     step++;
 }
@@ -62,30 +63,31 @@ void Trajconv::selectPBCMode() {
     while (true) {
         int option = choose(0, 4, "Choose : ");
         switch (option) {
-            case 0:
-                pbc_type = PBCType::None;
-                break;
-            case 1:
-                pbc_type = PBCType::OneAtom;
-                Atom::select1group(mask, "Please enter atom mask : ");
-                break;
-            case 2:
-                pbc_type = PBCType::OneMol;
-                Atom::select1group(mask, "Please enter one atom mask that the molecule include: ");
-                break;
-            case 3:
-                pbc_type = PBCType::AtomGroup;
-                Atom::select1group(mask, "Please enter atom group: ");
-                break;
-            case 4:
-                pbc_type = PBCType::AllIntoBox;
-                break;
-            default:
-                std::cerr << "option not found !\n";
-                continue;
+        case 0:
+            pbc_type = PBCType::None;
+            break;
+        case 1:
+            pbc_type = PBCType::OneAtom;
+            Atom::select1group(mask, "Please enter atom mask : ");
+            break;
+        case 2:
+            pbc_type = PBCType::OneMol;
+            Atom::select1group(mask, "Please enter one atom mask that the molecule include: ");
+            break;
+        case 3:
+            pbc_type = PBCType::AtomGroup;
+            Atom::select1group(mask, "Please enter atom group: ");
+            break;
+        case 4:
+            pbc_type = PBCType::AllIntoBox;
+            break;
+        default:
+            std::cerr << "option not found !\n";
+            continue;
         }
         break;
     }
+    Atom::select1group(mask_for_writetraj, "Enter mask for output > ", true);
 }
 
 void Trajconv::fastConvertTo(std::string target) noexcept(false) {
@@ -102,8 +104,17 @@ void Trajconv::fastConvertTo(std::string target) noexcept(false) {
     }
 }
 
-void Trajconv::processFirstFrame(std::shared_ptr<Frame> &) {
+void Trajconv::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &[name, w] : writers) {
         w->open(name);
+    }
+    if (!Atom::isBlank(mask_for_writetraj)) {
+        boost::for_each(frame->atom_list, [this](const std::shared_ptr<Atom> &atom) {
+            if (Atom::is_match(atom, mask_for_writetraj)) {
+                atoms_for_writetraj.push_back(atom);
+            }
+        });
+    } else {
+        atoms_for_writetraj = frame->atom_list;
     }
 }

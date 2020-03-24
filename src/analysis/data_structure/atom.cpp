@@ -179,19 +179,21 @@ void print::indent(int space_num) const { std::cout << std::string(3 * space_num
 
 template <typename Iterator, typename Skipper>
 Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &promot,
-                                     std::string input_string = "") {
+                                     std::string input_string = "", bool allow_empty = false) {
     for (;;) {
         Atom::AmberMask mask;
         if (input_string.empty())
             input_string = input(promot);
 
         boost::trim(input_string);
-        if (input_string.empty())
+        if (input_string.empty() and allow_empty)
+            return mask;
+        else
             continue;
 
         std::string::iterator begin{std::begin(input_string)}, it{begin}, end{std::end(input_string)};
         try {
-            qi::phrase_parse(it, end, grammar, boost::spirit::ascii::space, mask);
+            qi::phrase_parse(it, end, grammar > qi::eoi, boost::spirit::ascii::space, mask);
             std::cout << "Parsed Abstract Syntax Tree :\n";
             boost::apply_visitor(print(), mask);
             return mask;
@@ -207,7 +209,7 @@ Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, 
 
 AmberMask parse_atoms(const std::string &input_string) {
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
-    return input_atom_selection(grammar, "", input_string);
+    return input_atom_selection(grammar, "Enter mask for read trajectory > ", input_string);
 }
 
 void Atom::select2group(Atom::AmberMask &ids1, Atom::AmberMask &ids2, const std::string &prompt1,
@@ -218,14 +220,14 @@ void Atom::select2group(Atom::AmberMask &ids1, Atom::AmberMask &ids2, const std:
     ids2 = input_atom_selection(grammar, prompt2);
 }
 
-void Atom::select1group(AmberMask &ids, const std::string &prompt) {
+void Atom::select1group(AmberMask &ids, const std::string &prompt, bool allow_empty) {
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
     using ascii::char_;
 
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
 
-    ids = input_atom_selection(grammar, prompt);
+    ids = input_atom_selection(grammar, prompt, "", allow_empty);
 }
 
 bool is_match_impl(const std::shared_ptr<Atom> &atom, const Atom::Node &ast) {
