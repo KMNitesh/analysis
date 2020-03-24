@@ -44,13 +44,20 @@ void ProteinDihedral::print(std::ostream &os) {
         for (std::size_t j = 0; j < 4; ++j) {
             const auto &atom = atom_sequence[index + j];
             dihedral_id[j] =
-                (boost::format("%s%d@%s") % atom->residue_name % atom->residue_num % atom->atom_name).str();
+                (boost::format("%s%d@%s") % atom->residue_name.value() % atom->residue_num.value() % atom->atom_name)
+                    .str();
         }
         formated_items.emplace_back(std::move(dihedral_id), boost::accumulators::variance(dihedrals[index]));
     }
 
     boost::sort(formated_items, [](const auto &lhs, const auto &rhs) { return lhs.second > rhs.second; });
 
+    os << std::string(50, '#') << '\n';
+    os << '#' << title() << '\n';
+    os << "#     atoms > " << mask << '\n';
+    os << "# init atom > " << init_mask << '\n';
+    os << std::string(50, '#') << '\n';
+    os << "#  Dihedral Definition    STD\n";
     for (const auto &[names, value] : formated_items) {
         os << boost::format("%s - %s - %s - %s    %15.6f\n") % names[0] % names[1] % names[2] % names[3] %
                   std::sqrt(value);
@@ -90,6 +97,6 @@ void ProteinDihedral::processFirstFrame(std::shared_ptr<Frame> &frame) {
 }
 
 void ProteinDihedral::readInfo() {
-    Atom::select1group(mask, "Enter Protien MainChain > ");
+    Atom::select1group(mask, "Enter Protien Backbone > ");
     Atom::select1group(init_mask, "Enter init atom > ");
 }

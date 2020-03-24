@@ -24,8 +24,7 @@ namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 
-template <typename Iterator, typename Skipper>
-struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
+template <typename Iterator, typename Skipper> struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
     Grammar();
 
     qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>(),
@@ -38,7 +37,7 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
     qi::rule<Iterator, Atom::Node(), Skipper> select_rule;
     qi::rule<Iterator, Atom::Node(), Skipper> term, factor;
     qi::rule<Iterator, Atom::Node(), Skipper> expr;
-    qi::rule<Iterator, Atom::Node(), Skipper> maskParser;
+    qi::rule<Iterator, Atom::Node(), Skipper> maskParser, root;
 
     qi::rule<Iterator, std::string(), Skipper> str_with_wildcard;
 
@@ -71,7 +70,7 @@ struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
 BOOST_PHOENIX_ADAPT_FUNCTION(std::string, replace_all_copy, boost::replace_all_copy, 3)
 
 template <typename Iterator, typename Skipper>
-Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
+Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
     using boost::spirit::repository::qi::distinct;
     using phoenix::bind;
     using phoenix::new_;
@@ -131,8 +130,8 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
         '$' > ((uint_ >> -('-' > uint_ >> -('#' > int_))) % ',')[_val = make_shared_<Atom::molecule_nums>(_1)];
 
     nametype_select_rule = '@' > ('%' > (select_item_rule % ',')[_val = make_shared_<Atom::atom_types>(_1)] |
-                                   '/' > (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)] |
-                                   (select_item_rule % ',')[_val = make_shared_<Atom::atom_name_nums>(_1)]);
+                                  '/' > (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)] |
+                                  (select_item_rule % ',')[_val = make_shared_<Atom::atom_name_nums>(_1)]);
 
 #define DISTINCT(x) distinct(char_("a-zA-Z_0-9") | char_("-+"))[x]
 
@@ -141,11 +140,10 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
 
         | DISTINCT("Protein")[_val = make_shared_<Atom::residue_name_nums>(protein)]
 
-        |
-        DISTINCT("Protein-H")[_val = make_shared_<Atom::Operator>(
-                                  Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                  make_shared_<Atom::Operator>(
-                                      Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"H*"})))] |
+        | DISTINCT("Protein-H")[_val = make_shared_<Atom::Operator>(
+                                    Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
+                                    make_shared_<Atom::Operator>(Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(
+                                                                                    Atom::select_ranges{"H*"})))] |
         DISTINCT("Backbone")[_val = make_shared_<Atom::Operator>(
                                  Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
                                  make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N"}))]
@@ -174,16 +172,15 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
                                                                  make_shared_<Atom::atom_name_nums>(
                                                                      Atom::select_ranges{"CA", "C", "O", "N", "H"})))]
 
-        |
-        DISTINCT("SideChain-H")[_val = make_shared_<Atom::Operator>(
-                                    Atom::Op::AND,
-                                    make_shared_<Atom::Operator>(
-                                        Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                        make_shared_<Atom::Operator>(
-                                            Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(
-                                                               Atom::select_ranges{"CA", "C", "O", "N", "H"}))),
-                                    make_shared_<Atom::Operator>(
-                                        Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"H*"})))]
+        | DISTINCT("SideChain-H")[_val = make_shared_<Atom::Operator>(
+                                      Atom::Op::AND,
+                                      make_shared_<Atom::Operator>(
+                                          Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
+                                          make_shared_<Atom::Operator>(
+                                              Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(
+                                                                 Atom::select_ranges{"CA", "C", "O", "N", "H"}))),
+                                      make_shared_<Atom::Operator>(Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(
+                                                                                      Atom::select_ranges{"H*"})))]
 
         | DISTINCT("DNA")[_val = make_shared_<Atom::residue_name_nums>(dna)]
 
@@ -209,7 +206,9 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
 
     expr = term[_val = _1] > *("&" > term[_val = make_shared_<Atom::Operator>(Atom::Op::AND, _val, _1)]);
 
-    maskParser = eps > expr[_val = _1] > *("|" > expr[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]) > qi::eoi;
+    maskParser = expr[_val = _1] > *("|" > expr[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
+
+    root = eps > maskParser > qi::eoi;
 
     str_with_wildcard.name("str_with_wildcard");
     select_item_rule.name("select_item_rule");
@@ -221,7 +220,6 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(maskParser, "mask") {
     term.name("term");
     expr.name("expr");
     maskParser.name("mask");
-
 }
 
-#endif  // TINKER_GRAMMER_HPP
+#endif // TINKER_GRAMMER_HPP
