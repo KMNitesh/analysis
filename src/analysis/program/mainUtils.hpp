@@ -37,6 +37,6 @@ int executeAnalysis(const std::vector<std::string> &xyzfiles, int argc, char *co
                     boost::optional<std::string> &topology, boost::optional<std::string> &forcefield_file,
                     const boost::optional<std::string> &output_file,
                     std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> &task_list, int start,
-                    int total_frames, int step_size, int nthreads);
+                    int total_frames, int step_size, int nthreads, const std::string &mask_string = "");
 
 #endif  // TINKER_MAINUTILS_HPP

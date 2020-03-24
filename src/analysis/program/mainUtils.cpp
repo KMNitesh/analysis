@@ -162,11 +162,14 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
     }
 
     boost::optional<string> topology;
-    if (vm.count("topology")) topology = vm["topology"].as<string>();
+    if (vm.count("topology"))
+        topology = vm["topology"].as<string>();
     boost::optional<string> forcefield_file;
-    if (vm.count("prm")) forcefield_file = vm["prm"].as<string>();
+    if (vm.count("prm"))
+        forcefield_file = vm["prm"].as<string>();
     boost::optional<string> output_file;
-    if (vm.count("output")) output_file = vm["output"].as<string>();
+    if (vm.count("output"))
+        output_file = vm["output"].as<string>();
 
     boost::any ast;
     auto it = scriptContent.begin();
@@ -176,7 +179,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         std::cerr << "Syntax Parse Error\n";
         std::cerr << "error-pos : " << std::endl;
         std::cout << scriptContent << std::endl;
-        for (auto iter = scriptContent.begin(); iter != it; ++iter) std::cerr << " ";
+        for (auto iter = scriptContent.begin(); iter != it; ++iter)
+            std::cerr << " ";
         std::cerr << "^" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -518,7 +522,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
                     boost::optional<string> &script_file, boost::optional<string> &topology,
                     boost::optional<string> &forcefield_file, const boost::optional<string> &output_file,
                     shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list, int start, int total_frames,
-                    int step_size, int nthreads) {
+                    int step_size, int nthreads, const std::string &mask_string) {
     if (task_list->empty()) {
         cerr << "Empty task in the pending list, skip go function ...\n";
         return 0;
@@ -612,12 +616,15 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
             exit(EXIT_FAILURE);
         }
     }
+    reader->set_mask(mask_string);
+
     shared_ptr<Frame> frame;
     int Clear = 0;
     int current_frame_num = 0;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames) break;
+        if (total_frames != 0 and current_frame_num > total_frames)
+            break;
         if (current_frame_num % 10 == 0) {
             if (Clear) {
                 cout << "\r";
@@ -731,7 +738,8 @@ void processTrajectory(const boost::program_options::options_description &desc,
     if (choose_bool("Do you want to use multiple files [N]:", Default(false))) {
         while (true) {
             std::string input_line = choose_file("next file [Enter for End]:").isExist(true).can_empty(true);
-            if (input_line.empty()) break;
+            if (input_line.empty())
+                break;
             if (getFileType(input_line) == FileType::TRAJ) {
                 std::cout << "traj file can not use multiple files [retype]" << std::endl;
                 continue;
@@ -744,6 +752,9 @@ void processTrajectory(const boost::program_options::options_description &desc,
     if (enable_outfile) {
         outfile.open(getOutputFilename(vm));
     }
+
+    if (vm.count("mask"))
+        reader->set_mask(vm["mask"].as<std::string>());
 
     std::shared_ptr<AbstractAnalysis> parallel_while_task;
     for (auto &task : *task_list) {
@@ -812,7 +823,8 @@ std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<Abstra
     std::shared_ptr<Frame> frame;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames) break;
+        if (total_frames != 0 and current_frame_num > total_frames)
+            break;
         std::cout << "\rProcessing Coordinate Frame  " << current_frame_num << "   " << std::flush;
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {
