@@ -13,21 +13,23 @@ bool GroTrajectoryReader::open(const std::string &file) {
     return static_cast<bool>(ifs);
 }
 
-bool GroTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
+bool GroTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame,
+                                           const std::vector<std::shared_ptr<Atom>> &atoms) {
     std::string line;
     std::getline(ifs, frame->title);
     std::getline(ifs, line);
 
     boost::trim(line);
-    if (line.empty()) return false;
+    if (line.empty())
+        return false;
 
     auto total_atom_numbers = std::stoi(line);
-    if (total_atom_numbers != frame->atom_list.size()) {
+    if (total_atom_numbers != atoms.size()) {
         std::cerr << "atom number from gro file do not match topology\n";
         std::exit(EXIT_FAILURE);
     }
 
-    for (auto &atom : frame->atom_list) {
+    for (auto &atom : atoms) {
         std::getline(ifs, line);
         atom->x = 10 * std::stod(line.substr(20, 8));
         atom->y = 10 * std::stod(line.substr(28, 8));

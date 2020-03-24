@@ -69,20 +69,10 @@ FileType getFileType(const std::string &filename) {
     boost::to_lower(extension);
 
     const std::unordered_map<std::string, FileType> mapping = {
-        {".xtc",    FileType::XTC},
-        {".trr",    FileType::TRR},
-        {".nc",     FileType::NC},
-        {".mdcrd",  FileType::NC},
-        {".xyz",    FileType::ARC},
-        {".arc",    FileType::ARC},
-        {".tpr",    FileType::TPR},
-        {".prmtop", FileType::PRMTOP},
-        {".parm7",  FileType::PRMTOP},
-        {".mol2",   FileType::MOL2},
-        {".prm",    FileType::PRM},
-        {".gro",    FileType::GRO},
-        {".traj",   FileType::TRAJ},
-        {".json",   FileType::JSON}};
+        {".xtc", FileType::XTC},      {".trr", FileType::TRR},   {".nc", FileType::NC},   {".mdcrd", FileType::NC},
+        {".xyz", FileType::ARC},      {".arc", FileType::ARC},   {".tpr", FileType::TPR}, {".prmtop", FileType::PRMTOP},
+        {".parm7", FileType::PRMTOP}, {".mol2", FileType::MOL2}, {".prm", FileType::PRM}, {".gro", FileType::GRO},
+        {".traj", FileType::TRAJ},    {".json", FileType::JSON}};
 
     auto it = mapping.find(extension);
     return it != mapping.end() ? it->second : FileType::UnKnown;
@@ -142,7 +132,8 @@ boost::program_options::options_description make_program_options() {
         ("di", "Delocalization Index based on Multiwfn")
         ("adch", "Atomic dipole corrected Hirshfeld population (ADCH) Charge")
         ("fchk", po::value<std::string>()->value_name("file-name"), "Gaussian Fchk File")
-        ("silent", po::bool_switch()->default_value(false), "Dont show the main menu");
+        ("silent", po::bool_switch()->default_value(false), "Dont show the main menu")
+        ("mask", po::value<std::string>()->value_name("mask"),"specify for read traj");
 
     return desc;
 }

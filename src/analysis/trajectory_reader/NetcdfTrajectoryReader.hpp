@@ -14,10 +14,10 @@ public:
     ~NetcdfTrajectoryReader() override;
 
 protected:
-    bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
+    bool readOneFrameImpl(std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) override;
 
 private:
     std::unique_ptr<struct AmberNetcdf> NC;
 };
 
-#endif  // TINKER_NETCDFTRAJECTORYREADER_HPP
+#endif // TINKER_NETCDFTRAJECTORYREADER_HPP

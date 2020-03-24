@@ -12,16 +12,25 @@ bool NetcdfTrajectoryReader::open(const std::string &file) {
     return true;
 }
 
-bool NetcdfTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
+bool NetcdfTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame,
+                                              const std::vector<std::shared_ptr<Atom>> &atoms) {
     auto coord = std::make_unique<double[]>(NC->ncatom3);
     double box[6];
-    if (!netcdfGetNextFrame(NC.get(), coord.get(), box)) return false;
-    int i = 0;
-    for (auto &atom : frame->atom_list) {
+    if (!netcdfGetNextFrame(NC.get(), coord.get(), box))
+        return false;
+
+    static bool has_Warning_d = false;
+    if (!has_Warning_d and NC->ncatom != static_cast<int>(atoms.size())) {
+        std::cerr << boost::format("WARNING: topology has %d atoms, whereas trajectory has %d\n") % atoms.size() %
+                         NC->ncatom;
+        has_Warning_d = true;
+    }
+
+    for (auto i : boost::irange(NC->ncatom)) {
+        auto &atom = atoms[i];
         atom->x = coord[3 * i];
         atom->y = coord[3 * i + 1];
         atom->z = coord[3 * i + 2];
-        i++;
     }
     frame->box = PBCBox(box[0], box[1], box[2], box[3], box[4], box[5]);
     return true;

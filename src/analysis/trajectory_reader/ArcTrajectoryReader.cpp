@@ -23,23 +23,27 @@ bool ArcTrajectoryReader::open(const std::string &file) {
     return static_cast<bool>(ifs);
 }
 
-bool ArcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
+bool ArcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame,
+                                           const std::vector<std::shared_ptr<Atom>> &atoms) {
     std::getline(ifs, line);
-    if (line.empty()) return false;
+    if (line.empty())
+        return false;
 
     if (frame->enable_bound) {
         std::getline(ifs, line);
         field = split(line);
-        if (field.empty()) return false;
+        if (field.empty())
+            return false;
         parse_box(frame);
     }
 
-    for (auto &atom : frame->atom_list) {
+    for (auto &atom : atoms) {
         std::getline(ifs, line);
         field = split(line);
         parse_coord(atom);
     }
-    if (enable_read_velocity) readOneFrameVelocity(frame);
+    if (enable_read_velocity)
+        readOneFrameVelocity(frame);
 
     return true;
 }
@@ -58,7 +62,8 @@ std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
     if (frame->enable_bound) {
         std::getline(ifs, line);
         field = split(line);
-        if (field.empty()) return {};
+        if (field.empty())
+            return {};
         parse_box(frame);
     }
 
@@ -66,7 +71,8 @@ std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
         std::getline(ifs, line);
         field = split(line);
         if (i == 0) {
-            if (field.empty()) return {};
+            if (field.empty())
+                return {};
             try {
                 parse_box(frame);
                 frame->enable_bound = true;
@@ -94,7 +100,7 @@ std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
     return frame;
 }
 
-void ArcTrajectoryReader::parse_coord(std::shared_ptr<Atom> &atom) {
+void ArcTrajectoryReader::parse_coord(const std::shared_ptr<Atom> &atom) {
     atom->x = std::stod(field[2]);
     atom->y = std::stod(field[3]);
     atom->z = std::stod(field[4]);

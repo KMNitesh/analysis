@@ -10,7 +10,8 @@ bool XtcTrajectoryReader::open(const std::string &file) {
     return fio != nullptr;
 }
 
-bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
+bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame,
+                                           const std::vector<std::shared_ptr<Atom>> &atoms) {
     gmx::matrix box;
     gmx::gmx_bool bOK;
 
@@ -25,16 +26,16 @@ bool XtcTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
 
     if (bOK) {
         static bool has_Warning_d = false;
-        if (!has_Warning_d and natoms != static_cast<int>(frame->atom_list.size())) {
-            std::cerr << boost::format("WARNING: topology has %d atoms, whereas trajectory has %d\n") %
-                             frame->atom_list.size() % natoms;
+        if (!has_Warning_d and natoms != static_cast<int>(atoms.size())) {
+            std::cerr << boost::format("WARNING: topology has %d atoms, whereas trajectory has %d\n") % atoms.size() %
+                             natoms;
             has_Warning_d = true;
         }
         if (frame->enable_bound) {
             frame->box = PBCBox(box);
         }
-        for (auto i : boost::irange(0, natoms)) {
-            auto &atom = frame->atom_list[i];
+        for (auto i : boost::irange(natoms)) {
+            auto &atom = atoms[i];
             atom->x = x[i][0] * 10;
             atom->y = x[i][1] * 10;
             atom->z = x[i][2] * 10;

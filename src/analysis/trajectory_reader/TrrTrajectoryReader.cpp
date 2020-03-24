@@ -16,7 +16,8 @@ bool TrrTrajectoryReader::open(const std::string &file) {
     return fio != nullptr;
 }
 
-bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
+bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame,
+                                           const std::vector<std::shared_ptr<Atom>> &atoms) {
     gmx::t_trnheader trnheader;
     gmx::gmx_bool bOK;
     gmx::rvec box[3];
@@ -44,12 +45,14 @@ bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
                 frame->enable_bound = false;
                 gmx::fread_htrn(fio, &trnheader, nullptr, coord.get(), velocities.get(), nullptr);
             }
-            if (static_cast<int>(frame->atom_list.size()) != trnheader.natoms) {
-                std::cerr << "ERROR! the atom number do not match" << std::endl;
-                exit(1);
+            static bool has_Warning_d = false;
+            if (!has_Warning_d and trnheader.natoms != static_cast<int>(atoms.size())) {
+                std::cerr << boost::format("WARNING: topology has %d atoms, whereas trajectory has %d\n") %
+                                 atoms.size() % trnheader.natoms;
+                has_Warning_d = true;
             }
-            int i = 0;
-            for (auto &atom : frame->atom_list) {
+            for (auto i : boost::irange(trnheader.natoms)) {
+                auto &atom = atoms[i];
                 atom->x = coord[i][0] * 10;
                 atom->y = coord[i][1] * 10;
                 atom->z = coord[i][2] * 10;
@@ -58,7 +61,6 @@ bool TrrTrajectoryReader::readOneFrameImpl(std::shared_ptr<Frame> &frame) {
                     atom->vy = velocities[i][1] * 10;
                     atom->vz = velocities[i][2] * 10;
                 }
-                i++;
             }
 
             return true;

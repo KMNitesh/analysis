@@ -19,7 +19,7 @@ public:
     ~TrrTrajectoryReader() override;
 
 protected:
-    bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
+    bool readOneFrameImpl(std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) override;
 
 private:
     gmx::t_fileio *fio = nullptr;

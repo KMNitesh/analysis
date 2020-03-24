@@ -12,7 +12,7 @@ public:
     void close() override;
 
 protected:
-    bool readOneFrameImpl(std::shared_ptr<Frame> &frame) override;
+    bool readOneFrameImpl(std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) override;
 
     std::ifstream ifs;
 };

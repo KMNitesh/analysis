@@ -14,14 +14,14 @@ class TrajectoryInterface {
 public:
     virtual bool open(const std::string &file) = 0;
 
-    bool readOneFrame(std::shared_ptr<Frame> &frame);
+    bool readOneFrame(std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms);
 
     virtual void close() = 0;
 
     virtual ~TrajectoryInterface() = default;
 
 protected:
-    virtual bool readOneFrameImpl(std::shared_ptr<Frame> &frame) = 0;
+    virtual bool readOneFrameImpl(std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) = 0;
 
     static void apply_box(std::shared_ptr<Frame> &frame);
 };
