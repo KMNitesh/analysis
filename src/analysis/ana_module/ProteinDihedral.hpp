@@ -32,7 +32,7 @@ protected:
     AmberMask mask, init_mask;
     std::vector<std::shared_ptr<Atom>> atom_sequence;
 
-    std::vector<boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::variance>>> dihedrals;
+    std::vector<boost::accumulators::accumulator_set<double, boost::accumulators::features<boost::accumulators::tag::variance>>> angles, dihedrals;
 
 };
 

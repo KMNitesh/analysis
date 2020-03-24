@@ -10,6 +10,24 @@ ProteinDihedral::ProteinDihedral() {
 }
 
 void ProteinDihedral::process(std::shared_ptr<Frame> &frame) {
+    for (std::size_t index = 0; index + 2 < atom_sequence.size(); ++index) {
+
+        const auto &atom1 = atom_sequence[index];
+        const auto &atom2 = atom_sequence[index + 1];
+        const auto &atom3 = atom_sequence[index + 2];
+
+        auto v2_1 = atom1->getCoordinate() - atom2->getCoordinate();
+        auto v2_3 = atom3->getCoordinate() - atom2->getCoordinate();
+
+        frame->image(v2_1);
+        frame->image(v2_3);
+
+        auto angle =
+            radian * std::acos(dot_multiplication(v2_1, v2_3) / std::sqrt(vector_norm2(v2_1) * vector_norm2(v2_3)));
+
+        angles[index](angle);
+    }
+
     for (std::size_t index = 0; index + 3 < atom_sequence.size(); ++index) {
 
         const auto &atom1 = atom_sequence[index];
@@ -37,6 +55,21 @@ void ProteinDihedral::process(std::shared_ptr<Frame> &frame) {
 
 void ProteinDihedral::print(std::ostream &os) {
 
+    std::vector<std::pair<std::array<std::string, 3>, double>> formated_items_angle;
+
+    for (std::size_t index = 0; index + 3 < atom_sequence.size(); ++index) {
+        std::array<std::string, 3> angle_id;
+        for (std::size_t j = 0; j < 3; ++j) {
+            const auto &atom = atom_sequence[index + j];
+            angle_id[j] =
+                (boost::format("%s%d@%s") % atom->residue_name.value() % atom->residue_num.value() % atom->atom_name)
+                    .str();
+        }
+        formated_items_angle.emplace_back(std::move(angle_id), boost::accumulators::variance(angles[index]));
+    }
+
+    boost::sort(formated_items_angle, [](const auto &lhs, const auto &rhs) { return lhs.second > rhs.second; });
+
     std::vector<std::pair<std::array<std::string, 4>, double>> formated_items;
 
     for (std::size_t index = 0; index + 3 < atom_sequence.size(); ++index) {
@@ -56,6 +89,12 @@ void ProteinDihedral::print(std::ostream &os) {
     os << '#' << title() << '\n';
     os << "#     atoms > " << mask << '\n';
     os << "# init atom > " << init_mask << '\n';
+    os << std::string(50, '#') << '\n';
+    os << "#  Angle Definition    STD\n";
+    for (const auto &[names, value] : formated_items_angle) {
+        os << boost::format("%s - %s - %s    %15.6f\n") % names[0] % names[1] % names[2] % std::sqrt(value);
+    }
+
     os << std::string(50, '#') << '\n';
     os << "#  Dihedral Definition    STD\n";
     for (const auto &[names, value] : formated_items) {
@@ -81,7 +120,8 @@ void ProteinDihedral::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
     for (;;) {
     cont:
-        atom_sequence.push_back(init_atom);
+        if (init_atom->atom_name == "CA")
+            atom_sequence.push_back(init_atom);
         init_atom->mark = true;
 
         for (auto i : init_atom->con_list) {
@@ -93,6 +133,8 @@ void ProteinDihedral::processFirstFrame(std::shared_ptr<Frame> &frame) {
         }
         break;
     }
+
+    angles.resize(atom_sequence.size() - 2);
     dihedrals.resize(atom_sequence.size() - 3);
 }
 
