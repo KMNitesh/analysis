@@ -23,7 +23,7 @@ namespace readline {
 #include <readline/history.h>
 #include <readline/readline.h>
 
-}  // namespace readline
+} // namespace readline
 class Atom;
 
 class Frame;
@@ -36,7 +36,7 @@ constexpr double radian = 57.29577951308232088;
 constexpr double pi = boost::math::constants::pi<double>();
 
 constexpr double avogadro_constant = 6.022140857e23;
-constexpr double kb = 1.380649e-23;  // unit: J/K
+constexpr double kb = 1.380649e-23; // unit: J/K
 
 // global variables
 
@@ -59,8 +59,7 @@ std::vector<std::string> split_quoted(const std::string &str);
 
 std::string input(const std::string &prompt = "", std::istream &in = std::cin, std::ostream &out = std::cout);
 
-template <typename T>
-class Default {
+template <typename T> class Default {
 public:
     Default() = default;
 
@@ -80,11 +79,13 @@ T choose(T min, T max, const std::string &prompt, const Default<T> &defaultValue
     while (true) {
         std::string input_line = input(prompt, in, out);
         if (input_line.empty()) {
-            if (defaultValue) return defaultValue.getValue();
+            if (defaultValue)
+                return defaultValue.getValue();
         }
         try {
             auto option = boost::lexical_cast<T>(input_line);
-            if (option >= min and option <= max) return option;
+            if (option >= min and option <= max)
+                return option;
 
             out << "must be a " << boost::typeindex::type_id<T>().pretty_name() << " range " << min << " and " << max
                 << "! please retype!\n";
@@ -143,7 +144,8 @@ public:
                         continue;
                     }
                 }
-                if (!is_exist) return input_line;
+                if (!is_exist)
+                    return input_line;
                 std::fstream in(input_line, std::ofstream::in);
                 if (in.good()) {
                     return input_line;
@@ -152,7 +154,8 @@ public:
                     out << "The file is bad [retype]" << std::endl;
                 }
             }
-            if (b_can_empty) return "";
+            if (b_can_empty)
+                return "";
         }
     }
 
@@ -172,10 +175,7 @@ inline ChooseFile choose_file(const std::string &prompt, std::istream &in = std:
 std::string choose_file(const std::string &prompt, bool exist, std::string ext = "", bool can_empty = false,
                         std::istream &in = std::cin, std::ostream &out = std::cout);
 
-template <typename T>
-T sign(const T &x, const T &y) {
-    return y > 0 ? std::abs(x) : -std::abs(x);
-}
+template <typename T> T sign(const T &x, const T &y) { return y > 0 ? std::abs(x) : -std::abs(x); }
 
 double atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
                      const std::shared_ptr<Frame> &frame);
@@ -183,21 +183,35 @@ double atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<A
 double atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
                       const std::shared_ptr<Frame> &frame);
 
-template <typename T>
-struct make_shared_f {
-    template <typename... A>
-    struct result {
-        typedef std::shared_ptr<T> type;
-    };
+inline double atom_distance(const std::array<std::shared_ptr<Atom>, 2> &atoms, const std::shared_ptr<Frame> &frame) {
+    return atom_distance(atoms[0], atoms[1], frame);
+}
 
-    template <typename... A>
-    typename result<A...>::type operator()(A &&... a) const {
+double atom_angle(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
+                  const std::shared_ptr<Atom> &atom3, const std::shared_ptr<Frame> &frame);
+
+inline double atom_angle(const std::array<std::shared_ptr<Atom>, 3> &atoms, const std::shared_ptr<Frame> &frame) {
+    return atom_angle(atoms[0], atoms[1], atoms[2], frame);
+}
+
+
+double atom_dihedral(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
+                     const std::shared_ptr<Atom> &atom3, const std::shared_ptr<Atom> &atom4,
+                     const std::shared_ptr<Frame> &frame);
+                     
+inline double atom_dihedral(const std::array<std::shared_ptr<Atom>, 4> &atoms, const std::shared_ptr<Frame> &frame) {
+    return atom_dihedral(atoms[0], atoms[1], atoms[2], atoms[3], frame);
+}
+
+template <typename T> struct make_shared_f {
+    template <typename... A> struct result { typedef std::shared_ptr<T> type; };
+
+    template <typename... A> typename result<A...>::type operator()(A &&... a) const {
         return std::make_shared<T>(std::forward<A>(a)...);
     }
 };
 
-template <typename T, typename... _Args>
-inline auto make_shared_(_Args &&... __args) {
+template <typename T, typename... _Args> inline auto make_shared_(_Args &&... __args) {
     return boost::phoenix::function<make_shared_f<T>>()(std::forward<_Args>(__args)...);
 }
 
@@ -243,11 +257,9 @@ inline range_object range(int end) {
     return range_object(0, end, 1);
 }
 
-template <typename Iterable>
-class enumerate_object;
+template <typename Iterable> class enumerate_object;
 
-template <typename Iterable>
-class enumerate_iterator {
+template <typename Iterable> class enumerate_iterator {
     decltype(std::begin(Iterable())) it;
     int _start;
     int _step;
@@ -265,8 +277,7 @@ public:
     auto operator*() const { return std::make_pair(_start, *it); }
 };
 
-template <typename Iterable>
-class enumerate_object {
+template <typename Iterable> class enumerate_object {
     friend class enumerate_iterator<Iterable>;
 
     Iterable &_iter;
@@ -309,25 +320,21 @@ public:
  *
  */
 
-template <typename Iterable>
-auto enumerate(Iterable &&iter) {
+template <typename Iterable> auto enumerate(Iterable &&iter) {
     return enumerate_object<std::remove_reference_t<Iterable>>(std::forward<Iterable>(iter));
 }
 
-template <typename T>
-auto enumerate(std::initializer_list<T> &&iter) {
+template <typename T> auto enumerate(std::initializer_list<T> &&iter) {
     return enumerate_object<std::initializer_list<T>>(std::forward<std::initializer_list<T>>(iter));
 }
 
-template <typename T, typename... Args>
-auto format(T &&s, Args &&... args) {
+template <typename T, typename... Args> auto format(T &&s, Args &&... args) {
     return (boost::format(std::forward<T>(s)) % ... % (std::forward<Args>(args)));
 }
 
 std::string print_cmdline(int argc, const char *const argv[]);
 
-template <typename Iterable>
-class PushIterable {
+template <typename Iterable> class PushIterable {
 public:
     using value_type = typename Iterable::value_type;
 
@@ -450,104 +457,84 @@ public:
     }
 };
 
-template <typename T>
-auto dot_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+template <typename T> auto dot_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     return std::get<0>(lhs) * std::get<0>(rhs) + std::get<1>(lhs) * std::get<1>(rhs) +
            std::get<2>(lhs) * std::get<2>(rhs);
 }
 
-template <typename T>
-auto dot_multiplication(const T &lhs, const T &rhs) {
-    return lhs * rhs;
-}
+template <typename T> auto dot_multiplication(const T &lhs, const T &rhs) { return lhs * rhs; }
 
-template <typename T>
-auto cross_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+template <typename T> auto cross_multiplication(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     auto [u1, u2, u3] = lhs;
     auto [v1, v2, v3] = rhs;
     return std::make_tuple(u2 * v3 - u3 * v2, u1 * v3 - u3 * v1, u1 * v2 - u2 * v1);
 }
 
-template <typename T>
-auto vector_norm2(const std::tuple<T, T, T> &vector1) {
+template <typename T> auto vector_norm2(const std::tuple<T, T, T> &vector1) {
     auto [u1, u2, u3] = vector1;
     return u1 * u1 + u2 * u2 + u3 * u3;
 }
 
-template <typename T>
-auto vector_norm(const std::tuple<T, T, T> &vector1) {
-    return std::sqrt(vector_norm2(vector1));
-}
+template <typename T> auto vector_norm(const std::tuple<T, T, T> &vector1) { return std::sqrt(vector_norm2(vector1)); }
 
-template <typename T>
-auto operator-(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+template <typename T> auto operator-(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     return std::make_tuple(std::get<0>(lhs) - std::get<0>(rhs), std::get<1>(lhs) - std::get<1>(rhs),
                            std::get<2>(lhs) - std::get<2>(rhs));
 }
 
-template <typename T>
-auto operator+(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
+template <typename T> auto operator+(const std::tuple<T, T, T> &lhs, const std::tuple<T, T, T> &rhs) {
     return std::make_tuple(std::get<0>(lhs) + std::get<0>(rhs), std::get<1>(lhs) + std::get<1>(rhs),
                            std::get<2>(lhs) + std::get<2>(rhs));
 }
 
-template <typename T, typename U>
-auto &operator+=(std::tuple<T, T, T> &lhs, const std::tuple<U, U, U> &rhs) {
+template <typename T, typename U> auto &operator+=(std::tuple<T, T, T> &lhs, const std::tuple<U, U, U> &rhs) {
     std::get<0>(lhs) += std::get<0>(rhs);
     std::get<1>(lhs) += std::get<1>(rhs);
     std::get<2>(lhs) += std::get<2>(rhs);
     return lhs;
 }
 
-template <typename T, typename U>
-auto &operator+=(std::tuple<T &, T &, T &> &&lhs, const std::tuple<U, U, U> &rhs) {
+template <typename T, typename U> auto &operator+=(std::tuple<T &, T &, T &> &&lhs, const std::tuple<U, U, U> &rhs) {
     std::get<0>(lhs) += std::get<0>(rhs);
     std::get<1>(lhs) += std::get<1>(rhs);
     std::get<2>(lhs) += std::get<2>(rhs);
     return lhs;
 }
 
-template <typename T, typename U>
-auto &operator-=(std::tuple<T, T, T> &lhs, const std::tuple<U, U, U> &rhs) {
+template <typename T, typename U> auto &operator-=(std::tuple<T, T, T> &lhs, const std::tuple<U, U, U> &rhs) {
     std::get<0>(lhs) -= std::get<0>(rhs);
     std::get<1>(lhs) -= std::get<1>(rhs);
     std::get<2>(lhs) -= std::get<2>(rhs);
     return lhs;
 }
 
-template <typename T, typename U>
-auto &operator-=(std::tuple<T &, T &, T &> &&lhs, const std::tuple<U, U, U> &rhs) {
+template <typename T, typename U> auto &operator-=(std::tuple<T &, T &, T &> &&lhs, const std::tuple<U, U, U> &rhs) {
     std::get<0>(lhs) -= std::get<0>(rhs);
     std::get<1>(lhs) -= std::get<1>(rhs);
     std::get<2>(lhs) -= std::get<2>(rhs);
     return lhs;
 }
 
-template <typename T1, typename T2>
-auto operator/(const std::tuple<T1, T1, T1> &vector1, T2 norm) {
+template <typename T1, typename T2> auto operator/(const std::tuple<T1, T1, T1> &vector1, T2 norm) {
     return std::make_tuple(std::get<0>(vector1) / norm, std::get<1>(vector1) / norm, std::get<2>(vector1) / norm);
 }
 
-template <typename T1, typename T2>
-auto &operator/=(std::tuple<T1, T1, T1> &vector1, T2 norm) {
+template <typename T1, typename T2> auto &operator/=(std::tuple<T1, T1, T1> &vector1, T2 norm) {
     std::get<0>(vector1) /= norm;
     std::get<1>(vector1) /= norm;
     std::get<2>(vector1) /= norm;
     return vector1;
 }
 
-template <typename T1, typename T2>
-auto operator*(T1 norm, const std::tuple<T2, T2, T2> &vector1) {
+template <typename T1, typename T2> auto operator*(T1 norm, const std::tuple<T2, T2, T2> &vector1) {
     return std::make_tuple(std::get<0>(vector1) * norm, std::get<1>(vector1) * norm, std::get<2>(vector1) * norm);
 }
 
-template <typename T1, typename T2>
-auto operator*(const std::tuple<T1, T1, T1> &vector1, T2 norm) {
+template <typename T1, typename T2> auto operator*(const std::tuple<T1, T1, T1> &vector1, T2 norm) {
     return norm * vector1;
 }
 
-template <typename T1, typename T2>
-auto &operator*=(std::tuple<T1, T1, T1> &vector1, T2 norm) {
+template <typename T1, typename T2> auto &operator*=(std::tuple<T1, T1, T1> &vector1, T2 norm) {
     std::get<0>(vector1) *= norm;
     std::get<1>(vector1) *= norm;
     std::get<2>(vector1) *= norm;
@@ -559,8 +546,7 @@ public:
     int x, y, z;
 };
 
-template <typename T>
-std::string chrono_cast(const T &dur) {
+template <typename T> std::string chrono_cast(const T &dur) {
     auto secs = std::chrono::duration_cast<std::chrono::seconds>(dur).count();
     std::string format_string;
     auto hours = secs / 3600;
@@ -593,10 +579,7 @@ std::string getPrmFilename(const boost::program_options::variables_map &vm);
 std::size_t getDefaultVectorReserve();
 
 struct join_type {
-    template <class C>
-    auto operator()(C &&c) const {
-        return boost::make_iterator_range(std::begin(c), std::end(c));
-    }
+    template <class C> auto operator()(C &&c) const { return boost::make_iterator_range(std::begin(c), std::end(c)); }
 
     template <typename First, typename Second, typename... Rest>
     auto operator()(First &&first, Second &&second, Rest &&... rest) const {
@@ -606,12 +589,9 @@ struct join_type {
     }
 };
 
-template <typename... Args>
-auto join(Args &&... args) {
-    return join_type()(std::forward<Args>(args)...);
-}
+template <typename... Args> auto join(Args &&... args) { return join_type()(std::forward<Args>(args)...); }
 
 class Atom;
 using graph_t = boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, std::shared_ptr<Atom>>;
 
-#endif  // TINKER_COMMON_HPP
+#endif // TINKER_COMMON_HPP

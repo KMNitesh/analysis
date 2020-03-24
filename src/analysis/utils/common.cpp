@@ -108,6 +108,33 @@ double atom_distance(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<A
     return std::sqrt(atom_distance2(atom1, atom2, frame));
 }
 
+double atom_angle(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
+                  const std::shared_ptr<Atom> &atom3, const std::shared_ptr<Frame> &frame) {
+    auto v2_1 = atom1->getCoordinate() - atom2->getCoordinate();
+    auto v2_3 = atom3->getCoordinate() - atom2->getCoordinate();
+    frame->image(v2_1);
+    frame->image(v2_3);
+
+    return radian * std::acos(dot_multiplication(v2_1, v2_3) / std::sqrt(vector_norm2(v2_1) * vector_norm2(v2_3)));
+}
+
+double atom_dihedral(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
+                     const std::shared_ptr<Atom> &atom3, const std::shared_ptr<Atom> &atom4,
+                     const std::shared_ptr<Frame> &frame) {
+    auto v1_2 = atom2->getCoordinate() - atom1->getCoordinate();
+    auto v2_3 = atom3->getCoordinate() - atom2->getCoordinate();
+    auto v3_4 = atom4->getCoordinate() - atom3->getCoordinate();
+
+    frame->image(v1_2);
+    frame->image(v2_3);
+    frame->image(v3_4);
+
+    auto cv1 = cross_multiplication(v1_2, v2_3);
+    auto cv2 = cross_multiplication(v2_3, v3_4);
+
+    return radian * std::acos(dot_multiplication(cv1, cv2) / std::sqrt(vector_norm2(cv1) * vector_norm2(cv2)));
+}
+
 double atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
                       const std::shared_ptr<Frame> &frame) {
     auto r = atom1->getCoordinate() - atom2->getCoordinate();
@@ -118,22 +145,20 @@ double atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<
 boost::program_options::options_description make_program_options() {
     namespace po = boost::program_options;
     po::options_description desc("Allowed options");
-    desc.add_options()
-        ("help,h", "show this help message")
-        ("topology,p", po::value<std::string>()->value_name("topology-file-name"), "topology file")
-        ("file,f", po::value<std::vector<std::string>>()->multitoken()->composing()->value_name("trajectory-file-name"),
-         "trajectory file")
-        ("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")
-        ("prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")
-        ("target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")
-        ("script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")
-        ("script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")
-        ("aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")
-        ("di", "Delocalization Index based on Multiwfn")
-        ("adch", "Atomic dipole corrected Hirshfeld population (ADCH) Charge")
-        ("fchk", po::value<std::string>()->value_name("file-name"), "Gaussian Fchk File")
-        ("silent", po::bool_switch()->default_value(false), "Dont show the main menu")
-        ("mask", po::value<std::string>()->value_name("mask"),"specify for read traj");
+    desc.add_options()("help,h", "show this help message")(
+        "topology,p", po::value<std::string>()->value_name("topology-file-name"), "topology file")(
+        "file,f", po::value<std::vector<std::string>>()->multitoken()->composing()->value_name("trajectory-file-name"),
+        "trajectory file")("output,o", po::value<std::string>()->value_name("output-file-name"), "output file")(
+        "prm", po::value<std::string>()->value_name("tinker-prm-file-name"), "force field file")(
+        "target,x", po::value<std::string>()->value_name("trajectout-file-name"), "target trajectory file")(
+        "script", po::value<std::string>()->value_name("script-content"), "script command for non-interactive use")(
+        "script-file", po::value<std::string>()->value_name("script-file-name"), "read command from script file")(
+        "aim", po::value<std::string>()->value_name("options"), "QTAIM analysis based on Multiwfn")(
+        "di", "Delocalization Index based on Multiwfn")("adch",
+                                                        "Atomic dipole corrected Hirshfeld population (ADCH) Charge")(
+        "fchk", po::value<std::string>()->value_name("file-name"),
+        "Gaussian Fchk File")("silent", po::bool_switch()->default_value(false), "Dont show the main menu")(
+        "mask", po::value<std::string>()->value_name("mask"), "specify for read traj");
 
     return desc;
 }

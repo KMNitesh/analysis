@@ -62,6 +62,9 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
     expr = (DISTINCT("com") > mask[_val = make_shared_<MassCenterRuleNode>(_1)]) |
            (DISTINCT("geom") > mask[_val = make_shared_<GeomCenterRuleNode>(_1)]) |
            ((DISTINCT("eda") > mask > mask)[_val = make_shared_<EDARuleNode>(_1, _2)]) |
+           ((DISTINCT("bond") > mask > mask)[_val = make_shared_<BondRuleNode>(_1, _2)]) |
+           ((DISTINCT("angle") > mask > mask > mask)[_val = make_shared_<AngleRuleNode>(_1, _2, _3)]) |
+           ((DISTINCT("dihedral") > mask > mask > mask > mask)[_val = make_shared_<DihedralRuleNode>(_1, _2, _3, _4)]) |
            DISTINCT("quit")[_val = make_shared_<QuitRuleNode>()] |
            DISTINCT("help")[_val = make_shared_<HelpRuleNode>()] | mask[_val = make_shared_<NoopRuleNode>(_1)];
     root = eps > expr;
@@ -80,7 +83,7 @@ input_atom_selection(const CenterGrammar<std::string::iterator, qi::ascii::space
 
         std::string::iterator begin{std::begin(input_string)}, it{begin}, end{std::end(input_string)};
         try {
-            qi::phrase_parse(it, end, grammar, boost::spirit::ascii::space, mask);
+            qi::phrase_parse(it, end, grammar > qi::eoi, boost::spirit::ascii::space, mask);
             return {mask, input_string};
         } catch (const qi::expectation_failure<std::string::iterator> &x) {
             std::cerr << "Grammar Parse Failure ! Expecting : " << x.what_ << '\n';

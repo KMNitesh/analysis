@@ -215,10 +215,10 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
     residue_select_rule.name("residue_select_rule");
     molecule_select_rule.name("molecule_select_rule");
     nametype_select_rule.name("nametype_select_rule");
-    select_rule.name("select_rule");
-    factor.name("factor");
-    term.name("term");
-    expr.name("expr");
+    select_rule.name("mask");
+    factor.name("mask");
+    term.name("mask");
+    expr.name("mask");
     maskParser.name("mask");
 }
 

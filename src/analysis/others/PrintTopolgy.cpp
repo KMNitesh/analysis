@@ -11,6 +11,8 @@
 #include "dsl/center_selection_grammar.hpp"
 #include "trajectory_reader/trajectoryreader.hpp"
 #include "utils/EnergyCalculator.hpp"
+#include "utils/PBCUtils.hpp"
+#include <boost/range/algorithm.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -59,6 +61,54 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             std::cout << "E(ele) = " << ele << " (kcal/mole)\n"
                       << "E(vdW) = " << lj << " (kcal/mole)\n";
             continue;
+        } else if (auto ret = boost::get<std::shared_ptr<BondRuleNode>>(&r)) {
+            auto atom1 = PBCUtils::find_atom((*ret)->mask1, frame);
+            auto atom2 = PBCUtils::find_atom((*ret)->mask2, frame);
+
+            auto distance = atom_distance(atom1, atom2, frame);
+
+            std::array<int, 2> key{atom1->seq, atom2->seq};
+            boost::sort(key);
+
+            if (auto it = frame->f_bond_params.find(key); it != std::end(frame->f_bond_params)) {
+                std::cout << boost::format(" K = %g kJ/mol    b0 = %g  Ang    b = %g  Ang\n") % it->second.krA %
+                                 it->second.rA % distance;
+            } else {
+                std::cout << "No bond parameter found !!!\n";
+            }
+            continue;
+        } else if (auto ret = boost::get<std::shared_ptr<AngleRuleNode>>(&r)) {
+            std::array atoms{PBCUtils::find_atom((*ret)->mask1, frame), PBCUtils::find_atom((*ret)->mask2, frame),
+                             PBCUtils::find_atom((*ret)->mask3, frame)};
+
+            boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
+            auto angle = atom_angle(atoms, frame);
+            if (auto it = frame->f_angle_params.find(std::array<int, 3>{atoms[0]->seq, atoms[1]->seq, atoms[2]->seq});
+                it != std::end(frame->f_angle_params)) {
+                std::cout << boost::format(" K = %g kJ/mol/rad    theta0 = %g  degree    theta = %g  degree\n") %
+                                 it->second.krA % it->second.rA % angle;
+            } else {
+                std::cout << "No angle parameter found !!!\n";
+            }
+            continue;
+
+        } else if (auto ret = boost::get<std::shared_ptr<DihedralRuleNode>>(&r)) {
+            std::array atoms{PBCUtils::find_atom((*ret)->mask1, frame), PBCUtils::find_atom((*ret)->mask2, frame),
+                             PBCUtils::find_atom((*ret)->mask3, frame), PBCUtils::find_atom((*ret)->mask4, frame)};
+
+            boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
+            auto angle = atom_dihedral(atoms, frame);
+            std::array<int, 4> key{atoms[0]->seq, atoms[1]->seq, atoms[2]->seq, atoms[3]->seq};
+
+            if (auto [lower_bound, upper_bound] = frame->f_dihedral_params.equal_range(key);
+                lower_bound != std::end(frame->f_dihedral_params)) {
+                for (auto it = lower_bound; it != upper_bound; ++it)
+                    std::cout << boost::format(" K = %g kJ/mol    phi0 = %g degree    multi = %d  phi = %g degree\n") %
+                                     it->second.cpA % it->second.phiA % it->second.mult % angle;
+            } else {
+                std::cout << "No dihedral parameter found !!!\n";
+            }
+            continue;
         } else if (boost::get<std::shared_ptr<QuitRuleNode>>(&r)) {
             break;
         } else if (boost::get<std::shared_ptr<HelpRuleNode>>(&r)) {
@@ -67,8 +117,11 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                       << " 2. geom mask\n"
                       << " 3. mask\n"
                       << " 4. eda mask1 mask2\n"
-                      << " 5. help\n"
-                      << " 6. quit\n";
+                      << " 5. bond mask1 mask2\n"
+                      << " 6. angle mask1 mask2 mask3\n"
+                      << " 7. dihedral mask1 mask2 mask3 mask4\n"
+                      << " 8. help\n"
+                      << " 9. quit\n";
             continue;
         }
 

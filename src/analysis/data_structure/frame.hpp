@@ -17,6 +17,10 @@
 #include "config.h"
 #include "utils/common.hpp"
 
+namespace gmx {
+#include <gromacs/utility/real.h>
+}
+
 class Atom;
 
 class Molecule;
@@ -55,6 +59,18 @@ public:
     std::tuple<double, double, double> getDipole();
 
     void build_graph();
+
+    struct harmonic {
+        double krA, rA;
+    };
+
+     struct pdihs {
+        double phiA, cpA; int mult;
+    };
+
+    std::map<std::array<int, 2>, harmonic> f_bond_params;
+    std::map<std::array<int, 3>, harmonic> f_angle_params;
+    std::multimap<std::array<int, 4>,pdihs> f_dihedral_params; 
 };
 
-#endif  // TINKER_FRAME_HPP
+#endif // TINKER_FRAME_HPP

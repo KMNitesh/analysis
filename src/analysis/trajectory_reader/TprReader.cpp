@@ -123,6 +123,33 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         i += 1 + nratoms;
     }
 
+    for (int k = 0; k < top.idef.il[gmx::F_BONDS].nr;) {
+        auto type = top.idef.il[gmx::F_BONDS].iatoms[k++];
+        auto ai = top.idef.il[gmx::F_BONDS].iatoms[k++];
+        auto aj = top.idef.il[gmx::F_BONDS].iatoms[k++];
+        const auto &harmonic = top.idef.iparams[type].harmonic;
+        frame->f_bond_params.emplace(std::array{ai + 1, aj + 1}, Frame::harmonic{harmonic.krA, harmonic.rA * 10});
+    }
+    for (int k = 0; k < top.idef.il[gmx::F_ANGLES].nr;) {
+        auto type = top.idef.il[gmx::F_ANGLES].iatoms[k++];
+        auto ai = top.idef.il[gmx::F_ANGLES].iatoms[k++];
+        auto aj = top.idef.il[gmx::F_ANGLES].iatoms[k++];
+        auto ak = top.idef.il[gmx::F_ANGLES].iatoms[k++];
+        const auto &harmonic = top.idef.iparams[type].harmonic;
+        frame->f_angle_params.emplace(std::array{ai + 1, aj + 1, ak + 1}, Frame::harmonic{harmonic.krA, harmonic.rA});
+    }
+    for (int k = 0; k < top.idef.il[gmx::F_PDIHS].nr;) {
+        auto type = top.idef.il[gmx::F_PDIHS].iatoms[k++];
+        auto ai = top.idef.il[gmx::F_PDIHS].iatoms[k++];
+        auto aj = top.idef.il[gmx::F_PDIHS].iatoms[k++];
+        auto ak = top.idef.il[gmx::F_PDIHS].iatoms[k++];
+        auto an = top.idef.il[gmx::F_PDIHS].iatoms[k++];
+
+        const auto &pdihs = top.idef.iparams[type].pdihs;
+        frame->f_dihedral_params.emplace(std::array{ai + 1, aj + 1, ak + 1, an + 1},
+                                         Frame::pdihs{pdihs.phiA, pdihs.cpA, pdihs.mult});
+    }
+
     topology_utils::assgin_atom_to_molecule(frame);
     frame->build_graph();
 
