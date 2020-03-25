@@ -108,13 +108,7 @@ void Trajconv::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &[name, w] : writers) {
         w->open(name);
     }
-    if (!Atom::isBlank(mask_for_writetraj)) {
-        boost::for_each(frame->atom_list, [this](const std::shared_ptr<Atom> &atom) {
-            if (Atom::is_match(atom, mask_for_writetraj)) {
-                atoms_for_writetraj.push_back(atom);
-            }
-        });
-    } else {
-        atoms_for_writetraj = frame->atom_list;
-    }
+
+    atoms_for_writetraj =
+        Atom::isBlank(mask_for_writetraj) ? frame->atom_list : PBCUtils::find_atoms(mask_for_writetraj, frame);
 }

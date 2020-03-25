@@ -9,7 +9,7 @@
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 
-std::shared_ptr<Atom> PBCUtils::find_atom(AmberMask &mask, std::shared_ptr<Frame> &frame) {
+std::shared_ptr<Atom> PBCUtils::find_atom(const AmberMask &mask, const std::shared_ptr<Frame> &frame) {
     std::shared_ptr<Atom> ret;
     for (auto &atom : frame->atom_list) {
         if (Atom::is_match(atom, mask)) {
@@ -22,7 +22,7 @@ std::shared_ptr<Atom> PBCUtils::find_atom(AmberMask &mask, std::shared_ptr<Frame
     return ret;
 }
 
-std::vector<std::shared_ptr<Atom>> PBCUtils::find_atoms(AmberMask &mask, std::shared_ptr<Frame> &frame) {
+std::vector<std::shared_ptr<Atom>> PBCUtils::find_atoms(const AmberMask &mask, const std::shared_ptr<Frame> &frame) {
     std::vector<std::shared_ptr<Atom>> ret;
     for (auto &atom : frame->atom_list) {
         if (Atom::is_match(atom, mask)) {
@@ -32,7 +32,7 @@ std::vector<std::shared_ptr<Atom>> PBCUtils::find_atoms(AmberMask &mask, std::sh
     return ret;
 }
 
-std::shared_ptr<Molecule> PBCUtils::find_molecule(AmberMask &mask, std::shared_ptr<Frame> &frame) {
+std::shared_ptr<Molecule> PBCUtils::find_molecule(const AmberMask &mask, const std::shared_ptr<Frame> &frame) {
     std::shared_ptr<Molecule> ret;
     for (auto &atom : frame->atom_list) {
         if (Atom::is_match(atom, mask)) {
@@ -45,9 +45,10 @@ std::shared_ptr<Molecule> PBCUtils::find_molecule(AmberMask &mask, std::shared_p
     return ret;
 }
 
-void PBCUtils::do_move_center_basedto_atom(AmberMask &mask, std::shared_ptr<Frame> &frame) const {
+void PBCUtils::do_move_center_basedto_atom(const AmberMask &mask, const std::shared_ptr<Frame> &frame) const {
     do_molecule_aggregate(frame);
-    if (selected_atoms.empty()) selected_atoms.push_back(find_atom(mask, frame));
+    if (selected_atoms.empty())
+        selected_atoms.push_back(find_atom(mask, frame));
     auto center = selected_atoms.front()->getCoordinate();
     for (auto &mol : frame->molecule_list) {
         auto r = mol->calc_geom_center_inplace() - center;
@@ -64,7 +65,7 @@ void PBCUtils::do_move_center_basedto_atom(AmberMask &mask, std::shared_ptr<Fram
     }
 }
 
-void PBCUtils::do_move_center_basedto_atom_group(AmberMask &mask, std::shared_ptr<Frame> &frame) const {
+void PBCUtils::do_move_center_basedto_atom_group(const AmberMask &mask, const std::shared_ptr<Frame> &frame) const {
     if (selected_atoms.empty()) {
         selected_atoms = find_atoms(mask, frame);
         for (auto &atom : selected_atoms) {
@@ -78,7 +79,8 @@ void PBCUtils::do_move_center_basedto_atom_group(AmberMask &mask, std::shared_pt
                   selected_atoms.size();
 
     for (auto &mol : frame->molecule_list) {
-        if (mols_set.contains(mol)) continue;
+        if (mols_set.contains(mol))
+            continue;
         mol->do_aggregate(frame);
         auto r = mol->calc_geom_center_inplace() - center;
         auto old = r;
@@ -94,9 +96,10 @@ void PBCUtils::do_move_center_basedto_atom_group(AmberMask &mask, std::shared_pt
     }
 }
 
-void PBCUtils::do_move_center_basedto_molecule(AmberMask &mask, std::shared_ptr<Frame> &frame) const {
+void PBCUtils::do_move_center_basedto_molecule(const AmberMask &mask, const std::shared_ptr<Frame> &frame) const {
     do_molecule_aggregate(frame);
-    if (!selected_molecule) selected_molecule = find_molecule(mask, frame);
+    if (!selected_molecule)
+        selected_molecule = find_molecule(mask, frame);
     auto center = selected_molecule->calc_geom_center_inplace();
     for (auto &mol : frame->molecule_list) {
         auto r = mol->calc_geom_center_inplace() - center;
@@ -113,32 +116,32 @@ void PBCUtils::do_move_center_basedto_molecule(AmberMask &mask, std::shared_ptr<
     }
 }
 
-void PBCUtils::do_molecule_aggregate(std::shared_ptr<Frame> &frame) const {
+void PBCUtils::do_molecule_aggregate(const std::shared_ptr<Frame> &frame) const {
     for (auto &mol : frame->molecule_list) {
         mol->do_aggregate(frame);
     }
 }
 
-void PBCUtils::do_move_all_atom_into_box(std::shared_ptr<Frame> &frame) const {
+void PBCUtils::do_move_all_atom_into_box(const std::shared_ptr<Frame> &frame) const {
     for (auto &atom : frame->atom_list) {
         frame->image(atom->x, atom->y, atom->z);
     }
 }
 
-void PBCUtils::doPBC(Trajconv::PBCType pbc_mode, AmberMask &mask, std::shared_ptr<Frame> &frame) const {
+void PBCUtils::doPBC(Trajconv::PBCType pbc_mode, const AmberMask &mask, const std::shared_ptr<Frame> &frame) const {
     switch (pbc_mode) {
-        case Trajconv::PBCType::AllIntoBox:
-            do_move_all_atom_into_box(frame);
-            break;
-        case Trajconv::PBCType::OneAtom:
-            do_move_center_basedto_atom(mask, frame);
-            break;
-        case Trajconv::PBCType::OneMol:
-            do_move_center_basedto_molecule(mask, frame);
-            break;
-        case Trajconv::PBCType::AtomGroup:
-            do_move_center_basedto_atom_group(mask, frame);
-            break;
+    case Trajconv::PBCType::AllIntoBox:
+        do_move_all_atom_into_box(frame);
+        break;
+    case Trajconv::PBCType::OneAtom:
+        do_move_center_basedto_atom(mask, frame);
+        break;
+    case Trajconv::PBCType::OneMol:
+        do_move_center_basedto_molecule(mask, frame);
+        break;
+    case Trajconv::PBCType::AtomGroup:
+        do_move_center_basedto_atom_group(mask, frame);
+        break;
     }
 }
 
@@ -161,15 +164,17 @@ void PBCUtils::move(std::set<std::shared_ptr<Molecule>> &mols_set,
     }
 }
 
-std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> PBCUtils::calculate_intermol_imp(
-    const std::set<std::shared_ptr<Molecule>> &mols_set, const std::shared_ptr<Frame> &frame) {
+std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>>
+PBCUtils::calculate_intermol_imp(const std::set<std::shared_ptr<Molecule>> &mols_set,
+                                 const std::shared_ptr<Frame> &frame) {
     for (auto &mol : mols_set) {
         mol->do_aggregate(frame);
         mol->calc_geom_center_inplace();
     }
     std::vector<std::shared_ptr<Molecule>> mols(std::begin(mols_set), std::end(mols_set));
     Graph g;
-    for (auto &mol : mols) mol->vertex_descriptor = boost::add_vertex(g);
+    for (auto &mol : mols)
+        mol->vertex_descriptor = boost::add_vertex(g);
 
     using namespace boost;
     for (auto it1 = mols.begin(); it1 != --mols.end(); ++it1) {

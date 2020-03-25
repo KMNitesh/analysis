@@ -14,6 +14,7 @@
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
 #include "nlohmann/json.hpp"
+#include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
 
 void TrajectoryReader::add_trajectoy_file(const std::string &filename) {
@@ -36,16 +37,8 @@ void TrajectoryReader::set_topology(const std::string &filename) { topology_file
 std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
     if (!frame) {
         readTopology();
-        if (!mask_string.empty()) {
-            auto mask_for_readtraj = parse_atoms(mask_string);
-            boost::for_each(frame->atom_list, [this, &mask_for_readtraj](const std::shared_ptr<Atom> &atom) {
-                if (Atom::is_match(atom, mask_for_readtraj)) {
-                    atoms_for_readtraj.push_back(atom);
-                }
-            });
-        } else {
-            atoms_for_readtraj = frame->atom_list;
-        }
+        atoms_for_readtraj =
+            mask_string.empty() ? frame->atom_list : PBCUtils::find_atoms(parse_atoms(mask_string), frame);
     }
     for (;;) {
         if (!traj_reader) {
