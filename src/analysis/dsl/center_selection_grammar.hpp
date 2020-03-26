@@ -65,6 +65,7 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
            ((DISTINCT("bond") > mask > mask)[_val = make_shared_<BondRuleNode>(_1, _2)]) |
            ((DISTINCT("angle") > mask > mask > mask)[_val = make_shared_<AngleRuleNode>(_1, _2, _3)]) |
            ((DISTINCT("dihedral") > mask > mask > mask > mask)[_val = make_shared_<DihedralRuleNode>(_1, _2, _3, _4)]) |
+           (DISTINCT("energy") > mask[_val = make_shared_<BondedEnergyRuleNode>(_1)]) |
            DISTINCT("quit")[_val = make_shared_<QuitRuleNode>()] |
            DISTINCT("help")[_val = make_shared_<HelpRuleNode>()] | mask[_val = make_shared_<NoopRuleNode>(_1)];
     root = eps > expr;

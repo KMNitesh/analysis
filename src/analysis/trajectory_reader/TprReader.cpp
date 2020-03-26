@@ -128,7 +128,8 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         auto ai = top.idef.il[gmx::F_BONDS].iatoms[k++];
         auto aj = top.idef.il[gmx::F_BONDS].iatoms[k++];
         const auto &harmonic = top.idef.iparams[type].harmonic;
-        frame->f_bond_params.emplace(std::array{ai + 1, aj + 1}, Frame::harmonic{harmonic.krA, harmonic.rA * 10});
+        frame->f_bond_params.emplace(std::array{ai + 1, aj + 1},
+                                     Frame::harmonic{harmonic.krA * 0.01, harmonic.rA * 10});
     }
     for (int k = 0; k < top.idef.il[gmx::F_ANGLES].nr;) {
         auto type = top.idef.il[gmx::F_ANGLES].iatoms[k++];

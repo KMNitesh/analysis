@@ -10,6 +10,7 @@
 #include "data_structure/molecule.hpp"
 #include "dsl/center_selection_grammar.hpp"
 #include "trajectory_reader/trajectoryreader.hpp"
+#include "utils/BondEnergyCalculator.hpp"
 #include "utils/EnergyCalculator.hpp"
 #include "utils/PBCUtils.hpp"
 #include <boost/range/algorithm.hpp>
@@ -65,14 +66,16 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             auto atom1 = PBCUtils::find_atom((*ret)->mask1, frame);
             auto atom2 = PBCUtils::find_atom((*ret)->mask2, frame);
 
-            auto distance = atom_distance(atom1, atom2, frame);
-
             std::array<int, 2> key{atom1->seq, atom2->seq};
             boost::sort(key);
 
             if (auto it = frame->f_bond_params.find(key); it != std::end(frame->f_bond_params)) {
-                std::cout << boost::format(" K = %g kJ/mol    b0 = %g  Ang    b = %g  Ang\n") % it->second.krA %
-                                 it->second.rA % distance;
+                auto distance = atom_distance(atom1, atom2, frame);
+                auto r = distance - it->second.rA;
+                auto energy = 0.5 * it->second.krA * r * r;
+                std::cout << boost::format(
+                                 " K = %10g kJ/mol/Ang2    b0 = %10g Ang    b = %10g Ang   E(bond) = %10g kJ/mol\n") %
+                                 it->second.krA % it->second.rA % distance % energy;
             } else {
                 std::cout << "No bond parameter found !!!\n";
             }
@@ -82,11 +85,15 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                              PBCUtils::find_atom((*ret)->mask3, frame)};
 
             boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
-            auto angle = atom_angle(atoms, frame);
+
             if (auto it = frame->f_angle_params.find(std::array<int, 3>{atoms[0]->seq, atoms[1]->seq, atoms[2]->seq});
                 it != std::end(frame->f_angle_params)) {
-                std::cout << boost::format(" K = %g kJ/mol/rad    theta0 = %g  degree    theta = %g  degree\n") %
-                                 it->second.krA % it->second.rA % angle;
+                auto angle = atom_angle(atoms, frame);
+                auto theta = (angle - it->second.rA) / radian;
+                auto energy = 0.5 * it->second.krA * theta * theta;
+                std::cout << boost::format(" K = %10g kJ/mol/rad2    theta0 = %10g degree    theta = %10g degree  "
+                                           "E(angle) = %10g kJ/mol\n") %
+                                 it->second.krA % it->second.rA % angle % energy;
             } else {
                 std::cout << "No angle parameter found !!!\n";
             }
@@ -97,17 +104,29 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                              PBCUtils::find_atom((*ret)->mask3, frame), PBCUtils::find_atom((*ret)->mask4, frame)};
 
             boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
-            auto angle = atom_dihedral(atoms, frame);
+
             std::array<int, 4> key{atoms[0]->seq, atoms[1]->seq, atoms[2]->seq, atoms[3]->seq};
 
             if (auto [lower_bound, upper_bound] = frame->f_dihedral_params.equal_range(key);
-                lower_bound != std::end(frame->f_dihedral_params)) {
-                for (auto it = lower_bound; it != upper_bound; ++it)
-                    std::cout << boost::format(" K = %g kJ/mol    phi0 = %g degree    multi = %d  phi = %g degree\n") %
-                                     it->second.cpA % it->second.phiA % it->second.mult % angle;
+                lower_bound != upper_bound) {
+                auto angle = atom_dihedral(atoms, frame);
+                double energy{};
+                for (auto it = lower_bound; it != upper_bound; ++it) {
+                    std::cout << boost::format(" K = %10g kJ/mol    phi0 = %10g degree    multi = %2d\n") %
+                                     it->second.cpA % it->second.phiA % it->second.mult;
+                    auto cos = std::cos((angle * it->second.mult - it->second.phiA) / radian);
+                    energy += it->second.cpA * (1 + cos);
+                }
+                std::cout << boost::format(" phi = %10g degree  E(dihedral) = %10g kJ/mol\n") % angle % energy;
             } else {
                 std::cout << "No dihedral parameter found !!!\n";
             }
+            continue;
+        } else if (auto ret = boost::get<std::shared_ptr<BondedEnergyRuleNode>>(&r)) {
+            auto [bond, angle, dihedral] = BondEnergyCalculator::energy((*ret)->mask, frame);
+            std::cout << boost::format(
+                             "E(bond) = %g KJ/mol   E(angle) = %g kJ/mol   E(dihedral) = %g kJ/mol   E_toal = %g\n") %
+                             bond % angle % dihedral % (bond + angle + dihedral);
             continue;
         } else if (boost::get<std::shared_ptr<QuitRuleNode>>(&r)) {
             break;
@@ -120,8 +139,9 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                       << " 5. bond mask1 mask2\n"
                       << " 6. angle mask1 mask2 mask3\n"
                       << " 7. dihedral mask1 mask2 mask3 mask4\n"
-                      << " 8. help\n"
-                      << " 9. quit\n";
+                      << " 8. energy mask\n"
+                      << " 9. help\n"
+                      << "10. quit\n";
             continue;
         }
 

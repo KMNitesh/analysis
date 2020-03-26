@@ -50,6 +50,11 @@ struct DihedralRuleNode {
         : mask1(std::move(mask1)), mask2(std::move(mask2)), mask3(std::move(mask3)), mask4(std::move(mask4)) {}
 };
 
+struct BondedEnergyRuleNode {
+    AmberMask mask;
+    BondedEnergyRuleNode(AmberMask mask) : mask(std::move(mask)) {}
+};
+
 struct QuitRuleNode {};
 
 struct HelpRuleNode {};
@@ -57,7 +62,7 @@ struct HelpRuleNode {};
 using CenterRuleNode =
     boost::variant<std::shared_ptr<MassCenterRuleNode>, std::shared_ptr<GeomCenterRuleNode>,
                    std::shared_ptr<NoopRuleNode>, std::shared_ptr<EDARuleNode>, std::shared_ptr<BondRuleNode>,
-                   std::shared_ptr<AngleRuleNode>, std::shared_ptr<DihedralRuleNode>, std::shared_ptr<QuitRuleNode>,
-                   std::shared_ptr<HelpRuleNode>>;
+                   std::shared_ptr<AngleRuleNode>, std::shared_ptr<DihedralRuleNode>,
+                   std::shared_ptr<BondedEnergyRuleNode>, std::shared_ptr<QuitRuleNode>, std::shared_ptr<HelpRuleNode>>;
 
 #endif // TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP
