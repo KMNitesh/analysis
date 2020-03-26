@@ -63,14 +63,10 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                       << "E(vdW) = " << lj << " (kcal/mole)\n";
             continue;
         } else if (auto ret = boost::get<std::shared_ptr<BondRuleNode>>(&r)) {
-            auto atom1 = PBCUtils::find_atom((*ret)->mask1, frame);
-            auto atom2 = PBCUtils::find_atom((*ret)->mask2, frame);
-
-            std::array<int, 2> key{atom1->seq, atom2->seq};
-            boost::sort(key);
-
-            if (auto it = frame->f_bond_params.find(key); it != std::end(frame->f_bond_params)) {
-                auto distance = atom_distance(atom1, atom2, frame);
+            std::array atoms{PBCUtils::find_atom((*ret)->mask1, frame), PBCUtils::find_atom((*ret)->mask2, frame)};
+            boost::sort(atoms);
+            if (auto it = frame->f_bond_params.find(atoms); it != std::end(frame->f_bond_params)) {
+                auto distance = atom_distance(atoms, frame);
                 auto r = distance - it->second.rA;
                 auto energy = 0.5 * it->second.krA * r * r;
                 std::cout << boost::format(
@@ -86,8 +82,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
 
             boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
 
-            if (auto it = frame->f_angle_params.find(std::array<int, 3>{atoms[0]->seq, atoms[1]->seq, atoms[2]->seq});
-                it != std::end(frame->f_angle_params)) {
+            if (auto it = frame->f_angle_params.find(atoms); it != std::end(frame->f_angle_params)) {
                 auto angle = atom_angle(atoms, frame);
                 auto theta = (angle - it->second.rA) / radian;
                 auto energy = 0.5 * it->second.krA * theta * theta;
@@ -105,9 +100,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
 
             boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
 
-            std::array<int, 4> key{atoms[0]->seq, atoms[1]->seq, atoms[2]->seq, atoms[3]->seq};
-
-            if (auto [lower_bound, upper_bound] = frame->f_dihedral_params.equal_range(key);
+            if (auto [lower_bound, upper_bound] = frame->f_dihedral_params.equal_range(atoms);
                 lower_bound != upper_bound) {
                 auto angle = atom_dihedral(atoms, frame);
                 double energy{};
@@ -124,9 +117,10 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             continue;
         } else if (auto ret = boost::get<std::shared_ptr<BondedEnergyRuleNode>>(&r)) {
             auto [bond, angle, dihedral] = BondEnergyCalculator::energy((*ret)->mask, frame);
-            std::cout << boost::format(
-                             "E(bond) = %g KJ/mol   E(angle) = %g kJ/mol   E(dihedral) = %g kJ/mol   E_toal = %g\n") %
-                             bond % angle % dihedral % (bond + angle + dihedral);
+            std::cout
+                << boost::format(
+                       "E(bond) = %g KJ/mol   E(angle) = %g kJ/mol   E(dihedral) = %g kJ/mol   E_total = %g kJ/mol\n") %
+                       bond % angle % dihedral % (bond + angle + dihedral);
             continue;
         } else if (boost::get<std::shared_ptr<QuitRuleNode>>(&r)) {
             break;
@@ -152,9 +146,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         std::cout << '\n';
 
         double weight = 0;
-        double sum_x = 0.0;
-        double sum_y = 0.0;
-        double sum_z = 0.0;
+        std::tuple<double, double, double> sum{};
         const boost::format fmt{"%6d %-7s %4s %-7s %4s %-6s  %8s %8s  %8.3f%8.3f%8.3f"};
 
         for (auto &atom : frame->atom_list) {
@@ -179,15 +171,11 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                         std::cerr << "atom mass not available !\n";
                         goto beg;
                     }
-                    sum_x += atom->x * atom->mass.get();
-                    sum_y += atom->y * atom->mass.get();
-                    sum_z += atom->z * atom->mass.get();
+                    sum += atom->getCoordinate() * atom->mass.get();
                     weight += atom->mass.get();
                     break;
                 case Mode::Geom:
-                    sum_x += atom->x;
-                    sum_y += atom->y;
-                    sum_z += atom->z;
+                    sum += atom->getCoordinate() * atom->mass.get();
                     weight++;
                     break;
                 case Mode::Noop:
@@ -198,16 +186,16 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         if (weight != 0.0) {
             switch (mode) {
             case Mode::Mass:
-
+                sum /= weight;
                 std::cout << boost::format("Mass Center %8s%8s%8s\n") % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
-                std::cout << boost::format("            %8.3f%8.3f%8.3f\n") % (sum_x / weight) % (sum_y / weight) %
-                                 (sum_z / weight);
-
+                std::cout << boost::format("            %8.3f%8.3f%8.3f\n") % std::get<0>(sum) % std::get<1>(sum) %
+                                 std::get<2>(sum);
                 break;
             case Mode::Geom:
+                sum /= weight;
                 std::cout << boost::format("Geom Center %8s%8s%8s\n") % "X(Ang)" % "Y(Ang)" % "Z(Ang)";
-                std::cout << boost::format("            %8.3f%8.3f%8.3f\n") % (sum_x / weight) % (sum_y / weight) %
-                                 (sum_z / weight);
+                std::cout << boost::format("            %8.3f%8.3f%8.3f\n") % std::get<0>(sum) % std::get<1>(sum) %
+                                 std::get<2>(sum);
                 break;
             case Mode::Noop:
                 break;

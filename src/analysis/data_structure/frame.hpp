@@ -68,9 +68,9 @@ public:
         double phiA, cpA; int mult;
     };
 
-    std::map<std::array<int, 2>, harmonic> f_bond_params;
-    std::map<std::array<int, 3>, harmonic> f_angle_params;
-    std::multimap<std::array<int, 4>,pdihs> f_dihedral_params; 
+    std::map<std::array<std::shared_ptr<Atom>, 2>, harmonic> f_bond_params;
+    std::map<std::array<std::shared_ptr<Atom>, 3>, harmonic> f_angle_params;
+    std::multimap<std::array<std::shared_ptr<Atom>, 4>,pdihs> f_dihedral_params; 
 };
 
 #endif // TINKER_FRAME_HPP

@@ -128,7 +128,7 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         auto ai = top.idef.il[gmx::F_BONDS].iatoms[k++];
         auto aj = top.idef.il[gmx::F_BONDS].iatoms[k++];
         const auto &harmonic = top.idef.iparams[type].harmonic;
-        frame->f_bond_params.emplace(std::array{ai + 1, aj + 1},
+        frame->f_bond_params.emplace(std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1]},
                                      Frame::harmonic{harmonic.krA * 0.01, harmonic.rA * 10});
     }
     for (int k = 0; k < top.idef.il[gmx::F_ANGLES].nr;) {
@@ -137,7 +137,9 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         auto aj = top.idef.il[gmx::F_ANGLES].iatoms[k++];
         auto ak = top.idef.il[gmx::F_ANGLES].iatoms[k++];
         const auto &harmonic = top.idef.iparams[type].harmonic;
-        frame->f_angle_params.emplace(std::array{ai + 1, aj + 1, ak + 1}, Frame::harmonic{harmonic.krA, harmonic.rA});
+        frame->f_angle_params.emplace(
+            std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1], frame->atom_map[ak + 1]},
+            Frame::harmonic{harmonic.krA, harmonic.rA});
     }
     for (int k = 0; k < top.idef.il[gmx::F_PDIHS].nr;) {
         auto type = top.idef.il[gmx::F_PDIHS].iatoms[k++];
@@ -147,7 +149,8 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         auto an = top.idef.il[gmx::F_PDIHS].iatoms[k++];
 
         const auto &pdihs = top.idef.iparams[type].pdihs;
-        frame->f_dihedral_params.emplace(std::array{ai + 1, aj + 1, ak + 1, an + 1},
+        frame->f_dihedral_params.emplace(std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1],
+                                                    frame->atom_map[ak + 1], frame->atom_map[an + 1]},
                                          Frame::pdihs{pdihs.phiA, pdihs.cpA, pdihs.mult});
     }
 
