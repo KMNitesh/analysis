@@ -31,7 +31,7 @@ BondEnergyCalculator::BondEnergyCalculator(const std::vector<std::shared_ptr<Ato
             angles.push_back(&angle);
         }
     }
-    for (const auto &dihedral : frame->f_dihedral_params) {
+    for (const auto &dihedral : join(frame->f_dihedral_params, frame->f_improper_dihedral_params)) {
         if (all_in_set(dihedral.first, atoms_set)) {
             dihedrals.push_back(&dihedral);
         }

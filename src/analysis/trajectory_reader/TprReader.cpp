@@ -153,6 +153,18 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
                                                     frame->atom_map[ak + 1], frame->atom_map[an + 1]},
                                          Frame::pdihs{pdihs.phiA, pdihs.cpA, pdihs.mult});
     }
+    for (int k = 0; k < top.idef.il[gmx::F_PIDIHS].nr;) {
+        auto type = top.idef.il[gmx::F_PIDIHS].iatoms[k++];
+        auto ai = top.idef.il[gmx::F_PIDIHS].iatoms[k++];
+        auto aj = top.idef.il[gmx::F_PIDIHS].iatoms[k++];
+        auto ak = top.idef.il[gmx::F_PIDIHS].iatoms[k++];
+        auto an = top.idef.il[gmx::F_PIDIHS].iatoms[k++];
+
+        const auto &pdihs = top.idef.iparams[type].pdihs;
+        frame->f_improper_dihedral_params.emplace(std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1],
+                                                             frame->atom_map[ak + 1], frame->atom_map[an + 1]},
+                                                  Frame::pdihs{pdihs.phiA, pdihs.cpA, pdihs.mult});
+    }
 
     topology_utils::assgin_atom_to_molecule(frame);
     frame->build_graph();

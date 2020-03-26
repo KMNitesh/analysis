@@ -11,26 +11,26 @@
 #include "data_structure/atom.hpp"
 
 struct MassCenterRuleNode {
-    Atom::Node SelectionMask;
+    AmberMask SelectionMask;
 
-    MassCenterRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
+    MassCenterRuleNode(AmberMask mask) : SelectionMask(std::move(mask)) {}
 };
 
 struct GeomCenterRuleNode {
-    Atom::Node SelectionMask;
+    AmberMask SelectionMask;
 
-    GeomCenterRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
+    GeomCenterRuleNode(AmberMask mask) : SelectionMask(std::move(mask)) {}
 };
 
 struct NoopRuleNode {
-    Atom::Node SelectionMask;
+    AmberMask SelectionMask;
 
-    NoopRuleNode(const Atom::Node &selectionMask) : SelectionMask(selectionMask) {}
+    NoopRuleNode(AmberMask mask) : SelectionMask(std::move(mask)) {}
 };
 
 struct EDARuleNode {
-    Atom::Node mask1, mask2;
-    EDARuleNode(const Atom::Node &mask1, const Atom::Node &mask2) : mask1(mask1), mask2(mask2) {}
+    AmberMask mask1, mask2;
+    EDARuleNode(AmberMask mask1, AmberMask mask2) : mask1(std::move(mask1)), mask2(std::move(mask2)) {}
 };
 
 struct BondRuleNode {
