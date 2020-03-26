@@ -16,6 +16,7 @@ namespace mpl = boost::mpl;
 #include "ana_module/Angle.hpp"
 #include "ana_module/AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 #include "ana_module/AngleWat.hpp"
+#include "ana_module/BondedEnergyCalc.hpp"
 #include "ana_module/Cluster.hpp"
 #include "ana_module/ClusterVolume.hpp"
 #include "ana_module/ConditionalTimeCorrelationFunction.hpp"
@@ -143,12 +144,14 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
 
     using nmrMenu = mpl::vector<NMRRange>;
 
+    using edaMenu = mpl::vector<BondedEnergyCalc>;
+
     using otherUtilsMenu =
         mpl::vector<DynFrameFind, SearchInteractionResidue, FindMinBetweenTwoGroups, FirstCoordExchangeSearch>;
 
     using mainMenu =
         mpl::vector<trajectoryTransformationMenu, structurePropertyMenu, dynamicsPropertyMenu, angleDistributionMenu,
-                    hydrogenBondMenu, biphaseSystemMenu, spectraMenu, nmrMenu, otherUtilsMenu>;
+                    hydrogenBondMenu, biphaseSystemMenu, spectraMenu, nmrMenu, edaMenu, otherUtilsMenu>;
 
     std::vector<std::string> menuString{"Trajectory Transformation",
                                         "Structure Properties",
@@ -158,6 +161,7 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
                                         "Biphase System",
                                         "Spetra",
                                         "NMR",
+                                        "Energy Decomposition",
                                         "Other Utils"};
 
     std::vector<std::function<std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>>()>> menu_functions;

@@ -31,9 +31,14 @@ BondEnergyCalculator::BondEnergyCalculator(const std::vector<std::shared_ptr<Ato
             angles.push_back(&angle);
         }
     }
-    for (const auto &dihedral : join(frame->f_dihedral_params, frame->f_improper_dihedral_params)) {
+    for (const auto &dihedral : frame->f_dihedral_params) {
         if (all_in_set(dihedral.first, atoms_set)) {
             dihedrals.push_back(&dihedral);
+        }
+    }
+    for (const auto &improper : frame->f_improper_dihedral_params) {
+        if (all_in_set(improper.first, atoms_set)) {
+            improper_dihedrals.push_back(&improper);
         }
     }
 }
@@ -58,6 +63,11 @@ BondEnergyCalculator::Term BondEnergyCalculator::energy(const std::shared_ptr<Fr
         const auto &[atoms, param] = **it;
         auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
         term.dihedral += param.cpA * (1 + cos);
+    }
+    for (auto it = improper_dihedrals.begin(); it != improper_dihedrals.end(); ++it) {
+        const auto &[atoms, param] = **it;
+        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
+        term.improper += param.cpA * (1 + cos);
     }
     return term;
 }

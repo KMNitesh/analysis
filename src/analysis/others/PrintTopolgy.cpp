@@ -116,11 +116,10 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             }
             continue;
         } else if (auto ret = boost::get<std::shared_ptr<BondedEnergyRuleNode>>(&r)) {
-            auto [bond, angle, dihedral] = BondEnergyCalculator::energy((*ret)->mask, frame);
-            std::cout
-                << boost::format(
-                       "E(bond) = %g KJ/mol   E(angle) = %g kJ/mol   E(dihedral) = %g kJ/mol   E_total = %g kJ/mol\n") %
-                       bond % angle % dihedral % (bond + angle + dihedral);
+            auto [bond, angle, dihedral, improper] = BondEnergyCalculator::energy((*ret)->mask, frame);
+            std::cout << boost::format("E(bond) = %g KJ/mol   E(angle) = %g kJ/mol   E(dihedral) = %g kJ/mol "
+                                       "E(improper dihedral) = %g kJ/mol   E_total = %g kJ/mol\n") %
+                             bond % angle % dihedral % improper % (bond + angle + dihedral + improper);
             continue;
         } else if (boost::get<std::shared_ptr<QuitRuleNode>>(&r)) {
             break;

@@ -186,10 +186,12 @@ Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, 
             input_string = input(promot);
 
         boost::trim(input_string);
-        if (input_string.empty() and allow_empty)
-            return mask;
-        else
-            continue;
+        if (input_string.empty()) {
+            if (allow_empty)
+                return mask;
+            else
+                continue;
+        }
 
         std::string::iterator begin{std::begin(input_string)}, it{begin}, end{std::end(input_string)};
         try {

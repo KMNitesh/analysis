@@ -15,7 +15,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Energy Calculator for Bonded Terms"; }
 
     struct Term {
-        double bond, angle, dihedral;
+        double bond, angle, dihedral, improper;
     };
 
     Term energy(const std::shared_ptr<Frame> &frame);
@@ -29,6 +29,7 @@ private:
     std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 2>, Frame::harmonic> *> bonds;
     std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 3>, Frame::harmonic> *> angles;
     std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 4>, Frame::pdihs> *> dihedrals;
+    std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 4>, Frame::pdihs> *> improper_dihedrals;
 };
 
 #endif // TINKER_BONDENERGYCALCULATOR_HPP
