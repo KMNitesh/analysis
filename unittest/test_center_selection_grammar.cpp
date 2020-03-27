@@ -12,7 +12,7 @@ TEST(test_center_selection_grammer, test_com) {
     auto it = input_string.begin();
     bool status = qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast);
 
-    auto ret = boost::get<std::shared_ptr<MassCenterRuleNode>>(&ast);
+    auto ret = boost::get<MassCenterRuleNode>(&ast);
 
     ASSERT_TRUE(status && it == input_string.end() && ret);
 }
@@ -34,7 +34,7 @@ TEST(test_center_selection_grammer, test_geom) {
     auto it = input_string.begin();
     bool status = qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast);
 
-    auto ret = boost::get<std::shared_ptr<GeomCenterRuleNode>>(&ast);
+    auto ret = boost::get<GeomCenterRuleNode>(&ast);
 
     ASSERT_TRUE(status && it == input_string.end() && ret);
 }
@@ -64,7 +64,7 @@ TEST(test_center_selection_grammer, test_noop) {
     auto it = input_string.begin();
     bool status = qi::phrase_parse(it, input_string.end(), grammar > qi::eoi, qi::ascii::space, ast);
 
-    auto ret = boost::get<std::shared_ptr<NoopRuleNode>>(&ast);
+    auto ret = boost::get<NoopRuleNode>(&ast);
 
     ASSERT_TRUE(status && it == input_string.end() && ret);
 }
