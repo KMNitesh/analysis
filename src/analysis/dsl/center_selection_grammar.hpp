@@ -38,6 +38,7 @@ template <typename Iterator, typename Skipper>
 CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(root) {
     using boost::spirit::repository::qi::distinct;
     using phoenix::bind;
+    using phoenix::construct;
     using phoenix::new_;
     using phoenix::ref;
     using phoenix::val;
@@ -59,15 +60,16 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
     mask = (("[" >> maskParser >> "]") | maskParser)[_val = _1];
     mask.name("mask");
 
-    expr = (DISTINCT("com") > mask[_val = make_shared_<MassCenterRuleNode>(_1)]) |
-           (DISTINCT("geom") > mask[_val = make_shared_<GeomCenterRuleNode>(_1)]) |
-           ((DISTINCT("eda") > mask > mask)[_val = make_shared_<EDARuleNode>(_1, _2)]) |
-           ((DISTINCT("bond") > mask > mask)[_val = make_shared_<BondRuleNode>(_1, _2)]) |
-           ((DISTINCT("angle") > mask > mask > mask)[_val = make_shared_<AngleRuleNode>(_1, _2, _3)]) |
-           ((DISTINCT("dihedral") > mask > mask > mask > mask)[_val = make_shared_<DihedralRuleNode>(_1, _2, _3, _4)]) |
-           (DISTINCT("energy") > mask[_val = make_shared_<BondedEnergyRuleNode>(_1)]) |
-           DISTINCT("quit")[_val = make_shared_<QuitRuleNode>()] |
-           DISTINCT("help")[_val = make_shared_<HelpRuleNode>()] | mask[_val = make_shared_<NoopRuleNode>(_1)];
+    expr =
+        (DISTINCT("com") > mask[_val = construct<MassCenterRuleNode>(_1)]) |
+        (DISTINCT("geom") > mask[_val = construct<GeomCenterRuleNode>(_1)]) |
+        ((DISTINCT("eda") > mask > mask)[_val = construct<EDARuleNode>(_1, _2)]) |
+        ((DISTINCT("bond") > mask > mask)[_val = construct<BondRuleNode>(_1, _2)]) |
+        ((DISTINCT("angle") > mask > mask > mask)[_val = construct<AngleRuleNode>(_1, _2, _3)]) |
+        ((DISTINCT("dihedral") > mask > mask > mask > mask)[_val = construct<DihedralRuleNode>(_1, _2, _3, _4)]) |
+        (DISTINCT("energy") > mask[_val = construct<BondedEnergyRuleNode>(_1)]) |
+        (DISTINCT("help") >> -(as_string[lexeme[+(char_ - qi::ascii::space)]]))[_val = construct<HelpRuleNode>(_1)] |
+        DISTINCT("quit")[_val = construct<QuitRuleNode>()] | mask[_val = construct<NoopRuleNode>(_1)];
     root = eps > expr;
 }
 

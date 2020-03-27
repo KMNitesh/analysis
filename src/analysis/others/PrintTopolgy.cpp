@@ -44,26 +44,26 @@ void PrintTopolgy::action(const std::string &topology_filename) {
     beg:
         CenterRuleNode r;
         selectCentergroup(r, "> ");
-        Atom::Node ast;
+        AmberMask ast;
 
-        if (auto ret = boost::get<std::shared_ptr<MassCenterRuleNode>>(&r)) {
-            ast = (*ret)->SelectionMask;
+        if (auto ret = boost::get<MassCenterRuleNode>(&r)) {
+            ast = ret->SelectionMask;
             mode = Mode::Mass;
-        } else if (auto ret = boost::get<std::shared_ptr<GeomCenterRuleNode>>(&r)) {
-            ast = (*ret)->SelectionMask;
+        } else if (auto ret = boost::get<GeomCenterRuleNode>(&r)) {
+            ast = ret->SelectionMask;
             mode = Mode::Geom;
-        } else if (auto ret = boost::get<std::shared_ptr<NoopRuleNode>>(&r)) {
-            ast = (*ret)->SelectionMask;
+        } else if (auto ret = boost::get<NoopRuleNode>(&r)) {
+            ast = ret->SelectionMask;
             mode = Mode::Noop;
-        } else if (auto ret = boost::get<std::shared_ptr<EDARuleNode>>(&r)) {
+        } else if (auto ret = boost::get<EDARuleNode>(&r)) {
             EnergyCalculator calculator;
-            calculator.setMask((*ret)->mask1, (*ret)->mask2, frame);
+            calculator.setMask(ret->mask1, ret->mask2, frame);
             auto [ele, lj] = calculator.calculate_energy(frame);
             std::cout << "E(ele) = " << ele << " (kcal/mole)\n"
                       << "E(vdW) = " << lj << " (kcal/mole)\n";
             continue;
-        } else if (auto ret = boost::get<std::shared_ptr<BondRuleNode>>(&r)) {
-            std::array atoms{PBCUtils::find_atom((*ret)->mask1, frame), PBCUtils::find_atom((*ret)->mask2, frame)};
+        } else if (auto ret = boost::get<BondRuleNode>(&r)) {
+            std::array atoms{PBCUtils::find_atom(ret->mask1, frame), PBCUtils::find_atom(ret->mask2, frame)};
             boost::sort(atoms);
             if (auto it = frame->f_bond_params.find(atoms); it != std::end(frame->f_bond_params)) {
                 auto distance = atom_distance(atoms, frame);
@@ -76,9 +76,9 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                 std::cout << "No bond parameter found !!!\n";
             }
             continue;
-        } else if (auto ret = boost::get<std::shared_ptr<AngleRuleNode>>(&r)) {
-            std::array atoms{PBCUtils::find_atom((*ret)->mask1, frame), PBCUtils::find_atom((*ret)->mask2, frame),
-                             PBCUtils::find_atom((*ret)->mask3, frame)};
+        } else if (auto ret = boost::get<AngleRuleNode>(&r)) {
+            std::array atoms{PBCUtils::find_atom(ret->mask1, frame), PBCUtils::find_atom(ret->mask2, frame),
+                             PBCUtils::find_atom(ret->mask3, frame)};
 
             boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
 
@@ -94,9 +94,9 @@ void PrintTopolgy::action(const std::string &topology_filename) {
             }
             continue;
 
-        } else if (auto ret = boost::get<std::shared_ptr<DihedralRuleNode>>(&r)) {
-            std::array atoms{PBCUtils::find_atom((*ret)->mask1, frame), PBCUtils::find_atom((*ret)->mask2, frame),
-                             PBCUtils::find_atom((*ret)->mask3, frame), PBCUtils::find_atom((*ret)->mask4, frame)};
+        } else if (auto ret = boost::get<DihedralRuleNode>(&r)) {
+            std::array atoms{PBCUtils::find_atom(ret->mask1, frame), PBCUtils::find_atom(ret->mask2, frame),
+                             PBCUtils::find_atom(ret->mask3, frame), PBCUtils::find_atom(ret->mask4, frame)};
 
             boost::sort(atoms, [](const auto &lhs, const auto &rhs) { return lhs->seq < rhs->seq; });
 
@@ -115,26 +115,59 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                 std::cout << "No dihedral parameter found !!!\n";
             }
             continue;
-        } else if (auto ret = boost::get<std::shared_ptr<BondedEnergyRuleNode>>(&r)) {
-            auto [bond, angle, dihedral, improper] = BondEnergyCalculator::energy((*ret)->mask, frame);
+        } else if (auto ret = boost::get<BondedEnergyRuleNode>(&r)) {
+            auto [bond, angle, dihedral, improper] = BondEnergyCalculator::energy(ret->mask, frame);
             std::cout << boost::format("E(bond) = %g KJ/mol   E(angle) = %g kJ/mol   E(dihedral) = %g kJ/mol "
                                        "E(improper dihedral) = %g kJ/mol   E_total = %g kJ/mol\n") %
                              bond % angle % dihedral % improper % (bond + angle + dihedral + improper);
             continue;
-        } else if (boost::get<std::shared_ptr<QuitRuleNode>>(&r)) {
+        } else if (boost::get<QuitRuleNode>(&r)) {
             break;
-        } else if (boost::get<std::shared_ptr<HelpRuleNode>>(&r)) {
-            std::cout << "Help : \n"
-                      << " 1. com mask\n"
-                      << " 2. geom mask\n"
-                      << " 3. mask\n"
-                      << " 4. eda mask1 mask2\n"
-                      << " 5. bond mask1 mask2\n"
-                      << " 6. angle mask1 mask2 mask3\n"
-                      << " 7. dihedral mask1 mask2 mask3 mask4\n"
-                      << " 8. energy mask\n"
-                      << " 9. help\n"
-                      << "10. quit\n";
+        } else if (auto ret = boost::get<HelpRuleNode>(&r)) {
+            if (ret->keyword.has_value()) {
+                const auto &keyword = ret->keyword.get();
+                if (keyword == "com") {
+                    std::cout << "syntax : com mask\n"
+                              << "list selected atoms' information and center of mass\n";
+                } else if (keyword == "geom") {
+                    std::cout << "syntax : geom mask\n"
+                              << "list selected atoms' information and center of geometry\n";
+                } else if (keyword == "eda") {
+                    std::cout << "syntax : eda mask1 mask2\n"
+                              << "calculate electrostatic and vdW energies between two groups\n";
+                } else if (keyword == "bond") {
+                    std::cout << "syntax : bond mask1 mask2\n"
+                              << " list bond parameters, bond length and energy\n";
+                } else if (keyword == "angle") {
+                    std::cout << "syntax : angle mask1 mask2\n"
+                              << " list angle parameters, angle degree and energy\n";
+                } else if (keyword == "dihedral") {
+                    std::cout << "syntax : dihedral mask1 mask2 mask3 mask4\n"
+                              << " list dihedral angle parameters, dihedral angle degree and energy\n";
+                } else if (keyword == "energy") {
+                    std::cout << "syntax : dihedral mask1 mask2 mask3 mask4\n"
+                              << " list dihedral angle parameters, dihedral angle degree and energy\n";
+                } else if (keyword == "help") {
+                    std::cout << "syntax : help [keyword]\n"
+                              << "print help information with topic of sepcific keyword or help menu\n";
+                } else if (keyword == "quit") {
+                    std::cout << "exit program immediately\n";
+                } else {
+                    std::cout << "unknown keyword `" << keyword << "`\n";
+                }
+            } else {
+                std::cout << "Help : \n"
+                          << " 1. com mask\n"
+                          << " 2. geom mask\n"
+                          << " 3. mask\n"
+                          << " 4. eda mask1 mask2\n"
+                          << " 5. bond mask1 mask2\n"
+                          << " 6. angle mask1 mask2 mask3\n"
+                          << " 7. dihedral mask1 mask2 mask3 mask4\n"
+                          << " 8. energy mask\n"
+                          << " 9. help [keyword]\n"
+                          << "10. quit\n";
+            }
             continue;
         }
 

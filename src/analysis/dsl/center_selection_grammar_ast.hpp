@@ -5,6 +5,7 @@
 #ifndef TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP
 #define TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP
 
+#include <boost/blank.hpp>
 #include <boost/optional.hpp>
 #include <memory>
 
@@ -57,12 +58,13 @@ struct BondedEnergyRuleNode {
 
 struct QuitRuleNode {};
 
-struct HelpRuleNode {};
+struct HelpRuleNode {
+    boost::optional<std::string> keyword;
+    HelpRuleNode(boost::optional<std::string> keyword) : keyword(std::move(keyword)) {}
+};
 
 using CenterRuleNode =
-    boost::variant<std::shared_ptr<MassCenterRuleNode>, std::shared_ptr<GeomCenterRuleNode>,
-                   std::shared_ptr<NoopRuleNode>, std::shared_ptr<EDARuleNode>, std::shared_ptr<BondRuleNode>,
-                   std::shared_ptr<AngleRuleNode>, std::shared_ptr<DihedralRuleNode>,
-                   std::shared_ptr<BondedEnergyRuleNode>, std::shared_ptr<QuitRuleNode>, std::shared_ptr<HelpRuleNode>>;
+    boost::variant<boost::blank, MassCenterRuleNode, GeomCenterRuleNode, NoopRuleNode, EDARuleNode, BondRuleNode,
+                   AngleRuleNode, DihedralRuleNode, BondedEnergyRuleNode, QuitRuleNode, HelpRuleNode>;
 
 #endif // TINKER_CENTER_SELECTION_GRAMMAR_AST_HPP
