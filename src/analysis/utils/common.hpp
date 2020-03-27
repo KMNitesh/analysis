@@ -47,6 +47,12 @@ extern bool enable_outfile;
 extern Forcefield forcefield;
 extern bool enable_forcefield;
 
+extern bool verbose_message;
+
+class ProgramConfiguration;
+
+extern std::unique_ptr<ProgramConfiguration> program_configuration;
+
 enum class FileType { XTC, TRR, NC, ARC, TPR, PRMTOP, MOL2, PRM, GRO, TRAJ, JSON, UnKnown };
 
 FileType getFileType(const std::string &filename);
@@ -194,11 +200,10 @@ inline double atom_angle(const std::array<std::shared_ptr<Atom>, 3> &atoms, cons
     return atom_angle(atoms[0], atoms[1], atoms[2], frame);
 }
 
-
 double atom_dihedral(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
                      const std::shared_ptr<Atom> &atom3, const std::shared_ptr<Atom> &atom4,
                      const std::shared_ptr<Frame> &frame);
-                     
+
 inline double atom_dihedral(const std::array<std::shared_ptr<Atom>, 4> &atoms, const std::shared_ptr<Frame> &frame) {
     return atom_dihedral(atoms[0], atoms[1], atoms[2], atoms[3], frame);
 }

@@ -12,6 +12,7 @@
 
 #include "data_structure/forcefield.hpp"
 #include "data_structure/frame.hpp"
+#include "utils/ProgramConfiguration.hpp"
 
 bool enable_read_velocity = false;
 bool enable_tbb = false;
@@ -19,6 +20,10 @@ bool enable_outfile = false;
 
 Forcefield forcefield;
 bool enable_forcefield = false;
+
+bool verbose_message = false;
+
+std::unique_ptr<ProgramConfiguration> program_configuration;
 
 std::vector<std::string> split(const std::string &str, const std::string &sep) {
     std::vector<std::string> ret_;
@@ -158,7 +163,9 @@ boost::program_options::options_description make_program_options() {
                                                         "Atomic dipole corrected Hirshfeld population (ADCH) Charge")(
         "fchk", po::value<std::string>()->value_name("file-name"),
         "Gaussian Fchk File")("silent", po::bool_switch()->default_value(false), "Dont show the main menu")(
-        "mask", po::value<std::string>()->value_name("mask"), "specify for read traj");
+        "mask", po::value<std::string>()->value_name("mask"),
+        "specify for read traj")("config", po::value<std::string>()->value_name("config_filename"),
+                                 "configuration file name")("verbose,v", "show verbose message");
 
     return desc;
 }

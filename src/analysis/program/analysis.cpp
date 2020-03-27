@@ -29,6 +29,7 @@
 #include "others/QMStructureComp.hpp"
 #include "others/RamanSpectrum.hpp"
 #include "others/TrajConverter.hpp"
+#include "utils/ProgramConfiguration.hpp"
 #include "utils/common.hpp"
 
 void printDSLDetails() {
@@ -65,6 +66,12 @@ int main(int argc, char *argv[]) {
         printDSLDetails();
         exit(EXIT_SUCCESS);
     }
+
+    verbose_message = vm.contains("verbose");
+
+    program_configuration = vm.contains("config")
+                                ? std::make_unique<ProgramConfiguration>(vm["config"].as<std::string>())
+                                : std::make_unique<ProgramConfiguration>();
 
     bool keep_silent = vm["silent"].as<bool>();
 
@@ -151,8 +158,8 @@ int main(int argc, char *argv[]) {
         [] { NBOOrbitalComposition::process(); },
         [] { DelocalizationIndex::process_interactive(); },
         [&] {
-            ADCHCharge::process_interactive(
-                vm.count("fchk") ? vm["fchk"].as<std::string>() : boost::optional<std::string>{});
+            ADCHCharge::process_interactive(vm.count("fchk") ? vm["fchk"].as<std::string>()
+                                                             : boost::optional<std::string>{});
         },
         [] { TrajConverter::process(); },
         [] { QMStructureComp::process(); },
@@ -172,7 +179,8 @@ int main(int argc, char *argv[]) {
             std::cout << " (5) " << CrossCorrelation::title() << '\n';
             std::cout << " (6) " << GmxTopologyPrinter::title() << '\n';
             std::cout << " (7) " << GQuadruplexPdb2gmx::title() << '\n';
-            std::cout << " (8) " << "Superpose and move for Residues" << '\n';
+            std::cout << " (8) "
+                      << "Superpose and move for Residues" << '\n';
             std::cout << " (9) " << NBOSpin::title() << '\n';
             std::cout << "(10) Renumber atom and residue num\n";
             std::cout << "(11) " << Averager::title() << '\n';

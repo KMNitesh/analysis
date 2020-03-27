@@ -1,5 +1,7 @@
 
-find_package(Boost 1.72 REQUIRED CONFIG COMPONENTS thread regex program_options filesystem iostreams)
+find_package(Threads REQUIRED)
+
+find_package(Boost 1.72 REQUIRED CONFIG COMPONENTS  regex program_options filesystem iostreams)
 
 find_package(TBB 2020.1 REQUIRED COMPONENTS tbb tbbmalloc)
 target_compile_definitions(TBB::tbb INTERFACE TBB_SUPPRESS_DEPRECATED_MESSAGES)
@@ -27,7 +29,7 @@ target_include_directories(base SYSTEM
     )
 
 target_link_libraries(base
-    PUBLIC Boost::thread Boost::regex Boost::program_options Boost::filesystem Boost::iostreams
+    PUBLIC  Boost::regex Boost::program_options Boost::filesystem Boost::iostreams
     PUBLIC TBB::tbb TBB::tbbmalloc
     PUBLIC pugixml-shared
     PUBLIC Eigen3::Eigen
@@ -35,6 +37,8 @@ target_link_libraries(base
     PUBLIC Readline::Readline
     PRIVATE NetCDF::NetCDF
     PRIVATE ${GROMACS_LIBRARIES}
+    PRIVATE ${CMAKE_DL_LIBS}
+    PRIVATE Threads::Threads
     )
 
 target_link_directories(base
@@ -42,7 +46,7 @@ target_link_directories(base
     )
 
 target_compile_definitions(base
-    PRIVATE $<$<AND:$<CONFIG:Release>,$<STREQUAL:$<CXX_COMPILER_ID>,GNU>>:BOOST_DISABLE_ASSERTS>
+    PRIVATE $<$<CONFIG:Release>:BOOST_DISABLE_ASSERTS>
     )
 
 add_executable(analysis program/analysis.cpp)
