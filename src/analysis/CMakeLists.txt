@@ -1,7 +1,7 @@
 
 find_package(Threads REQUIRED)
 
-find_package(Boost 1.72 REQUIRED CONFIG COMPONENTS  regex program_options filesystem iostreams)
+find_package(Boost 1.72 REQUIRED CONFIG COMPONENTS regex program_options filesystem iostreams)
 
 find_package(TBB 2020.1 REQUIRED COMPONENTS tbb tbbmalloc)
 target_compile_definitions(TBB::tbb INTERFACE TBB_SUPPRESS_DEPRECATED_MESSAGES)
@@ -29,7 +29,7 @@ target_include_directories(base SYSTEM
     )
 
 target_link_libraries(base
-    PUBLIC  Boost::regex Boost::program_options Boost::filesystem Boost::iostreams
+    PUBLIC Boost::regex Boost::program_options Boost::filesystem Boost::iostreams
     PUBLIC TBB::tbb TBB::tbbmalloc
     PUBLIC pugixml-shared
     PUBLIC Eigen3::Eigen
