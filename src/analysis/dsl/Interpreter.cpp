@@ -388,7 +388,7 @@ boost::any Interpreter::evalArithmeticOperation(const ArithmeticOperation &op) {
         return boost::any_cast<int>(lhs) % boost::any_cast<int>(rhs);
         break;
     default:
-        break;
+        throw InterpreterException("Operation not valid !!");
     }
 }
 
@@ -406,9 +406,8 @@ boost::any Interpreter::evalBitwiseOperation(const BitwiseOperation &op) {
                                                                boost::any_cast<Atom::Node>(rhs)));
             break;
         }
-    } else {
-        throw InterpreterException("Bitwise operation only for AmbberMask");
     }
+    throw InterpreterException("Bitwise operation only for AmbberMask");
 }
 namespace {
 inline ostream &operator<<(ostream &os, const vector<string> &vect) {
@@ -627,7 +626,7 @@ boost::any Interpreter::evalArithmeticSubtract(boost::any lhs, boost::any rhs) {
 
 boost::any Interpreter::evalArithmeticMultiply(boost::any lhs, boost::any rhs) {
     if (lhs.type() == typeid(bool)) {
-        return ArithmeticOpMultiply<bool>(lhs, rhs);
+        return ArithmeticOpMultiply_bool(lhs, rhs);
     } else if (lhs.type() == typeid(int)) {
         return ArithmeticOpMultiply<int>(lhs, rhs);
     } else if (lhs.type() == typeid(double)) {

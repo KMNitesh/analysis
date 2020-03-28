@@ -179,7 +179,7 @@ void print::indent(int space_num) const { std::cout << std::string(3 * space_num
 
 template <typename Iterator, typename Skipper>
 Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &promot,
-                                     std::string input_string = "", bool allow_empty = false) {
+                                     std::string input_string = "", bool allow_empty = false, bool quiet = false) {
     for (;;) {
         Atom::AmberMask mask;
         if (input_string.empty())
@@ -196,8 +196,10 @@ Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, 
         std::string::iterator begin{std::begin(input_string)}, it{begin}, end{std::end(input_string)};
         try {
             qi::phrase_parse(it, end, grammar > qi::eoi, boost::spirit::ascii::space, mask);
-            std::cout << "Parsed Abstract Syntax Tree :\n";
-            boost::apply_visitor(print(), mask);
+            if (!quiet) {
+                std::cout << "Parsed Abstract Syntax Tree :\n";
+                boost::apply_visitor(print(), mask);
+            }
             return mask;
         } catch (const qi::expectation_failure<std::string::iterator> &x) {
             std::cerr << "Grammar Parse Failure ! Expecting : " << x.what_ << '\n';
@@ -209,9 +211,9 @@ Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, 
     }
 }
 
-AmberMask parse_atoms(const std::string &input_string) {
+AmberMask parse_atoms(const std::string &input_string, bool quiet) {
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
-    return input_atom_selection(grammar, "Enter mask for read trajectory > ", input_string);
+    return input_atom_selection(grammar, "Enter mask for read trajectory > ", input_string, false, quiet);
 }
 
 void Atom::select2group(Atom::AmberMask &ids1, Atom::AmberMask &ids2, const std::string &prompt1,

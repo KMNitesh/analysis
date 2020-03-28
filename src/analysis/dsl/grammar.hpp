@@ -18,6 +18,7 @@
 #include <boost/variant.hpp>
 
 #include "data_structure/atom.hpp"
+#include "utils/ProgramConfiguration.hpp"
 #include "utils/common.hpp"
 
 namespace qi = boost::spirit::qi;
@@ -129,8 +130,8 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
     molecule_select_rule =
         '$' > ((uint_ >> -('-' > uint_ >> -('#' > int_))) % ',')[_val = make_shared_<Atom::molecule_nums>(_1)];
 
-    nametype_select_rule = '@' > ('%' > (select_item_rule % ',')[_val = make_shared_<Atom::atom_types>(_1)] |
-                                  '/' > (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)] |
+    nametype_select_rule = '@' > (('%' > (select_item_rule % ',')[_val = make_shared_<Atom::atom_types>(_1)]) |
+                                  ('/' > (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)]) |
                                   (select_item_rule % ',')[_val = make_shared_<Atom::atom_name_nums>(_1)]);
 
 #define DISTINCT(x) distinct(char_("a-zA-Z_0-9") | char_("-+"))[x]
@@ -197,6 +198,12 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
                                     Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"H*"})))]
 
         | DISTINCT("Water")[_val = make_shared_<Atom::residue_name_nums>(water)];
+
+    if (program_configuration) {
+        for (const auto &[name, macro] : program_configuration->get_macro_mask()) {
+            macro_rule = macro_rule[_val = _1] | DISTINCT(name)[_val = macro];
+        }
+    }
 
     select_rule = macro_rule | residue_select_rule | molecule_select_rule | nametype_select_rule;
 

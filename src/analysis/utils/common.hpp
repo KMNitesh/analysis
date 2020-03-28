@@ -49,6 +49,13 @@ extern bool enable_forcefield;
 
 extern bool verbose_message;
 
+[[maybe_unused]] inline struct {
+    template <typename... Args> void operator()(Args &&... args) {
+        if (verbose_message)
+            (std::cout << ... << std::forward<Args>(args));
+    }
+} LOG;
+
 class ProgramConfiguration;
 
 extern std::unique_ptr<ProgramConfiguration> program_configuration;

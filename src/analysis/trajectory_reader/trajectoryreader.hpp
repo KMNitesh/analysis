@@ -5,9 +5,9 @@
 #ifndef TINKER_TRAJECTORYREADER_HPP
 #define TINKER_TRAJECTORYREADER_HPP
 
+#include "data_structure/atom.hpp"
 #include "trajectory_reader/TopologyInterface.hpp"
 #include "trajectory_reader/TrajectoryInterface.hpp"
-#include "data_structure/atom.hpp"
 
 class TrajectoryReader {
 public:
@@ -19,26 +19,27 @@ public:
 
     std::shared_ptr<Frame> readTopology();
 
-    void set_mask(const std::string &mask) { mask_string = mask; }
+    void set_mask(std::string mask_string);
 
 private:
     class TrajectoryFile {
     public:
         TrajectoryFile() = default;
-        TrajectoryFile(std::string name, std::size_t start = 1, std::size_t end = 0)
-            : name(std::move(name)), start(start), end(end) {}
+        TrajectoryFile(std::string name, std::size_t start = 1, std::size_t end = 0, AmberMask mask = boost::blank{})
+            : name(std::move(name)), start(start), end(end), mask(std::move(mask)) {}
 
         operator std::string() { return name; }
 
         std::string name;
         std::size_t start;
         std::size_t end;
+        AmberMask mask;
     };
 
     TrajectoryFile current_trajectory_file;
     std::size_t current_frame_pos;
 
-    std::string mask_string;
+    AmberMask mask;
     std::vector<std::shared_ptr<Atom>> atoms_for_readtraj;
 
     boost::optional<std::string> topology_filename;

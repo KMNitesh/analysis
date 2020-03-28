@@ -89,8 +89,7 @@ struct DoWhileStmt {
 
 struct IfElseStmt {
     IfElseStmt(boost::any condtion, boost::any ifStmtBlock, boost::any elseStmtBlock)
-        : condtion(std::move(condtion)),
-          if_stmt_block(std::move(ifStmtBlock)),
+        : condtion(std::move(condtion)), if_stmt_block(std::move(ifStmtBlock)),
           else_stmt_block(std::move(elseStmtBlock)) {}
 
     boost::any condtion;
@@ -372,8 +371,7 @@ public:
     boost::any invoke(std::vector<boost::any> &arguments,
                       std::vector<std::pair<boost::any, boost::any>> &optional_arguments);
 
-    template <typename... Ts>
-    FunctionObject &addArgument(const std::string &arg_name, boost::any defaultValue = {}) {
+    template <typename... Ts> FunctionObject &addArgument(const std::string &arg_name, boost::any defaultValue = {}) {
         if (!defaultValue.empty()) {
             throw_assert(TypeIs<Ts...>()(defaultValue),
                          "Arguemnt(" << arg_name << ") default value type error, function (" << name << ")");
@@ -430,39 +428,36 @@ protected:
 
     bool evalLogicalOperationLess(boost::any lhs, boost::any rhs);
 
-    template <typename T>
-    T ArithmeticOpAdd(boost::any &lhs, boost::any &rhs) {
+    template <typename T> T ArithmeticOpAdd(boost::any &lhs, boost::any &rhs) {
         return boost::any_cast<T>(lhs) + boost::any_cast<T>(rhs);
     }
 
-    template <typename T>
-    T ArithmeticOpSubtract(boost::any &lhs, boost::any &rhs) {
+    template <typename T> T ArithmeticOpSubtract(boost::any &lhs, boost::any &rhs) {
         return boost::any_cast<T>(lhs) - boost::any_cast<T>(rhs);
     }
 
-    template <typename T>
-    T ArithmeticOpMultiply(boost::any &lhs, boost::any &rhs) {
+    template <typename T> T ArithmeticOpMultiply(boost::any &lhs, boost::any &rhs) {
         return boost::any_cast<T>(lhs) * boost::any_cast<T>(rhs);
     }
 
-    template <typename T>
-    T ArithemeticOpDivide(boost::any &lhs, boost::any &rhs) {
+    bool ArithmeticOpMultiply_bool(boost::any &lhs, boost::any &rhs) {
+        return boost::any_cast<bool>(lhs) and boost::any_cast<bool>(rhs);
+    }
+
+    template <typename T> T ArithemeticOpDivide(boost::any &lhs, boost::any &rhs) {
         return boost::any_cast<T>(lhs) / boost::any_cast<T>(rhs);
     }
 
-    template <typename T>
-    bool LogicalOpEqaul(boost::any &lhs, boost::any &rhs) {
+    template <typename T> bool LogicalOpEqaul(boost::any &lhs, boost::any &rhs) {
         return boost::any_cast<T>(lhs) == boost::any_cast<T>(rhs);
     }
 
-    template <typename T>
-    bool LogicalOpLess(boost::any &lhs, boost::any &rhs) {
+    template <typename T> bool LogicalOpLess(boost::any &lhs, boost::any &rhs) {
         return boost::any_cast<T>(lhs) < boost::any_cast<T>(rhs);
     }
 };
 
-template <typename Iterator>
-struct SkipperGrammar : qi::grammar<Iterator> {
+template <typename Iterator> struct SkipperGrammar : qi::grammar<Iterator> {
     qi::rule<Iterator> block_comment, single_line_comment, skipper;
 
     SkipperGrammar() : SkipperGrammar::base_type(skipper) {
@@ -477,4 +472,4 @@ struct SkipperGrammar : qi::grammar<Iterator> {
 using SkipperT = SkipperGrammar<std::string::iterator>;
 using InterpreterGrammarT = InterpreterGrammar<std::string::iterator, SkipperT>;
 
-#endif  // TINKER_INTERPRETER_HPP
+#endif // TINKER_INTERPRETER_HPP

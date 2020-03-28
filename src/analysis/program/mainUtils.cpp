@@ -36,6 +36,7 @@
 #include "program/taskMenu.hpp"
 #include "trajectory_reader/trajectoryreader.hpp"
 #include "utils/NormalVectorSelector.hpp"
+#include "utils/ProgramConfiguration.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/TwoAtomVectorSelector.hpp"
 #include "utils/TypeUtility.hpp"
@@ -699,8 +700,10 @@ void processTrajectory(const boost::program_options::options_description &desc,
 
     tbb::task_scheduler_init tbb_init(tbb::task_scheduler_init::deferred);
     if (enable_tbb) {
-        int threads =
-            choose<int>(0, sysconf(_SC_NPROCESSORS_ONLN), "How many cores to used in parallel[automatic]:", Default(0));
+        int threads = choose<int>(
+            0, sysconf(_SC_NPROCESSORS_ONLN),
+            (boost::format("How many cores to used in parallel[%s]:") % program_configuration->get_nthreads()).str(),
+            Default(program_configuration->get_nthreads()));
         tbb_init.initialize(threads == 0 ? tbb::task_scheduler_init::automatic : threads);
     }
 
@@ -711,7 +714,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         b_added_topology = false;
     } else {
         if (vm.count("topology")) {
-            std::cerr << "WRANING !!  do not use topolgy file !\n";
+            std::cerr << "WRANING !!  do not use topology file !\n";
         }
     }
     for (auto &xyzfile : xyzfiles) {

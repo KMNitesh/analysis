@@ -9,7 +9,6 @@
 #include <list>
 
 #include "ReaderFactory.hpp"
-#include "config.h"
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
@@ -26,7 +25,9 @@ void TrajectoryReader::add_trajectoy_file(const std::string &filename) {
             std::size_t start = item.value("start", 1);
             std::size_t end = item.value("end", 0);
             std::string name = item.at("name");
-            traj_filenames.emplace(std::move(name), start, end);
+            std::string mask = item.value("mask", "");
+            traj_filenames.emplace(std::move(name), start, end,
+                                   mask.empty() ? boost::blank{} : parse_atoms(mask, true));
         }
     } else
         traj_filenames.push(filename);
@@ -34,11 +35,15 @@ void TrajectoryReader::add_trajectoy_file(const std::string &filename) {
 
 void TrajectoryReader::set_topology(const std::string &filename) { topology_filename = filename; }
 
+void TrajectoryReader::set_mask(std::string mask_string) {
+    if (!mask_string.empty()) {
+        mask = parse_atoms(mask_string, true);
+    }
+}
 std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
     if (!frame) {
         readTopology();
-        atoms_for_readtraj =
-            mask_string.empty() ? frame->atom_list : PBCUtils::find_atoms(parse_atoms(mask_string), frame);
+        atoms_for_readtraj = Atom::isBlank(mask) ? frame->atom_list : PBCUtils::find_atoms(mask, frame);
     }
     for (;;) {
         if (!traj_reader) {
@@ -49,6 +54,11 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
             current_frame_pos = 1;
             traj_reader = ReaderFactory::getTrajectory(current_trajectory_file);
             traj_reader->open(current_trajectory_file);
+            if (Atom::isBlank(mask)) {
+                atoms_for_readtraj = Atom::isBlank(current_trajectory_file.mask)
+                                         ? frame->atom_list
+                                         : PBCUtils::find_atoms(current_trajectory_file.mask, frame);
+            }
             while (current_frame_pos < current_trajectory_file.start) {
                 traj_reader->readOneFrame(frame, atoms_for_readtraj);
                 ++current_frame_pos;

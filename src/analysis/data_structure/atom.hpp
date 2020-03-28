@@ -256,6 +256,6 @@ inline bool operator==(const std::shared_ptr<Atom::Operator> &op1, const std::sh
 
 std::string to_string(const AmberMask &mask);
 
-AmberMask parse_atoms(const std::string &input_string);
+AmberMask parse_atoms(const std::string &input_string, bool quiet = false);
 
 #endif // TINKER_ATOM_HPP
