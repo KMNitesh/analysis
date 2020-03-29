@@ -69,9 +69,10 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                 auto distance = atom_distance(atoms, frame);
                 auto r = distance - it->second.rA;
                 auto energy = 0.5 * it->second.krA * r * r;
-                std::cout << boost::format(
-                                 " K = %10g kJ/mol/Ang2    b0 = %10g Ang    b = %10g Ang   E(bond) = %10g kJ/mol\n") %
-                                 it->second.krA % it->second.rA % distance % energy;
+                std::cout
+                    << boost::format(
+                           " K = %10g kcal/mol/Ang2    b0 = %10g Ang    b = %10g Ang   E(bond) = %10g kcal/mol\n") %
+                           it->second.krA % it->second.rA % distance % energy;
             } else {
                 std::cout << "No bond parameter found !!!\n";
             }
@@ -84,10 +85,10 @@ void PrintTopolgy::action(const std::string &topology_filename) {
 
             if (auto it = frame->f_angle_params.find(atoms); it != std::end(frame->f_angle_params)) {
                 auto angle = atom_angle(atoms, frame);
-                auto theta = (angle - it->second.rA) / radian;
+                auto theta = (angle - it->second.rA) * degree;
                 auto energy = 0.5 * it->second.krA * theta * theta;
-                std::cout << boost::format(" K = %10g kJ/mol/rad2    theta0 = %10g degree    theta = %10g degree  "
-                                           "E(angle) = %10g kJ/mol\n") %
+                std::cout << boost::format(" K = %10g kcal/mol/rad2    theta0 = %10g degree    theta = %10g degree  "
+                                           "E(angle) = %10g kcal/mol\n") %
                                  it->second.krA % it->second.rA % angle % energy;
             } else {
                 std::cout << "No angle parameter found !!!\n";
@@ -105,20 +106,20 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                 auto angle = atom_dihedral(atoms, frame);
                 double energy{};
                 for (auto it = lower_bound; it != upper_bound; ++it) {
-                    std::cout << boost::format(" K = %10g kJ/mol    phi0 = %10g degree    multi = %2d\n") %
+                    std::cout << boost::format(" K = %10g kcal/mol    phi0 = %10g degree    multi = %2d\n") %
                                      it->second.cpA % it->second.phiA % it->second.mult;
-                    auto cos = std::cos((angle * it->second.mult - it->second.phiA) / radian);
+                    auto cos = std::cos((angle * it->second.mult - it->second.phiA) * degree);
                     energy += it->second.cpA * (1 + cos);
                 }
-                std::cout << boost::format(" phi = %10g degree  E(dihedral) = %10g kJ/mol\n") % angle % energy;
+                std::cout << boost::format(" phi = %10g degree  E(dihedral) = %10g kcal/mol\n") % angle % energy;
             } else {
                 std::cout << "No dihedral parameter found !!!\n";
             }
             continue;
         } else if (auto ret = boost::get<BondedEnergyRuleNode>(&r)) {
             auto [bond, angle, dihedral, improper] = BondEnergyCalculator::energy(ret->mask, frame);
-            std::cout << boost::format("E(bond) = %g KJ/mol   E(angle) = %g kJ/mol   E(dihedral) = %g kJ/mol "
-                                       "E(improper dihedral) = %g kJ/mol   E_total = %g kJ/mol\n") %
+            std::cout << boost::format("E(bond) = %g Kcal/mol   E(angle) = %g kcal/mol   E(dihedral) = %g kcal/mol "
+                                       "E(improper dihedral) = %g kcal/mol   E_total = %g kcal/mol\n") %
                              bond % angle % dihedral % improper % (bond + angle + dihedral + improper);
             continue;
         } else if (boost::get<QuitRuleNode>(&r)) {
@@ -145,8 +146,8 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                     std::cout << "syntax : dihedral mask1 mask2 mask3 mask4\n"
                               << " list dihedral angle parameters, dihedral angle degree and energy\n";
                 } else if (keyword == "energy") {
-                    std::cout << "syntax : dihedral mask1 mask2 mask3 mask4\n"
-                              << " list dihedral angle parameters, dihedral angle degree and energy\n";
+                    std::cout << "syntax : energy mask\n"
+                              << " calculate bond, angle, dihedral and improper energy\n";
                 } else if (keyword == "help") {
                     std::cout << "syntax : help [keyword]\n"
                               << "print help information with topic of sepcific keyword or help menu\n";

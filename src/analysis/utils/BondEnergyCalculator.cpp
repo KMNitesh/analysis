@@ -56,18 +56,53 @@ BondEnergyCalculator::Term BondEnergyCalculator::energy(const std::shared_ptr<Fr
     }
     for (auto it = angles.begin(); it != angles.end(); ++it) {
         const auto &[atoms, param] = **it;
-        auto theta = (atom_angle(atoms, frame) - param.rA) / radian;
+        auto theta = (atom_angle(atoms, frame) - param.rA) * degree;
         term.angle += 0.5 * param.krA * theta * theta;
     }
     for (auto it = dihedrals.begin(); it != dihedrals.end(); ++it) {
         const auto &[atoms, param] = **it;
-        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
+        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) * degree);
         term.dihedral += param.cpA * (1 + cos);
     }
     for (auto it = improper_dihedrals.begin(); it != improper_dihedrals.end(); ++it) {
         const auto &[atoms, param] = **it;
-        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
+        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) * degree);
         term.improper += param.cpA * (1 + cos);
     }
     return term;
+}
+
+std::map<int, BondEnergyCalculator::Term>
+BondEnergyCalculator::energy_with_residue_rank(const std::shared_ptr<Frame> &frame) {
+
+    std::map<int, Term> terms_map;
+    for (auto it = bonds.begin(); it != bonds.end(); ++it) {
+        const auto &[atoms, param] = **it;
+        auto r = atom_distance(atoms, frame) - param.rA;
+        auto half_bond = 0.25 * param.krA * r * r;
+        for (auto &atom : atoms)
+            terms_map[atom->residue_num.get()].bond += half_bond;
+    }
+    for (auto it = angles.begin(); it != angles.end(); ++it) {
+        const auto &[atoms, param] = **it;
+        auto theta = (atom_angle(atoms, frame) - param.rA) / radian;
+        auto angle = 1 / 3.0 * 0.5 * param.krA * theta * theta;
+        for (auto &atom : atoms)
+            terms_map[atom->residue_num.get()].angle += angle;
+    }
+    for (auto it = dihedrals.begin(); it != dihedrals.end(); ++it) {
+        const auto &[atoms, param] = **it;
+        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
+        auto dihedral = 0.25 * param.cpA * (1 + cos);
+        for (auto &atom : atoms)
+            terms_map[atom->residue_num.get()].dihedral += dihedral;
+    }
+    for (auto it = improper_dihedrals.begin(); it != improper_dihedrals.end(); ++it) {
+        const auto &[atoms, param] = **it;
+        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
+        auto improper = 0.25 * param.cpA * (1 + cos);
+        for (auto &atom : atoms)
+            terms_map[atom->residue_num.get()].improper += improper;
+    }
+    return terms_map;
 }

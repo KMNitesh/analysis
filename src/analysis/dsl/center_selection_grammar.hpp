@@ -60,16 +60,15 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
     mask = (("[" >> maskParser >> "]") | maskParser)[_val = _1];
     mask.name("mask");
 
-    expr =
-        (DISTINCT("com") > mask[_val = construct<MassCenterRuleNode>(_1)]) |
-        (DISTINCT("geom") > mask[_val = construct<GeomCenterRuleNode>(_1)]) |
-        ((DISTINCT("eda") > mask > mask)[_val = construct<EDARuleNode>(_1, _2)]) |
-        ((DISTINCT("bond") > mask > mask)[_val = construct<BondRuleNode>(_1, _2)]) |
-        ((DISTINCT("angle") > mask > mask > mask)[_val = construct<AngleRuleNode>(_1, _2, _3)]) |
-        ((DISTINCT("dihedral") > mask > mask > mask > mask)[_val = construct<DihedralRuleNode>(_1, _2, _3, _4)]) |
-        (DISTINCT("energy") > mask[_val = construct<BondedEnergyRuleNode>(_1)]) |
-        (DISTINCT("help") >> -(as_string[lexeme[+(char_ - qi::ascii::space)]]))[_val = construct<HelpRuleNode>(_1)] |
-        DISTINCT("quit")[_val = construct<QuitRuleNode>()] | mask[_val = construct<NoopRuleNode>(_1)];
+    expr = (DISTINCT("com") > mask[_val = construct<MassCenterRuleNode>(_1)]) |
+           (DISTINCT("geom") > mask[_val = construct<GeomCenterRuleNode>(_1)]) |
+           ((DISTINCT("eda") > mask > mask)[_val = construct<EDARuleNode>(_1, _2)]) |
+           ((DISTINCT("bond") > mask > mask)[_val = construct<BondRuleNode>(_1, _2)]) |
+           ((DISTINCT("angle") > mask > mask > mask)[_val = construct<AngleRuleNode>(_1, _2, _3)]) |
+           ((DISTINCT("dihedral") > mask > mask > mask > mask)[_val = construct<DihedralRuleNode>(_1, _2, _3, _4)]) |
+           (DISTINCT("energy") > mask[_val = construct<BondedEnergyRuleNode>(_1)]) |
+           (DISTINCT("help") >> -(as_string[lexeme[+(char_ - qi::ascii::space)]]))[_val = construct<HelpRuleNode>(_1)] |
+           DISTINCT("quit")[_val = construct<QuitRuleNode>()] | mask[_val = construct<NoopRuleNode>(_1)];
     root = eps > expr;
 }
 
@@ -79,7 +78,14 @@ input_atom_selection(const CenterGrammar<std::string::iterator, qi::ascii::space
 
     for (;;) {
         CenterRuleNode mask;
-        std::string input_string = input(prompt);
+        std::string input_string;
+        if (isatty(STDIN_FILENO) == 1) {
+            char *buf = readline::readline(prompt.c_str());
+            input_string = buf;
+            free(buf);
+        } else {
+            input_string = input(prompt);
+        }
         boost::trim(input_string);
         if (input_string.empty())
             continue;

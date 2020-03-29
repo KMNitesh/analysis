@@ -178,12 +178,19 @@ void print::operator()(const std::shared_ptr<Atom::Operator> &op) const {
 void print::indent(int space_num) const { std::cout << std::string(3 * space_num, ' '); }
 
 template <typename Iterator, typename Skipper>
-Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &promot,
+Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, const std::string &prompt,
                                      std::string input_string = "", bool allow_empty = false, bool quiet = false) {
     for (;;) {
         Atom::AmberMask mask;
-        if (input_string.empty())
-            input_string = input(promot);
+        if (input_string.empty()) {
+            if (isatty(STDIN_FILENO) == 1) {
+                char *buf = readline::readline(prompt.c_str());
+                input_string = buf;
+                free(buf);
+            } else {
+                input_string = input(prompt);
+            }
+        }
 
         boost::trim(input_string);
         if (input_string.empty()) {
@@ -208,6 +215,7 @@ Atom::AmberMask input_atom_selection(const Grammar<Iterator, Skipper> &grammar, 
             std::cerr << pos << ">>>>" << input_string << "<<<<\n";
             std::cerr << std::string(column + pos.size() + 3, ' ') << "^~~~ here\n";
         }
+        input_string.clear();
     }
 }
 

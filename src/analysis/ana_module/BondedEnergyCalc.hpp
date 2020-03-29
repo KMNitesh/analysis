@@ -24,7 +24,7 @@ public:
 private:
     AmberMask mask;
     std::unique_ptr<BondEnergyCalculator> calculator;
-    std::deque<BondEnergyCalculator::Term> energy_terms;
+    std::deque<std::map<int,BondEnergyCalculator::Term>> energy_terms;
 };
 
 #endif // TINKER_BONDEDENERGYCALC_HPP

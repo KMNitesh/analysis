@@ -47,15 +47,15 @@ void ProgramConfiguration::load_config(const boost::filesystem::path &config_fil
 
     if (auto result = doc.load_file(config_file.c_str()); result) {
 
-        LOG("load config file : ", config_file.native(), '\n');
+        LOG("  load");
 
         const auto &root = doc.child("cac-ana");
         vector_size = root.child("vector-size").attribute("value").as_ullong();
         nthreads = root.child("nthreads").attribute("value").as_int();
 
-        for (auto mask : root.children("mask")) {
+        for (const auto &mask : root.children("macro")) {
             macro_mask.emplace_back(boost::trim_copy(std::string(mask.attribute("name").as_string())),
-                                    parse_atoms(mask.attribute("expr").as_string(), true));
+                                    parse_atoms(mask.attribute("mask").as_string(), true));
         }
     }
 }

@@ -42,7 +42,9 @@ template <typename Iterator, typename Skipper> struct Grammar : qi::grammar<Iter
 
     qi::rule<Iterator, std::string(), Skipper> str_with_wildcard;
 
-    qi::rule<Iterator, Atom::Node(), Skipper> macro_rule;
+    qi::rule<Iterator, Atom::Node(), Skipper> macro_rule, custum_macro_rule;
+
+    std::vector<qi::rule<Iterator, Atom::Node(), Skipper>> r;
 
     inline static auto protein = Atom::select_ranges{
         "ABU",   "ACE",   "AIB",   "ALA",   "ARG",   "ARGN",  "ASN",   "ASN1", "ASP",   "ASP1",  "ASPH",  "ASPP",
@@ -200,12 +202,20 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
         | DISTINCT("Water")[_val = make_shared_<Atom::residue_name_nums>(water)];
 
     if (program_configuration) {
-        for (const auto &[name, macro] : program_configuration->get_macro_mask()) {
-            macro_rule = macro_rule[_val = _1] | DISTINCT(name)[_val = macro];
+        const auto &all_macros = program_configuration->get_macro_mask();
+        r.resize(all_macros.size() + 1);
+        r[0] = eps(false);
+
+        for (std::size_t i = 0; i < all_macros.size(); ++i) {
+            const auto &[name, macro] = all_macros[i];
+            r[i + 1] = DISTINCT(name)[_val = macro] | r[i][_val = _1];
         }
+        custum_macro_rule = r[all_macros.size()];
+    } else {
+        custum_macro_rule = eps(false);
     }
 
-    select_rule = macro_rule | residue_select_rule | molecule_select_rule | nametype_select_rule;
+    select_rule = custum_macro_rule | macro_rule | residue_select_rule | molecule_select_rule | nametype_select_rule;
 
     factor = ("(" > maskParser > ")") | select_rule;
 

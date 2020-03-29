@@ -129,7 +129,7 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         auto aj = top.idef.il[gmx::F_BONDS].iatoms[k++];
         const auto &harmonic = top.idef.iparams[type].harmonic;
         frame->f_bond_params.emplace(std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1]},
-                                     Frame::harmonic{harmonic.krA * 0.01, harmonic.rA * 10});
+                                     Frame::harmonic{harmonic.krA * 0.01 * kj2kcal, harmonic.rA * 10});
     }
     for (int k = 0; k < top.idef.il[gmx::F_ANGLES].nr;) {
         auto type = top.idef.il[gmx::F_ANGLES].iatoms[k++];
@@ -139,7 +139,7 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         const auto &harmonic = top.idef.iparams[type].harmonic;
         frame->f_angle_params.emplace(
             std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1], frame->atom_map[ak + 1]},
-            Frame::harmonic{harmonic.krA, harmonic.rA});
+            Frame::harmonic{harmonic.krA * kj2kcal, harmonic.rA});
     }
     for (int k = 0; k < top.idef.il[gmx::F_PDIHS].nr;) {
         auto type = top.idef.il[gmx::F_PDIHS].iatoms[k++];
@@ -151,7 +151,7 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         const auto &pdihs = top.idef.iparams[type].pdihs;
         frame->f_dihedral_params.emplace(std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1],
                                                     frame->atom_map[ak + 1], frame->atom_map[an + 1]},
-                                         Frame::pdihs{pdihs.phiA, pdihs.cpA, pdihs.mult});
+                                         Frame::pdihs{pdihs.phiA, pdihs.cpA * kj2kcal, pdihs.mult});
     }
     for (int k = 0; k < top.idef.il[gmx::F_PIDIHS].nr;) {
         auto type = top.idef.il[gmx::F_PIDIHS].iatoms[k++];
@@ -163,7 +163,7 @@ std::shared_ptr<Frame> TprReader::read(const std::string &filename) {
         const auto &pdihs = top.idef.iparams[type].pdihs;
         frame->f_improper_dihedral_params.emplace(std::array{frame->atom_map[ai + 1], frame->atom_map[aj + 1],
                                                              frame->atom_map[ak + 1], frame->atom_map[an + 1]},
-                                                  Frame::pdihs{pdihs.phiA, pdihs.cpA, pdihs.mult});
+                                                  Frame::pdihs{pdihs.phiA, pdihs.cpA * kj2kcal, pdihs.mult});
     }
 
     topology_utils::assgin_atom_to_molecule(frame);

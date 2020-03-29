@@ -32,8 +32,12 @@ class Forcefield;
 
 constexpr int ATOM_MAX = 10000;
 
-constexpr double radian = 57.29577951308232088;
+constexpr double radian = boost::math::constants::radian<double>();
+constexpr double degree = boost::math::constants::degree<double>();
 constexpr double pi = boost::math::constants::pi<double>();
+
+constexpr double kcal2kj = 4.184;
+constexpr double kj2kcal = 1 / kcal2kj;
 
 constexpr double avogadro_constant = 6.022140857e23;
 constexpr double kb = 1.380649e-23; // unit: J/K
