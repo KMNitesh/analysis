@@ -32,16 +32,16 @@ BOOST_FUSION_ADAPT_ADT(std::shared_ptr<Atom::atom_name_nums>,
 BOOST_FUSION_ADAPT_ADT(std::shared_ptr<Atom::atom_types>, (Atom::select_ranges, Atom::select_ranges, obj->val, /**/))
 
 BOOST_FUSION_ADAPT_ADT(std::shared_ptr<Atom::atom_element_names>,
-                       (std::vector<std::string>, const std::vector<std::string> &, obj->val, /**/))
+                       (std::vector<Atom::Name>, const std::vector<Atom::Name> &, obj->val, /**/))
 
 BOOST_FUSION_ADAPT_ADT(std::shared_ptr<Atom::Operator>,
                        (Atom::Op, Atom::Op, obj->op, /**/)(Atom::Node, Atom::Node, obj->node1,
                                                            /**/)(Atom::Node, Atom::Node, obj->node2, /**/))
 
-template <typename Iterator>
-struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
-    karma::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>()>
+template <typename Iterator> struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
+    karma::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, Atom::Name>()>
         select_item_rule;
+    karma::rule<Iterator, Atom::Name()> name;
     karma::rule<Iterator, fusion::vector<uint, boost::optional<std::pair<uint, int>>>()> num_range;
     karma::rule<Iterator, int()> step_num;
     karma::rule<Iterator, std::shared_ptr<Atom::residue_name_nums>()> residue_select_rule;
@@ -72,7 +72,7 @@ struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
         molecule_select_rule = '$' << ((uint_ << -('-' << uint_ << -step_num)) % ',')[_1 = at_c<0>(_val)];
         atom_name_select_rule = "@" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
         atom_type_rule = "@%" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
-        atom_element_rule = "@/" << (string % ",")[_1 = at_c<0>(_val)];
+        atom_element_rule = "@/" << (name % ",")[_1 = at_c<0>(_val)];
 
         Operator =
             eps(at_c<0>(_val) == Atom::Op::NOT) << "!" << expr(3)[_1 = at_c<1>(_val)] |
@@ -88,7 +88,8 @@ struct GeneratorGrammar : karma::grammar<Iterator, Atom::Node()> {
 
         step_num = eps(_val != 1) << "#" << int_[_1 = _val];
         num_range = uint_ << -("-" << uint_ << step_num);
-        select_item_rule = num_range | string;
+        select_item_rule = num_range | name;
+        name = string[_1 = (&_val)->*&Atom::Name::name];
     }
 };
 
@@ -98,4 +99,4 @@ inline bool format_node(const Atom::Node &node, std::string &generated) {
     return karma::generate(sink, serializer, node);
 }
 
-#endif  // TINKER_GENERATORGRAMMAR_HPP
+#endif // TINKER_GENERATORGRAMMAR_HPP

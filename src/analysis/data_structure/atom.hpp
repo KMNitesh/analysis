@@ -5,6 +5,7 @@
 #ifndef TINKER_ATOM_HPP
 #define TINKER_ATOM_HPP
 
+#include <boost/algorithm/string.hpp>
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
@@ -81,7 +82,28 @@ public:
 
     using numItemType = boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>>;
 
-    using select_ranges = std::vector<boost::variant<numItemType, std::string>>;
+    struct Name {
+        std::string name;
+        bool has_GLOB;
+        bool has_alpha;
+
+        Name() : Name("") {}
+        Name(const char *str) : Name(std::string(str)) {}
+        Name(std::string name) : name(std::move(name)) {
+            for (char c : name) {
+                if (boost::is_any_of("*?")(c))
+                    has_GLOB = true;
+                else if (boost::is_alpha()(c))
+                    has_alpha = true;
+                if (has_GLOB and has_alpha)
+                    return;
+            }
+        }
+
+        operator std::string() { return name; }
+    };
+
+    using select_ranges = std::vector<boost::variant<numItemType, Name>>;
 
     struct residue_name_nums {
         select_ranges val;
@@ -101,7 +123,7 @@ public:
 
         explicit atom_name_nums(const select_ranges &val) : val(val) {}
 
-        explicit atom_name_nums(const std::string &name) { val.emplace_back(name); }
+        explicit atom_name_nums(const Name &name) { val.emplace_back(name); }
     };
 
     struct atom_types {
@@ -109,7 +131,7 @@ public:
 
         explicit atom_types(const select_ranges &val) : val(val) {}
 
-        explicit atom_types(const std::string &type) { val.push_back(type); }
+        explicit atom_types(const Name &type) { val.push_back(type); }
 
         explicit atom_types(int typenum) {
             boost::fusion::vector<uint, boost::optional<std::pair<uint, int>>> t;
@@ -119,9 +141,9 @@ public:
     };
 
     struct atom_element_names {
-        std::vector<std::string> val;
+        std::vector<Name> val;
 
-        explicit atom_element_names(const std::vector<std::string> &val) : val(val) {}
+        explicit atom_element_names(const std::vector<Name> &val) : val(val) {}
     };
 
     struct Operator;
@@ -200,6 +222,10 @@ private:
 };
 
 std::ostream &operator<<(std::ostream &os, const Atom::AmberMask &mask);
+
+inline std::ostream &operator<<(std::ostream &os, const Atom::Name &name) { return os << name.name; }
+
+inline bool operator==(const Atom::Name &name1, const Atom::Name &name2) { return name1.name == name2.name; }
 
 inline bool operator==(const std::shared_ptr<Atom::residue_name_nums> &residues1,
                        const std::shared_ptr<Atom::residue_name_nums> &residues2) {

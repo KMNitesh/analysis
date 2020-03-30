@@ -41,7 +41,7 @@ void print::operator()(const std::shared_ptr<Atom::residue_name_nums> &residues)
             }
         }
 
-        void operator()(std::string &i) { std::cout << i; }
+        void operator()(Atom::Name &i) { std::cout << i; }
     } p;
     for (auto &i : residues->val) {
         if (first) {
@@ -273,11 +273,18 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::residue_name_nums> &resid
                 return false;
             }
 
-            bool operator()(const std::string &pattern) {
-                if (fnmatch(pattern.c_str(), atom->residue_name.get().c_str(), 0) == 0)
-                    return true;
-                std::string num_str = std::to_string(atom->residue_num.get());
-                return fnmatch(pattern.c_str(), num_str.c_str(), 0) == 0;
+            bool operator()(const Atom::Name &pattern) {
+                if (pattern.has_GLOB) {
+                    if (fnmatch(pattern.name.c_str(), atom->residue_name.get().c_str(), 0) == 0)
+                        return true;
+                    if (!pattern.has_alpha) {
+                        std::string num_str = std::to_string(atom->residue_num.get());
+                        return fnmatch(pattern.name.c_str(), num_str.c_str(), 0) == 0;
+                    }
+                } else if (pattern.has_alpha) {
+                    return pattern.name == atom->residue_name.get();
+                }
+                return false;
             }
 
         private:
@@ -339,11 +346,18 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_name_nums> &names) c
                 }
             }
 
-            bool operator()(const std::string &pattern) {
-                if (fnmatch(pattern.c_str(), atom->atom_name.c_str(), 0) == 0)
-                    return true;
-                std::string num_str = std::to_string(atom->seq);
-                return fnmatch(pattern.c_str(), num_str.c_str(), 0) == 0;
+            bool operator()(const Atom::Name &pattern) {
+                if (pattern.has_GLOB) {
+                    if (fnmatch(pattern.name.c_str(), atom->atom_name.c_str(), 0) == 0)
+                        return true;
+                    if (!pattern.has_alpha) {
+                        std::string num_str = std::to_string(atom->seq);
+                        return fnmatch(pattern.name.c_str(), num_str.c_str(), 0) == 0;
+                    }
+                } else if (pattern.has_alpha) {
+                    return pattern.name == atom->atom_name;
+                }
+                return false;
             }
 
         private:
@@ -379,11 +393,18 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_types> &types) const
                 }
             }
 
-            bool operator()(const std::string &pattern) {
-                if (fnmatch(pattern.c_str(), atom->type_name.c_str(), 0) == 0)
-                    return true;
-                std::string num_str = std::to_string(atom->typ);
-                return fnmatch(pattern.c_str(), num_str.c_str(), 0) == 0;
+            bool operator()(const Atom::Name &pattern) {
+                if (pattern.has_GLOB) {
+                    if (fnmatch(pattern.name.c_str(), atom->type_name.c_str(), 0) == 0)
+                        return true;
+                    if (!pattern.has_alpha) {
+                        std::string num_str = std::to_string(atom->typ);
+                        return fnmatch(pattern.name.c_str(), num_str.c_str(), 0) == 0;
+                    }
+                } else if (pattern.has_alpha) {
+                    return pattern.name == atom->type_name;
+                }
+                return false;
             }
 
         private:
@@ -404,8 +425,13 @@ bool AtomEqual::operator()(const std::shared_ptr<Atom::atom_element_names> &ele)
             throw std::runtime_error("atom element symbol selection syntax is invaild in current context");
         }
         for (auto &pattern : ele->val) {
-            if (fnmatch(pattern.c_str(), atom->atom_symbol.get().c_str(), 0) == 0)
-                return true;
+            if (pattern.has_GLOB) {
+                if (fnmatch(pattern.name.c_str(), atom->atom_symbol.get().c_str(), 0) == 0)
+                    return true;
+            } else {
+                if (pattern.name == atom->atom_symbol.get())
+                    return true;
+            }
         }
     }
     return false;

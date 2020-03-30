@@ -28,7 +28,7 @@ namespace phoenix = boost::phoenix;
 template <typename Iterator, typename Skipper> struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
     Grammar();
 
-    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, std::string>(),
+    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, Atom::Name>(),
              Skipper>
         select_item_rule;
 
@@ -40,7 +40,7 @@ template <typename Iterator, typename Skipper> struct Grammar : qi::grammar<Iter
     qi::rule<Iterator, Atom::Node(), Skipper> expr;
     qi::rule<Iterator, Atom::Node(), Skipper> maskParser, root;
 
-    qi::rule<Iterator, std::string(), Skipper> str_with_wildcard;
+    qi::rule<Iterator, Atom::Name(), Skipper> str_with_wildcard;
 
     qi::rule<Iterator, Atom::Node(), Skipper> macro_rule, custum_macro_rule;
 
