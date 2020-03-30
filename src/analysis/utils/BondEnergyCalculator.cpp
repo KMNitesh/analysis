@@ -85,21 +85,21 @@ BondEnergyCalculator::energy_with_residue_rank(const std::shared_ptr<Frame> &fra
     }
     for (auto it = angles.begin(); it != angles.end(); ++it) {
         const auto &[atoms, param] = **it;
-        auto theta = (atom_angle(atoms, frame) - param.rA) / radian;
+        auto theta = (atom_angle(atoms, frame) - param.rA) * degree;
         auto angle = 1 / 3.0 * 0.5 * param.krA * theta * theta;
         for (auto &atom : atoms)
             terms_map[atom->residue_num.get()].angle += angle;
     }
     for (auto it = dihedrals.begin(); it != dihedrals.end(); ++it) {
         const auto &[atoms, param] = **it;
-        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
+        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) * degree);
         auto dihedral = 0.25 * param.cpA * (1 + cos);
         for (auto &atom : atoms)
             terms_map[atom->residue_num.get()].dihedral += dihedral;
     }
     for (auto it = improper_dihedrals.begin(); it != improper_dihedrals.end(); ++it) {
         const auto &[atoms, param] = **it;
-        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) / radian);
+        auto cos = std::cos((atom_dihedral(atoms, frame) * param.mult - param.phiA) * degree);
         auto improper = 0.25 * param.cpA * (1 + cos);
         for (auto &atom : atoms)
             terms_map[atom->residue_num.get()].improper += improper;

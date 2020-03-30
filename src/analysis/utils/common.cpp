@@ -23,6 +23,8 @@ bool enable_forcefield = false;
 
 bool verbose_message = false;
 
+bool debug_mode = false;
+
 std::unique_ptr<ProgramConfiguration> program_configuration;
 
 std::vector<std::string> split(const std::string &str, const std::string &sep) {
@@ -119,8 +121,12 @@ double atom_angle(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom
     auto v2_3 = atom3->getCoordinate() - atom2->getCoordinate();
     frame->image(v2_1);
     frame->image(v2_3);
-
-    return radian * std::acos(dot_multiplication(v2_1, v2_3) / std::sqrt(vector_norm2(v2_1) * vector_norm2(v2_3)));
+    auto acos = dot_multiplication(v2_1, v2_3) / std::sqrt(vector_norm2(v2_1) * vector_norm2(v2_3));
+    if (acos > 1.0)
+        acos = 1.0;
+    if (acos < -1.0)
+        acos = -1.0;
+    return radian * std::acos(acos);
 }
 
 double atom_dihedral(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
@@ -137,7 +143,12 @@ double atom_dihedral(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<A
     auto cv1 = cross_multiplication(v1_2, v2_3);
     auto cv2 = cross_multiplication(v2_3, v3_4);
 
-    return radian * std::acos(dot_multiplication(cv1, cv2) / std::sqrt(vector_norm2(cv1) * vector_norm2(cv2)));
+    auto acos = dot_multiplication(cv1, cv2) / std::sqrt(vector_norm2(cv1) * vector_norm2(cv2));
+    if (acos > 1.0)
+        acos = 1.0;
+    if (acos < -1.0)
+        acos = -1.0;
+    return radian * std::acos(acos);
 }
 
 double atom_distance2(const std::shared_ptr<Atom> &atom1, const std::shared_ptr<Atom> &atom2,
@@ -165,7 +176,7 @@ boost::program_options::options_description make_program_options() {
         "Gaussian Fchk File")("silent", po::bool_switch()->default_value(false), "Dont show the main menu")(
         "mask", po::value<std::string>()->value_name("mask"),
         "specify for read traj")("config", po::value<std::string>()->value_name("config_filename"),
-                                 "configuration file name")("verbose,v", "show verbose message");
+                                 "configuration file name")("verbose,v", "show verbose message")("debug", "debug mode");
 
     return desc;
 }

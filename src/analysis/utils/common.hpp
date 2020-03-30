@@ -53,6 +53,8 @@ extern bool enable_forcefield;
 
 extern bool verbose_message;
 
+extern bool debug_mode;
+
 [[maybe_unused]] inline struct {
     template <typename... Args> void operator()(Args &&... args) {
         if (verbose_message)
@@ -95,9 +97,11 @@ T choose(T min, T max, const std::string &prompt, const Default<T> &defaultValue
          std::ostream &out = std::cout) {
     while (true) {
         std::string input_line = input(prompt, in, out);
+        boost::trim(input_line);
         if (input_line.empty()) {
             if (defaultValue)
                 return defaultValue.getValue();
+            continue;
         }
         try {
             auto option = boost::lexical_cast<T>(input_line);
