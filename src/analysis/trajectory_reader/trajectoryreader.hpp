@@ -8,6 +8,8 @@
 #include "data_structure/atom.hpp"
 #include "trajectory_reader/TopologyInterface.hpp"
 #include "trajectory_reader/TrajectoryInterface.hpp"
+#include <boost/fusion/sequence.hpp>
+#include <boost/optional.hpp>
 
 class TrajectoryReader {
 public:
@@ -25,19 +27,36 @@ private:
     class TrajectoryFile {
     public:
         TrajectoryFile() = default;
-        TrajectoryFile(std::string name, std::size_t start = 1, std::size_t end = 0, AmberMask mask = boost::blank{})
-            : name(std::move(name)), start(start), end(end), mask(std::move(mask)) {}
+        TrajectoryFile(std::string name, AmberMask mask = boost::blank{})
+            : name(std::move(name)), mask(std::move(mask)) {}
 
         operator std::string() { return name; }
 
         std::string name;
-        std::size_t start;
-        std::size_t end;
+        using Ranges = std::vector<boost::fusion::vector<uint, boost::optional<boost::variant<uint, char>>>>;
+        Ranges range;
+
+        struct LessEqual : public boost::static_visitor<bool> {
+            LessEqual(uint pos) : pos(pos) {}
+            bool operator()(const uint end) const { return pos <= end; };
+
+            bool operator()(const char) const { return true; };
+
+        private:
+            uint pos;
+        };
+
         AmberMask mask;
+
+        bool is_in_range(uint pos) const;
+
+        bool is_end(uint pos) const;
+
+        static Ranges parse_range(const std::string &range_string);
     };
 
     TrajectoryFile current_trajectory_file;
-    std::size_t current_frame_pos;
+    uint current_frame_pos;
 
     AmberMask mask;
     std::vector<std::shared_ptr<Atom>> atoms_for_readtraj;

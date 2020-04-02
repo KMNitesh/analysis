@@ -4,6 +4,7 @@
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/irange.hpp>
+#include <boost/spirit/include/qi.hpp>
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -16,18 +17,79 @@
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
 
+bool TrajectoryReader::TrajectoryFile::is_in_range(uint pos) const {
+
+    if (range.empty())
+        return true;
+    for (const auto &r : range) {
+        const auto &first = boost::fusion::at_c<0>(r);
+        const auto &second = boost::fusion::at_c<1>(r);
+        if (second.has_value()) {
+            if (first <= pos) {
+                LessEqual less_equal_visitor(pos);
+                if (boost::apply_visitor(less_equal_visitor, second.get()))
+                    return true;
+            }
+        } else {
+            if (first == pos)
+                return true;
+        }
+    }
+    return false;
+}
+
+bool TrajectoryReader::TrajectoryFile::is_end(uint pos) const {
+    if (range.empty())
+        return false;
+
+    const auto last = range.back();
+    const auto &first = boost::fusion::at_c<0>(last);
+    const auto &second = boost::fusion::at_c<1>(last);
+    if (second.has_value()) {
+        LessEqual less_equal_visitor(pos);
+        return !boost::apply_visitor(less_equal_visitor, second.get());
+    } else {
+        return pos > first;
+    }
+}
+
+TrajectoryReader::TrajectoryFile::Ranges
+TrajectoryReader::TrajectoryFile::parse_range(const std::string &range_string) {
+    using namespace boost::spirit;
+    Ranges ranges;
+    if (auto it = std::begin(range_string);
+        qi::phrase_parse(it, std::end(range_string),
+                         ((qi::uint_ >> -('-' >> (qi::uint_ | qi::char_('$')))) % ',') >> qi::eoi, ascii::space,
+                         ranges) and
+        it == std::end(range_string)) {
+        return ranges;
+    } else {
+        throw std::runtime_error("range syntax error <" + range_string + ">");
+    }
+}
+
 void TrajectoryReader::add_trajectoy_file(const std::string &filename) {
     if (getFileType(filename) == FileType::JSON) {
         std::ifstream i(filename);
         nlohmann::json j;
         i >> j;
         for (auto &item : j) {
-            std::size_t start = item.value("start", 1);
-            std::size_t end = item.value("end", 0);
             std::string name = item.at("name");
             std::string mask = item.value("mask", "");
-            traj_filenames.emplace(std::move(name), start, end,
-                                   mask.empty() ? boost::blank{} : parse_atoms(mask, true));
+            traj_filenames.emplace(std::move(name), mask.empty() ? boost::blank{} : parse_atoms(mask, true));
+            try {
+                std::string range_string = item.at("range");
+                traj_filenames.back().range = TrajectoryFile::parse_range(range_string);
+            } catch (...) {
+                uint start = item.value("start", 1);
+                uint end = item.value("end", 0);
+                boost::variant<uint, char> end_tag;
+                if (end == 0)
+                    end_tag = '$';
+                else
+                    end_tag = end;
+                traj_filenames.back().range.emplace_back(start, end_tag);
+            }
         }
     } else
         traj_filenames.push(filename);
@@ -49,7 +111,7 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
         if (!traj_reader) {
             if (traj_filenames.empty())
                 return {};
-            current_trajectory_file = traj_filenames.front();
+            current_trajectory_file = std::move(traj_filenames.front());
             traj_filenames.pop();
             current_frame_pos = 1;
             traj_reader = ReaderFactory::getTrajectory(current_trajectory_file);
@@ -59,17 +121,16 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
                                          ? frame->atom_list
                                          : PBCUtils::find_atoms(current_trajectory_file.mask, frame);
             }
-            while (current_frame_pos < current_trajectory_file.start) {
-                traj_reader->readOneFrame(frame, atoms_for_readtraj);
-                ++current_frame_pos;
-            }
         }
-        if (traj_reader->readOneFrame(frame, atoms_for_readtraj)) {
-            if (current_trajectory_file.end == 0 or current_frame_pos <= current_trajectory_file.end) {
-                ++current_frame_pos;
+        while (traj_reader->readOneFrame(frame, atoms_for_readtraj)) {
+            ++current_frame_pos;
+            if (current_trajectory_file.is_in_range(current_frame_pos)) {
                 return frame;
+            } else if (current_trajectory_file.is_end(current_frame_pos)) {
+                break;
             }
         }
+    close_label:
         traj_reader->close();
         traj_reader.reset();
     }
