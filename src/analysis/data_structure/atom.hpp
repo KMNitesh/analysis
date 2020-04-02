@@ -84,12 +84,17 @@ public:
 
     struct Name {
         std::string name;
-        bool has_GLOB;
-        bool has_alpha;
+        bool has_GLOB = false;
+        bool has_alpha = false;
 
         Name() : Name("") {}
         Name(const char *str) : Name(std::string(str)) {}
-        Name(std::string name) : name(std::move(name)) {
+        Name(std::string name) : name(std::move(name)) { check(); }
+
+        operator std::string() { return name; }
+
+    private:
+        void check() {
             for (char c : name) {
                 if (boost::is_any_of("*?")(c))
                     has_GLOB = true;
@@ -99,8 +104,6 @@ public:
                     return;
             }
         }
-
-        operator std::string() { return name; }
     };
 
     using select_ranges = std::vector<boost::variant<numItemType, Name>>;
