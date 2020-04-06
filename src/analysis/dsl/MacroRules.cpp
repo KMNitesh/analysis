@@ -37,20 +37,22 @@ AmberMask Protein_H = make_shared<Operator>(Op::AND, Protein, Not_Hydrogen);
 AmberMask Backbone =
     make_shared<Operator>(Op::AND, Protein, make_shared<atom_name_nums>(select_ranges{"CA", "C", "N"}));
 
-AmberMask MainChain =
-    make_shared<Operator>(Op::AND, Protein, make_shared<atom_name_nums>(select_ranges{"CA", "C", "N", "O"}));
+AmberMask MainChain = make_shared<Operator>(
+    Op::AND, Protein, make_shared<atom_name_nums>(select_ranges{"CA", "C", "N", "O", "OC1", "OC2"}));
 
-AmberMask MainChain_plus_Cb =
-    make_shared<Operator>(Op::AND, Protein, make_shared<atom_name_nums>(select_ranges{"CA", "C", "N", "O", "CB"}));
+AmberMask MainChain_plus_Cb = make_shared<Operator>(
+    Op::AND, Protein, make_shared<atom_name_nums>(select_ranges{"CA", "C", "N", "O", "OC1", "OC2", "CB"}));
 
-AmberMask MainChain_plus_H =
-    make_shared<Operator>(Op::AND, Protein, make_shared<atom_name_nums>(select_ranges{"CA", "C", "N", "O", "H"}));
+AmberMask MainChain_plus_H = make_shared<Operator>(
+    Op::AND, Protein,
+    make_shared<atom_name_nums>(select_ranges{"CA", "C", "N", "O", "OC1", "OC2", "H", "H1", "H2", "H3"}));
 
 AmberMask C_alpha = make_shared<Operator>(Op::AND, Protein, make_shared<atom_name_nums>(select_ranges{"CA"}));
 
 AmberMask SideChain = make_shared<Operator>(
     Op::AND, Protein,
-    make_shared<Operator>(Op::NOT, make_shared<atom_name_nums>(select_ranges{"CA", "C", "O", "N", "H"})));
+    make_shared<Operator>(
+        Op::NOT, make_shared<atom_name_nums>(select_ranges{"CA", "C", "O", "N", "H", "OC1", "OC2", "H1", "H2", "H3"})));
 
 AmberMask SideChain_H = make_shared<Operator>(Op::AND, SideChain, Not_Hydrogen);
 

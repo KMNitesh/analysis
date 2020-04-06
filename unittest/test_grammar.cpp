@@ -463,52 +463,55 @@ TEST_F(TestGrammarMacro, Protein_H) {
     parse();
     AmberMask node = make_shared<AmberMaskAST::Operator>(
         AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
+        make_shared<AmberMaskAST::Operator>(
+            AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, Backbone) {
     input_string = "Backbone";
     parse();
-    AmberMask node =
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
-                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N"}));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+        make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, MainChain) {
     input_string = "MainChain";
     parse();
-    AmberMask node =
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
-                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N", "O"}));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+        make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N", "O", "OC1", "OC2"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, MainChainPlusCb) {
     input_string = "MainChain+Cb";
     parse();
-    AmberMask node =
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
-                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N", "O", "CB"}));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+        make_shared<AmberMaskAST::atom_name_nums>(
+            AmberMaskAST::select_ranges{"CA", "C", "N", "O", "OC1", "OC2", "CB"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, MainChainPlusH) {
     input_string = "MainChain+H";
     parse();
-    AmberMask node =
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
-                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N", "O", "H"}));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+        make_shared<AmberMaskAST::atom_name_nums>(
+            AmberMaskAST::select_ranges{"CA", "C", "N", "O", "OC1", "OC2", "H", "H1", "H2", "H3"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, C_alpha) {
     input_string = "C-alpha";
     parse();
-    AmberMask node =
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
-                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA"}));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+        make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
@@ -518,7 +521,8 @@ TEST_F(TestGrammarMacro, SideChain) {
     AmberMask node = make_shared<AmberMaskAST::Operator>(
         AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
         make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT,
-                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "O", "N", "H"})));
+                                            make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{
+                                                "CA", "C", "O", "N", "H", "OC1", "OC2", "H1", "H2", "H3"})));
     ASSERT_THAT(mask, Eq(node));
 }
 
@@ -529,9 +533,11 @@ TEST_F(TestGrammarMacro, SideChain_H) {
         AmberMaskAST::Op::AND,
         make_shared<AmberMaskAST::Operator>(
             AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
-            make_shared<AmberMaskAST::Operator>(
-                AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "O", "N", "H"}))),
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"}))
+            make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT,
+                                                make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{
+                                                    "CA", "C", "O", "N", "H", "OC1", "OC2", "H1", "H2", "H3"}))),
+        make_shared<AmberMaskAST::Operator>(
+            AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"}))
 
     );
     ASSERT_THAT(mask, Eq(node));
@@ -552,7 +558,8 @@ TEST_F(TestGrammarMacro, DNA_H) {
 
     AmberMask node = make_shared<AmberMaskAST::Operator>(
         AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::dna),
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
+        make_shared<AmberMaskAST::Operator>(
+            AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
 
     ASSERT_THAT(mask, Eq(node));
 }
@@ -572,7 +579,8 @@ TEST_F(TestGrammarMacro, RNA_H) {
 
     AmberMask node = make_shared<AmberMaskAST::Operator>(
         AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::rna),
-        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
+        make_shared<AmberMaskAST::Operator>(
+            AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
 
     ASSERT_THAT(mask, Eq(node));
 }
