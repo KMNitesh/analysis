@@ -114,7 +114,7 @@ void GreenKubo::print(std::ostream &os) {
 }
 
 void GreenKubo::readInfo() {
-    Atom::select1group(ids, "Please enter atom group");
+    select1group(ids, "Please enter atom group");
     this->timestep =
         choose(0.0, static_cast<double>(numeric_limits<int>::max()), "Please enter time step for each frame(ps):");
 }
@@ -147,6 +147,6 @@ void GreenKubo::process(std::shared_ptr<Frame> &frame) {
 
 void GreenKubo::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids)) this->group.insert(atom);
+        if (is_match(atom, this->ids)) this->group.insert(atom);
     });
 }

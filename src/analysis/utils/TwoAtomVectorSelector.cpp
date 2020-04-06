@@ -18,9 +18,9 @@ int TwoAtomVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         shared_ptr<Atom> atom1, atom2;
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, mask1)) {
+            if (is_match(atom, mask1)) {
                 atom1 = atom;
-            } else if (Atom::is_match(atom, mask2)) {
+            } else if (is_match(atom, mask2)) {
                 atom2 = atom;
             }
         }
@@ -46,8 +46,8 @@ std::vector<std::tuple<double, double, double>> TwoAtomVectorSelector::calculate
 
 void TwoAtomVectorSelector::readInfo() {
     std::cout << "# " << title() << " #\n";
-    Atom::select1group(mask1, "Please Enter for Atom1(start) > ");
-    Atom::select1group(mask2, "Please Enter for Atom2(end)   > ");
+    select1group(mask1, "Please Enter for Atom1(start) > ");
+    select1group(mask2, "Please Enter for Atom2(end)   > ");
 }
 
 void TwoAtomVectorSelector::print(std::ostream &os) {
@@ -67,9 +67,9 @@ tuple<double, double, double> TwoAtomVectorSelector::calculateVector(const std::
                                                                      const std::shared_ptr<Frame> &frame) {
     shared_ptr<Atom> atom1, atom2;
     for (auto &atom : mol->atom_list) {
-        if (Atom::is_match(atom, mask1)) {
+        if (is_match(atom, mask1)) {
             atom1 = atom;
-        } else if (Atom::is_match(atom, mask2)) {
+        } else if (is_match(atom, mask2)) {
             atom2 = atom;
         }
     }
@@ -78,7 +78,7 @@ tuple<double, double, double> TwoAtomVectorSelector::calculateVector(const std::
     return calVector({atom1, atom2}, frame);
 }
 
-void TwoAtomVectorSelector::setParameters(const Atom::Node &id1, const Atom::Node &id2) {
+void TwoAtomVectorSelector::setParameters(const AmberMask &id1, const AmberMask &id2) {
     this->mask1 = id1;
     this->mask2 = id2;
 }

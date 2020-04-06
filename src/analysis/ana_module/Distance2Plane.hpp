@@ -9,6 +9,7 @@
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "utils/PBCUtils.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 

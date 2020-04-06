@@ -17,7 +17,7 @@ HBondLifeTime::HBondLifeTime() { enable_outfile = true; }
 
 void HBondLifeTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &atom : frame->atom_list) {
-        if (Atom::is_match(atom, water_mask)) {
+        if (is_match(atom, water_mask)) {
             switch (which(atom)) {
                 case Symbol::Hydrogen:
                     hydrogens.push_back(atom);
@@ -119,5 +119,5 @@ void HBondLifeTime::readInfo() {
     angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", Default(30.0));
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
     max_time_grap_ps = choose(0.0, 100.0, "max_time_grap_ps [100 ps] :", Default(100.0));
-    Atom::select1group(water_mask, "Enter mask for water atoms in system > ");
+    select1group(water_mask, "Enter mask for water atoms in system > ");
 }

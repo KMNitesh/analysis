@@ -31,7 +31,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Dipole Angle Distribution with Axis"; }
 
 protected:
-    Atom::AmberMask ids;
+    AmberMask ids;
 
     std::unordered_set<std::shared_ptr<Molecule>> group;
 

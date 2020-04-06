@@ -183,7 +183,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
         const boost::format fmt{"%6d %-7s %4s %-7s %4s %-6s  %8s %8s  %8.3f%8.3f%8.3f"};
 
         for (auto &atom : frame->atom_list) {
-            if (Atom::is_match(atom, ast)) {
+            if (is_match(atom, ast)) {
                 std::cout << boost::format(fmt) % atom->seq % atom->atom_name %
                                  (atom->residue_num ? std::to_string(atom->residue_num.get()) : "-") %
                                  (atom->residue_name ? atom->residue_name.get() : "-") %

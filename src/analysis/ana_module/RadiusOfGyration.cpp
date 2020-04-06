@@ -21,7 +21,7 @@ RadiusOfGyration::RadiusOfGyration() {
 
 void RadiusOfGyration::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, atomMask)) {
+        if (is_match(atom, atomMask)) {
             moles.insert(atom->molecule.lock());
         }
     });
@@ -67,6 +67,6 @@ void RadiusOfGyration::print(std::ostream &os) {
 }
 
 void RadiusOfGyration::readInfo() {
-    Atom::select1group(atomMask, "Enter mask for selected molecules : ");
+    select1group(atomMask, "Enter mask for selected molecules : ");
     bIncludeHydrogen = choose_bool("Include Hydrogen Atom [N] : ", Default(false));
 }

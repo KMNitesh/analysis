@@ -11,6 +11,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -26,7 +27,7 @@ public:
 
     void readInfo() override;
 
-    void setParameters(const Atom::Node &id1, const Atom::Node &id2, double max_dist, double width, bool intramol,
+    void setParameters(const AmberMask &id1, const AmberMask &id2, double max_dist, double width, bool intramol,
                        const std::string outfilename);
 
     [[nodiscard]] static std::string_view title() { return "Radical Distribution Function"; }
@@ -45,11 +46,11 @@ private:
 
     double volume;
 
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
+    AmberMask ids1;
+    AmberMask ids2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;
 };
 
-#endif  // TINKER_RADICALDISTRIBTUIONFUNCTION_HPP
+#endif // TINKER_RADICALDISTRIBTUIONFUNCTION_HPP

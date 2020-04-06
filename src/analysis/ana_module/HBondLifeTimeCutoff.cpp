@@ -23,7 +23,7 @@ HBondLifeTimeCutoff::HBondLifeTimeCutoff() { enable_outfile = true; }
 void HBondLifeTimeCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, Ow_atom_mask)) {
+            if (is_match(atom, Ow_atom_mask)) {
                 std::deque<std::shared_ptr<Atom>> hydrogens;
                 for (auto &hydro : mol->atom_list) {
                     if (which(hydro) == Symbol::Hydrogen) {
@@ -31,7 +31,7 @@ void HBondLifeTimeCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
                     }
                 }
                 water_struct.emplace_back(atom, hydrogens);
-            } else if (Atom::is_match(atom, center_Metal_atom_mask)) {
+            } else if (is_match(atom, center_Metal_atom_mask)) {
                 metal.emplace(atom);
             }
         }
@@ -157,8 +157,8 @@ void HBondLifeTimeCutoff::readInfo() {
     max_time_grap_ps = choose(0.0, 100.0, "max_time_grap_ps [100 ps] :", Default(100.0));
     auto cutoff = choose(0.0, 100.0, "cutoff :");
     cutoff2 = cutoff * cutoff;
-    Atom::select1group(center_Metal_atom_mask, "Enter mask for Metal > ");
-    Atom::select1group(Ow_atom_mask, "Enter mask for Ow > ");
+    select1group(center_Metal_atom_mask, "Enter mask for Metal > ");
+    select1group(Ow_atom_mask, "Enter mask for Ow > ");
 }
 
 HBondLifeTimeCutoff::~HBondLifeTimeCutoff() {

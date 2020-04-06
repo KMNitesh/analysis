@@ -14,7 +14,7 @@ DipoleAngleAxis3D::DipoleAngleAxis3D() {
 
 void DipoleAngleAxis3D::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->amberMask)) this->group.insert(atom->molecule.lock());
+        if (is_match(atom, this->amberMask)) this->group.insert(atom->molecule.lock());
     });
 }
 
@@ -44,7 +44,7 @@ void DipoleAngleAxis3D::print(std::ostream &os) {
     os << std::string(50, '#') << '\n';
 }
 
-void DipoleAngleAxis3D::readInfo() { Atom::select1group(amberMask); }
+void DipoleAngleAxis3D::readInfo() { select1group(amberMask); }
 
 void DipoleAngleAxis3D::printData(std::ostream &os) const {
     const boost::format fmt("%15.3f %15.3f %15.3f\n");

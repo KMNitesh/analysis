@@ -18,7 +18,7 @@ public:
 
     void readInfo() override;
 
-    void setParameters(const Atom::Node &id1, const Atom::Node &id2, const Atom::Node &id3);
+    void setParameters(const AmberMask &id1, const AmberMask &id2, const AmberMask &id3);
 
     std::tuple<double, double, double> calculateVector(const std::shared_ptr<Molecule> &mol,
                                                        const std::shared_ptr<Frame> &frame) override;
@@ -30,9 +30,9 @@ public:
     static const std::string title() { return "Plane normal vector (define by three atoms in same molecule) selector"; }
 
 protected:
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
-    Atom::AmberMask ids3;
+    AmberMask ids1;
+    AmberMask ids2;
+    AmberMask ids3;
 
     std::list<std::tuple<std::shared_ptr<Atom>, std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 

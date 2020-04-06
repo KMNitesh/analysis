@@ -61,9 +61,9 @@ EnergyCalculator::EnergyTerm EnergyCalculator::calculate_energy(const std::share
 
 void EnergyCalculator::setMask(AmberMask &mask1, AmberMask &mask2, const std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [&](const std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, mask1)) {
+        if (is_match(atom, mask1)) {
             group1.push_back(atom);
-        } else if (Atom::is_match(atom, mask2)) {
+        } else if (is_match(atom, mask2)) {
             group2.push_back(atom);
         }
     });

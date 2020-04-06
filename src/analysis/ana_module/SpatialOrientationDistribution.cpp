@@ -18,7 +18,7 @@ SpatialOrientationDistribution::SpatialOrientationDistribution() {
 
 void SpatialOrientationDistribution::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
+        if (is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
     });
 }
 
@@ -44,7 +44,7 @@ void SpatialOrientationDistribution::print(std::ostream &os) {
     os << string(50, '#') << '\n';
 }
 
-void SpatialOrientationDistribution::readInfo() { Atom::select1group(ids); }
+void SpatialOrientationDistribution::readInfo() { select1group(ids); }
 
 double SpatialOrientationDistribution::calculatePhiAngle(const std::tuple<double, double, double> &vector) {
     constexpr std::tuple<double, double, double> z_axis = {0.0, 0.0, 1.0};

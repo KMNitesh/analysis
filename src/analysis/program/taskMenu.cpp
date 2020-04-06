@@ -53,6 +53,7 @@ namespace mpl = boost::mpl;
 #include "ana_module/IRSpectrum.hpp"
 #include "ana_module/IRSpectrumDeltaDipole.hpp"
 #include "ana_module/IRSpectrumElectricalFlux.hpp"
+#include "ana_module/KeyInteractionResidueFinder.hpp"
 #include "ana_module/LocalStructureIndex.hpp"
 #include "ana_module/LocalStructureIndexForLiquid.hpp"
 #include "ana_module/NMRRange.hpp"
@@ -72,6 +73,7 @@ namespace mpl = boost::mpl;
 #include "ana_module/SspResidenceTime.hpp"
 #include "ana_module/Trajconv.hpp"
 #include "ana_module/VelocityAutocorrelationFunction.hpp"
+#include "ana_module/Curvature.hpp"
 #include "taskMenu.hpp"
 
 using namespace std;
@@ -127,7 +129,7 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
         mpl::vector<Distance, Angle, Distance2Plane, CoordinateNumPerFrame, RadicalDistribtuionFunction, RMSDCal,
                     RMSFCal, Cluster, ShellDensity, OrientationResolvedRadialDistributionFunction, RadiusOfGyration,
                     CoordinationStructureClassification, CoordinationStructureMatch, LocalStructureIndex,
-                    LocalStructureIndexForLiquid>;
+                    LocalStructureIndexForLiquid, Curvature>;
 
     using hydrogenBondMenu = mpl::vector<HBond, HBondLifeTime, HBondLifeTimeContinuous, HBondLifeTimeCutoff,
                                          HBondLifeTimeCutoffContinuous, HBondSpread>;
@@ -146,8 +148,8 @@ std::shared_ptr<std::list<std::shared_ptr<AbstractAnalysis>>> getTasks() {
 
     using edaMenu = mpl::vector<BondedEnergyCalc>;
 
-    using otherUtilsMenu =
-        mpl::vector<DynFrameFind, SearchInteractionResidue, FindMinBetweenTwoGroups, FirstCoordExchangeSearch>;
+    using otherUtilsMenu = mpl::vector<DynFrameFind, SearchInteractionResidue, FindMinBetweenTwoGroups,
+                                       FirstCoordExchangeSearch, KeyInteractionResidueFinder>;
 
     using mainMenu =
         mpl::vector<trajectoryTransformationMenu, structurePropertyMenu, dynamicsPropertyMenu, angleDistributionMenu,

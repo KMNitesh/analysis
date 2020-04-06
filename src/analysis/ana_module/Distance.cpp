@@ -61,12 +61,12 @@ void Distance::print(std::ostream &os) {
     os << "\n<<<JSON>>>\n";
 }
 
-void Distance::readInfo() { Atom::select2group(mask_for_group1, mask_for_group2); }
+void Distance::readInfo() { select2group(mask_for_group1, mask_for_group2); }
 
 void Distance::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, mask_for_group1)) atoms_for_group1.insert(atom);
-        if (Atom::is_match(atom, mask_for_group2)) atoms_for_group2.insert(atom);
+        if (is_match(atom, mask_for_group1)) atoms_for_group1.insert(atom);
+        if (is_match(atom, mask_for_group2)) atoms_for_group2.insert(atom);
     });
 }
 

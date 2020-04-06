@@ -17,6 +17,7 @@
 #include "utils/ThrowAssert.hpp"
 #include "utils/VectorSelectorFactory.hpp"
 #include "utils/common.hpp"
+#include "data_structure/atom.hpp"
 
 RotAcf::RotAcf() {
     enable_outfile = true;

@@ -73,7 +73,7 @@ void DemixIndexOfTwoGroup::process(std::shared_ptr<Frame> &frame) {
 }
 
 void DemixIndexOfTwoGroup::readInfo() {
-    Atom::select2group(mask1, mask2, "Please select group1 > ", "Please select group2 > ");
+    select2group(mask1, mask2, "Please select group1 > ", "Please select group2 > ");
     grid_x = choose<int>(0, 1000, "Grid in X dememsion  :  ");
     grid_y = choose<int>(0, 1000, "Grid in Y dememsion  :  ");
     grid_z = choose<int>(0, 1000, "Grid in Z dememsion  :  ");
@@ -122,8 +122,8 @@ void DemixIndexOfTwoGroup::processFirstFrame(std::shared_ptr<Frame> &frame) {
         std::exit(1);
     }
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+        if (is_match(atom, this->mask1)) this->group1.insert(atom);
+        if (is_match(atom, this->mask2)) this->group2.insert(atom);
     });
 }
 

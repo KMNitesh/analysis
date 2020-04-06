@@ -14,9 +14,9 @@ EquatorialAngle::EquatorialAngle() { enable_outfile = true; }
 
 void EquatorialAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
-        if (Atom::is_match(atom, this->ids3)) this->group3.insert(atom);
+        if (is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (is_match(atom, this->ids2)) this->group2.insert(atom);
+        if (is_match(atom, this->ids3)) this->group3.insert(atom);
     });
 }
 
@@ -72,9 +72,9 @@ void EquatorialAngle::print(std::ostream &os) {
 }
 
 void EquatorialAngle::readInfo() {
-    Atom::select1group(ids1, "Enter mask for atom1 : ");
-    Atom::select1group(ids2, "Enter mask for atom2(in same mol with atom1) : ");
-    Atom::select1group(ids3, "Enter mask for atom3 : ");
+    select1group(ids1, "Enter mask for atom1 : ");
+    select1group(ids2, "Enter mask for atom2(in same mol with atom1) : ");
+    select1group(ids3, "Enter mask for atom3 : ");
 
     auto angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     auto angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));

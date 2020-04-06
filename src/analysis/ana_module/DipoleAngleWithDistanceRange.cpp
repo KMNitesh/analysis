@@ -15,8 +15,8 @@ DipoleAngleWithDistanceRange::DipoleAngleWithDistanceRange() {
 
 void DipoleAngleWithDistanceRange::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+        if (is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (is_match(atom, this->ids2)) this->group2.insert(atom);
     });
 }
 
@@ -81,7 +81,7 @@ void DipoleAngleWithDistanceRange::printData(std::ostream &os) const {
 }
 
 void DipoleAngleWithDistanceRange::readInfo() {
-    Atom::select2group(ids1, ids2);
+    select2group(ids1, ids2);
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));
 

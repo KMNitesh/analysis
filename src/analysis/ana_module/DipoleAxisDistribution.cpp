@@ -15,7 +15,7 @@ DipoleAxisDistribution::DipoleAxisDistribution() {
 
 void DipoleAxisDistribution::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
+        if (is_match(atom, this->ids)) this->group.insert(atom->molecule.lock());
     });
 }
 
@@ -44,7 +44,7 @@ void DipoleAxisDistribution::print(std::ostream &os) {
 }
 
 void DipoleAxisDistribution::readInfo() {
-    Atom::select1group(ids);
+    select1group(ids);
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     auto angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));
 

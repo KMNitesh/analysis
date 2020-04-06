@@ -68,15 +68,15 @@ void Trajconv::selectPBCMode() {
             break;
         case 1:
             pbc_type = PBCType::OneAtom;
-            Atom::select1group(mask, "Please enter atom mask : ");
+            select1group(mask, "Please enter atom mask : ");
             break;
         case 2:
             pbc_type = PBCType::OneMol;
-            Atom::select1group(mask, "Please enter one atom mask that the molecule include: ");
+            select1group(mask, "Please enter one atom mask that the molecule include: ");
             break;
         case 3:
             pbc_type = PBCType::AtomGroup;
-            Atom::select1group(mask, "Please enter atom group: ");
+            select1group(mask, "Please enter atom group: ");
             break;
         case 4:
             pbc_type = PBCType::AllIntoBox;
@@ -87,7 +87,7 @@ void Trajconv::selectPBCMode() {
         }
         break;
     }
-    Atom::select1group(mask_for_writetraj, "Enter mask for output > ", true);
+    select1group(mask_for_writetraj, "Enter mask for output > ", true);
 }
 
 void Trajconv::fastConvertTo(std::string target) noexcept(false) {
@@ -110,5 +110,5 @@ void Trajconv::processFirstFrame(std::shared_ptr<Frame> &frame) {
     }
 
     atoms_for_writetraj =
-        Atom::isBlank(mask_for_writetraj) ? frame->atom_list : PBCUtils::find_atoms(mask_for_writetraj, frame);
+        isBlank(mask_for_writetraj) ? frame->atom_list : PBCUtils::find_atoms(mask_for_writetraj, frame);
 }

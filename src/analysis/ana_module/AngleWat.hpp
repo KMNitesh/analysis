@@ -8,6 +8,7 @@
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "utils/std.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -26,7 +27,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Angle (Ow-Hw) Distribution with cutoff"; }
 
 protected:
-    Atom::AmberMask mask1, mask2, mask3;
+    AmberMask mask1, mask2, mask3;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
 

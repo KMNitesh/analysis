@@ -12,7 +12,7 @@ DipoleVectorSelector::DipoleVectorSelector() { enable_forcefield = true; }
 int DipoleVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
     if (!selected_mols.empty()) return selected_mols.size();
     for (auto &atom : frame->atom_list) {
-        if (Atom::is_match(atom, amberMask)) {
+        if (is_match(atom, amberMask)) {
             selected_mols.insert(atom->molecule.lock());
         }
     }
@@ -32,7 +32,7 @@ std::vector<std::tuple<double, double, double>> DipoleVectorSelector::calculateV
 
 void DipoleVectorSelector::readInfo() {
     std::cout << "# " << title() << " #\n";
-    Atom::select1group(amberMask, "Please Enter for Atom > ");
+    select1group(amberMask, "Please Enter for Atom > ");
 }
 
 void DipoleVectorSelector::print(std::ostream &os) {

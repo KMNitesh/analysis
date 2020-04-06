@@ -14,9 +14,9 @@ AngleDistributionBetweenTwoVectorWithCutoff::AngleDistributionBetweenTwoVectorWi
 
 void AngleDistributionBetweenTwoVectorWithCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->metal_mask))
+        if (is_match(atom, this->metal_mask))
             this->group1.insert(atom);
-        if (Atom::is_match(atom, this->ligand_mask))
+        if (is_match(atom, this->ligand_mask))
             this->group2.insert(atom);
     });
     throw_assert(this->group1.size() == 1, "Group1 must has only one atom");
@@ -112,7 +112,7 @@ void AngleDistributionBetweenTwoVectorWithCutoff::print(std::ostream &os) {
 }
 
 void AngleDistributionBetweenTwoVectorWithCutoff::readInfo() {
-    Atom::select2group(metal_mask, ligand_mask);
+    select2group(metal_mask, ligand_mask);
 
     std::cout << "For first Vector\n";
     vector1 = VectorSelectorFactory::getVectorSelector();

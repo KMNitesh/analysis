@@ -2,14 +2,13 @@
 // Created by xiamr on 7/17/19.
 //
 
-#include <gmock/gmock.h>
-#include <boost/any.hpp>
-#include "utils/common.hpp"
 #include "utils/TypeUtility.hpp"
+#include "utils/common.hpp"
+#include <boost/any.hpp>
+#include <gmock/gmock.h>
 
 using namespace std;
 using namespace testing;
-
 
 TEST(TypeCheckTest, IsInt) {
     boost::any val = 1;
@@ -31,14 +30,15 @@ TEST(TypeCheckTest, IsIntOrDouble) {
 }
 
 TEST(TypePrettyNameTest, ALLAccept) {
-    TypePrettyNames<int, double, string, bool, Atom::Node, Grid,
-            shared_ptr<AbstractAnalysis>, shared_ptr<VectorSelector>> check{};
-    ASSERT_THAT(check(), ContainerEq(vector<string>{
-            "int", "double", "string", "bool", "AmberMask", "Grid", "BasicAnalysis", "VectorSelector"}));
+    TypePrettyNames<int, double, string, bool, AmberMask, Grid, shared_ptr<AbstractAnalysis>,
+                    shared_ptr<VectorSelector>>
+        check{};
+    ASSERT_THAT(check(), ContainerEq(vector<string>{"int", "double", "string", "bool", "AmberMask", "Grid",
+                                                    "BasicAnalysis", "VectorSelector"}));
 }
 
 TEST(getPrettyNameTest, BoostAny) {
-    boost::any v = Atom::Node();
+    boost::any v = AmberMask();
     ASSERT_THAT(getPrettyName(v), Eq("AmberMask"));
     v = shared_ptr<AbstractAnalysis>();
     ASSERT_THAT(getPrettyName(v), Eq("BasicAnalysis"));
@@ -92,12 +92,8 @@ TEST(AutoConvertTest, String) {
 }
 
 TEST(AutoConvertTest, AmberMask) {
-    auto node = Atom::Node();
+    auto node = AmberMask();
     boost::any v = node;
-    Atom::Node i;
+    AmberMask i;
     ASSERT_NO_THROW((i = AutoConvert(v)));
 }
-
-
-
-

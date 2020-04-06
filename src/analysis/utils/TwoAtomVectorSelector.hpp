@@ -18,7 +18,7 @@ public:
 
     void readInfo() override;
 
-    void setParameters(const Atom::Node &id1, const Atom::Node &id2);
+    void setParameters(const AmberMask &id1, const AmberMask &id2);
 
     void print(std::ostream &os) override;
 

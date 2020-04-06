@@ -11,6 +11,7 @@
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "utils/std.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -36,8 +37,8 @@ protected:
 
     std::deque<double> distances;
 
-    Atom::AmberMask mask_for_group1;
-    Atom::AmberMask mask_for_group2;
+    AmberMask mask_for_group1;
+    AmberMask mask_for_group2;
 
     std::unordered_set<std::shared_ptr<Atom>> atoms_for_group1;
     std::unordered_set<std::shared_ptr<Atom>> atoms_for_group2;

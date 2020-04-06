@@ -12,7 +12,7 @@
 std::shared_ptr<Atom> PBCUtils::find_atom(const AmberMask &mask, const std::shared_ptr<Frame> &frame) {
     std::shared_ptr<Atom> ret;
     for (auto &atom : frame->atom_list) {
-        if (Atom::is_match(atom, mask)) {
+        if (is_match(atom, mask)) {
             if (ret) {
                 throw std::runtime_error("More then one atom selected");
             }
@@ -25,7 +25,7 @@ std::shared_ptr<Atom> PBCUtils::find_atom(const AmberMask &mask, const std::shar
 std::vector<std::shared_ptr<Atom>> PBCUtils::find_atoms(const AmberMask &mask, const std::shared_ptr<Frame> &frame) {
     std::vector<std::shared_ptr<Atom>> ret;
     for (auto &atom : frame->atom_list) {
-        if (Atom::is_match(atom, mask)) {
+        if (is_match(atom, mask)) {
             ret.push_back(atom);
         }
     }
@@ -35,7 +35,7 @@ std::vector<std::shared_ptr<Atom>> PBCUtils::find_atoms(const AmberMask &mask, c
 std::shared_ptr<Molecule> PBCUtils::find_molecule(const AmberMask &mask, const std::shared_ptr<Frame> &frame) {
     std::shared_ptr<Molecule> ret;
     for (auto &atom : frame->atom_list) {
-        if (Atom::is_match(atom, mask)) {
+        if (is_match(atom, mask)) {
             if (ret and ret != atom->molecule.lock()) {
                 throw std::runtime_error("More then one moleule selected");
             }

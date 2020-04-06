@@ -71,8 +71,7 @@ std::vector<double> IRSpectrum::calculateIntense(const std::vector<double> &acf,
     return intense;
 }
 
-template <typename Container>
-std::vector<double> IRSpectrum::calculateAcf(const Container &evolution) {
+template <typename Container> std::vector<double> IRSpectrum::calculateAcf(const Container &evolution) {
     auto max_calc_length = evolution.size() / 3;
 
     auto [acf, ntime] = tbb::parallel_reduce(
@@ -112,7 +111,7 @@ template std::vector<double> IRSpectrum::calculateAcf(const std::deque<double> &
 
 void IRSpectrum::readInfo() {
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
-    Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
+    select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }
 
 void IRSpectrum::calculateSpectrum(const std::string &out) {
@@ -136,7 +135,7 @@ void IRSpectrum::calculateSpectrum(const std::string &out) {
 
 void IRSpectrum::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, selected_mols_mask)) {
+        if (is_match(atom, selected_mols_mask)) {
             selected_mols.insert(atom->molecule.lock());
         }
     });

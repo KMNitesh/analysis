@@ -90,11 +90,11 @@ void ProteinDihedral::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::shared_ptr<Atom> init_atom;
 
     boost::for_each(frame->atom_list, [this, &atoms, &init_atom](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, mask)) {
+        if (is_match(atom, mask)) {
             atoms.insert(atom);
             atom->mark = false;
         }
-        if (Atom::is_match(atom, init_mask)) {
+        if (is_match(atom, init_mask)) {
             init_atom = atom;
         }
     });
@@ -120,6 +120,6 @@ void ProteinDihedral::processFirstFrame(std::shared_ptr<Frame> &frame) {
 }
 
 void ProteinDihedral::readInfo() {
-    Atom::select1group(mask, "Enter Protien Backbone > ");
-    Atom::select1group(init_mask, "Enter init atom > ");
+    select1group(mask, "Enter Protien Backbone > ");
+    select1group(init_mask, "Enter init atom > ");
 }

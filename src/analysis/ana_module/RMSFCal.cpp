@@ -129,13 +129,13 @@ void RMSFCal::saveJson(std::ostream &os) const {
 }
 
 void RMSFCal::readInfo() {
-    Atom::select1group(mask_for_superpose, "Please enter atoms for superpose > ");
-    Atom::select1group(mask_for_rmsfcalc, "Please enter atoms for rmsf calc > ");
+    select1group(mask_for_superpose, "Please enter atoms for superpose > ");
+    select1group(mask_for_rmsfcalc, "Please enter atoms for rmsf calc > ");
 
     output_residue_average = choose_bool("average for each residue [N] > ", Default(false));
 
     if (choose_bool("Output superposed strcuture [N] > ", Default(false))) {
-        Atom::select1group(mask_for_first_frame_output, "Please enter atoms for first frame output > ");
+        select1group(mask_for_first_frame_output, "Please enter atoms for first frame output > ");
         std::string filename = choose_file("Enter pdb filename for output > ").extension("pdb");
         pdb_ostream = std::make_unique<std::ofstream>(filename);
         if (!(*pdb_ostream)) {
@@ -189,8 +189,8 @@ void RMSFCal::add_atom_to_residue_vector(std::shared_ptr<Atom> &atom) {
 
 void RMSFCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        auto b_for_superpose = Atom::is_match(atom, mask_for_superpose);
-        auto b_for_rmsf_calc = Atom::is_match(atom, mask_for_rmsfcalc);
+        auto b_for_superpose = is_match(atom, mask_for_superpose);
+        auto b_for_rmsf_calc = is_match(atom, mask_for_rmsfcalc);
 
         if (b_for_superpose and b_for_rmsf_calc)
             atoms_for_superpose_and_rmsfcalc.push_back(atom);
@@ -202,7 +202,7 @@ void RMSFCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
             add_atom_to_residue_vector(atom);
         }
 
-        if (pdb_ostream and Atom::is_match(atom, mask_for_first_frame_output))
+        if (pdb_ostream and is_match(atom, mask_for_first_frame_output))
             atoms_for_first_frame_output.push_back(atom);
     });
 

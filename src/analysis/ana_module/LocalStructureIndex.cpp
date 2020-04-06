@@ -17,9 +17,9 @@ LocalStructureIndex::LocalStructureIndex() { enable_outfile = true; }
 
 void LocalStructureIndex::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, metal_mask))
+        if (is_match(atom, metal_mask))
             metal = atom;
-        else if (Atom::is_match(atom, Ow_atom_mask))
+        else if (is_match(atom, Ow_atom_mask))
             Ow_atoms.push_back(atom);
     });
     assert(metal);
@@ -98,7 +98,7 @@ void LocalStructureIndex::print(std::ostream &os) {
 }
 
 void LocalStructureIndex::readInfo() {
-    Atom::select2group(metal_mask, Ow_atom_mask, "Enter mask for center metal > ",
+    select2group(metal_mask, Ow_atom_mask, "Enter mask for center metal > ",
                        "Enter mask for coordination atom > ");
     auto cutoff = choose(0.0, "Enter cutoff for first hydration shell (Ang) [ 3.0 ] > ", Default(3.0));
     cutoff2 = cutoff * cutoff;

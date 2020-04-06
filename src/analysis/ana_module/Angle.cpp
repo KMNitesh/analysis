@@ -18,10 +18,9 @@ Angle::Angle() {
 }
 
 void Angle::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, mask1)) atom_group1.push_back(atom);
-        if (Atom::is_match(atom, mask2)) atom_group2.push_back(atom);
-    });
+    atom_group1 = PBCUtils::find_atoms(mask1, frame);
+    atom_group2 = PBCUtils::find_atoms(mask2, frame);
+
     mol1 = PBCUtils::calculate_intermol(atom_group1, frame);
     mol2 = PBCUtils::calculate_intermol(atom_group2, frame);
 }
@@ -81,10 +80,10 @@ void Angle::readInfo() {
         std::cout << "(0) MIX\n(1) MAX\n";
         return static_cast<AxisType>(choose(0, 1, "choose : "));
     };
-    Atom::select1group(mask1, "Enter mask for group1 > ");
+    select1group(mask1, "Enter mask for group1 > ");
     type1 = get_type();
 
-    Atom::select1group(mask2, "Enter mask for group2 > ");
+    select1group(mask2, "Enter mask for group2 > ");
     type2 = get_type();
 }
 

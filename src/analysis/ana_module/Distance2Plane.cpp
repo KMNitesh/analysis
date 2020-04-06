@@ -14,13 +14,13 @@ Distance2Plane::Distance2Plane() { enable_outfile = true; }
 void Distance2Plane::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
         for (std::size_t i = 0; i < 3; ++i) {
-            if (Atom::is_match(atom, plane_marks[i])) {
+            if (is_match(atom, plane_marks[i])) {
                 plane_atoms[i] = atom;
                 return;
             }
         }
         for (std::size_t i = 0; i < outplane_marks.size(); ++i) {
-            if (Atom::is_match(atom, outplane_marks[i])) {
+            if (is_match(atom, outplane_marks[i])) {
                 outplane_atoms[i] = atom;
                 return;
             }
@@ -78,16 +78,16 @@ void Distance2Plane::print(std::ostream &os) {
 }
 
 void Distance2Plane::readInfo() {
-    Atom::select1group(plane_marks[0], "Enter atom1 for plane > ");
-    Atom::select1group(plane_marks[1], "Enter atom2 for plane > ");
-    Atom::select1group(plane_marks[2], "Enter atom3 for plane > ");
+    select1group(plane_marks[0], "Enter atom1 for plane > ");
+    select1group(plane_marks[1], "Enter atom2 for plane > ");
+    select1group(plane_marks[2], "Enter atom3 for plane > ");
 
     auto num = choose(1, "Enter number of outplanar points > ");
     outplane_atoms.resize(num);
     outplane_marks.resize(num);
 
     for (int i = 0; i < num; ++i) {
-        Atom::select1group(outplane_marks[i], "Enter atom(" + std::to_string(i + 1) + ") for plane > ");
+        select1group(outplane_marks[i], "Enter atom(" + std::to_string(i + 1) + ") for plane > ");
     }
 }
 

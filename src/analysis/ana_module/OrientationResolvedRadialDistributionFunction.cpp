@@ -17,9 +17,9 @@ OrientationResolvedRadialDistributionFunction::OrientationResolvedRadialDistribu
 void OrientationResolvedRadialDistributionFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {
     water_OW_atoms.reserve(frame->atom_list.size() / 3);
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, water_Ow_atom_mask))
+        if (is_match(atom, water_Ow_atom_mask))
             water_OW_atoms.push_back(atom);
-        else if (Atom::is_match(atom, reference_atom_mask)) {
+        else if (is_match(atom, reference_atom_mask)) {
             if (reference_atom) {
                 std::cerr << "ERROR !! Only one reference atom allowed for module <" << title() << ">\n";
                 exit(1);
@@ -109,8 +109,8 @@ void OrientationResolvedRadialDistributionFunction::normalize() {
 }
 
 void OrientationResolvedRadialDistributionFunction::readInfo() {
-    Atom::select1group(reference_atom_mask, "Eneter mask for reference atom > ");
-    Atom::select1group(water_Ow_atom_mask, "Enter mask for OW atoms > ");
+    select1group(reference_atom_mask, "Eneter mask for reference atom > ");
+    select1group(water_Ow_atom_mask, "Enter mask for OW atoms > ");
 
     vectorSelector = VectorSelectorFactory::getVectorSelector();
     vectorSelector->readInfo();

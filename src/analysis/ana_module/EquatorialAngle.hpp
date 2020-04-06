@@ -11,6 +11,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/Histogram.hpp"
 
 class Frame;
@@ -30,7 +31,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Over Plane Angle Distribution with cutoff"; }
 
 protected:
-    Atom::AmberMask ids1, ids2, ids3;
+    AmberMask ids1, ids2, ids3;
 
     std::unordered_set<std::shared_ptr<Atom>> group1, group2, group3;
 
@@ -41,4 +42,4 @@ protected:
     void printData(std::ostream &os) const;
 };
 
-#endif  // TINKER_EQUATORIALANGLE_HPP
+#endif // TINKER_EQUATORIALANGLE_HPP

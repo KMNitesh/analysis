@@ -16,7 +16,7 @@ public:
         bool status;
         try {
             status = qi::phrase_parse(it, input_string.end(), grammar, qi::ascii::space, mask);
-            ret = status && it == input_string.end() && Atom::is_match(atom, mask);
+            ret = status && it == input_string.end() && is_match(atom, mask);
         } catch (...) {
             ret = false;
             status = false;
@@ -24,7 +24,7 @@ public:
 
         ret = need_suceess == ret;
         if (!ret) {
-            boost::apply_visitor(print(), mask);
+            boost::apply_visitor(AmberMaskAST::print(), mask);
             if (!(status and (it == input_string.end()))) {
                 std::cout << "error-pos : " << std::endl;
                 std::cout << input_string << std::endl;
@@ -37,7 +37,7 @@ public:
     }
 
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
-    Atom::AmberMask mask;
+    AmberMask mask;
     std::shared_ptr<Atom> atom;
     std::string input_string;
 };
@@ -433,105 +433,105 @@ protected:
     }
 
     Grammar<std::string::iterator, qi::ascii::space_type> grammar;
-    Atom::AmberMask mask;
+    AmberMask mask;
     std::string input_string;
 };
 
 TEST_F(TestGrammarMacro, System) {
     input_string = "System";
     parse();
-    Atom::Node node = make_shared<Atom::atom_name_nums>(Atom::select_ranges{"*"});
+    AmberMask node = make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"*"});
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, All) {
     input_string = "All";
     parse();
-    Atom::Node node = make_shared<Atom::atom_name_nums>(Atom::select_ranges{"*"});
+    AmberMask node = make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"*"});
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, Protein) {
     input_string = "Protein";
     parse();
-    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::protein);
+    AmberMask node = make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein);
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, Protein_H) {
     input_string = "Protein-H";
     parse();
-    Atom::Node node = make_shared<Atom::Operator>(
-        Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-        make_shared<Atom::Operator>(Atom::Op::NOT, make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"})));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, Backbone) {
     input_string = "Backbone";
     parse();
-    Atom::Node node =
-        make_shared<Atom::Operator>(Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-                                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N"}));
+    AmberMask node =
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, MainChain) {
     input_string = "MainChain";
     parse();
-    Atom::Node node =
-        make_shared<Atom::Operator>(Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-                                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O"}));
+    AmberMask node =
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N", "O"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, MainChainPlusCb) {
     input_string = "MainChain+Cb";
     parse();
-    Atom::Node node =
-        make_shared<Atom::Operator>(Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-                                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O", "CB"}));
+    AmberMask node =
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N", "O", "CB"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, MainChainPlusH) {
     input_string = "MainChain+H";
     parse();
-    Atom::Node node =
-        make_shared<Atom::Operator>(Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-                                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O", "H"}));
+    AmberMask node =
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "N", "O", "H"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, C_alpha) {
     input_string = "C-alpha";
     parse();
-    Atom::Node node =
-        make_shared<Atom::Operator>(Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-                                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA"}));
+    AmberMask node =
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA"}));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, SideChain) {
     input_string = "SideChain";
     parse();
-    Atom::Node node = make_shared<Atom::Operator>(
-        Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-        make_shared<Atom::Operator>(Atom::Op::NOT,
-                                    make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "O", "N", "H"})));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT,
+                                    make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "O", "N", "H"})));
     ASSERT_THAT(mask, Eq(node));
 }
 
 TEST_F(TestGrammarMacro, SideChain_H) {
     input_string = "SideChain-H";
     parse();
-    Atom::Node node = make_shared<Atom::Operator>(
-        Atom::Op::AND,
-        make_shared<Atom::Operator>(
-            Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::protein),
-            make_shared<Atom::Operator>(
-                Atom::Op::NOT, make_shared<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "O", "N", "H"}))),
-        make_shared<Atom::Operator>(Atom::Op::NOT, make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"}))
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND,
+        make_shared<AmberMaskAST::Operator>(
+            AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::protein),
+            make_shared<AmberMaskAST::Operator>(
+                AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"CA", "C", "O", "N", "H"}))),
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"}))
 
     );
     ASSERT_THAT(mask, Eq(node));
@@ -541,7 +541,7 @@ TEST_F(TestGrammarMacro, DNA) {
     input_string = "DNA";
     parse();
 
-    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::dna);
+    AmberMask node = make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::dna);
 
     ASSERT_THAT(mask, Eq(node));
 }
@@ -550,9 +550,9 @@ TEST_F(TestGrammarMacro, DNA_H) {
     input_string = "DNA-H";
     parse();
 
-    Atom::Node node = make_shared<Atom::Operator>(
-        Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::dna),
-        make_shared<Atom::Operator>(Atom::Op::NOT, make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"})));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::dna),
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
 
     ASSERT_THAT(mask, Eq(node));
 }
@@ -561,7 +561,7 @@ TEST_F(TestGrammarMacro, RNA) {
     input_string = "RNA";
     parse();
 
-    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::rna);
+    AmberMask node = make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::rna);
 
     ASSERT_THAT(mask, Eq(node));
 }
@@ -570,9 +570,9 @@ TEST_F(TestGrammarMacro, RNA_H) {
     input_string = "RNA-H";
     parse();
 
-    Atom::Node node = make_shared<Atom::Operator>(
-        Atom::Op::AND, make_shared<Atom::residue_name_nums>(decltype(grammar)::rna),
-        make_shared<Atom::Operator>(Atom::Op::NOT, make_shared<Atom::atom_name_nums>(Atom::select_ranges{"H*"})));
+    AmberMask node = make_shared<AmberMaskAST::Operator>(
+        AmberMaskAST::Op::AND, make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::rna),
+        make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, make_shared<AmberMaskAST::atom_name_nums>(AmberMaskAST::select_ranges{"H*"})));
 
     ASSERT_THAT(mask, Eq(node));
 }
@@ -581,7 +581,7 @@ TEST_F(TestGrammarMacro, Water) {
     input_string = "Water";
     parse();
 
-    Atom::Node node = make_shared<Atom::residue_name_nums>(decltype(grammar)::water);
+    AmberMask node = make_shared<AmberMaskAST::residue_name_nums>(AMBERMASK::water);
 
     ASSERT_THAT(mask, Eq(node));
 }

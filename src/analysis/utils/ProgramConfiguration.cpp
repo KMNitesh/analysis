@@ -55,7 +55,7 @@ void ProgramConfiguration::load_config(const boost::filesystem::path &config_fil
 
         for (const auto &mask : root.children("macro")) {
             macro_mask.emplace_back(boost::trim_copy(std::string(mask.attribute("name").as_string())),
-                                    parse_atoms(mask.attribute("mask").as_string(), true));
+                                    AmberMaskAST::parse_atoms(mask.attribute("mask").as_string(), true));
         }
     }
 }

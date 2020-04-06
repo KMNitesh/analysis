@@ -30,10 +30,10 @@ public:
     Residue(std::string chain, std::string resName, int residueNum)
         : chain(std::move(chain)), res_name(std::move(resName)), residue_num(residueNum) {}
 
+    std::string chain;
     std::string res_name;
     int residue_num;
     std::vector<PDBAtom> atoms;
-    std::string chain;
 
     std::optional<int> min_num;
 
@@ -76,8 +76,10 @@ std::map<std::string, std::map<std::string, int>> parse_rtp(std::ifstream &&ifs)
     while (!ifs.eof()) {
         std::getline(ifs, line);
         boost::trim(line);
-        if (line.empty()) continue;
-        if (boost::starts_with(line, ";")) continue;
+        if (line.empty())
+            continue;
+        if (boost::starts_with(line, ";"))
+            continue;
         if (boost::starts_with(line, "[") and boost::ends_with(line, "]")) {
             line.erase(line.length() - 1);
             line.erase(0);
@@ -107,9 +109,9 @@ std::map<std::string, std::map<std::string, int>> parse_rtp(std::ifstream &&ifs)
 void match_and_change_residue_name(const std::vector<Residue> &residues, size_t i, Residue &current_res) {
     static std::unordered_set<std::string> accepted_residue{"GUA", "ADE", "THY", "CYT"};
     if (accepted_residue.count(current_res.res_name)) {
-        if (i == 0) {  // 5'
+        if (i == 0) { // 5'
             current_res.res_name = std::string("D") + current_res.res_name[0] + std::to_string(5);
-        } else if (i == residues.size() - 1) {  // 3'
+        } else if (i == residues.size() - 1) { // 3'
             current_res.res_name = std::string("D") + current_res.res_name[0] + std::to_string(3);
         } else {
             current_res.res_name = std::string("D") + current_res.res_name[0];
@@ -146,7 +148,7 @@ std::vector<Residue> readPDB(std::ifstream &ifs) {
     }
     return residues;
 }
-}  // namespace
+} // namespace
 
 void GQuadruplexPdb2gmx::convert() {
     std::string input_pdb = choose_file("Input PDB : ").extension("pdb").isExist(true);
@@ -198,7 +200,7 @@ void move_position(double *x, double *y, double *z, std::vector<Residue> &residu
         }
     }
 }
-}  // namespace
+} // namespace
 
 void GQuadruplexPdb2gmx::superpose_and_move() {
     std::string input_pdb = choose_file("Input PDB : ").extension("pdb").isExist(true);

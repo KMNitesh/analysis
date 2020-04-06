@@ -168,7 +168,7 @@ void ResidenceTime::readInfo() {
 }
 
 void ResidenceTime::readBasicSetting() {
-    Atom::select2group(center_atom_mask, Ow_atom_mask, "Enter mask for center atom > ", "Enter mask for Ow atoms > ");
+    select2group(center_atom_mask, Ow_atom_mask, "Enter mask for center atom > ", "Enter mask for Ow atoms > ");
     dis_cutoff = choose(0.0, "Please enter distance cutoff1: ");
 }
 
@@ -177,7 +177,7 @@ void ResidenceTime::readTimeStarSetting() {
     timeStarMode = static_cast<TimeStarMode>(choose(0, 1, "t* mode\n(0) Loose\n(1) Strict\nchoose : "));
 }
 
-void ResidenceTime::setParameters(const Atom::Node &id1, const Atom::Node &id2, double cutoff, int t_star,
+void ResidenceTime::setParameters(const AmberMask &id1, const AmberMask &id2, double cutoff, int t_star,
                                   const std::string &outfilename) {
     this->center_atom_mask = id1;
     this->Ow_atom_mask = id2;
@@ -202,7 +202,7 @@ void ResidenceTime::setParameters(const Atom::Node &id1, const Atom::Node &id2, 
 
 void ResidenceTime::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->center_atom_mask)) this->center_atom_group.insert(atom);
-        if (Atom::is_match(atom, this->Ow_atom_mask)) this->Ow_atom_group.insert(atom);
+        if (is_match(atom, this->center_atom_mask)) this->center_atom_group.insert(atom);
+        if (is_match(atom, this->Ow_atom_mask)) this->Ow_atom_group.insert(atom);
     });
 }

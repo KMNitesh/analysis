@@ -20,54 +20,33 @@
 #include "data_structure/atom.hpp"
 #include "utils/ProgramConfiguration.hpp"
 #include "utils/common.hpp"
+#include "dsl/MacroRules.hpp"
+#include "dsl/AmberMask.hpp"
 
 namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 
-template <typename Iterator, typename Skipper> struct Grammar : qi::grammar<Iterator, Atom::Node(), Skipper> {
+template <typename Iterator, typename Skipper> struct Grammar : qi::grammar<Iterator, AmberMask(), Skipper> {
     Grammar();
 
-    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, Atom::Name>(),
+    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, AmberMaskAST::Name>(),
              Skipper>
         select_item_rule;
 
-    qi::rule<Iterator, Atom::Node(), Skipper> residue_select_rule;
-    qi::rule<Iterator, Atom::Node(), Skipper> molecule_select_rule;
-    qi::rule<Iterator, Atom::Node(), Skipper> nametype_select_rule;
-    qi::rule<Iterator, Atom::Node(), Skipper> select_rule;
-    qi::rule<Iterator, Atom::Node(), Skipper> term, factor;
-    qi::rule<Iterator, Atom::Node(), Skipper> expr;
-    qi::rule<Iterator, Atom::Node(), Skipper> maskParser, root;
+    qi::rule<Iterator, AmberMask(), Skipper> residue_select_rule;
+    qi::rule<Iterator, AmberMask(), Skipper> molecule_select_rule;
+    qi::rule<Iterator, AmberMask(), Skipper> nametype_select_rule;
+    qi::rule<Iterator, AmberMask(), Skipper> select_rule;
+    qi::rule<Iterator, AmberMask(), Skipper> term, factor;
+    qi::rule<Iterator, AmberMask(), Skipper> expr;
+    qi::rule<Iterator, AmberMask(), Skipper> maskParser, root;
 
-    qi::rule<Iterator, Atom::Name(), Skipper> str_with_wildcard;
+    qi::rule<Iterator, AmberMaskAST::Name(), Skipper> str_with_wildcard;
 
-    qi::rule<Iterator, Atom::Node(), Skipper> macro_rule, custum_macro_rule;
+    qi::rule<Iterator, AmberMask(), Skipper> macro_rule, custum_macro_rule;
 
-    std::vector<qi::rule<Iterator, Atom::Node(), Skipper>> r;
-
-    inline static auto protein = Atom::select_ranges{
-        "ABU",   "ACE",   "AIB",   "ALA",   "ARG",   "ARGN",  "ASN",   "ASN1", "ASP",   "ASP1",  "ASPH",  "ASPP",
-        "ASH",   "CT3",   "CYS",   "CYS1",  "CYS2",  "CYSH",  "DALA",  "GLN",  "GLU",   "GLUH",  "GLUP",  "GLH",
-        "GLY",   "HIS",   "HIS1",  "HISA",  "HISB",  "HISH",  "HISD",  "HISE", "HISP",  "HSD",   "HSE",   "HSP",
-        "HYP",   "ILE",   "LEU",   "LSN",   "LYS",   "LYSH",  "MELEU", "MET",  "MEVAL", "NAC",   "NME",   "NHE",
-        "NH2",   "PHE",   "PHEH",  "PHEU",  "PHL",   "PRO",   "SER",   "THR",  "TRP",   "TRPH",  "TRPU",  "TYR",
-        "TYRH",  "TYRU",  "VAL",   "PGLU",  "HID",   "HIE",   "HIP",   "LYP",  "LYN",   "CYN",   "CYM",   "CYX",
-        "DAB",   "ORN",   "NALA",  "NGLY",  "NSER",  "NTHR",  "NLEU",  "NILE", "NVAL",  "NASN",  "NGLN",  "NARG",
-        "NHID",  "NHIE",  "NHIP",  "NHISD", "NHISE", "NHISH", "NTRP",  "NPHE", "NTYR",  "NGLU",  "NASP",  "NLYS",
-        "NORN",  "NDAB",  "NLYSN", "NPRO",  "NHYP",  "NCYS",  "NCYS2", "NMET", "NASPH", "NGLUH", "CALA",  "CGLY",
-        "CSER",  "CTHR",  "CLEU",  "CILE",  "CVAL",  "CASN",  "CGLN",  "CARG", "CHID",  "CHIE",  "CHIP",  "CHISD",
-        "CHISE", "CHISH", "CTRP",  "CPHE",  "CTYR",  "CGLU",  "CASP",  "CLYS", "CORN",  "CDAB",  "CLYSN", "CPRO",
-        "CHYP",  "CCYS",  "CCYS2", "CMET",  "CASPH", "CGLUH"};
-
-    inline static auto dna = Atom::select_ranges{"DA5", "DA", "DA3", "DAN", "DT5", "DT", "DT3", "DTN",
-                                                 "DG5", "DG", "DG3", "DGN", "DC5", "DC", "DC3", "DCN"};
-
-    inline static auto rna =
-        Atom::select_ranges{"A",   "U",  "C",   "G",   "RA5", "RA", "RA3", "RAN", "RU5", "RU",  "RU3", "RUN",
-                            "RG5", "RG", "RG3", "RGN", "RC5", "RC", "RC3", "RCN", "RT5", "RT3", "RTN"};
-
-    inline static auto water = Atom::select_ranges{"SOL", "WAT", "HOH", "OHH", "TIP", "T3P", "T4P", "T5P", "T3H"};
+    std::vector<qi::rule<Iterator, AmberMask(), Skipper>> r;
 };
 
 BOOST_PHOENIX_ADAPT_FUNCTION(std::string, replace_all_copy, boost::replace_all_copy, 3)
@@ -127,79 +106,26 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
             }
         })];
 
-    residue_select_rule = ':' > (select_item_rule % ',')[_val = make_shared_<Atom::residue_name_nums>(_1)];
+    residue_select_rule = ':' > (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::residue_name_nums>(_1)];
 
     molecule_select_rule =
-        '$' > ((uint_ >> -('-' > uint_ >> -('#' > int_))) % ',')[_val = make_shared_<Atom::molecule_nums>(_1)];
+        '$' > ((uint_ >> -('-' > uint_ >> -('#' > int_))) % ',')[_val = make_shared_<AmberMaskAST::molecule_nums>(_1)];
 
-    nametype_select_rule = '@' > (('%' > (select_item_rule % ',')[_val = make_shared_<Atom::atom_types>(_1)]) |
-                                  ('/' > (str_with_wildcard % ',')[_val = make_shared_<Atom::atom_element_names>(_1)]) |
-                                  (select_item_rule % ',')[_val = make_shared_<Atom::atom_name_nums>(_1)]);
+    nametype_select_rule = '@' > (('%' > (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::atom_types>(_1)]) |
+                                  ('/' > (str_with_wildcard % ',')[_val = make_shared_<AmberMaskAST::atom_element_names>(_1)]) |
+                                  (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::atom_name_nums>(_1)]);
 
 #define DISTINCT(x) distinct(char_("a-zA-Z_0-9") | char_("-+"))[x]
 
-    macro_rule =
-        (DISTINCT("System") | DISTINCT("All"))[_val = make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"*"})]
-
-        | DISTINCT("Protein")[_val = make_shared_<Atom::residue_name_nums>(protein)]
-
-        | DISTINCT("Protein-H")[_val = make_shared_<Atom::Operator>(
-                                    Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                    make_shared_<Atom::Operator>(Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(
-                                                                                    Atom::select_ranges{"H*"})))] |
-        DISTINCT("Backbone")[_val = make_shared_<Atom::Operator>(
-                                 Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                 make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N"}))]
-
-        | DISTINCT("MainChain")[_val = make_shared_<Atom::Operator>(
-                                    Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                    make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O"}))]
-
-        | DISTINCT(
-              "MainChain+Cb")[_val = make_shared_<Atom::Operator>(
-                                  Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                  make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O", "CB"}))]
-
-        |
-        DISTINCT("MainChain+H")[_val = make_shared_<Atom::Operator>(
-                                    Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                    make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"CA", "C", "N", "O", "H"}))]
-
-        | DISTINCT("C-alpha")[_val = make_shared_<Atom::Operator>(
-                                  Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                  make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"CA"}))]
-
-        | DISTINCT("SideChain")[_val = make_shared_<Atom::Operator>(
-                                    Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                    make_shared_<Atom::Operator>(Atom::Op::NOT,
-                                                                 make_shared_<Atom::atom_name_nums>(
-                                                                     Atom::select_ranges{"CA", "C", "O", "N", "H"})))]
-
-        | DISTINCT("SideChain-H")[_val = make_shared_<Atom::Operator>(
-                                      Atom::Op::AND,
-                                      make_shared_<Atom::Operator>(
-                                          Atom::Op::AND, make_shared_<Atom::residue_name_nums>(protein),
-                                          make_shared_<Atom::Operator>(
-                                              Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(
-                                                                 Atom::select_ranges{"CA", "C", "O", "N", "H"}))),
-                                      make_shared_<Atom::Operator>(Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(
-                                                                                      Atom::select_ranges{"H*"})))]
-
-        | DISTINCT("DNA")[_val = make_shared_<Atom::residue_name_nums>(dna)]
-
-        | DISTINCT("DNA-H")[_val = make_shared_<Atom::Operator>(
-                                Atom::Op::AND, make_shared_<Atom::residue_name_nums>(dna),
-                                make_shared_<Atom::Operator>(
-                                    Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"H*"})))]
-
-        | DISTINCT("RNA")[_val = make_shared_<Atom::residue_name_nums>(rna)]
-
-        | DISTINCT("RNA-H")[_val = make_shared_<Atom::Operator>(
-                                Atom::Op::AND, make_shared_<Atom::residue_name_nums>(rna),
-                                make_shared_<Atom::Operator>(
-                                    Atom::Op::NOT, make_shared_<Atom::atom_name_nums>(Atom::select_ranges{"H*"})))]
-
-        | DISTINCT("Water")[_val = make_shared_<Atom::residue_name_nums>(water)];
+    macro_rule = (DISTINCT("System") | DISTINCT("All"))[_val = AMBERMASK::System] |
+                 DISTINCT("Protein")[_val = AMBERMASK::Protein] | DISTINCT("Protein-H")[_val = AMBERMASK::Protein_H] |
+                 DISTINCT("Backbone")[_val = AMBERMASK::Backbone] | DISTINCT("MainChain")[_val = AMBERMASK::MainChain] |
+                 DISTINCT("MainChain+Cb")[_val = AMBERMASK::MainChain_plus_Cb] |
+                 DISTINCT("MainChain+H")[_val = AMBERMASK::MainChain_plus_H] |
+                 DISTINCT("C-alpha")[_val = AMBERMASK::C_alpha] | DISTINCT("SideChain")[_val = AMBERMASK::SideChain] |
+                 DISTINCT("SideChain-H")[_val = AMBERMASK::SideChain_H] | DISTINCT("DNA")[_val = AMBERMASK::DNA] |
+                 DISTINCT("DNA-H")[_val = AMBERMASK::DNA_H] | DISTINCT("RNA")[_val = AMBERMASK::RNA] |
+                 DISTINCT("RNA-H")[_val = AMBERMASK::RNA_H] | DISTINCT("Water")[_val = AMBERMASK::Water];
 
     if (program_configuration) {
         const auto &all_macros = program_configuration->get_macro_mask();
@@ -219,11 +145,11 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
 
     factor = ("(" > maskParser > ")") | select_rule;
 
-    term = ("!" > factor[_val = make_shared_<Atom::Operator>(Atom::Op::NOT, _1)]) | factor[_val = _1];
+    term = ("!" > factor[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, _1)]) | factor[_val = _1];
 
-    expr = term[_val = _1] > *("&" > term[_val = make_shared_<Atom::Operator>(Atom::Op::AND, _val, _1)]);
+    expr = term[_val = _1] > *("&" > term[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, _val, _1)]);
 
-    maskParser = expr[_val = _1] > *("|" > expr[_val = make_shared_<Atom::Operator>(Atom::Op::OR, _val, _1)]);
+    maskParser = expr[_val = _1] > *("|" > expr[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::OR, _val, _1)]);
 
     root = eps > maskParser;
 

@@ -63,7 +63,7 @@ void ShellDensity::saveJson(std::ostream &os) const {
 }
 
 void ShellDensity::readInfo() {
-    Atom::select2group(mask1, mask2);
+    select2group(mask1, mask2);
     double rmax = choose(0.0, std::numeric_limits<double>::max(),
                          "Enter Maximum Distance to Accumulate[10.0 Ang]:", Default(10.0));
     distance_width =
@@ -76,7 +76,7 @@ void ShellDensity::readInfo() {
 
 void ShellDensity::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, mask1)) group1.insert(atom);
-        if (Atom::is_match(atom, mask2)) group2.insert(atom);
+        if (is_match(atom, mask1)) group1.insert(atom);
+        if (is_match(atom, mask2)) group2.insert(atom);
     });
 }

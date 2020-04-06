@@ -11,6 +11,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -29,7 +30,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Dipole Angle 3 Dimension Distribution with Axis"; }
 
 protected:
-    Atom::AmberMask amberMask;
+    AmberMask amberMask;
 
     std::unordered_set<std::shared_ptr<Molecule>> group;
 

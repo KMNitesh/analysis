@@ -15,6 +15,7 @@
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -33,8 +34,8 @@ public:
     [[nodiscard]] static std::string_view title() { return "Water exchange analysis"; }
 
 private:
-    Atom::AmberMask ids1;
-    Atom::AmberMask ids2;
+    AmberMask ids1;
+    AmberMask ids2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;

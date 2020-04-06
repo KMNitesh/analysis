@@ -103,7 +103,7 @@ void DiffuseCutoff::print(std::ostream &os) {
 }
 
 void DiffuseCutoff::readInfo() {
-    Atom::select2group(mask1, mask2);
+    select2group(mask1, mask2);
 
     double cutoff = choose(0.0, std::numeric_limits<double>::max(), "Please enter distance cutoff:");
     this->cutoff2 = cutoff * cutoff;
@@ -147,8 +147,8 @@ void DiffuseCutoff::setParameters(const AmberMask &M, const AmberMask &L, double
 
 void DiffuseCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
+        if (is_match(atom, this->mask1)) this->group1.insert(atom);
+        if (is_match(atom, this->mask2)) this->group2.insert(atom);
     });
     if (group1.size() > 1) {
         std::cerr << "the reference(metal cation) atom for DiffuseCutoff function can only have one\n";

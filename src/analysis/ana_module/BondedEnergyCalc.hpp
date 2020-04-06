@@ -5,6 +5,7 @@
 #include "ana_module/AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
 #include "utils/BondEnergyCalculator.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 

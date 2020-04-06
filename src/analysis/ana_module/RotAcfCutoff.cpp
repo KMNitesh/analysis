@@ -56,7 +56,7 @@ void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
 }
 
 void RotAcfCutoff::readInfo() {
-    Atom::select2group(ids1, ids2);
+    select2group(ids1, ids2);
 
     vectorSelector = VectorSelectorFactory::getVectorSelector();
     vectorSelector->readInfo();
@@ -197,8 +197,8 @@ void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long lon
 
 void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+        if (is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (is_match(atom, this->ids2)) this->group2.insert(atom);
     });
     if (group1.size() > 1) {
         cerr << "the reference(metal cation) atom for RotAcfCutoff function can only have one\n";

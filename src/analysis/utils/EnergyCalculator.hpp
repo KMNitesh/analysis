@@ -4,6 +4,7 @@
 #include "utils/std.hpp"
 
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 

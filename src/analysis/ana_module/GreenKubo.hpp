@@ -12,6 +12,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -31,7 +32,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Green-Kubo"; }
 
 private:
-    Atom::AmberMask ids;
+    AmberMask ids;
     std::unordered_set<std::shared_ptr<Atom>> group;
 
     double timestep;
@@ -42,4 +43,4 @@ private:
     std::map<int, double> vecz_map;
 };
 
-#endif  // TINKER_GREENKUBO_HPP
+#endif // TINKER_GREENKUBO_HPP

@@ -42,9 +42,9 @@ std::tuple<double, double, double> NormalVectorSelector::calVector(
 
 void NormalVectorSelector::readInfo() {
     std::cout << "# " << title() << " #\n";
-    Atom::select1group(ids1, "Please Enter for Atom1 > ");
-    Atom::select1group(ids2, "Please Enter for Atom2 > ");
-    Atom::select1group(ids3, "Please Enter for Atom3 > ");
+    select1group(ids1, "Please Enter for Atom1 > ");
+    select1group(ids2, "Please Enter for Atom2 > ");
+    select1group(ids3, "Please Enter for Atom3 > ");
 }
 
 void NormalVectorSelector::print(std::ostream &os) {
@@ -57,11 +57,11 @@ int NormalVectorSelector::initialize(const std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         shared_ptr<Atom> atom1, atom2, atom3;
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, ids1)) {
+            if (is_match(atom, ids1)) {
                 atom1 = atom;
-            } else if (Atom::is_match(atom, ids2)) {
+            } else if (is_match(atom, ids2)) {
                 atom2 = atom;
-            } else if (Atom::is_match(atom, ids3)) {
+            } else if (is_match(atom, ids3)) {
                 atom3 = atom;
             }
         }
@@ -80,11 +80,11 @@ tuple<double, double, double> NormalVectorSelector::calculateVector(const std::s
                                                                     const std::shared_ptr<Frame> &frame) {
     shared_ptr<Atom> atom1, atom2, atom3;
     for (auto &atom : mol->atom_list) {
-        if (Atom::is_match(atom, ids1)) {
+        if (is_match(atom, ids1)) {
             atom1 = atom;
-        } else if (Atom::is_match(atom, ids2)) {
+        } else if (is_match(atom, ids2)) {
             atom2 = atom;
-        } else if (Atom::is_match(atom, ids3)) {
+        } else if (is_match(atom, ids3)) {
             atom3 = atom;
         }
     }
@@ -92,7 +92,7 @@ tuple<double, double, double> NormalVectorSelector::calculateVector(const std::s
     return calVector({atom1, atom2, atom3}, frame);
 }
 
-void NormalVectorSelector::setParameters(const Atom::Node &id1, const Atom::Node &id2, const Atom::Node &id3) {
+void NormalVectorSelector::setParameters(const AmberMask &id1, const AmberMask &id2, const AmberMask &id3) {
     ids1 = id1;
     ids2 = id2;
     ids3 = id3;

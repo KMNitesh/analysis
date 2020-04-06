@@ -6,6 +6,7 @@
 
 #include <boost/spirit/include/karma.hpp>
 #include <unordered_set>
+#include "dsl/AmberMask.hpp"
 
 #include "utils/ThrowAssert.hpp"
 
@@ -395,15 +396,15 @@ boost::any Interpreter::evalArithmeticOperation(const ArithmeticOperation &op) {
 boost::any Interpreter::evalBitwiseOperation(const BitwiseOperation &op) {
     auto lhs = evalRightValue(op.operand1);
     auto rhs = evalRightValue(op.operand2);
-    if (lhs.type() == typeid(Atom::Node) && rhs.type() == typeid(Atom::Node)) {
+    if (lhs.type() == typeid(AmberMask) && rhs.type() == typeid(AmberMask)) {
         switch (op.op) {
         case BitwiseOp::And:
-            return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::AND, boost::any_cast<Atom::Node>(lhs),
-                                                               boost::any_cast<Atom::Node>(rhs)));
+            return AmberMask(std::make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, boost::any_cast<AmberMask>(lhs),
+                                                               boost::any_cast<AmberMask>(rhs)));
             break;
         case BitwiseOp::Or:
-            return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::OR, boost::any_cast<Atom::Node>(lhs),
-                                                               boost::any_cast<Atom::Node>(rhs)));
+            return AmberMask(std::make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::OR, boost::any_cast<AmberMask>(lhs),
+                                                               boost::any_cast<AmberMask>(rhs)));
             break;
         }
     }
@@ -587,8 +588,8 @@ boost::any Interpreter::evalLogicalOperation(const LogicalOperation &op) {
 
         if (lhs.type() == typeid(bool)) {
             return !boost::any_cast<bool>(lhs);
-        } else if (lhs.type() == typeid(Atom::Node)) {
-            return Atom::Node(std::make_shared<Atom::Operator>(Atom::Op::NOT, boost::any_cast<Atom::Node>(lhs)));
+        } else if (lhs.type() == typeid(AmberMask)) {
+            return AmberMask(std::make_shared<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, boost::any_cast<AmberMask>(lhs)));
         } else {
             throw InterpreterException(std::string("Logical Not operation not permitted for type : ") +
                                        lhs.type().name());

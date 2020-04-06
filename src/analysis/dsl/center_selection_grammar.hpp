@@ -30,7 +30,7 @@ template <typename Iterator, typename Skipper> struct CenterGrammar : qi::gramma
     CenterGrammar();
 
     qi::rule<Iterator, CenterRuleNode(), Skipper> expr, root;
-    qi::rule<Iterator, Atom::Node(), Skipper> mask;
+    qi::rule<Iterator, AmberMask(), Skipper> mask;
     Grammar<Iterator, Skipper> maskParser;
 };
 

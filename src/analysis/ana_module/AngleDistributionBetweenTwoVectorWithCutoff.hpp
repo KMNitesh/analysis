@@ -10,6 +10,7 @@
 #include "utils/Histogram.hpp"
 #include "utils/VectorSelector.hpp"
 #include "utils/std.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -34,8 +35,8 @@ public:
                        double cutoff2, const std::string &outfilename);
 
 protected:
-    Atom::AmberMask metal_mask;
-    Atom::AmberMask ligand_mask;
+    AmberMask metal_mask;
+    AmberMask ligand_mask;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;

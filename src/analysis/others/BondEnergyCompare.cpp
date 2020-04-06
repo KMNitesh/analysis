@@ -79,7 +79,7 @@ void BondEnergyCompare::process() {
                 ++it2;
                 continue;
             }
-            diff_map[{v1.first, v2.first}](v1.second.total() - v2.second.total());
+            diff_map[{v1.first, v2.first}](v1.second.dihedral- v2.second.dihedral);
             ++it1;
             ++it2;
         }

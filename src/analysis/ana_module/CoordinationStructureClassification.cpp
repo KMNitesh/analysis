@@ -22,9 +22,9 @@ CoordinationStructureClassification::CoordinationStructureClassification() {
 
 void CoordinationStructureClassification::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, metal_mask))
+        if (is_match(atom, metal_mask))
             metal = atom;
-        else if (Atom::is_match(atom, Ow_atom_mask))
+        else if (is_match(atom, Ow_atom_mask))
             Ow_atoms.push_back(atom);
     });
     assert(metal);
@@ -117,15 +117,11 @@ std::map<int, std::list<Cluster::rmsd_matrix>> CoordinationStructureClassificati
         Body(std::deque<std::pair<int, std::vector<std::tuple<double, double, double>>>> &tables,
              CoordinationStructureClassification *parent, std::atomic<std::size_t> &current_completed_compute_amount,
              std::size_t &total_compute_amount)
-            : tables(tables),
-              parent(parent),
-              current_completed_compute_amount(current_completed_compute_amount),
+            : tables(tables), parent(parent), current_completed_compute_amount(current_completed_compute_amount),
               total_compute_amount(total_compute_amount){};
 
         Body(Body &c, tbb::split)
-            : tables(c.tables),
-              parent(c.parent),
-              current_completed_compute_amount(c.current_completed_compute_amount),
+            : tables(c.tables), parent(c.parent), current_completed_compute_amount(c.current_completed_compute_amount),
               total_compute_amount(c.total_compute_amount) {}
 
         void join(Body &c) {
@@ -205,10 +201,11 @@ int rms_max_index(double x1[], double y1[], double z1[], double x2[], double y2[
     }
     return index;
 }
-}  // namespace
+} // namespace
 
-double CoordinationStructureClassification::calculateRmsdOfTwoStructs(
-    std::vector<std::tuple<double, double, double>> &c1, std::vector<std::tuple<double, double, double>> &c2) {
+double
+CoordinationStructureClassification::calculateRmsdOfTwoStructs(std::vector<std::tuple<double, double, double>> &c1,
+                                                               std::vector<std::tuple<double, double, double>> &c2) {
     assert(c1.size() == c2.size());
     assert(c1.size() > 2);
 
@@ -221,7 +218,8 @@ double CoordinationStructureClassification::calculateRmsdOfTwoStructs(
 
     for (auto c2_index1 : boost::irange<int>(0, c2.size())) {
         for (auto c2_index2 : boost::irange<int>(0, c2.size())) {
-            if (c2_index1 == c2_index2) continue;
+            if (c2_index1 == c2_index2)
+                continue;
 
             x1[0] = y1[0] = z1[0] = x2[0] = y2[0] = z2[0] = 0.0;
 
@@ -257,8 +255,8 @@ double CoordinationStructureClassification::calculateRmsdOfTwoStructs(
     return std::sqrt(rmsd_value2);
 }
 
-std::pair<int, int> CoordinationStructureClassification::find_min_distance_pair(
-    std::vector<std::tuple<double, double, double>> &c) {
+std::pair<int, int>
+CoordinationStructureClassification::find_min_distance_pair(std::vector<std::tuple<double, double, double>> &c) {
     double min_distance2 = std::numeric_limits<double>::max();
     int index1, index2;
     index1 = index2 = std::numeric_limits<int>::max();
@@ -316,8 +314,7 @@ void CoordinationStructureClassification::permutation(double x1[], double y1[], 
 }
 
 void CoordinationStructureClassification::readInfo() {
-    Atom::select2group(metal_mask, Ow_atom_mask, "Enter mask for center metal > ",
-                       "Enter mask for coordination atom > ");
+    select2group(metal_mask, Ow_atom_mask, "Enter mask for center metal > ", "Enter mask for coordination atom > ");
     auto cutoff = choose(0.0, "Enter cutoff for first hydration shell (Ang) [ 3.0 ] > ", Default(3.0));
     cutoff2 = cutoff * cutoff;
 

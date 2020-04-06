@@ -39,7 +39,7 @@ void RadicalDistribtuionFunction::process(std::shared_ptr<Frame> &frame) {
 }
 
 void RadicalDistribtuionFunction::readInfo() {
-    Atom::select2group(ids1, ids2);
+    select2group(ids1, ids2);
     rmax = choose(0.0, std::numeric_limits<double>::max(),
                   "Enter Maximum Distance to Accumulate[10.0 Ang]:", Default(10.0));
     width = choose(0.0, std::numeric_limits<double>::max(), "Enter Width of Distance Bins [0.01 Ang]:", Default(0.01));
@@ -105,14 +105,14 @@ void RadicalDistribtuionFunction::print(std::ostream &os) {
 
 void RadicalDistribtuionFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+        if (is_match(atom, this->ids1)) this->group1.insert(atom);
+        if (is_match(atom, this->ids2)) this->group2.insert(atom);
     });
     numj = group1.size();
     numk = group2.size();
 }
 
-void RadicalDistribtuionFunction::setParameters(const Atom::Node &id1, const Atom::Node &id2, double max_dist,
+void RadicalDistribtuionFunction::setParameters(const AmberMask &id1, const AmberMask &id2, double max_dist,
                                                 double width, bool intramol, std::string outfilename) {
     this->ids1 = id1;
     this->ids2 = id2;

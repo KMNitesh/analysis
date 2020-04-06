@@ -14,6 +14,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -32,8 +33,8 @@ public:
     [[nodiscard]] static std::string_view title() { return "Dipole Angle"; }
 
 protected:
-    Atom::AmberMask mask1;
-    Atom::AmberMask ids2;
+    AmberMask mask1;
+    AmberMask ids2;
 
     std::unordered_set<std::shared_ptr<Atom>> group1;
     std::unordered_set<std::shared_ptr<Atom>> group2;

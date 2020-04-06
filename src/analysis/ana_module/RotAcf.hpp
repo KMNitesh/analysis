@@ -6,7 +6,6 @@
 #define TINKER_ROTACF_HPP
 
 #include "AbstractAnalysis.hpp"
-#include "data_structure/atom.hpp"
 #include "utils/VectorSelector.hpp"
 
 class Frame;

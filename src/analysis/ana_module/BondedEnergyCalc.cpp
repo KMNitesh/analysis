@@ -17,7 +17,6 @@ void BondedEnergyCalc::processFirstFrame([[maybe_unused]] std::shared_ptr<Frame>
 
 void BondedEnergyCalc::process(std::shared_ptr<Frame> &frame) {
     auto map = calculator->energy_with_residue_rank(frame);
-
     energy_terms.push_back(std::move(map));
 }
 
@@ -65,4 +64,4 @@ void BondedEnergyCalc::print(std::ostream &os) {
     file << std::setw(2) << j;
 }
 
-void BondedEnergyCalc::readInfo() { Atom::select1group(mask); }
+void BondedEnergyCalc::readInfo() { select1group(mask); }

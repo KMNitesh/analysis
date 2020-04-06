@@ -56,12 +56,12 @@ void FindMinBetweenTwoGroups::print(std::ostream &os) {
     os << "************************************************\n";
 }
 
-void FindMinBetweenTwoGroups::readInfo() { Atom::select1group(amberMask, "Input Residue Name Mask: "); }
+void FindMinBetweenTwoGroups::readInfo() { select1group(amberMask, "Input Residue Name Mask: "); }
 
 void FindMinBetweenTwoGroups::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, this->amberMask)) {
+            if (is_match(atom, this->amberMask)) {
                 mol_list.push_back(mol);
                 break;
             }

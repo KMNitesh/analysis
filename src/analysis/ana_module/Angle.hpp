@@ -8,6 +8,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/PBCUtils.hpp"
 #include "utils/std.hpp"
 
@@ -47,4 +48,4 @@ protected:
     std::deque<double> deque;
 };
 
-#endif  // TINKER_ANGLE_HPP
+#endif // TINKER_ANGLE_HPP

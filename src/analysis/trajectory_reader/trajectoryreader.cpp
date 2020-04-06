@@ -13,6 +13,7 @@
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
+#include "dsl/AmberMask.hpp"
 #include "nlohmann/json.hpp"
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
@@ -76,7 +77,8 @@ void TrajectoryReader::add_trajectoy_file(const std::string &filename) {
         for (auto &item : j) {
             std::string name = item.at("name");
             std::string mask = item.value("mask", "");
-            traj_filenames.emplace(std::move(name), mask.empty() ? boost::blank{} : parse_atoms(mask, true));
+            traj_filenames.emplace(std::move(name),
+                                   mask.empty() ? boost::blank{} : AmberMaskAST::parse_atoms(mask, true));
             try {
                 std::string range_string = item.at("range");
                 traj_filenames.back().range = TrajectoryFile::parse_range(range_string);
@@ -99,13 +101,13 @@ void TrajectoryReader::set_topology(const std::string &filename) { topology_file
 
 void TrajectoryReader::set_mask(std::string mask_string) {
     if (!mask_string.empty()) {
-        mask = parse_atoms(mask_string, true);
+        mask = AmberMaskAST::parse_atoms(mask_string, true);
     }
 }
 std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
     if (!frame) {
         readTopology();
-        atoms_for_readtraj = Atom::isBlank(mask) ? frame->atom_list : PBCUtils::find_atoms(mask, frame);
+        atoms_for_readtraj = isBlank(mask) ? frame->atom_list : PBCUtils::find_atoms(mask, frame);
     }
     for (;;) {
         if (!traj_reader) {
@@ -113,11 +115,11 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
                 return {};
             current_trajectory_file = std::move(traj_filenames.front());
             traj_filenames.pop();
-            current_frame_pos = 1;
+            current_frame_pos = 0;
             traj_reader = ReaderFactory::getTrajectory(current_trajectory_file);
             traj_reader->open(current_trajectory_file);
-            if (Atom::isBlank(mask)) {
-                atoms_for_readtraj = Atom::isBlank(current_trajectory_file.mask)
+            if (isBlank(mask)) {
+                atoms_for_readtraj = isBlank(current_trajectory_file.mask)
                                          ? frame->atom_list
                                          : PBCUtils::find_atoms(current_trajectory_file.mask, frame);
             }
@@ -130,7 +132,6 @@ std::shared_ptr<Frame> TrajectoryReader::readOneFrame() {
                 break;
             }
         }
-    close_label:
         traj_reader->close();
         traj_reader.reset();
     }

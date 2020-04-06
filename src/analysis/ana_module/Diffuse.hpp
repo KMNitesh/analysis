@@ -9,6 +9,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/common.hpp"
 #include "utils/std.hpp"
 

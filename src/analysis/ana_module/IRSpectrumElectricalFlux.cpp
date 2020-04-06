@@ -67,12 +67,12 @@ void IRSpectrumElectricalFlux::print(std::ostream &os) {
 
 void IRSpectrumElectricalFlux::readInfo() {
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
-    Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
+    select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }
 
 void IRSpectrumElectricalFlux::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, selected_mols_mask)) {
+        if (is_match(atom, selected_mols_mask)) {
             selected_mols.insert(atom->molecule.lock());
         }
     });

@@ -9,6 +9,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/std.hpp"
 
 class Frame;
@@ -27,7 +28,7 @@ public:
 
     [[nodiscard]] std::string description() override;
 
-    void setParameters(const Atom::Node &M, const Atom::Node &L, double cutoff, double time_increment_ps,
+    void setParameters(const AmberMask &M, const AmberMask &L, double cutoff, double time_increment_ps,
                        const std::string &outfilename);
 
     [[nodiscard]] static std::string_view title() {

@@ -9,7 +9,7 @@
 #include <boost/optional.hpp>
 #include <memory>
 
-#include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 struct MassCenterRuleNode {
     AmberMask SelectionMask;

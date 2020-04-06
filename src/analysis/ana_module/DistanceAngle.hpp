@@ -16,6 +16,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class DistanceAngle : public AbstractAnalysis {
 public:
@@ -32,7 +33,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Gibbs Free Energy of Distance Angle for AnO2"; }
 
 protected:
-    Atom::AmberMask mask1, mask2, mask3;
+    AmberMask mask1, mask2, mask3;
 
     std::list<std::pair<std::shared_ptr<Atom>, std::shared_ptr<Atom>>> pairs;
 

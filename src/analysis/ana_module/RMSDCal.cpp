@@ -47,8 +47,8 @@ void RMSDCal::saveJson(std::ostream &os) const {
 }
 
 void RMSDCal::readInfo() {
-    Atom::select1group(mask_for_superpose, "Please enter atoms for superpose > ");
-    Atom::select1group(mask_for_rmscalc, "Please enter atoms for rms calc  > ");
+    select1group(mask_for_superpose, "Please enter atoms for superpose > ");
+    select1group(mask_for_rmscalc, "Please enter atoms for rms calc  > ");
     if (choose_bool("Output suprposed structure [N] >", Default(false))) {
         writer = std::make_unique<XTCWriter>();
         writer->open(choose_file("Enter xtc filename for output superposed structures > ").extension("xtc"));
@@ -341,9 +341,9 @@ label_10:
 
 void RMSDCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, mask_for_superpose)) {
+        if (is_match(atom, mask_for_superpose)) {
             atoms_for_superpose.insert(atom);
-        } else if (Atom::is_match(atom, mask_for_rmscalc)) {
+        } else if (is_match(atom, mask_for_rmscalc)) {
             atoms_for_rmscalc.insert(atom);
         }
     });

@@ -3,6 +3,7 @@
 #define TINKER_PROGRAMCONFIGURATION_HPP
 
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/std.hpp"
 
 namespace boost::filesystem {

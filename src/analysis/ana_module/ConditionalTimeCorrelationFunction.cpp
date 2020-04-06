@@ -24,9 +24,9 @@ ConditionalTimeCorrelationFunction::ConditionalTimeCorrelationFunction()
 void ConditionalTimeCorrelationFunction::processFirstFrame(std::shared_ptr<Frame> &frame) {
     water_Ow_atoms.reserve(frame->atom_list.size() / 3);
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, water_Ow_atoms_mask))
+        if (is_match(atom, water_Ow_atoms_mask))
             water_Ow_atoms.push_back(atom);
-        else if (Atom::is_match(atom, reference_atom_mask)) {
+        else if (is_match(atom, reference_atom_mask)) {
             if (reference_atom) {
                 std::cerr << "ERROR !! Only one reference atom allowed for module <" << title() << ">\n";
                 exit(1);
@@ -63,8 +63,7 @@ void ConditionalTimeCorrelationFunction::process(std::shared_ptr<Frame> &frame) 
     func_mapping.at(LegendrePolynomial)();
 }
 
-template <typename Function>
-void ConditionalTimeCorrelationFunction::calculateFrame(Function f) {
+template <typename Function> void ConditionalTimeCorrelationFunction::calculateFrame(Function f) {
     if (cb_vector.at(0).full()) {
         for (std::size_t i = 0; i < water_Ow_atoms.size(); ++i) {
             auto d_ref = cache_x[0][i];
@@ -113,8 +112,8 @@ void ConditionalTimeCorrelationFunction::normalize() {
 }
 
 void ConditionalTimeCorrelationFunction::readInfo() {
-    Atom::select1group(reference_atom_mask, "Enter mask for reference atom > ");
-    Atom::select1group(water_Ow_atoms_mask, "Enter mask for OW atoms > ");
+    select1group(reference_atom_mask, "Enter mask for reference atom > ");
+    select1group(water_Ow_atoms_mask, "Enter mask for OW atoms > ");
 
     vectorSelector = VectorSelectorFactory::getVectorSelector();
     vectorSelector->readInfo();

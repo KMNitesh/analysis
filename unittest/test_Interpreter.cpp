@@ -143,12 +143,12 @@ TEST_F(InterpreterGrammarTest, Bitwise_AND_Operation) {
     pass();
     ASSERT_NO_THROW((result = interpreter.execute(ast)));
 
-    ASSERT_EQ(result.type(), typeid(Atom::Node));
-    ASSERT_THAT(boost::any_cast<Atom::Node>(result), Eq(
-            Atom::Node(make_shared<Atom::Operator>(
-                    Atom::Op::AND,
-                    boost::any_cast<Atom::Node>(interpreter.getVariables()["a"]),
-                    boost::any_cast<Atom::Node>(interpreter.getVariables()["b"])
+    ASSERT_EQ(result.type(), typeid(AmberMask));
+    ASSERT_THAT(boost::any_cast<AmberMask>(result), Eq(
+            AmberMask(make_shared<AmberMaskAST::Operator>(
+                    AmberMaskAST::Op::AND,
+                    boost::any_cast<AmberMask>(interpreter.getVariables()["a"]),
+                    boost::any_cast<AmberMask>(interpreter.getVariables()["b"])
             ))));
 }
 
@@ -159,12 +159,12 @@ TEST_F(InterpreterGrammarTest, Bitwise_OR_Operation) {
     pass();
     ASSERT_NO_THROW((result = interpreter.execute(ast)));
 
-    ASSERT_EQ(result.type(), typeid(Atom::Node));
-    ASSERT_THAT(boost::any_cast<Atom::Node>(result), Eq(
-            Atom::Node(make_shared<Atom::Operator>(
-                    Atom::Op::OR,
-                    boost::any_cast<Atom::Node>(interpreter.getVariables()["a"]),
-                    boost::any_cast<Atom::Node>(interpreter.getVariables()["b"])
+    ASSERT_EQ(result.type(), typeid(AmberMask));
+    ASSERT_THAT(boost::any_cast<AmberMask>(result), Eq(
+            AmberMask(make_shared<AmberMaskAST::Operator>(
+                    AmberMaskAST::Op::OR,
+                    boost::any_cast<AmberMask>(interpreter.getVariables()["a"]),
+                    boost::any_cast<AmberMask>(interpreter.getVariables()["b"])
             ))));
 }
 
@@ -174,11 +174,11 @@ TEST_F(InterpreterGrammarTest, Bitwise_NOT_Operation) {
     pass();
     ASSERT_NO_THROW(result = interpreter.execute(ast));
 
-    ASSERT_EQ(result.type(), typeid(Atom::Node));
-    ASSERT_THAT(boost::any_cast<Atom::Node>(result), Eq(
-            Atom::Node(make_shared<Atom::Operator>(
-                    Atom::Op::NOT,
-                    boost::any_cast<Atom::Node>(interpreter.getVariables()["a"])
+    ASSERT_EQ(result.type(), typeid(AmberMask));
+    ASSERT_THAT(boost::any_cast<AmberMask>(result), Eq(
+            AmberMask(make_shared<AmberMaskAST::Operator>(
+                    AmberMaskAST::Op::NOT,
+                    boost::any_cast<AmberMask>(interpreter.getVariables()["a"])
             ))));
 }
 
@@ -392,9 +392,9 @@ TEST_F(InterpreterGrammarTest, Comments) {
     ASSERT_NO_THROW((result = interpreter.execute(ast)));
     ASSERT_THAT(boost::any_cast<int>(result), Eq(1));
     ASSERT_THAT(boost::any_cast<int>(interpreter.getVariables()["i"]), Eq(1));
-    ASSERT_THAT(boost::any_cast<Atom::Node>(interpreter.getVariables()["a"]), Eq(
-            Atom::Node(make_shared<Atom::atom_name_nums>(
-                    Atom::select_ranges{Atom::numItemType(1, make_pair<uint>(1536, 3))}))
+    ASSERT_THAT(boost::any_cast<AmberMask>(interpreter.getVariables()["a"]), Eq(
+            AmberMask(make_shared<AmberMaskAST::atom_name_nums>(
+                    AmberMaskAST::select_ranges{AmberMaskAST::numItemType(1, make_pair<uint>(1536, 3))}))
     ));
 
 }

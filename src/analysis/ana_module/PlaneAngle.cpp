@@ -15,10 +15,10 @@ PlaneAngle::PlaneAngle() { enable_outfile = true; }
 
 void PlaneAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
-        if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
-        if (Atom::is_match(atom, this->mask4)) this->group4.insert(atom);
+        if (is_match(atom, this->mask1)) this->group1.insert(atom);
+        if (is_match(atom, this->mask2)) this->group2.insert(atom);
+        if (is_match(atom, this->mask3)) this->group3.insert(atom);
+        if (is_match(atom, this->mask4)) this->group4.insert(atom);
     });
 
     for (auto &vec1_atom1 : group1) {
@@ -100,10 +100,10 @@ void PlaneAngle::print(std::ostream &os) {
 }
 
 void PlaneAngle::readInfo() {
-    Atom::select1group(mask1, "Enter mask for atom1 (Ow) : ");
-    Atom::select1group(mask2, "Enter mask for atom2 (Hw) : ");
-    Atom::select1group(mask3, "Enter mask for atom3 (Hw) : ");
-    Atom::select1group(mask4, "Enter mask for atom4 (Metal) : ");
+    select1group(mask1, "Enter mask for atom1 (Ow) : ");
+    select1group(mask2, "Enter mask for atom2 (Hw) : ");
+    select1group(mask3, "Enter mask for atom3 (Hw) : ");
+    select1group(mask4, "Enter mask for atom4 (Metal) : ");
 
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));

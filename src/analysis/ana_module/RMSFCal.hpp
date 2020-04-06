@@ -15,6 +15,7 @@
 #include "AbstractAnalysis.hpp"
 #include "ana_module/RMSDCal.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
 

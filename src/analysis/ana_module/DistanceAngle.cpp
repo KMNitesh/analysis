@@ -15,11 +15,11 @@ void DistanceAngle::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         std::shared_ptr<Atom> atom1, atom2;
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, mask1)) {
+            if (is_match(atom, mask1)) {
                 atom1 = atom;
-            } else if (Atom::is_match(atom, mask2)) {
+            } else if (is_match(atom, mask2)) {
                 atom2 = atom;
-            } else if (Atom::is_match(atom, mask3)) {
+            } else if (is_match(atom, mask3)) {
                 group3.insert(atom);
             }
         }
@@ -101,9 +101,9 @@ void DistanceAngle::printData(std::ostream &os) const {
 }
 
 void DistanceAngle::readInfo() {
-    Atom::select1group(mask1, "Please Enter mask for Atom1(An) > ");
-    Atom::select1group(mask2, "Please Enter mask for Atom2(OAn) > ");
-    Atom::select1group(mask3, "Please Enter mask for Atom3(Ow) > ");
+    select1group(mask1, "Please Enter mask for Atom1(An) > ");
+    select1group(mask2, "Please Enter mask for Atom2(OAn) > ");
+    select1group(mask3, "Please Enter mask for Atom3(Ow) > ");
 
     double rmax = choose(0.0, std::numeric_limits<double>::max(),
                          "Enter Maximum Distance to Accumulate[10.0 Ang]:", Default(10.0));

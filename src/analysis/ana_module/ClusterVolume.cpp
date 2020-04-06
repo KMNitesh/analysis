@@ -25,7 +25,7 @@ void ClusterVolume::processFirstFrame(std::shared_ptr<Frame> &frame) {
         std::exit(1);
     }
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->atom_mask))
+        if (is_match(atom, this->atom_mask))
             this->atom_group.insert(atom);
         else
             this->other_atoms.insert(atom);
@@ -231,7 +231,7 @@ void ClusterVolume::print(std::ostream &os) {
 }
 
 void ClusterVolume::readInfo() {
-    Atom::select1group(atom_mask, "Please enter AmberMask for selected group > ");
+    select1group(atom_mask, "Please enter AmberMask for selected group > ");
     grid_x = choose<int>(1, 10000, "Grid in X dememsion  :  ");
     grid_y = choose<int>(1, 10000, "Grid in Y dememsion  :  ");
     grid_z = choose<int>(1, 10000, "Grid in Z dememsion  :  ");

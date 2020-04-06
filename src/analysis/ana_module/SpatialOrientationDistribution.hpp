@@ -10,6 +10,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -36,7 +37,7 @@ public:
     static double calculateThetaAngle(const std::tuple<double, double, double> &vector);
 
 protected:
-    Atom::AmberMask ids;
+    AmberMask ids;
 
     std::unordered_set<std::shared_ptr<Molecule>> group;
 

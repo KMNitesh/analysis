@@ -8,6 +8,7 @@
 #include <set>
 
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "data_structure/molecule.hpp"
 #include "utils/VectorSelector.hpp"
 

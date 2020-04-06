@@ -15,6 +15,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -28,7 +29,7 @@ public:
 
     void print(std::ostream &os) override;
 
-    void setParameters(const Atom::Node &id1, const Atom::Node &id2, double cutoff, int t_star,
+    void setParameters(const AmberMask &id1, const AmberMask &id2, double cutoff, int t_star,
                        const std::string &outfilename);
 
     void readInfo() override;

@@ -205,8 +205,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               task_list->emplace_back(task);
                               return shared_ptr<AbstractAnalysis>(task);
                           })
-        .addArgument<Atom::Node>("M")
-        .addArgument<Atom::Node>("L")
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
         .addArgument<double, int>("max_dist", 10.0)
         .addArgument<double, int>("width", 0.01)
         .addArgument<bool>("intramol", false)
@@ -252,8 +252,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               cout << task->description();
                               return shared_ptr<AbstractAnalysis>(task);
                           })
-        .addArgument<Atom::Node>("M")
-        .addArgument<Atom::Node>("L")
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
         .addArgument<shared_ptr<VectorSelector>>("vector")
         .addArgument<int>("P")
         .addArgument<double, int>("cutoff")
@@ -275,8 +275,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               task_list->emplace_back(task);
                               return shared_ptr<AbstractAnalysis>(task);
                           })
-        .addArgument<Atom::Node>("component1")
-        .addArgument<Atom::Node>("component2")
+        .addArgument<AmberMask>("component1")
+        .addArgument<AmberMask>("component2")
         .addArgument<Grid>("grid")
         .addArgument<string>("out");
 
@@ -296,8 +296,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               task_list->emplace_back(task);
                               return shared_ptr<AbstractAnalysis>(task);
                           })
-        .addArgument<Atom::Node>("M")
-        .addArgument<Atom::Node>("L")
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
         .addArgument<double, int>("cutoff")
         .addArgument<double, int>("time_star")
         .addArgument<string>("out");
@@ -317,7 +317,7 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               cout << task->description();
                               return shared_ptr<AbstractAnalysis>(task);
                           })
-        .addArgument<Atom::Node>("mask")
+        .addArgument<AmberMask>("mask")
         .addArgument<double, int>("time_increment_ps", 0.1)
         .addArgument<int>("total_frames")
         .addArgument<string>("out");
@@ -339,8 +339,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               cout << task->description();
                               return shared_ptr<AbstractAnalysis>(task);
                           })
-        .addArgument<Atom::Node>("M")
-        .addArgument<Atom::Node>("L")
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
         .addArgument<double, int>("cutoff")
         .addArgument<double, int>("time_increment_ps", 0.1)
         .addArgument<string>("out");
@@ -364,8 +364,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               cout << task->description();
                               return shared_ptr<AbstractAnalysis>(task);
                           })
-        .addArgument<Atom::Node>("M")
-        .addArgument<Atom::Node>("L")
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
         .addArgument<shared_ptr<VectorSelector>>("vector1")
         .addArgument<shared_ptr<VectorSelector>>("vector2")
         .addArgument<double, int>("angle_max", 180)
@@ -373,8 +373,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<double, int>("cutoff1", 0)
         .addArgument<double, int>("cutoff2")
         .addArgument<string>("out");
-    //  const Atom::Node &M,
-    //        const Atom::Node &L,
+    //  const AmberMask &M,
+    //        const AmberMask &L,
     //        std::shared_ptr<VectorSelector> vector1,
     //        std::shared_ptr<VectorSelector> vector2,
     //        double angle_max,
@@ -388,7 +388,7 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                           [](auto &args) -> boost::any {
                               auto vector = make_shared<DipoleVectorSelector>();
                               try {
-                                  vector->setParameters(boost::any_cast<Atom::Node>(get<3>(args.at(0))));
+                                  vector->setParameters(boost::any_cast<AmberMask>(get<3>(args.at(0))));
                               } catch (std::exception &e) {
                                   cerr << e.what() << " for function DipoleVector (" << __FILE__ << ":" << __LINE__
                                        << ")\n";
@@ -396,7 +396,7 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                               }
                               return shared_ptr<VectorSelector>(vector);
                           })
-        .addArgument<Atom::Node>("mask");
+        .addArgument<AmberMask>("mask");
 
     interpreter
         .registerFunction(
@@ -412,9 +412,9 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                 }
                 return shared_ptr<VectorSelector>(vector);
             })
-        .addArgument<Atom::Node>("mask1")
-        .addArgument<Atom::Node>("mask2")
-        .addArgument<Atom::Node>("mask3");
+        .addArgument<AmberMask>("mask1")
+        .addArgument<AmberMask>("mask2")
+        .addArgument<AmberMask>("mask3");
 
     interpreter
         .registerFunction(
@@ -429,8 +429,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                 }
                 return shared_ptr<VectorSelector>(vector);
             })
-        .addArgument<Atom::Node>("mask1")
-        .addArgument<Atom::Node>("mask2");
+        .addArgument<AmberMask>("mask1")
+        .addArgument<AmberMask>("mask2");
 
     interpreter
         .registerFunction("Grid",

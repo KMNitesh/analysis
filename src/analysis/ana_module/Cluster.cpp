@@ -12,6 +12,7 @@
 #include <type_traits>
 
 #include "data_structure/frame.hpp"
+#include "utils/PBCUtils.hpp"
 #include "utils/ThrowAssert.hpp"
 #include "utils/common.hpp"
 
@@ -105,7 +106,8 @@ void Cluster::print(std::ostream &os) {
     for (auto &v : rmsd_list) {
         std::cout << v.i << "  " << v.j << "  " << v.rms << '\n';
         n++;
-        if (n > 99) break;
+        if (n > 99)
+            break;
     }
 
     auto c = do_cluster(rmsd_list, steps, this->cutoff);
@@ -207,7 +209,8 @@ std::vector<Cluster::conf_clust> Cluster::do_cluster(const ForwardRange &rmsd_li
     do {
         bChange = false;
         for (auto &k : rmsd_list) {
-            if (k.rms >= cutoff) break;
+            if (k.rms >= cutoff)
+                break;
             int diff = c[k.j].clust - c[k.i].clust;
             if (diff) {
                 bChange = true;
@@ -234,18 +237,14 @@ std::vector<Cluster::conf_clust> Cluster::initialize_conf_clust_vector(int conf_
 }
 
 void Cluster::readInfo() {
-    Atom::AmberMask atomIndenter;
-    Atom::select1group(atomIndenter, "Please enter group > ");
+    AmberMask atomIndenter;
+    select1group(atomIndenter, "Please enter group > ");
     setSetting(atomIndenter, choose(0.0, static_cast<double>(std::numeric_limits<int>::max()), "Cutoff > "));
 }
 
-void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids)) this->group.push_back(atom);
-    });
-}
+void Cluster::processFirstFrame(std::shared_ptr<Frame> &frame) { group = PBCUtils::find_atoms(ids, frame); }
 
-void Cluster::setSetting(const Atom::AmberMask &atomIndenter, double cutoff) {
+void Cluster::setSetting(const AmberMask &atomIndenter, double cutoff) {
     this->ids = atomIndenter;
     throw_assert(cutoff > 0, "cutoff must postive (cutoff = " << cutoff << ")");
     this->cutoff = cutoff;
@@ -266,8 +265,9 @@ std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std
     return ret;
 }
 
-std::unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
-    const std::vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list) {
+std::unordered_map<int, std::pair<int, double>>
+do_find_medium_in_clust(const std::vector<Cluster::conf_clust> &clusts,
+                        const std::list<Cluster::rmsd_matrix> &rmsd_list) {
     std::unordered_map<int, std::pair<int, double>> ret;
     assert(!clusts.empty());
     std::vector<double> rmsd_sum(clusts.size(), 0.0);

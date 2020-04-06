@@ -14,6 +14,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 class Molecule;
@@ -33,7 +34,7 @@ public:
     [[nodiscard]] static std::string_view title() { return "Find Min distance between two groups"; }
 
 private:
-    Atom::AmberMask amberMask;
+    AmberMask amberMask;
 
     int total_frames = 0;
 

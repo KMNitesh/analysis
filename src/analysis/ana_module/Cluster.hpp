@@ -8,6 +8,7 @@
 #include "AbstractAnalysis.hpp"
 #include "RMSDCal.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/std.hpp"
 
 class Frame;
@@ -69,7 +70,7 @@ protected:
 
     std::list<Cluster::rmsd_matrix> do_calculate_rmsd_list_parallel();
 
-    void setSetting(const Atom::AmberMask &atomIndenter, double cutoff);
+    void setSetting(const AmberMask &atomIndenter, double cutoff);
 };
 
 std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std::vector<Cluster::conf_clust> &clusts);

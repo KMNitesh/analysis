@@ -36,13 +36,15 @@ void CoordinateNumPerFrame::print(std::ostream &os) {
 }
 
 void CoordinateNumPerFrame::readInfo() {
-    Atom::select2group(ids1, ids2);
+    select2group(ids1, ids2);
     dist_cutoff = choose(0.0, std::numeric_limits<double>::max(), "Please enter distance cutoff:");
 }
 
 void CoordinateNumPerFrame::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->ids1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->ids2)) this->group2.insert(atom);
+        if (is_match(atom, this->ids1))
+            this->group1.insert(atom);
+        if (is_match(atom, this->ids2))
+            this->group2.insert(atom);
     });
 }

@@ -13,6 +13,7 @@
 #include "AbstractAnalysis.hpp"
 #include "HBond.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "data_structure/frame.hpp"
 #include "utils/std.hpp"
 

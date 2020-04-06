@@ -13,6 +13,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -46,7 +47,7 @@ private:
     bool check_hbond(const std::shared_ptr<Atom> &donor, const std::shared_ptr<Atom> &hydrogen,
                      const std::shared_ptr<Atom> &acceptor, const std::shared_ptr<Frame> &frame);
 
-    void record_hbond(const std::shared_ptr<Atom> &hydrogen, const std::shared_ptr<Atom> &acceptor,
+    void record_hbond(const std::shared_ptr<Atom> &donor, const std::shared_ptr<Atom> &acceptor,
                       const std::shared_ptr<Frame> &frame);
 
     AmberMask mask1, mask2;
@@ -61,6 +62,8 @@ private:
     double angle_cutoff;
 
     std::deque<std::map<std::array<std::shared_ptr<Atom>, 2>, double>> hbdist;
+
+    std::deque<std::map<std::string, double>> residue_map;
 
     inline static const std::set<Symbol> donor_acceptor_symbols{Symbol::Oxygen, Symbol::Nitrogen, Symbol::Sulfur};
 

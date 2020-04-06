@@ -97,13 +97,13 @@ std::ostream &operator<<(std::ostream &os, const GROStruct &gro) {
     os << gro.atom_num << '\n';
     const boost::format fmt("%5d%-5s%5s%5d%8.3f%8.3f%8.3f\n");
     int atom_no = 0;
-    int residue_num = gro.residues.front().num;
+    // int residue_num = gro.residues.front().num;
     for (const auto &residue : gro.residues) {
         for (const auto &atom : residue.atoms) {
-            os << boost::format(fmt) % (residue_num % 100000) % residue.name % atom.name % (++atom_no % 100000) %
+            os << boost::format(fmt) % (residue.num % 100000) % residue.name % atom.name % (++atom_no % 100000) %
                       atom.coord[0] % atom.coord[1] % atom.coord[2];
         }
-        ++residue_num;
+        // ++residue_num;
     }
     os << boost::format(" %9.5f %9.5f %9.5f\n") % gro.box[0][0] % gro.box[1][1] % gro.box[2][2];
     return os;

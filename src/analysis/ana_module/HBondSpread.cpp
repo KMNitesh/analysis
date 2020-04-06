@@ -18,7 +18,7 @@ HBondSpread::HBondSpread() { enable_outfile = true; }
 void HBondSpread::processFirstFrame(std::shared_ptr<Frame> &frame) {
     for (auto &mol : frame->molecule_list) {
         for (auto &atom : mol->atom_list) {
-            if (Atom::is_match(atom, Ow_atom_mask)) {
+            if (is_match(atom, Ow_atom_mask)) {
                 Ow_mapping[atom->seq] = boost::add_vertex(atom->seq, g);
                 Ow.emplace_back(atom);
                 for (auto &hydro : mol->atom_list) {
@@ -26,7 +26,7 @@ void HBondSpread::processFirstFrame(std::shared_ptr<Frame> &frame) {
                         hydrogens.emplace_back(hydro);
                     }
                 }
-            } else if (Atom::is_match(atom, center_Metal_atom_mask)) {
+            } else if (is_match(atom, center_Metal_atom_mask)) {
                 metal.emplace(atom);
             }
         }
@@ -106,6 +106,6 @@ void HBondSpread::readInfo() {
     angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", Default(30.0));
     auto cutoff = choose(0.0, 100.0, "cutoff :");
     cutoff2 = cutoff * cutoff;
-    Atom::select1group(center_Metal_atom_mask, "Enter mask for Metal > ");
-    Atom::select1group(Ow_atom_mask, "Enter mask for Ow > ");
+    select1group(center_Metal_atom_mask, "Enter mask for Metal > ");
+    select1group(Ow_atom_mask, "Enter mask for Ow > ");
 }

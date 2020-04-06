@@ -125,12 +125,12 @@ void Diffuse::setParameters(const AmberMask &mask, double time_increment_ps, int
 void Diffuse::readInfo() {
     time_increment_ps = choose(0.0, "Enter the Time Increment in Picoseconds [0.1]: ", Default(0.1));
     total_frame_number = choose(1, "Enter the Total Frame Number: ");
-    Atom::select1group(mask, "select group :");
+    select1group(mask, "select group :");
 }
 
 void Diffuse::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, mask)) mols.insert(atom->molecule.lock());
+        if (is_match(atom, mask)) mols.insert(atom->molecule.lock());
     });
 }
 

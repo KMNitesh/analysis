@@ -160,7 +160,7 @@ template <typename Iterator, typename Skipper>
 struct InterpreterGrammar : qi::grammar<Iterator, boost::any(), Skipper> {
     Grammar<Iterator, qi::ascii::space_type> maskParser;
 
-    qi::rule<Iterator, Atom::Node(), Skipper> mask;
+    qi::rule<Iterator,AmberMask(), Skipper> mask;
     qi::rule<Iterator, boost::any(), Skipper> languague, stmt, quoted_string;
     qi::rule<Iterator, boost::any(), Skipper> assign_expr;
     qi::rule<Iterator, boost::any(), qi::locals<std::vector<boost::any>>, Skipper> stmts;

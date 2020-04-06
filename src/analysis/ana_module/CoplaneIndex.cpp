@@ -17,7 +17,7 @@ void CoplaneIndex::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
         for (std::size_t i = 0; i < mask_arrays.size(); ++i) {
             for (std::size_t j = 0; j < mask_arrays[i].size(); ++j) {
-                if (Atom::is_match(atom, mask_arrays[i][j])) {
+                if (is_match(atom, mask_arrays[i][j])) {
                     atom_arrays[i][j] = atom;
                     return;
                 }
@@ -100,7 +100,7 @@ void CoplaneIndex::readInfo() {
 
     for (std::size_t i = 0; i < num; ++i) {
         for (std::size_t j = 0; j < 3; ++j) {
-            Atom::select1group(mask_arrays[i][j], "Enter mark for atom (" + std::to_string(j + 1) + ") of plane (" +
+            select1group(mask_arrays[i][j], "Enter mark for atom (" + std::to_string(j + 1) + ") of plane (" +
                                                       std::to_string(i + 1) + ") > ");
         }
     }

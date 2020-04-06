@@ -26,7 +26,7 @@ void ConvertVelocityToVelocityCharge::processFirstFrame(std::shared_ptr<Frame> &
 
 void ConvertVelocityToVelocityCharge::do_select_mol(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, selected_mols_mask)) {
+        if (is_match(atom, selected_mols_mask)) {
             selected_mols.insert(atom->molecule.lock());
         }
     });
@@ -58,5 +58,5 @@ void ConvertVelocityToVelocityCharge::print(std::ostream &os) {
 
 void ConvertVelocityToVelocityCharge::readInfo() {
     trr_vq_outfilename = choose_file("Enter trr output filename > ").isExist(false).extension("trr");
-    Atom::select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
+    select1group(selected_mols_mask, " Enter molecule mask for dipole calculation > ");
 }

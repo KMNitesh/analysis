@@ -11,9 +11,9 @@ AngleWat::AngleWat() { enable_outfile = true; }
 
 void AngleWat::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (Atom::is_match(atom, this->mask1)) this->group1.insert(atom);
-        if (Atom::is_match(atom, this->mask2)) this->group2.insert(atom);
-        if (Atom::is_match(atom, this->mask3)) this->group3.insert(atom);
+        if (is_match(atom, mask1)) group1.insert(atom);
+        if (is_match(atom, mask2)) group2.insert(atom);
+        if (is_match(atom, mask3)) group3.insert(atom);
     });
     for (auto &vec1_atom1 : group2) {
         for (auto &vec1_atom2 : group3) {
@@ -76,9 +76,9 @@ void AngleWat::print(std::ostream &os) {
 }
 
 void AngleWat::readInfo() {
-    Atom::select1group(mask1, "Enter mask for atom1(Metal) : ");
-    Atom::select1group(mask2, "Enter mask for atom2(Ow) : ");
-    Atom::select1group(mask3, "Enter mask for atom3(Oh) : ");
+    select1group(mask1, "Enter mask for atom1(Metal) : ");
+    select1group(mask2, "Enter mask for atom2(Ow) : ");
+    select1group(mask3, "Enter mask for atom3(Oh) : ");
 
     double angle_max = choose(0.0, 180.0, "Enter Maximum Angle to Accumulate[180.0 degree]:", Default(180.0));
     angle_width = choose(0.0, 180.0, "Enter Width of Angle Bins [0.5 degree]:", Default(0.5));

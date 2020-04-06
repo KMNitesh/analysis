@@ -14,6 +14,7 @@
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
 #include "utils/xtc_writer.hpp"
+#include "dsl/AmberMask.hpp"
 
 class RMSDCal : public AbstractAnalysis {
 public:

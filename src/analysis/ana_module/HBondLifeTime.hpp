@@ -7,6 +7,7 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/std.hpp"
 
 class Frame;
@@ -28,7 +29,7 @@ public:
     }
 
 protected:
-    Atom::Node water_mask;
+    AmberMask water_mask;
 
     double dist_R_cutoff;
     double angle_HOO_cutoff;
