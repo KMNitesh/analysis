@@ -1,4 +1,5 @@
 #include "EnergyCalculator.hpp"
+#include "PBCUtils.hpp"
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"
 
@@ -60,11 +61,6 @@ EnergyCalculator::EnergyTerm EnergyCalculator::calculate_energy(const std::share
 }
 
 void EnergyCalculator::setMask(AmberMask &mask1, AmberMask &mask2, const std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list, [&](const std::shared_ptr<Atom> &atom) {
-        if (is_match(atom, mask1)) {
-            group1.push_back(atom);
-        } else if (is_match(atom, mask2)) {
-            group2.push_back(atom);
-        }
-    });
+    group1 = PBCUtils::find_atoms(mask1, frame);
+    group2 = PBCUtils::find_atoms(mask2, frame);
 }
