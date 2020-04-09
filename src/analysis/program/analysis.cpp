@@ -24,6 +24,7 @@
 #include "others/HOOH_Calculator.hpp"
 #include "others/ITS_PostProcess.hpp"
 #include "others/ITS_Reweight.hpp"
+#include "others/MMPBSA.hpp"
 #include "others/MultiwfnAIMDriver.hpp"
 #include "others/NBOOrbitalComposition.hpp"
 #include "others/NBOSpin.hpp"
@@ -169,7 +170,8 @@ int main(int argc, char *argv[]) {
         [] { GaussianLogCoordinateFormat::process(); },
         [] { HOOH_Calculator::process(); },
         [] { GroRenumber::process(); },
-        [] { BondEnergyCompare::process(); }};
+        [] { BondEnergyCompare::process(); },
+        [&] { MMPBSA::process(getTopologyFilename(vm)); }};
 
     auto mainMenu = [&] {
         if (!keep_silent) {
@@ -199,7 +201,8 @@ int main(int argc, char *argv[]) {
                       << "(22) " << GaussianLogCoordinateFormat::title() << '\n'
                       << "(23) " << HOOH_Calculator::title() << '\n'
                       << "(24) " << GroRenumber::title() << '\n'
-                      << "(25) " << BondEnergyCompare::title() << '\n';
+                      << "(25) " << BondEnergyCompare::title() << '\n'
+                      << "(26) " << MMPBSA::title() << '\n';
         }
         return choose<int>(0, actions.size() - 1, "select : ");
     };

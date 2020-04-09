@@ -18,10 +18,10 @@
 #include <boost/variant.hpp>
 
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
+#include "dsl/MacroRules.hpp"
 #include "utils/ProgramConfiguration.hpp"
 #include "utils/common.hpp"
-#include "dsl/MacroRules.hpp"
-#include "dsl/AmberMask.hpp"
 
 namespace qi = boost::spirit::qi;
 namespace fusion = boost::fusion;
@@ -30,9 +30,10 @@ namespace phoenix = boost::phoenix;
 template <typename Iterator, typename Skipper> struct Grammar : qi::grammar<Iterator, AmberMask(), Skipper> {
     Grammar();
 
-    qi::rule<Iterator, boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, AmberMaskAST::Name>(),
-             Skipper>
+    qi::rule<Iterator,
+             boost::variant<fusion::vector<uint, boost::optional<std::pair<uint, int>>>, AmberMaskAST::Name>(), Skipper>
         select_item_rule;
+    qi::rule<Iterator, boost::optional<std::pair<uint, int>>(), Skipper> num_range;
 
     qi::rule<Iterator, AmberMask(), Skipper> residue_select_rule;
     qi::rule<Iterator, AmberMask(), Skipper> molecule_select_rule;
@@ -106,14 +107,26 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
             }
         })];
 
-    residue_select_rule = ':' > (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::residue_name_nums>(_1)];
+    num_range = ("-" > (uint_ >> -("#" > int_)))[([](auto &attr, auto &context, bool &pass) {
+        auto step = fusion::at_c<1>(attr) ? fusion::at_c<1>(attr).get() : 1;
+        if (step == 0) {
+            pass = false;
+            return;
+        }
+        fusion::at_c<0>(context.attributes) = std::make_pair(fusion::at_c<0>(attr), step);
+    })];
+
+    residue_select_rule =
+        ':' > ('^' >> ((uint_ >> -num_range) % ",")[_val = make_shared_<AmberMaskAST::real_residue_nums>(_1)] |
+               (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::residue_name_nums>(_1)]);
 
     molecule_select_rule =
         '$' > ((uint_ >> -('-' > uint_ >> -('#' > int_))) % ',')[_val = make_shared_<AmberMaskAST::molecule_nums>(_1)];
 
-    nametype_select_rule = '@' > (('%' > (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::atom_types>(_1)]) |
-                                  ('/' > (str_with_wildcard % ',')[_val = make_shared_<AmberMaskAST::atom_element_names>(_1)]) |
-                                  (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::atom_name_nums>(_1)]);
+    nametype_select_rule =
+        '@' > (('%' > (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::atom_types>(_1)]) |
+               ('/' > (str_with_wildcard % ',')[_val = make_shared_<AmberMaskAST::atom_element_names>(_1)]) |
+               (select_item_rule % ',')[_val = make_shared_<AmberMaskAST::atom_name_nums>(_1)]);
 
 #define DISTINCT(x) distinct(char_("a-zA-Z_0-9") | char_("-+"))[x]
 
@@ -147,9 +160,11 @@ Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
 
     term = ("!" > factor[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::NOT, _1)]) | factor[_val = _1];
 
-    expr = term[_val = _1] > *("&" > term[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, _val, _1)]);
+    expr =
+        term[_val = _1] > *("&" > term[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::AND, _val, _1)]);
 
-    maskParser = expr[_val = _1] > *("|" > expr[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::OR, _val, _1)]);
+    maskParser =
+        expr[_val = _1] > *("|" > expr[_val = make_shared_<AmberMaskAST::Operator>(AmberMaskAST::Op::OR, _val, _1)]);
 
     root = eps > maskParser;
 

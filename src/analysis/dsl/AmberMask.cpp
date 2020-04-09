@@ -22,6 +22,8 @@ struct AtomEqual : boost::static_visitor<bool> {
 
     bool operator()(const boost::blank &) const { return false; };
 
+    bool operator()(const std::shared_ptr<real_residue_nums> &residues) const;
+
     bool operator()(const std::shared_ptr<residue_name_nums> &residues) const;
 
     bool operator()(const std::shared_ptr<molecule_nums> &molecules) const;
@@ -55,6 +57,14 @@ bool operator==(const Name &name1, const Name &name2) { return name1.name == nam
 
 bool operator==(const std::shared_ptr<residue_name_nums> &residues1,
                 const std::shared_ptr<residue_name_nums> &residues2) {
+    if (residues1 && residues2) {
+        return residues1->val == residues2->val;
+    }
+    return false;
+}
+
+bool operator==(const std::shared_ptr<real_residue_nums> &residues1,
+                const std::shared_ptr<real_residue_nums> &residues2) {
     if (residues1 && residues2) {
         return residues1->val == residues2->val;
     }
@@ -136,6 +146,28 @@ void print::operator()(const std::shared_ptr<residue_name_nums> &residues) const
             std::cout << ",";
         }
         boost::apply_visitor(p, i);
+    }
+    std::cout << std::endl;
+}
+
+void print::operator()(const std::shared_ptr<real_residue_nums> &residues) const {
+    indent(space_num);
+    bool first = true;
+    for (auto &i : residues->val) {
+        if (first) {
+            std::cout << "real_residues : ";
+            first = false;
+        } else {
+            std::cout << ",";
+        }
+        std::cout << fusion::at_c<0>(i);
+        auto op = fusion::at_c<1>(i);
+        if (op) {
+            std::cout << "-" << op.get().first;
+            if (op.get().second != 1) {
+                std::cout << '#' << op.get().second;
+            }
+        }
     }
     std::cout << std::endl;
 }
@@ -377,6 +409,37 @@ bool AtomEqual::operator()(const std::shared_ptr<residue_name_nums> &residues) c
 
         for (auto &i : residues->val) {
             if (boost::apply_visitor(equal, i))
+                return true;
+        }
+    }
+    return false;
+}
+
+bool AtomEqual::operator()(const std::shared_ptr<real_residue_nums> &residues) const {
+    if (residues) {
+        if (!atom->real_residue_number.has_value()) {
+            throw std::runtime_error("residue selection syntax is invaild in current context");
+        }
+
+        auto check = [this](const fusion::vector<uint, boost::optional<std::pair<uint, int>>> &i) {
+            auto op = fusion::at_c<1>(i);
+            auto res_num = atom->real_residue_number.get();
+            if (op) {
+                if (op.get().first >= fusion::at_c<0>(i)) {
+                    return res_num >= fusion::at_c<0>(i) and res_num <= op.get().first and
+                           ((res_num - fusion::at_c<0>(i)) % op.get().second == 0);
+                } else {
+                    return res_num >= op.get().first and res_num <= fusion::at_c<0>(i) and
+                           ((res_num - fusion::at_c<0>(i)) % op.get().second == 0);
+                }
+            } else {
+                return res_num == fusion::at_c<0>(i);
+            }
+            return false;
+        };
+
+        for (auto &i : residues->val) {
+            if (check(i))
                 return true;
         }
     }

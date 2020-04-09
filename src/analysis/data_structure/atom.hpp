@@ -61,6 +61,7 @@ public:
 
     boost::optional<std::string> residue_name;
     boost::optional<uint> residue_num;
+    boost::optional<uint> real_residue_number; // from 1
 
     boost::optional<std::string> atom_symbol;
 

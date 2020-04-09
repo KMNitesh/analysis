@@ -41,6 +41,12 @@ struct residue_name_nums {
     explicit residue_name_nums(const select_ranges &val) : val(val) {}
 };
 
+struct real_residue_nums {
+    std::vector<numItemType> val;
+
+    explicit real_residue_nums(const std::vector<numItemType> &val) : val(val) {}
+};
+
 struct molecule_nums {
     using Attr = boost::fusion::vector<uint, boost::optional<boost::fusion::vector<uint, boost::optional<int>>>>;
     std::vector<Attr> val;
@@ -78,9 +84,10 @@ struct atom_element_names {
 
 struct Operator;
 
-using AmberMask = boost::variant<boost::blank, std::shared_ptr<Operator>, std::shared_ptr<residue_name_nums>,
-                                 std::shared_ptr<molecule_nums>, std::shared_ptr<atom_name_nums>,
-                                 std::shared_ptr<atom_types>, std::shared_ptr<atom_element_names>>;
+using AmberMask =
+    boost::variant<boost::blank, std::shared_ptr<Operator>, std::shared_ptr<residue_name_nums>,
+                   std::shared_ptr<real_residue_nums>, std::shared_ptr<molecule_nums>, std::shared_ptr<atom_name_nums>,
+                   std::shared_ptr<atom_types>, std::shared_ptr<atom_element_names>>;
 
 enum class Op { NOT, AND, OR };
 
@@ -111,6 +118,9 @@ bool operator==(const Name &name1, const Name &name2);
 bool operator==(const std::shared_ptr<residue_name_nums> &residues1,
                 const std::shared_ptr<residue_name_nums> &residues2);
 
+bool operator==(const std::shared_ptr<real_residue_nums> &residues1,
+                const std::shared_ptr<real_residue_nums> &residues2);
+
 bool operator==(const std::shared_ptr<molecule_nums> &molecules1, const std::shared_ptr<molecule_nums> &molecules2);
 
 bool operator==(const std::shared_ptr<atom_name_nums> &names1, const std::shared_ptr<atom_name_nums> &names2);
@@ -131,6 +141,8 @@ struct print : boost::static_visitor<> {
     void operator()(const boost::blank &) const {};
 
     void operator()(const std::shared_ptr<residue_name_nums> &residues) const;
+
+    void operator()(const std::shared_ptr<real_residue_nums> &residues) const;
 
     void operator()(const std::shared_ptr<molecule_nums> &molecules) const;
 

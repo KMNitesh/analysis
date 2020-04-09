@@ -24,6 +24,11 @@ namespace phoenix = boost::phoenix;
 BOOST_FUSION_ADAPT_ADT(std::shared_ptr<AmberMaskAST::residue_name_nums>,
                        (AmberMaskAST::select_ranges, AmberMaskAST::select_ranges, obj->val, /**/))
 
+BOOST_FUSION_ADAPT_ADT(std::shared_ptr<AmberMaskAST::real_residue_nums>,
+                       (std::vector<AmberMaskAST::numItemType>, const std::vector<AmberMaskAST::numItemType> &,
+                        obj->val,
+                        /**/))
+
 BOOST_FUSION_ADAPT_ADT(std::shared_ptr<AmberMaskAST::molecule_nums>,
                        (std::vector<AmberMaskAST::molecule_nums::Attr>, std::vector<AmberMaskAST::molecule_nums::Attr>,
                         obj->val,
@@ -49,6 +54,7 @@ template <typename Iterator> struct GeneratorGrammar : karma::grammar<Iterator, 
     karma::rule<Iterator, AmberMaskAST::Name()> name;
     karma::rule<Iterator, fusion::vector<uint, boost::optional<std::pair<uint, int>>>()> num_range;
     karma::rule<Iterator, int()> step_num;
+    karma::rule<Iterator, std::shared_ptr<AmberMaskAST::real_residue_nums>()> real_residue_select_rule;
     karma::rule<Iterator, std::shared_ptr<AmberMaskAST::residue_name_nums>()> residue_select_rule;
     karma::rule<Iterator, std::shared_ptr<AmberMaskAST::molecule_nums>()> molecule_select_rule;
     karma::rule<Iterator, std::shared_ptr<AmberMaskAST::atom_name_nums>()> atom_name_select_rule;
@@ -73,6 +79,7 @@ template <typename Iterator> struct GeneratorGrammar : karma::grammar<Iterator, 
         using karma::uint_;
         using phoenix::at_c;
 
+        real_residue_select_rule = ":^" << (num_range % ',')[_1 = at_c<0>(_val)];
         residue_select_rule = ":" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
         molecule_select_rule = '$' << ((uint_ << -('-' << uint_ << -step_num)) % ',')[_1 = at_c<0>(_val)];
         atom_name_select_rule = "@" << (select_item_rule % ",")[_1 = at_c<0>(_val)];
@@ -96,7 +103,8 @@ template <typename Iterator> struct GeneratorGrammar : karma::grammar<Iterator, 
                eps(_val == AMBERMASK::SideChain_H) << "SideChain-H" | eps(_val == AMBERMASK::DNA) << "DNA" |
                eps(_val == AMBERMASK::DNA_H) << "DNA-H" | eps(_val == AMBERMASK::RNA) << "RNA" |
                eps(_val == AMBERMASK::RNA_H) << "RNA-H" | eps(_val == AMBERMASK::Water) << "Water" | atom_element_rule |
-               Operator(_r1) | atom_name_select_rule | atom_type_rule | residue_select_rule | molecule_select_rule;
+               Operator(_r1) | atom_name_select_rule | atom_type_rule | real_residue_select_rule | residue_select_rule |
+               molecule_select_rule;
 
         start = expr(0)[_1 = _val];
 
