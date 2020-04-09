@@ -46,7 +46,7 @@ public:
     struct Residue {
         enum TYPE { R, L } location;
         std::string name;
-        int no;
+        uint no;
     };
 
     friend std::istream &operator>>(std::istream &, std::vector<std::pair<Residue, ResidueComponent>> &);

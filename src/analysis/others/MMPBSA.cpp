@@ -69,6 +69,18 @@ std::ostream &operator<<(std::ostream &os,
     return os;
 }
 
+namespace {
+
+template <typename ForwardRange, typename T, typename Compare = std::less<>>
+auto binary_find(const ForwardRange &rng, const T &value, Compare comp = {}) {
+    auto first = begin(rng);
+    auto last = end(rng);
+    first = std::lower_bound(first, last, value, comp);
+    return first != last && !comp(value, *first) ? first : last;
+}
+
+} // namespace
+
 void MMPBSA::process(const std::string &topology_filename) {
 
     std::vector<std::pair<Residue, ResidueComponent>> all_residues_total;
@@ -85,7 +97,7 @@ void MMPBSA::process(const std::string &topology_filename) {
     std::cout << all_residues_total;
 
     std::cout << std::string(50, '#') << '\n';
-    std::cout << "Result Combines\n";
+    std::cout << "Result Combination\n";
     std::cout << std::string(50, '#') << '\n';
 
     std::map<std::string, ResidueComponent> combine_map;
@@ -96,8 +108,16 @@ void MMPBSA::process(const std::string &topology_filename) {
 
     for (auto &[residue, e] : all_residues_total) {
         if (residue.location == Residue::R) {
-            if (auto it = frame->real_residue_num_map.find(residue.no); it != end(frame->real_residue_num_map)) {
-                auto key = it->second->residue_name.get() + std::to_string(it->second->residue_num.get());
+            if (auto it = binary_find(frame->atom_list, residue.no,
+                                      []<typename T>(const T &lhs, const auto &rhs) {
+                                          if constexpr (std::is_same_v<T, uint>) {
+                                              return lhs < rhs->real_residue_number.get();
+                                          } else {
+                                              return lhs->real_residue_number.get() < rhs;
+                                          }
+                                      });
+                it != end(frame->atom_list)) {
+                auto key = (*it)->residue_name.get() + std::to_string((*it)->residue_num.get());
                 if (auto it2 = combine_map.find(key); it2 != end(combine_map)) {
                     it2->second += e;
                 } else {
