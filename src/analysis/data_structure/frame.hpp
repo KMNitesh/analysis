@@ -73,6 +73,8 @@ public:
     std::map<std::array<std::shared_ptr<Atom>, 3>, harmonic> f_angle_params;
     std::multimap<std::array<std::shared_ptr<Atom>, 4>, pdihs> f_dihedral_params;
     std::multimap<std::array<std::shared_ptr<Atom>, 4>, pdihs> f_improper_dihedral_params;
+
+    std::map<uint, std::shared_ptr<Atom>> real_residue_num_map;
 };
 
 #endif // TINKER_FRAME_HPP

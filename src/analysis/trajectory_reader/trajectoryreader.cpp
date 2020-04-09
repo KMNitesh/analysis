@@ -156,5 +156,24 @@ std::shared_ptr<Frame> TrajectoryReader::readTopology() {
     for (const auto &element : frame->molecule_list | boost::adaptors::indexed(1)) {
         element.value()->sequence = element.index();
     }
+    if (frame->atom_list.front()->residue_num.has_value()) {
+        auto resideu_name = frame->atom_list.front()->residue_name.get();
+        auto residue_num = frame->atom_list.front()->residue_num.get();
+        auto molecule = frame->atom_list.front()->molecule.lock();
+
+        uint current_real_residue_number = 1;
+        frame->real_residue_num_map.emplace(current_real_residue_number, frame->atom_list.front());
+        for (auto &atom : frame->atom_list) {
+            if (!(resideu_name == atom->residue_name.get() and residue_num == atom->residue_num.get() and
+                  molecule == atom->molecule.lock())) {
+                ++current_real_residue_number;
+                resideu_name = atom->residue_name.get();
+                residue_num = atom->residue_num.get();
+                molecule = atom->molecule.lock();
+                frame->real_residue_num_map.emplace(current_real_residue_number, atom);
+            }
+            atom->real_residue_number = current_real_residue_number;
+        }
+    }
     return frame;
 }
