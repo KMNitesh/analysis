@@ -51,7 +51,7 @@ public:
 
     friend std::istream &operator>>(std::istream &, std::vector<std::pair<Residue, ResidueComponent>> &);
 
-    friend std::ostream &operator<<(std::ostream &os, const std::vector<std::pair<Residue, ResidueComponent>>);
+    friend std::ostream &operator<<(std::ostream &, const std::vector<std::pair<Residue, ResidueComponent>> &);
 };
 
 #endif // TINKER_MMPBSA_HPP

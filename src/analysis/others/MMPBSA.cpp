@@ -46,7 +46,7 @@ std::istream &operator>>(std::istream &is,
 }
 
 std::ostream &operator<<(std::ostream &os,
-                         const std::vector<std::pair<MMPBSA::Residue, MMPBSA::ResidueComponent>> all_residues_total) {
+                         const std::vector<std::pair<MMPBSA::Residue, MMPBSA::ResidueComponent>> &all_residues_total) {
     os << boost::format("%-10s  %10s %10s %10s %10s %10s\n") % "Residue" % "vdW" % "Ele" % "PolarSolv" % "NonPol_Sov" %
               "Total";
     const boost::format fmt{"%-10s %10.3f %10.3f %10.3f %10.3f %10.3f\n"};
@@ -58,7 +58,7 @@ std::ostream &operator<<(std::ostream &os,
 }
 
 std::ostream &operator<<(std::ostream &os,
-                         const std::vector<std::pair<std::string, MMPBSA::ResidueComponent>> all_residues_total) {
+                         const std::vector<std::pair<std::string, MMPBSA::ResidueComponent>> &all_residues_total) {
     os << boost::format("%-10s  %10s %10s %10s %10s %10s\n") % "Residue" % "vdW" % "Ele" % "PolarSolv" % "NonPol_Sov" %
               "Total";
     const boost::format fmt{"%-10s %10.3f %10.3f %10.3f %10.3f %10.3f\n"};
