@@ -25,8 +25,9 @@
 17.  Co-plane Index (CPI)
 18.  RMSD & RMSF with outputting superposed structures
 19.  Use AmberMask for selecting Residues, Atoms in topology structure
-20.  Use Domain Specific Language(DSL) script to drive analysis process 
-21.  Other practical utilities for using Tinker
+20.  Use Domain Specific Language(DSL) script to drive analysis process
+21.  Use SQL like language to view topology file content 
+22.  Other practical utilities for using Tinker
 
 #### Typical QM analysis functions
 
