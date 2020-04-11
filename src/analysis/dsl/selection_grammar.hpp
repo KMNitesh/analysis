@@ -121,7 +121,7 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
 
     primary_condition.name("condition");
     like_condition.name("condition");
-    regex_conditon.name("condition");
+    regex_condiiton.name("condition");
     between_condition.name("condition");
     in_condition.name("condition");
     combine_condtion_factor.name("condition");
