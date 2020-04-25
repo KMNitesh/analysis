@@ -30,10 +30,14 @@ public:
     }
 
 private:
-    std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 2>, Frame::harmonic> *> bonds;
-    std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 3>, Frame::harmonic> *> angles;
-    std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 4>, Frame::pdihs> *> dihedrals;
-    std::vector<const std::pair<const std::array<std::shared_ptr<Atom>, 4>, Frame::pdihs> *> improper_dihedrals;
+    std::vector<std::reference_wrapper<const std::pair<const std::array<std::shared_ptr<Atom>, 2>, Frame::harmonic>>>
+        bonds;
+    std::vector<std::reference_wrapper<const std::pair<const std::array<std::shared_ptr<Atom>, 3>, Frame::harmonic>>>
+        angles;
+    std::vector<std::reference_wrapper<const std::pair<const std::array<std::shared_ptr<Atom>, 4>, Frame::pdihs>>>
+        dihedrals;
+    std::vector<std::reference_wrapper<const std::pair<const std::array<std::shared_ptr<Atom>, 4>, Frame::pdihs>>>
+        improper_dihedrals;
 };
 
 inline void to_json(nlohmann::json &j, const BondEnergyCalculator::Term &term) {
