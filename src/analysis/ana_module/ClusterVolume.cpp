@@ -39,9 +39,9 @@ void ClusterVolume::processFirstFrame(std::shared_ptr<Frame> &frame) {
     }
 }
 
-void ClusterVolume::fill_atom(boost::multi_array<ATOM_Category, 3> *grid, double grid_x_step, double grid_y_step,
-                              double grid_z_step, ATOM_Category category, double x, double y, double z,
-                              double radii) const {
+void ClusterVolume::fill_atom(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid, double grid_x_step,
+                              double grid_y_step, double grid_z_step, ATOM_Category category, double x, double y,
+                              double z, double radii) const {
     auto radii2 = radii * radii;
     int radii_x = std::ceil(radii / grid_x_step);
     int radii_y = std::ceil(radii / grid_y_step);
@@ -56,11 +56,14 @@ void ClusterVolume::fill_atom(boost::multi_array<ATOM_Category, 3> *grid, double
 
                 if ((xr * xr + yr * yr + zr * zr) < radii2) {
                     auto box_index_x = int((x + xr) / grid_x_step) % grid_x;
-                    while (box_index_x < 0) box_index_x += grid_x;
+                    while (box_index_x < 0)
+                        box_index_x += grid_x;
                     auto box_index_y = int((y + yr) / grid_y_step) % grid_y;
-                    while (box_index_y < 0) box_index_y += grid_y;
+                    while (box_index_y < 0)
+                        box_index_y += grid_y;
                     auto box_index_z = int((z + zr) / grid_z_step) % grid_z;
-                    while (box_index_z < 0) box_index_z += grid_z;
+                    while (box_index_z < 0)
+                        box_index_z += grid_z;
 
                     assert(box_index_x >= 0 && box_index_x < grid_x);
                     assert(box_index_y >= 0 && box_index_y < grid_y);
@@ -80,10 +83,10 @@ void ClusterVolume::process(std::shared_ptr<Frame> &frame) {
     work_body(grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume, nframe);
 }
 
-void ClusterVolume::work_body(boost::multi_array<ATOM_Category, 3> *grid,
-                              boost::multi_array<double, 2> *atom_group_array,
-                              boost::multi_array<double, 2> *other_atom_array, double grid_x_step, double grid_y_step,
-                              double grid_z_step, double total_volume, int nframe) {
+void ClusterVolume::work_body(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid,
+                              std::shared_ptr<boost::multi_array<double, 2>> &atom_group_array,
+                              std::shared_ptr<boost::multi_array<double, 2>> &other_atom_array, double grid_x_step,
+                              double grid_y_step, double grid_z_step, double total_volume, int nframe) {
     double total_grid_points = grid_x * grid_y * grid_z;
     auto [num_grid_point_before_fill, num_grid_point_after_fill] =
         do_grid(grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step);
@@ -99,11 +102,11 @@ void ClusterVolume::work_body(boost::multi_array<ATOM_Category, 3> *grid,
     accessor.release();
 }
 
-std::pair<std::size_t, std::size_t> ClusterVolume::do_grid(boost::multi_array<ATOM_Category, 3> *grid,
-                                                           boost::multi_array<double, 2> *atom_group_array,
-                                                           boost::multi_array<double, 2> *other_atom_array,
-                                                           double grid_x_step, double grid_y_step,
-                                                           double grid_z_step) const {
+std::pair<std::size_t, std::size_t>
+ClusterVolume::do_grid(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid,
+                       std::shared_ptr<boost::multi_array<double, 2>> &atom_group_array,
+                       std::shared_ptr<boost::multi_array<double, 2>> &other_atom_array, double grid_x_step,
+                       double grid_y_step, double grid_z_step) const {
     for (auto index : boost::irange(radii_for_other_atoms.size())) {
         fill_atom(grid, grid_x_step, grid_y_step, grid_z_step, ATOM_Category::OTHER, (*other_atom_array)[index][0],
                   (*other_atom_array)[index][1], (*other_atom_array)[index][2], radii_for_other_atoms[index]);
@@ -120,8 +123,8 @@ std::pair<std::size_t, std::size_t> ClusterVolume::do_grid(boost::multi_array<AT
     return {num_grid_point_before_fill, num_grid_point_after_fill};
 }
 
-bool ClusterVolume::fill_space(boost::multi_array<ATOM_Category, 3> *grid, double grid_x_step, double grid_y_step,
-                               double grid_z_step) const {
+bool ClusterVolume::fill_space(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid, double grid_x_step,
+                               double grid_y_step, double grid_z_step) const {
     bool updated = false;
 
     auto neighs = generate_neighbor_grids(grid_x_step, grid_y_step, grid_z_step);
@@ -181,7 +184,7 @@ bool ClusterVolume::fill_space(boost::multi_array<ATOM_Category, 3> *grid, doubl
     return updated;
 }
 
-size_t ClusterVolume::countFilledGridPoints(boost::multi_array<ATOM_Category, 3> *grid) const {
+size_t ClusterVolume::countFilledGridPoints(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid) const {
     std::size_t num_grid_point = 0;
     for (int i = 0; i < grid_x; i++) {
         for (int j = 0; j < grid_y; j++) {
@@ -286,11 +289,11 @@ bool ClusterVolume::enable_paralel_while_impl() { return true; }
 ClusterVolume::argument_type ClusterVolume::preprocess(std::shared_ptr<Frame> &frame) {
     current_frame_num++;
 
-    auto grid = new boost::multi_array<ATOM_Category, 3>(boost::extents[grid_x][grid_y][grid_z]);
+    auto grid = std::make_shared<boost::multi_array<ATOM_Category, 3>>(boost::extents[grid_x][grid_y][grid_z]);
     std::fill_n(grid->data(), grid->num_elements(), ATOM_Category::EMPTY);
 
-    auto atom_group_array = new boost::multi_array<double, 2>(boost::extents[atom_group.size()][3]);
-    auto other_atom_array = new boost::multi_array<double, 2>(boost::extents[other_atoms.size()][3]);
+    auto atom_group_array = std::make_shared<boost::multi_array<double, 2>>(boost::extents[atom_group.size()][3]);
+    auto other_atom_array = std::make_shared<boost::multi_array<double, 2>>(boost::extents[other_atoms.size()][3]);
 
     int i = 0;
     for (auto &atom : atom_group) {
@@ -312,9 +315,15 @@ ClusterVolume::argument_type ClusterVolume::preprocess(std::shared_ptr<Frame> &f
     double grid_y_step = b_axis / grid_y;
     double grid_z_step = c_axis / grid_z;
 
-    auto total_volume = frame->volume();  // Ang^3
-    return {grid,        atom_group_array, other_atom_array, grid_x_step,
-            grid_y_step, grid_z_step,      total_volume,     current_frame_num};
+    auto total_volume = frame->volume(); // Ang^3
+    return {std::move(grid),
+            std::move(atom_group_array),
+            std::move(other_atom_array),
+            grid_x_step,
+            grid_y_step,
+            grid_z_step,
+            total_volume,
+            current_frame_num};
 }
 
 void ClusterVolume::do_parallel_while_impl(std::function<std::shared_ptr<Frame>()> func) {
@@ -332,7 +341,7 @@ bool ClusterVolume::FrameStream::pop_if_present(ClusterVolume::argument_type &it
         if (parent->current_frame_num == 0) {
             parent->processFirstFrame(frame);
         }
-        item = parent->preprocess(frame);
+        item = std::move(parent->preprocess(frame));
         return true;
     } else {
         return false;
@@ -340,12 +349,8 @@ bool ClusterVolume::FrameStream::pop_if_present(ClusterVolume::argument_type &it
 }
 
 void ClusterVolume::ApplyBody::operator()(ClusterVolume::argument_type &item) const {
-    auto &[grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume, nframe] =
-        item;
+    auto [grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume, nframe] = item;
 
     parent->work_body(grid, atom_group_array, other_atom_array, grid_x_step, grid_y_step, grid_z_step, total_volume,
                       nframe);
-    delete std::get<0>(item);
-    delete std::get<1>(item);
-    delete std::get<2>(item);
 }

@@ -13,8 +13,8 @@
 #include "AbstractAnalysis.hpp"
 #include "HBond.hpp"
 #include "data_structure/atom.hpp"
-#include "dsl/AmberMask.hpp"
 #include "data_structure/frame.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/std.hpp"
 
 class ClusterVolume : public AbstractAnalysis {
@@ -33,14 +33,17 @@ public:
 
     enum class ATOM_Category : uint8_t { EMPTY, DEST, OTHER };
 
-    using argument_type = std::tuple<boost::multi_array<ATOM_Category, 3> *, boost::multi_array<double, 2> *,
-                                     boost::multi_array<double, 2> *, double, double, double, double, int>;
+    using argument_type =
+        std::tuple<std::shared_ptr<boost::multi_array<ATOM_Category, 3>>,
+                   std::shared_ptr<boost::multi_array<double, 2>>, std::shared_ptr<boost::multi_array<double, 2>>,
+                   double, double, double, double, int>;
 
     argument_type preprocess(std::shared_ptr<Frame> &frame);
 
-    void work_body(boost::multi_array<ATOM_Category, 3> *grid, boost::multi_array<double, 2> *atom_group_array,
-                   boost::multi_array<double, 2> *other_atom_array, double grid_x_step, double grid_y_step,
-                   double grid_z_step, double total_volume, int nframe);
+    void work_body(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid,
+                   std::shared_ptr<boost::multi_array<double, 2>> &atom_group_array,
+                   std::shared_ptr<boost::multi_array<double, 2>> &other_atom_array, double grid_x_step,
+                   double grid_y_step, double grid_z_step, double total_volume, int nframe);
 
 protected:
     bool enable_paralel_while_impl() override;
@@ -49,7 +52,7 @@ protected:
 
     static double getVdwRadii(const std::shared_ptr<Atom> &atom);
 
-    void fill_atom(boost::multi_array<ATOM_Category, 3> *grid, double grid_x_step, double grid_y_step,
+    void fill_atom(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid, double grid_x_step, double grid_y_step,
                    double grid_z_step, ATOM_Category category, double x, double y, double z, double radii) const;
 
     std::vector<std::tuple<int, int, int>> generate_neighbor_grids(double grid_x_step, double grid_y_step,
@@ -69,17 +72,17 @@ protected:
         {Symbol::Hydrogen, 1.10},   {Symbol::Carbon, 1.70}, {Symbol::Nitrogen, 1.55}, {Symbol::Oxygen, 1.52},
         {Symbol::Phosphorus, 1.80}, {Symbol::Sulfur, 1.80}, {Symbol::Sodium, 2.27}};
 
-    size_t countFilledGridPoints(boost::multi_array<ATOM_Category, 3> *grid) const;
+    size_t countFilledGridPoints(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid) const;
 
-    bool fill_space(boost::multi_array<ATOM_Category, 3> *grid, double grid_x_step, double grid_y_step,
+    bool fill_space(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid, double grid_x_step, double grid_y_step,
                     double grid_z_step) const;
 
     std::vector<double> radii_for_atom_group, radii_for_other_atoms;
 
-    std::pair<std::size_t, std::size_t> do_grid(boost::multi_array<ATOM_Category, 3> *grid,
-                                                boost::multi_array<double, 2> *atom_group_array,
-                                                boost::multi_array<double, 2> *other_atom_array, double grid_x_step,
-                                                double grid_y_step, double grid_z_step) const;
+    std::pair<std::size_t, std::size_t> do_grid(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid,
+                                                std::shared_ptr<boost::multi_array<double, 2>> &atom_group_array,
+                                                std::shared_ptr<boost::multi_array<double, 2>> &other_atom_array,
+                                                double grid_x_step, double grid_y_step, double grid_z_step) const;
 
     int current_frame_num = 0;
 
@@ -110,4 +113,4 @@ protected:
     friend class ApplyBody;
 };
 
-#endif  // TINKER_CLUSTERVOLUME_HPP
+#endif // TINKER_CLUSTERVOLUME_HPP
