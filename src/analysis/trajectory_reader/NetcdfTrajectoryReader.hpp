@@ -3,7 +3,6 @@
 
 #include "TrajectoryInterface.hpp"
 #include "utils/AmberNetcdf.h"
-#include "utils/amber_netcdf.h"
 
 class NetcdfTrajectoryReader : public TrajectoryInterface {
 public:

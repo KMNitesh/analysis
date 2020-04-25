@@ -56,7 +56,6 @@ template <typename Iterator, typename Skipper>
 Grammar<Iterator, Skipper>::Grammar() : Grammar::base_type(root, "mask") {
     using boost::spirit::repository::qi::distinct;
     using phoenix::bind;
-    using phoenix::new_;
     using phoenix::ref;
     using phoenix::val;
     using qi::_1;

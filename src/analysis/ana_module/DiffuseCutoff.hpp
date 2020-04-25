@@ -37,10 +37,10 @@ public:
 
     struct InnerAtom {
         int index;
-        std::deque<std::tuple<double, double, double>> *list_ptr = nullptr;
+        std::shared_ptr<std::deque<std::tuple<double, double, double>>> list_ptr;
 
-        InnerAtom(int index, std::deque<std::tuple<double, double, double>> *list_ptr)
-            : index(index), list_ptr(list_ptr) {}
+        InnerAtom(int index, std::shared_ptr<std::deque<std::tuple<double, double, double>>> list_ptr)
+            : index(index), list_ptr(std::move(list_ptr)) {}
     };
 
     struct InnerAtomHasher {
@@ -55,8 +55,6 @@ public:
         }
     };
 
-    ~DiffuseCutoff() override;
-
 private:
     double time_increment_ps = 0.1;
     double cutoff2;
@@ -69,7 +67,7 @@ private:
 
     std::unordered_set<InnerAtom, InnerAtomHasher> inner_atoms;
 
-    std::deque<std::deque<std::tuple<double, double, double>> *> rcm;
+    std::deque<std::shared_ptr<std::deque<std::tuple<double, double, double>>>> rcm;
 
     auto find_in(int seq);
 };

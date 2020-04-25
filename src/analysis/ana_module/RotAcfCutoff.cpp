@@ -41,7 +41,7 @@ void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
                 if (it != inner_atoms.end()) {
                     it->list_ptr->push_back(calVector(mol, frame));
                 } else {
-                    auto list_ptr = new std::list<std::tuple<double, double, double>>();
+                    auto list_ptr = std::make_shared<std::list<std::tuple<double, double, double>>>();
                     list_ptr->push_back(calVector(mol, frame));
                     inner_atoms.insert(InnerAtom(mol->seq(), list_ptr));
                     rots.emplace_back(list_ptr);
@@ -220,8 +220,4 @@ string RotAcfCutoff::description() {
     ss << " outfilename       = " << outfilename << "\n";
     ss << string(title_line.size(), '-') << '\n';
     return ss.str();
-}
-
-RotAcfCutoff::~RotAcfCutoff() {
-    boost::for_each(rots, std::default_delete<std::list<std::tuple<double, double, double>>>());
 }

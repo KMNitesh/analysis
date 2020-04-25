@@ -53,7 +53,6 @@ CenterGrammar<Iterator, Skipper>::CenterGrammar() : CenterGrammar::base_type(roo
     using boost::spirit::repository::qi::distinct;
     using phoenix::bind;
     using phoenix::construct;
-    using phoenix::new_;
     using phoenix::ref;
     using phoenix::val;
     using qi::_1;

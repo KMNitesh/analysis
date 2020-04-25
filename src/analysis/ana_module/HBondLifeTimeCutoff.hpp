@@ -32,11 +32,10 @@ public:
 
     struct InnerAtom {
         int index;
-        std::deque<int> *list_ptr1 = nullptr;
-        std::deque<int> *list_ptr2 = nullptr;
+        std::shared_ptr<std::deque<int>> list_ptr1, list_ptr2;
 
-        InnerAtom(int index, std::deque<int> *list_ptr1, std::deque<int> *list_ptr2)
-            : index(index), list_ptr1(list_ptr1), list_ptr2(list_ptr2) {}
+        InnerAtom(int index, std::shared_ptr<std::deque<int>> list_ptr1,  std::shared_ptr<std::deque<int>> list_ptr2)
+            : index(index), list_ptr1(std::move(list_ptr1)), list_ptr2(std::move(list_ptr2)) {}
     };
 
     struct InnerAtomHasher {
@@ -52,8 +51,6 @@ public:
         }
     };
 
-    ~HBondLifeTimeCutoff() override;
-
 protected:
     AmberMask center_Metal_atom_mask;
     AmberMask Ow_atom_mask;
@@ -66,7 +63,7 @@ protected:
 
     double cutoff2;
 
-    std::deque<std::deque<int> *> hb_histroy;
+    std::deque<std::shared_ptr<std::deque<int>>> hb_histroy;
 
     std::unordered_set<std::shared_ptr<Atom>> metal;
 

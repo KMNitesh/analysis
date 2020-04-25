@@ -4,7 +4,6 @@
 
 #include "RMSDCal.hpp"
 
-#include <boost/checked_delete.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 #include <boost/range/adaptors.hpp>
@@ -218,12 +217,9 @@ void RMSDCal::jacobi(int n, double a[4][4], double d[], double v[4][4]) {
     int nrot, maxrot;
     double sm, tresh, s, c, t;
     double theta, tau, h, g, p;
-    //    double *b; //traditional point
-    //    double *z;
+
     double b[4];
     double z[4];
-    //    b = new double[n];
-    //    z = new double[n];
 
     maxrot = 100;
     nrot = 0;
@@ -313,8 +309,6 @@ void RMSDCal::jacobi(int n, double a[4][4], double d[], double v[4][4]) {
     }
 
 label_10:
-    //    delete [] b; b = nullptr;
-    //    delete [] z; z = nullptr;
 
     if (nrot == maxrot) std::cerr << " JACOBI  --  Matrix Diagonalization not Converged" << std::endl;
 

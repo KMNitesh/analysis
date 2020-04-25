@@ -40,34 +40,34 @@ void SearchInteractionResidue::print(std::ostream &os) {
         int count;
     };
 
-    std::unordered_map<std::string, ResItem *> map;
+    std::unordered_map<std::string, ResItem> map;
     for (auto &set : interaction_residues) {
         for (auto &item : set) {
             auto it = map.find(item);
             if (it == map.end()) {
-                map[item] = new ResItem{item, 1};
+                map.emplace(item, ResItem{item, 1});
             } else {
-                it->second->count++;
+                it->second.count++;
             }
         }
     }
 
-    std::vector<ResItem *> itemVec;
+    std::vector<std::reference_wrapper<ResItem> > itemVec;
     for (auto &item : map) {
-        itemVec.push_back(item.second);
+        itemVec.push_back(std::ref(item.second));
     }
 
-    std::sort(itemVec.begin(), itemVec.end(), [](ResItem *i1, ResItem *i2) { return i1->count > i2->count; });
+    std::sort(itemVec.begin(), itemVec.end(), [](auto &i1, auto &i2) { return i1.get().count > i2.get().count; });
 
     std::size_t nframe = 1;
     os << boost::format("%10s") % "name";
     for (auto &item : itemVec) {
-        os << boost::format("%10s") % item->name;
+        os << boost::format("%10s") % item.get().name;
     }
     os << boost::format("\n%10s") % "Freq";
     ;
     for (auto &item : itemVec) {
-        os << boost::format("%9.1f%%") % (item->count * 100.0 / total_frames);
+        os << boost::format("%9.1f%%") % (item.get().count * 100.0 / total_frames);
     }
     os << '\n';
     for (auto &set : interaction_residues) {
@@ -75,7 +75,7 @@ void SearchInteractionResidue::print(std::ostream &os) {
         int index = 1;
         for (auto &item : itemVec) {
             os << boost::format("%10d") %
-                      (style == OutputStyle::NUMBER ? (set.count(item->name) ? index : 0) : set.count(item->name));
+                      (style == OutputStyle::NUMBER ? (set.count(item.get().name) ? index : 0) : set.count(item.get().name));
             index++;
         }
         os << '\n';

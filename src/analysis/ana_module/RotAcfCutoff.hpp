@@ -46,10 +46,10 @@ public:
 
     struct InnerAtom {
         int index;
-        std::list<std::tuple<double, double, double>> *list_ptr = nullptr;
+        std::shared_ptr<std::list<std::tuple<double, double, double>>> list_ptr;
 
-        InnerAtom(int index, std::list<std::tuple<double, double, double>> *list_ptr)
-            : index(index), list_ptr(list_ptr) {}
+        InnerAtom(int index, std::shared_ptr<std::list<std::tuple<double, double, double>>> list_ptr)
+            : index(index), list_ptr(std::move(list_ptr)) {}
     };
 
     struct InnerAtomHasher {
@@ -63,9 +63,7 @@ public:
             return seed;
         }
     };
-
-    virtual ~RotAcfCutoff();
-
+    
 private:
     double time_increment_ps = 0.1;
     double cutoff2;
@@ -78,7 +76,7 @@ private:
 
     std::unordered_set<InnerAtom, InnerAtomHasher> inner_atoms;
 
-    std::list<std::list<std::tuple<double, double, double>> *> rots;
+    std::list<std::shared_ptr<std::list<std::tuple<double, double, double>>>> rots;
 
     [[nodiscard]] auto find_in(int seq);
 

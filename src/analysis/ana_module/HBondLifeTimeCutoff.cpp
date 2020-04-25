@@ -50,8 +50,8 @@ void HBondLifeTimeCutoff::process(std::shared_ptr<Frame> &frame) {
                     it->list_ptr1->push_back(find_hbond(o1, hydrogens[0], frame));
                     it->list_ptr2->push_back(find_hbond(o1, hydrogens[1], frame));
                 } else {
-                    auto list_ptr1 = new std::deque<int>;
-                    auto list_ptr2 = new std::deque<int>;
+                    auto list_ptr1 = std::make_shared< std::deque<int>>();
+                    auto list_ptr2 = std::make_shared< std::deque<int>>();
                     list_ptr1->push_back(find_hbond(o1, hydrogens[0], frame));
                     list_ptr2->push_back(find_hbond(o1, hydrogens[1], frame));
 
@@ -159,8 +159,4 @@ void HBondLifeTimeCutoff::readInfo() {
     cutoff2 = cutoff * cutoff;
     select1group(center_Metal_atom_mask, "Enter mask for Metal > ");
     select1group(Ow_atom_mask, "Enter mask for Ow > ");
-}
-
-HBondLifeTimeCutoff::~HBondLifeTimeCutoff() {
-    for_each(hb_histroy.begin(), hb_histroy.end(), std::default_delete<std::deque<int>>());
 }
