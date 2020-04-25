@@ -4,6 +4,7 @@
 #include "GreenKubo.hpp"
 
 #include <tbb/tbb.h>
+#include <tbb/tbb_allocator.h>
 
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
@@ -21,9 +22,9 @@ void GreenKubo::print(std::ostream &os) {
         cerr << "Too few frame number :" << steps << endl;
         exit(1);
     }
-    auto vecx = new double[steps];
-    auto vecy = new double[steps];
-    auto vecz = new double[steps];
+    std::vector<double> vecx(steps);
+    std::vector<double> vecy(steps);
+    std::vector<double> vecz(steps);
     for (unsigned int i = 0; i < steps; i++) {
         vecx[i] = vecx_map[i + 1];
         vecy[i] = vecy_map[i + 1];
@@ -32,43 +33,25 @@ void GreenKubo::print(std::ostream &os) {
 
     class Body {
     public:
-        double *vecx;
-        double *vecy;
-        double *vecz;
+        const std::vector<double> &vecx;
+        const std::vector<double> &vecy;
+        const std::vector<double> &vecz;
 
-        double *cxx = nullptr;
-        double *cyy = nullptr;
-        double *czz = nullptr;
-        int *numbers = nullptr;
         size_t steps;
 
-        Body(double *vecx, double *vecy, double *vecz, size_t steps)
-            : vecx(vecx), vecy(vecy), vecz(vecz), steps(steps) {
-            allocate();
-        }
+        std::vector<double, tbb::tbb_allocator<double>> cxx, cyy, czz;
+        std::vector<size_t, tbb::tbb_allocator<size_t>> numbers;
 
-        Body(const Body &c, tbb::split) : vecx(c.vecx), vecy(c.vecy), vecz(c.vecz), steps(c.steps) { allocate(); }
+        Body(const std::vector<double> &vecx, const std::vector<double> &vecy, const std::vector<double> &vecz,
+             size_t steps)
+            : vecx(vecx), vecy(vecy), vecz(vecz), steps(steps), cxx(steps), cyy(steps), czz(steps), numbers(steps) {}
 
-        void allocate() {
-            cxx = new double[steps];
-            cyy = new double[steps];
-            czz = new double[steps];
-            numbers = new int[steps];
-            bzero(cxx, sizeof(double) * steps);
-            bzero(cyy, sizeof(double) * steps);
-            bzero(czz, sizeof(double) * steps);
-            bzero(numbers, sizeof(int) * steps);
-        }
-
-        ~Body() {
-            delete[] cxx;
-            delete[] cyy;
-            delete[] czz;
-            delete[] numbers;
-        }
+        Body(const Body &c, tbb::split)
+            : vecx(c.vecx), vecy(c.vecy), vecz(c.vecz), steps(c.steps), cxx(c.steps), cyy(c.steps), czz(c.steps),
+              numbers(c.steps) {}
 
         void join(const Body &y) {
-            for (unsigned int step = 0; step < steps - 1; step++) {
+            for (size_t step = 0; step < steps - 1; step++) {
                 cxx[step] += y.cxx[step];
                 cyy[step] += y.cyy[step];
                 czz[step] += y.czz[step];
@@ -76,7 +59,7 @@ void GreenKubo::print(std::ostream &os) {
             }
         }
 
-        void operator()(const tbb::blocked_range<size_t> &r) const {
+        void operator()(const tbb::blocked_range<size_t> &r) {
             for (size_t i = r.begin(); i != r.end(); i++) {
                 for (size_t j = i; j < steps; j++) {
                     cxx[j - i] += vecx[i] * vecx[j];
@@ -108,9 +91,6 @@ void GreenKubo::print(std::ostream &os) {
         pre_c = c;
         os << i * timestep << "    " << integral << endl;
     }
-    delete[] vecx;
-    delete[] vecy;
-    delete[] vecz;
 }
 
 void GreenKubo::readInfo() {
@@ -147,6 +127,7 @@ void GreenKubo::process(std::shared_ptr<Frame> &frame) {
 
 void GreenKubo::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
-        if (is_match(atom, this->ids)) this->group.insert(atom);
+        if (is_match(atom, this->ids))
+            this->group.insert(atom);
     });
 }

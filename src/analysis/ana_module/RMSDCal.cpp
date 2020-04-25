@@ -62,22 +62,22 @@ double RMSDCal::rmsvalue(std::shared_ptr<Frame> &frame) {
     if (first_frame) {
         first_frame = false;
         update(frame);
-        save_frame_coord(x1, y1, z1, frame);
+        save_frame_coord(x1.get(), y1.get(), z1.get(), frame);
         double mid[3];
-        center(n_rms_calc, x1, y1, z1, mid, nfit);
+        center(n_rms_calc, x1.get(), y1.get(), z1.get(), mid, nfit);
         return 0.0;
     }
-    save_frame_coord(x2, y2, z2, frame);
+    save_frame_coord(x2.get(), y2.get(), z2.get(), frame);
 
     double mid[3];
-    center(n_rms_calc, x2, y2, z2, mid, nfit);
+    center(n_rms_calc, x2.get(), y2.get(), z2.get(), mid, nfit);
 
-    quatfit(n_rms_calc, x1, y1, z1, n_rms_calc, x2, y2, z2, nfit);
+    quatfit(n_rms_calc, x1.get(), y1.get(), z1.get(), n_rms_calc, x2.get(), y2.get(), z2.get(), nfit);
 
-    if (rmsds.size() == 1) save_superposed_frame(x1, y1, z1, frame);
+    if (rmsds.size() == 1) save_superposed_frame(x1.get(), y1.get(), z1.get(), frame);
 
-    save_superposed_frame(x2, y2, z2, frame);
-    return rmsfit(x1, y1, z1, x2, y2, z2, n_rms_calc);
+    save_superposed_frame(x2.get(), y2.get(), z2.get(), frame);
+    return rmsfit(x1.get(), y1.get(), z1.get(), x2.get(), y2.get(), z2.get(), n_rms_calc);
 }
 
 void RMSDCal::save_frame_coord(double x[], double y[], double z[], const std::shared_ptr<Frame> &frame) {
@@ -349,23 +349,12 @@ void RMSDCal::processFirstFrame(std::shared_ptr<Frame> &frame) {
     });
     auto n_size = atoms_for_superpose.size() + atoms_for_rmscalc.size();
 
-    x1 = new double[n_size];
-    y1 = new double[n_size];
-    z1 = new double[n_size];
-
-    x2 = new double[n_size];
-    y2 = new double[n_size];
-    z2 = new double[n_size];
-}
-
-RMSDCal::~RMSDCal() {
-    boost::checked_array_delete(x1);
-    boost::checked_array_delete(y1);
-    boost::checked_array_delete(z1);
-
-    boost::checked_array_delete(x2);
-    boost::checked_array_delete(y2);
-    boost::checked_array_delete(z2);
+    x1 = std::make_unique<double[]>(n_size);
+    y1 = std::make_unique<double[]>(n_size);
+    z1 = std::make_unique<double[]>(n_size);
+    x2 = std::make_unique<double[]>(n_size);
+    y2 = std::make_unique<double[]>(n_size);
+    z2 = std::make_unique<double[]>(n_size);
 }
 
 void RMSDCal::save_superposed_frame(double *x, double *y, double *z, const std::shared_ptr<Frame> &frame) {

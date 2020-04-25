@@ -11,16 +11,14 @@
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
 #include "utils/xtc_writer.hpp"
-#include "dsl/AmberMask.hpp"
 
 class RMSDCal : public AbstractAnalysis {
 public:
     RMSDCal();
-
-    ~RMSDCal() override;
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
@@ -47,8 +45,8 @@ private:
     std::deque<double> rmsds;
     bool first_frame = true;
 
-    double *x1 = nullptr, *y1 = nullptr, *z1 = nullptr;
-    double *x2 = nullptr, *y2 = nullptr, *z2 = nullptr;
+    std::unique_ptr<double[]> x1, y1, z1;
+    std::unique_ptr<double[]> x2, y2, z2;
 
     double rmsvalue(std::shared_ptr<Frame> &frame);
 
@@ -70,4 +68,4 @@ private:
     void saveJson(std::ostream &os) const;
 };
 
-#endif  // TINKER_RMSDCAL_HPP
+#endif // TINKER_RMSDCAL_HPP
