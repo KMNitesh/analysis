@@ -31,6 +31,7 @@
 #include "others/QMStructureComp.hpp"
 #include "others/RamanSpectrum.hpp"
 #include "others/TrajConverter.hpp"
+#include "others/US_Pull_Wins.hpp"
 #include "utils/ProgramConfiguration.hpp"
 #include "utils/common.hpp"
 
@@ -171,7 +172,8 @@ int main(int argc, char *argv[]) {
         [] { HOOH_Calculator::process(); },
         [] { GroRenumber::process(); },
         [] { BondEnergyCompare::process(); },
-        [&] { MMPBSA::process(getTopologyFilename(vm)); }};
+        [&] { MMPBSA::process(getTopologyFilename(vm)); },
+        [] { US_Pull_Wins::process(); }};
 
     auto mainMenu = [&] {
         if (!keep_silent) {
@@ -202,7 +204,8 @@ int main(int argc, char *argv[]) {
                       << "(23) " << HOOH_Calculator::title() << '\n'
                       << "(24) " << GroRenumber::title() << '\n'
                       << "(25) " << BondEnergyCompare::title() << '\n'
-                      << "(26) " << MMPBSA::title() << '\n';
+                      << "(26) " << MMPBSA::title() << '\n'
+                      << "(27) " << US_Pull_Wins::title() << '\n';
         }
         return choose<int>(0, actions.size() - 1, "select : ");
     };

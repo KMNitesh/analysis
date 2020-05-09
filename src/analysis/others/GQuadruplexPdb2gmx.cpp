@@ -134,7 +134,11 @@ std::vector<Residue> readPDB(std::ifstream &ifs) {
             auto res_name = line.substr(17, 3);
             auto chain_name = line.substr(21, 1);
             auto res_num = std::stoi(line.substr(22, 4));
-            auto symbol = line.substr(76, 2);
+            std::string symbol;
+            try {
+                symbol = line.substr(76, 2);
+            } catch (std::out_of_range &) {
+            }
 
             auto x = std::stod(line.substr(30, 8));
             auto y = std::stod(line.substr(38, 8));

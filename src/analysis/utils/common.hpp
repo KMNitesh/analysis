@@ -146,6 +146,10 @@ public:
         this->b_can_empty = b_can_empty;
         return *this;
     }
+    ChooseFile &default_(std::string default_value) {
+        this->default_value = std::move(default_value);
+        return *this;
+    }
 
     operator std::string() {
         while (true) {
@@ -176,7 +180,7 @@ public:
                 }
             }
             if (b_can_empty)
-                return "";
+                return std::move(default_value);
         }
     }
 
@@ -187,6 +191,7 @@ private:
     bool is_exist = false;
     std::string ext;
     bool b_can_empty = false;
+    std::string default_value;
 };
 
 inline ChooseFile choose_file(const std::string &prompt, std::istream &in = std::cin, std::ostream &out = std::cout) {
