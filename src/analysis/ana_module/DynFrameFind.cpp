@@ -1,12 +1,10 @@
-//
-// Created by xiamr on 7/24/19.
-//
 
-#include "DynFrameFind.hpp"
 
 #include <boost/phoenix/phoenix.hpp>
 #include <boost/phoenix/stl/algorithm.hpp>
 #include <boost/range/combine.hpp>
+
+#include "DynFrameFind.hpp"
 
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"

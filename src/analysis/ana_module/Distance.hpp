@@ -29,6 +29,8 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Distance between two groups (mass-weighted)"; }
 
+    void setParameters(const AmberMask &A, const AmberMask &B, const std::string &out);
+
 protected:
     template <typename SinglePassRange>
     [[nodiscard]] static std::tuple<double, double, double> calculate_mass_center(const SinglePassRange &atoms_group);

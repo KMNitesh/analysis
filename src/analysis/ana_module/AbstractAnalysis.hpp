@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 //  This Pure Virtrial Class is the interface for All trajectory analysis method
 
@@ -25,8 +23,6 @@ public:
 
     [[nodiscard]] virtual std::string getOutfileName() { return outfilename; }
 
-    [[nodiscard]] virtual std::string description() { return "Abstract Class"; }
-
     [[nodiscard]] static std::string title() { return "Abstract Class"; }
 
     void do_parallel_while(std::function<std::shared_ptr<Frame>()> func) { do_parallel_while_impl(std::move(func)); }
@@ -42,7 +38,9 @@ protected:
 
     virtual void process_topology_impl([[maybe_unused]] std::shared_ptr<Frame> &frame) {}
 
+    void setOutFilename(std::string outfilename);
+
     std::string outfilename;
 };
 
-#endif // TINKER_ABSTRACTANALYSIS_HPP
+#endif  // TINKER_ABSTRACTANALYSIS_HPP

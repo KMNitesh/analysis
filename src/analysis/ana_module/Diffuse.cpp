@@ -84,21 +84,19 @@ void Diffuse::print(std::ostream &os) {
         body.msd[i] /= counts;
     }
 
-    os << "*********************************************************\n";
     os << description();
-    os << "Mean Squared Displacements and Self-Diffusion Constant\n";
-    os << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD        Diff Const\n";
-    os << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)     (x 10^-5 cm**2/sec)\n";
+    os << "    Time Gap      X MSD       Y MSD       Z MSD       R MSD      Diff Const\n";
+    os << "      (ps)       (Ang^2)     (Ang^2)     (Ang^2)     (Ang^2)   (x 10^-5 cm**2/sec)\n";
 
     for (int i = 0; i < total_frame_number - 1; i++) {
         double delta = time_increment_ps * (i + 1);
         auto [xvalue, yvalue, zvalue] = body.msd[i];
         double rvalue = xvalue + yvalue + zvalue;
         double dvalue = dunits * rvalue / delta / 6.0;
-        os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%12.4f\n") % delta % xvalue % yvalue % zvalue % rvalue %
+        os << boost::format("%12.2f%12.2f%12.2f%12.2f%12.2f%14.4f\n") % delta % xvalue % yvalue % zvalue % rvalue %
                   dvalue;
     }
-    os << "*********************************************************\n";
+    os << std::string(50, '#') << '\n';
 }
 
 void Diffuse::setParameters(const AmberMask &mask, double time_increment_ps, int total_frames,
@@ -141,7 +139,7 @@ std::string Diffuse::description() {
     ss << " mask              = [ " << mask << " ]\n";
     ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
     ss << " total_frames      = " << total_frame_number << " (frames)\n";
-    ss << " outfilename       = " << outfilename << "\n";
+    if (!outfilename.empty())    ss << " outfilename       = " << outfilename << "\n";
     ss << std::string(title_line.size(), '-') << '\n';
     return ss.str();
 }

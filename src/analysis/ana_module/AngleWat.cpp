@@ -1,7 +1,7 @@
 
-#include "AngleWat.hpp"
-
 #include <boost/range/algorithm.hpp>
+
+#include "AngleWat.hpp"
 
 #include "data_structure/frame.hpp"
 #include "utils/ThrowAssert.hpp"

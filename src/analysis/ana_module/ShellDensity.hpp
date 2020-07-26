@@ -29,6 +29,9 @@ public:
     void readInfo() override;
 
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
+    
+    void setParameters(const AmberMask &id1, const AmberMask &id2, double max_dist, double width,
+                       const std::string outfilename);
 
     [[nodiscard]] static std::string_view title() { return "Shell Density function"; }
 
@@ -50,4 +53,4 @@ protected:
     void saveJson(std::ostream &os) const;
 };
 
-#endif  // TINKER_SHELLDENSITY_HPP
+#endif // TINKER_SHELLDENSITY_HPP

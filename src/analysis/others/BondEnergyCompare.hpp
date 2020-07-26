@@ -6,7 +6,7 @@
 
 class BondEnergyCompare {
 public:
-    [[nodiscard]] static std::string title() { return "Bond Energy Compare"; }
+    [[nodiscard]] static std::string_view title() { return "Bond Energy Compare"; }
 
     static void process();
 };

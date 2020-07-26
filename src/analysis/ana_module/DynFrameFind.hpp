@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 7/24/19.
-//
+
 
 #ifndef TINKER_DYNFRAMEFIND_HPP
 #define TINKER_DYNFRAMEFIND_HPP

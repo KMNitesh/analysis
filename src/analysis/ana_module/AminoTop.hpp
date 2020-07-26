@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 #ifndef TINKER_AMINOTOP_HPP
 #define TINKER_AMINOTOP_HPP
@@ -90,4 +88,4 @@ public:
     void readTop(const std::string &filename);
 };
 
-#endif // TINKER_AMINOTOP_HPP
+#endif  // TINKER_AMINOTOP_HPP

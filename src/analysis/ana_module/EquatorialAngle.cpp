@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/30/19.
-//
+
 
 #include "EquatorialAngle.hpp"
 

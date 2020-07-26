@@ -1,10 +1,8 @@
-//
-// Created by xiamr on 6/14/19.
-//
-#include "GreenKubo.hpp"
 
 #include <tbb/tbb.h>
 #include <tbb/tbb_allocator.h>
+
+#include "GreenKubo.hpp"
 
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
@@ -47,7 +45,13 @@ void GreenKubo::print(std::ostream &os) {
             : vecx(vecx), vecy(vecy), vecz(vecz), steps(steps), cxx(steps), cyy(steps), czz(steps), numbers(steps) {}
 
         Body(const Body &c, tbb::split)
-            : vecx(c.vecx), vecy(c.vecy), vecz(c.vecz), steps(c.steps), cxx(c.steps), cyy(c.steps), czz(c.steps),
+            : vecx(c.vecx),
+              vecy(c.vecy),
+              vecz(c.vecz),
+              steps(c.steps),
+              cxx(c.steps),
+              cyy(c.steps),
+              czz(c.steps),
               numbers(c.steps) {}
 
         void join(const Body &y) {
@@ -127,7 +131,6 @@ void GreenKubo::process(std::shared_ptr<Frame> &frame) {
 
 void GreenKubo::processFirstFrame(std::shared_ptr<Frame> &frame) {
     std::for_each(frame->atom_list.begin(), frame->atom_list.end(), [this](shared_ptr<Atom> &atom) {
-        if (is_match(atom, this->ids))
-            this->group.insert(atom);
+        if (is_match(atom, this->ids)) this->group.insert(atom);
     });
 }

@@ -31,6 +31,10 @@ public:
         return "Orientation-Resolved Radial Distribution Function (JCTC 2019, 15, 803−812)";
     }
 
+    void setParameters(const AmberMask &M, const AmberMask &L, const std::shared_ptr<VectorSelector> &vector,
+                       double dist_width, double ang_width, double max_dist, double termperature,
+                       const std::string &out);
+
 protected:
     AmberMask reference_atom_mask;
     AmberMask water_Ow_atom_mask;
@@ -54,7 +58,7 @@ protected:
 
     void normalize();
 
-    double temperature;  // unit: K
+    double temperature; // unit: K
 };
 
-#endif  // TINKER_ORIENTATIONRESOLVEDRADIALDISTRIBUTIONFUNCTION_HPP
+#endif // TINKER_ORIENTATIONRESOLVEDRADIALDISTRIBUTIONFUNCTION_HPP

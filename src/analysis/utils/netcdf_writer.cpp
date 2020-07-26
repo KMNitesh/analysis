@@ -1,7 +1,7 @@
 
-#include "netcdf_writer.hpp"
-
 #include <iostream>
+
+#include "netcdf_writer.hpp"
 
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"

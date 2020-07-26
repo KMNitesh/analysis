@@ -65,8 +65,10 @@ void Distance::readInfo() { select2group(mask_for_group1, mask_for_group2); }
 
 void Distance::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (is_match(atom, mask_for_group1)) atoms_for_group1.insert(atom);
-        if (is_match(atom, mask_for_group2)) atoms_for_group2.insert(atom);
+        if (is_match(atom, mask_for_group1))
+            atoms_for_group1.insert(atom);
+        if (is_match(atom, mask_for_group2))
+            atoms_for_group2.insert(atom);
     });
 }
 
@@ -82,4 +84,15 @@ void Distance::saveJson(std::ostream &os) const {
     json["distances"] = distances;
 
     os << json;
+}
+void Distance::setParameters(const AmberMask &A, const AmberMask &B, const std::string &out) {
+
+    mask_for_group1 = A;
+    mask_for_group2 = B;
+
+    outfilename = out;
+    boost::trim(outfilename);
+    if (outfilename.empty()) {
+        throw std::runtime_error("outfilename cannot empty");
+    }
 }

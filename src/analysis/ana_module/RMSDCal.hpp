@@ -30,6 +30,8 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "RMSD Calculator"; }
 
+    void setParameters(const AmberMask &mask_for_superpose, const AmberMask &mask_for_rmscalc, const std::string &out);
+
     static double rmsfit(double x1[], double y1[], double z1[], double x2[], double y2[], double z2[], int n_rms_calc);
 
     static double rms_max(double x1[], double y1[], double z1[], double x2[], double y2[], double z2[], int n_rms_calc);

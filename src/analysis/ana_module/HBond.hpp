@@ -70,4 +70,4 @@ private:
     void output_distance_statistics(std::ostream &os);
 };
 
-#endif // TINKER_HBOND_HPP
+#endif  // TINKER_HBOND_HPP

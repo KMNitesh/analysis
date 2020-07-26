@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 #ifndef TINKER_GREENKUBO_HPP
 #define TINKER_GREENKUBO_HPP
@@ -43,4 +41,4 @@ private:
     std::map<int, double> vecz_map;
 };
 
-#endif // TINKER_GREENKUBO_HPP
+#endif  // TINKER_GREENKUBO_HPP

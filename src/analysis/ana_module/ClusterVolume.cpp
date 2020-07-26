@@ -1,14 +1,12 @@
-//
-// Created by xiamr on 8/26/19.
-//
 
-#include "ClusterVolume.hpp"
-
-#include <tbb/parallel_while.h>
 
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/irange.hpp>
+
+#include <tbb/parallel_while.h>
+
+#include "ClusterVolume.hpp"
 
 #include "data_structure/frame.hpp"
 #include "nlohmann/json.hpp"
@@ -56,14 +54,11 @@ void ClusterVolume::fill_atom(std::shared_ptr<boost::multi_array<ATOM_Category, 
 
                 if ((xr * xr + yr * yr + zr * zr) < radii2) {
                     auto box_index_x = int((x + xr) / grid_x_step) % grid_x;
-                    while (box_index_x < 0)
-                        box_index_x += grid_x;
+                    while (box_index_x < 0) box_index_x += grid_x;
                     auto box_index_y = int((y + yr) / grid_y_step) % grid_y;
-                    while (box_index_y < 0)
-                        box_index_y += grid_y;
+                    while (box_index_y < 0) box_index_y += grid_y;
                     auto box_index_z = int((z + zr) / grid_z_step) % grid_z;
-                    while (box_index_z < 0)
-                        box_index_z += grid_z;
+                    while (box_index_z < 0) box_index_z += grid_z;
 
                     assert(box_index_x >= 0 && box_index_x < grid_x);
                     assert(box_index_y >= 0 && box_index_y < grid_y);
@@ -102,11 +97,11 @@ void ClusterVolume::work_body(std::shared_ptr<boost::multi_array<ATOM_Category, 
     accessor.release();
 }
 
-std::pair<std::size_t, std::size_t>
-ClusterVolume::do_grid(std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid,
-                       std::shared_ptr<boost::multi_array<double, 2>> &atom_group_array,
-                       std::shared_ptr<boost::multi_array<double, 2>> &other_atom_array, double grid_x_step,
-                       double grid_y_step, double grid_z_step) const {
+std::pair<std::size_t, std::size_t> ClusterVolume::do_grid(
+    std::shared_ptr<boost::multi_array<ATOM_Category, 3>> &grid,
+    std::shared_ptr<boost::multi_array<double, 2>> &atom_group_array,
+    std::shared_ptr<boost::multi_array<double, 2>> &other_atom_array, double grid_x_step, double grid_y_step,
+    double grid_z_step) const {
     for (auto index : boost::irange(radii_for_other_atoms.size())) {
         fill_atom(grid, grid_x_step, grid_y_step, grid_z_step, ATOM_Category::OTHER, (*other_atom_array)[index][0],
                   (*other_atom_array)[index][1], (*other_atom_array)[index][2], radii_for_other_atoms[index]);
@@ -315,7 +310,7 @@ ClusterVolume::argument_type ClusterVolume::preprocess(std::shared_ptr<Frame> &f
     double grid_y_step = b_axis / grid_y;
     double grid_z_step = c_axis / grid_z;
 
-    auto total_volume = frame->volume(); // Ang^3
+    auto total_volume = frame->volume();  // Ang^3
     return {std::move(grid),
             std::move(atom_group_array),
             std::move(other_atom_array),

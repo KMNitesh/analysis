@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/30/19.
-//
+
 
 #ifndef TINKER_EQUATORIALANGLE_HPP
 #define TINKER_EQUATORIALANGLE_HPP
@@ -42,4 +40,4 @@ protected:
     void printData(std::ostream &os) const;
 };
 
-#endif // TINKER_EQUATORIALANGLE_HPP
+#endif  // TINKER_EQUATORIALANGLE_HPP

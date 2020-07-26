@@ -1,14 +1,13 @@
-//
-// Created by xiamr on 6/28/19.
-//
+
 
 #ifndef TINKER_TRAJECTORYFORMATWRITER_HPP
 #define TINKER_TRAJECTORYFORMATWRITER_HPP
 
-#include "data_structure/frame.hpp"
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "data_structure/frame.hpp"
 
 class Atom;
 
@@ -25,4 +24,4 @@ public:
     virtual ~TrajectoryFormatWriter() = default;
 };
 
-#endif // TINKER_TRAJECTORYFORMATWRITER_HPP
+#endif  // TINKER_TRAJECTORYFORMATWRITER_HPP

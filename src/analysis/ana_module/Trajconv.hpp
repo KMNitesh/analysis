@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 #ifndef TINKER_TRAJCONV_HPP
 #define TINKER_TRAJCONV_HPP
@@ -43,6 +41,9 @@ public:
 
     const auto &getWriters() const { return writers; }
 
+    void setParameters(const std::string &out, const std::string &pbc, const AmberMask &pbcmask,
+                       const AmberMask &outmask);
+
 private:
     PBCType pbc_type;
 
@@ -63,4 +64,4 @@ protected:
     void inputOutputFiles(std::istream &in = std::cin, std::ostream &out = std::cout);
 };
 
-#endif // TINKER_TRAJCONV_HPP
+#endif  // TINKER_TRAJCONV_HPP

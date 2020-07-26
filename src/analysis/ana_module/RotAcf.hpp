@@ -22,12 +22,12 @@ public:
 
     void print(std::ostream &os) override;
 
-    [[nodiscard]] std::string description() override;
+    [[nodiscard]] std::string description();
 
     void readInfo() override;
 
     void setParameters(const std::shared_ptr<VectorSelector> &vector, int LegendrePolynomial, double time_increment_ps,
-                       double max_time_grap_ps, const std::string &outfilename);
+                       double max_time_gap_ps, const std::string &outfilename);
 
     [[nodiscard]] static std::string_view title() { return "Rotational Autocorrelation Function"; }
 
@@ -45,7 +45,7 @@ protected:
 
     double time_increment_ps = 0.1;
 
-    double max_time_grap;
+    double max_time_gap;
 };
 
 #endif  // TINKER_ROTACF_HPP

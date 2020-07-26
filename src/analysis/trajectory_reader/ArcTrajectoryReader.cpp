@@ -95,7 +95,6 @@ std::shared_ptr<Frame> ArcTrajectoryReader::read(const std::string &filename) {
     }
 
     topology_utils::assgin_atom_to_molecule(frame);
-    apply_box(frame);
     frame->build_graph();
     return frame;
 }

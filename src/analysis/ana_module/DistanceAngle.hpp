@@ -1,6 +1,3 @@
-//
-// Created by xiamr on 7/4/19.
-//
 
 #ifndef TINKER_DISTANCEANGLE_HPP
 #define TINKER_DISTANCEANGLE_HPP

@@ -34,10 +34,10 @@ public:
 
     void readInfo() override;
 
-    [[nodiscard]] std::string description() override;
+    [[nodiscard]] std::string description();
 
     void setParameters(const AmberMask &M, const AmberMask &L, std::shared_ptr<VectorSelector> vector,
-                       int LegendrePolynomial, double cutoff, double time_increment_ps, double max_time_grap_ps,
+                       int LegendrePolynomial, double cutoff, double time_increment_ps, double max_time_gap_ps,
                        const std::string &outfilename);
 
     [[nodiscard]] static std::string_view title() {
@@ -90,7 +90,7 @@ private:
 
     int LegendrePolynomial;
 
-    double max_time_grap;
+    double max_time_gap;
 };
 
 #endif  // TINKER_ROTACFCUTOFF_HPP

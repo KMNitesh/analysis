@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/28/19.
-//
+
 
 #ifndef TINKER_NETCDFIMPL_HPP
 #define TINKER_NETCDFIMPL_HPP

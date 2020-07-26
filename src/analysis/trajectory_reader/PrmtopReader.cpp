@@ -107,7 +107,7 @@ std::shared_ptr<Frame> PrmtopReader::read(const std::string &filename) {
 
         Frame::pdihs param{.phiA = prmtop->dihedral_phase[dihedral_index],
                            .cpA = prmtop->dihedral_force_constant[dihedral_index],
-                           .mult = std::abs(prmtop->dihedral_periodicity[dihedral_index])};
+                           .mult = static_cast<int>(std::abs(prmtop->dihedral_periodicity[dihedral_index]))};
 
         if (atom_num4 > 0) {
             frame->f_dihedral_params.emplace(std::move(key), param);

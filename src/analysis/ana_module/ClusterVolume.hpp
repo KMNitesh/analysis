@@ -1,14 +1,13 @@
-//
-// Created by xiamr on 8/26/19.
-//
+
 
 #ifndef TINKER_CLUSTERVOLUME_HPP
 #define TINKER_CLUSTERVOLUME_HPP
 
-#include <tbb/tbb.h>
+#include <utility>
 
 #include <boost/multi_array.hpp>
-#include <utility>
+
+#include <tbb/tbb.h>
 
 #include "AbstractAnalysis.hpp"
 #include "HBond.hpp"
@@ -113,4 +112,4 @@ protected:
     friend class ApplyBody;
 };
 
-#endif // TINKER_CLUSTERVOLUME_HPP
+#endif  // TINKER_CLUSTERVOLUME_HPP

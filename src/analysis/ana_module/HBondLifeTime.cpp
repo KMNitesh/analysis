@@ -1,10 +1,8 @@
-//
-// Created by xiamr on 8/6/19.
-//
 
-#include "HBondLifeTime.hpp"
 
 #include <cmath>
+
+#include "HBondLifeTime.hpp"
 
 #include "HBond.hpp"
 #include "data_structure/atom.hpp"

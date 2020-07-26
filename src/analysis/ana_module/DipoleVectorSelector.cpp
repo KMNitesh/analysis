@@ -1,6 +1,3 @@
-//
-// Created by xiamr on 7/5/19.
-//
 #include "DipoleVectorSelector.hpp"
 
 #include "data_structure/frame.hpp"

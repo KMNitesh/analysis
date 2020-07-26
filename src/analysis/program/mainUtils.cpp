@@ -1,15 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
 
-#include "mainUtils.hpp"
-
-#include <tbb/tbb.h>
-
-#include <boost/algorithm/cxx11/one_of.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/program_options.hpp>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -18,23 +7,48 @@
 #include <string>
 #include <vector>
 
+#if __has_include(<source_location>)
+#include <source_location>
+#else
+#include <experimental/source_location>
+using namespace std::experimental;
+#endif
+
+#include <boost/algorithm/cxx11/one_of.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/program_options.hpp>
+
+#include <tbb/tbb.h>
+
 #include "ana_module/AbstractAnalysis.hpp"
 #include "ana_module/AngleDistributionBetweenTwoVectorWithCutoff.hpp"
+#include "ana_module/Cluster.hpp"
+#include "ana_module/ConditionalTimeCorrelationFunction.hpp"
+#include "ana_module/CoordinateNumPerFrame.hpp"
 #include "ana_module/DemixIndexOfTwoGroup.hpp"
 #include "ana_module/Diffuse.hpp"
 #include "ana_module/DiffuseCutoff.hpp"
 #include "ana_module/DipoleVectorSelector.hpp"
+#include "ana_module/Distance.hpp"
+#include "ana_module/OrientationResolvedRadialDistributionFunction.hpp"
+#include "ana_module/RMSDCal.hpp"
+#include "ana_module/RMSFCal.hpp"
 #include "ana_module/RadicalDistribtuionFunction.hpp"
+#include "ana_module/RadiusOfGyration.hpp"
 #include "ana_module/ResidenceTime.hpp"
 #include "ana_module/RotAcf.hpp"
 #include "ana_module/RotAcfCutoff.hpp"
+#include "ana_module/ShellDensity.hpp"
 #include "ana_module/Trajconv.hpp"
 #include "data_structure/forcefield.hpp"
 #include "data_structure/frame.hpp"
 #include "dsl/Interpreter.hpp"
+#include "mainUtils.hpp"
 #include "others/PrintTopolgy.hpp"
 #include "program/taskMenu.hpp"
 #include "trajectory_reader/trajectoryreader.hpp"
+#include "utils/IntertiaVector.hpp"
 #include "utils/NormalVectorSelector.hpp"
 #include "utils/ProgramConfiguration.hpp"
 #include "utils/ThrowAssert.hpp"
@@ -100,6 +114,7 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
         exit(EXIT_FAILURE);
     }
 
+    auto time_before_process = std::chrono::steady_clock::now();
     cout << "Fast Trajectory Convert...\n";
 
     int current_frame_num = 0;
@@ -114,7 +129,8 @@ void fastTrajectoryConvert(const boost::program_options::variables_map &vm, cons
         writer.process(frame);
     }
     writer.CleanUp();
-    cout << "\nMission Complete" << endl;
+    auto total_time = chrono_cast(std::chrono::steady_clock::now() - time_before_process);
+    cout << "\nMission Complete :) Time used  " << total_time << endl;
 }
 
 void printTopolgy(const boost::program_options::variables_map &vm) {
@@ -132,11 +148,62 @@ void printTopolgy(const boost::program_options::variables_map &vm) {
             PrintTopolgy::action(topol);
             exit(EXIT_SUCCESS);
         }
-        cout << "topology file " << topol << " is bad ! please retype !" << endl;
+        cout << "topology file " << topol << " is not exist! please retype !" << endl;
     }
     PrintTopolgy::action(choose_file("input topology file : ").isExist(true));
 }
 
+namespace {
+
+template <typename R, typename T, typename... ARGS>
+auto constexpr get_args_number(R (T::*)(ARGS...)) {
+    return sizeof...(ARGS);
+}
+
+template <typename T>
+struct FunObject {
+    FunObject(std::shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list, std::string name,
+              source_location location = source_location::current())
+        : task_list(task_list), name(std::move(name)), location(std::move(location)) {}
+
+    template <typename U>
+    boost::any operator()(U &&args) {
+        auto task = make_shared<T>();
+        try {
+            setParameters(task, std::forward<U>(args));
+        } catch (std::exception &e) {
+            cerr << e.what() << " for function " << name << " (" << location.file_name() << ":" << location.line()
+                 << ")\n";
+            exit(EXIT_FAILURE);
+        }
+        print_desciption(task);
+        task_list->emplace_back(task);
+        return static_pointer_cast<AbstractAnalysis>(task);
+    }
+
+private:
+    template <typename U, typename Args, typename... Numbers>
+    void setParameters(U &&task, Args &&args, Numbers &&... N) {
+        if constexpr (get_args_number(&T::setParameters) != sizeof...(N)) {
+            setParameters(std::forward<U>(task), std::forward<Args>(args), N..., sizeof...(N));
+        } else {
+            task->setParameters(AutoConvert(get<3>(args.at(N)))...);
+        }
+    }
+
+    template <typename U>
+    void print_desciption(U &) {}
+
+    template <typename U, typename = decltype(U::description)>
+    void print_desciption(shared_ptr<U> &task) {
+        cout << task->description();
+    }
+    std::shared_ptr<list<shared_ptr<AbstractAnalysis>>> &task_list;
+    std::string name;
+    source_location location;
+};
+
+}  // namespace
 void executeScript([[maybe_unused]] const boost::program_options::options_description &desc,
                    const boost::program_options::variables_map &vm, std::vector<std::string> &xyzfiles, int argc,
                    char *argv[]) {
@@ -163,14 +230,11 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
     }
 
     boost::optional<string> topology;
-    if (vm.count("topology"))
-        topology = vm["topology"].as<string>();
+    if (vm.count("topology")) topology = vm["topology"].as<string>();
     boost::optional<string> forcefield_file;
-    if (vm.count("prm"))
-        forcefield_file = vm["prm"].as<string>();
+    if (vm.count("prm")) forcefield_file = vm["prm"].as<string>();
     boost::optional<string> output_file;
-    if (vm.count("output"))
-        output_file = vm["output"].as<string>();
+    if (vm.count("output")) output_file = vm["output"].as<string>();
 
     boost::any ast;
     auto it = scriptContent.begin();
@@ -180,8 +244,7 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         std::cerr << "Syntax Parse Error\n";
         std::cerr << "error-pos : " << std::endl;
         std::cout << scriptContent << std::endl;
-        for (auto iter = scriptContent.begin(); iter != it; ++iter)
-            std::cerr << " ";
+        for (auto iter = scriptContent.begin(); iter != it; ++iter) std::cerr << " ";
         std::cerr << "^" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -190,21 +253,28 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
 
     auto task_list = make_shared<list<shared_ptr<AbstractAnalysis>>>();
 
-    interpreter
-        .registerFunction("rdf",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<RadicalDistribtuionFunction>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
-                                                      AutoConvert(get<3>(args.at(4))), AutoConvert(get<3>(args.at(5))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function rdf (" << __FILE__ << ":" << __LINE__ << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+#define REGISTER(name, type) interpreter.registerFunction(name, FunObject<type>{task_list, name})
+
+    REGISTER("trajconv", Trajconv)
+        .addArgument<string>("out")
+        .addArgument<string>("pbc")
+        .addArgument<AmberMask>("pbcmask", AmberMask{})
+        .addArgument<AmberMask>("outmask", AmberMask{});
+
+    REGISTER("distance", Distance).addArgument<AmberMask>("A").addArgument<AmberMask>("B").addArgument<string>("out");
+
+    REGISTER("angle", Angle)
+        .addArgument<IntertiaVector>("v1")
+        .addArgument<IntertiaVector>("v2")
+        .addArgument<string>("out");
+
+    REGISTER("cn_per_frame", CoordinateNumPerFrame)
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
+        .addArgument<double, int>("cutoff")
+        .addArgument<string>("out");
+
+    REGISTER("rdf", RadicalDistribtuionFunction)
         .addArgument<AmberMask>("M")
         .addArgument<AmberMask>("L")
         .addArgument<double, int>("max_dist", 10.0)
@@ -212,158 +282,99 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<bool>("intramol", false)
         .addArgument<string>("out");
 
-    interpreter
-        .registerFunction("rotacf",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<RotAcf>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
-                                                      AutoConvert(get<3>(args.at(4))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function rotacf (" << __FILE__ << ":" << __LINE__ << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              cout << task->description();
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+    REGISTER("shelldensity", ShellDensity)
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
+        .addArgument<double, int>("max_dist", 10.0)
+        .addArgument<double, int>("width", 0.01)
+        .addArgument<string>("out");
+
+    REGISTER("cluster", Cluster)
+        .addArgument<AmberMask>("mask")
+        .addArgument<double, int>("cutoff")
+        .addArgument<string>("out");
+
+    REGISTER("rmsd", RMSDCal)
+        .addArgument<AmberMask>("superpose")
+        .addArgument<AmberMask>("rms")
+        .addArgument<string>("out");
+
+    REGISTER("rmsf", RMSFCal)
+        .addArgument<AmberMask>("superpose")
+        .addArgument<AmberMask>("rmsf")
+        .addArgument<bool>("avg_residue", false)
+        .addArgument<string>("out");
+
+    REGISTER("orrdf", OrientationResolvedRadialDistributionFunction)
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
+        .addArgument<shared_ptr<VectorSelector>>("vector")
+        .addArgument<double, int>("dist_width", 0.01)
+        .addArgument<double, int>("ang_width", 0.5)
+        .addArgument<double, int>("max_dist", 10.0)
+        .addArgument<double, int>("temperature", 298)
+        .addArgument<string>("out");
+
+    REGISTER("rg", RadiusOfGyration)
+        .addArgument<AmberMask>("mask")
+        .addArgument<bool>("includeHydrogen", false)
+        .addArgument<string>("out");
+
+    REGISTER("ctcf", ConditionalTimeCorrelationFunction)
+        .addArgument<AmberMask>("M")
+        .addArgument<AmberMask>("L")
+        .addArgument<shared_ptr<VectorSelector>>("vector")
+        .addArgument<int>("P")
+        .addArgument<double, int>("width", 0.01)
+        .addArgument<double, int>("max_r", 10.0)
+        .addArgument<double, int>("time_increment_ps", 0.1)
+        .addArgument<double, int>("max_time_gap_ps", 100)
+        .addArgument<string>("out");
+
+    REGISTER("rotacf", RotAcf)
         .addArgument<shared_ptr<VectorSelector>>("vector")
         .addArgument<int>("P")
         .addArgument<double, int>("time_increment_ps", 0.1)
-        .addArgument<double, int>("max_time_grap_ps")
+        .addArgument<double, int>("max_time_gap_ps")
         .addArgument<string>("out");
 
-    interpreter
-        .registerFunction("rotacfCutoff",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<RotAcfCutoff>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
-                                                      AutoConvert(get<3>(args.at(4))), AutoConvert(get<3>(args.at(5))),
-                                                      AutoConvert(get<3>(args.at(6))), AutoConvert(get<3>(args.at(7))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function rotacfCutoff (" << __FILE__ << ":" << __LINE__
-                                       << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              cout << task->description();
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+    REGISTER("rotacfCutoff", RotAcfCutoff)
         .addArgument<AmberMask>("M")
         .addArgument<AmberMask>("L")
         .addArgument<shared_ptr<VectorSelector>>("vector")
         .addArgument<int>("P")
         .addArgument<double, int>("cutoff")
         .addArgument<double, int>("time_increment_ps", 0.1)
-        .addArgument<double, int>("max_time_grap_ps")
+        .addArgument<double, int>("max_time_gap_ps")
         .addArgument<string>("out");
 
-    interpreter
-        .registerFunction("demix",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<DemixIndexOfTwoGroup>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function demix (" << __FILE__ << ":" << __LINE__ << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+    REGISTER("demix", DemixIndexOfTwoGroup)
         .addArgument<AmberMask>("component1")
         .addArgument<AmberMask>("component2")
         .addArgument<Grid>("grid")
         .addArgument<string>("out");
 
-    interpreter
-        .registerFunction("residenceTime",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<ResidenceTime>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
-                                                      AutoConvert(get<3>(args.at(4))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function residenceTime (" << __FILE__ << ":" << __LINE__
-                                       << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+    REGISTER("residenceTime", ResidenceTime)
         .addArgument<AmberMask>("M")
         .addArgument<AmberMask>("L")
         .addArgument<double, int>("cutoff")
         .addArgument<double, int>("time_star")
         .addArgument<string>("out");
 
-    interpreter
-        .registerFunction("diffuse",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<Diffuse>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function diffuse (" << __FILE__ << ":" << __LINE__ << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              cout << task->description();
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+    REGISTER("diffuse", Diffuse)
         .addArgument<AmberMask>("mask")
         .addArgument<double, int>("time_increment_ps", 0.1)
         .addArgument<int>("total_frames")
         .addArgument<string>("out");
 
-    interpreter
-        .registerFunction("diffuseCutoff",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<DiffuseCutoff>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
-                                                      AutoConvert(get<3>(args.at(4))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function diffuseCutoff (" << __FILE__ << ":" << __LINE__
-                                       << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              cout << task->description();
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+    REGISTER("diffuseCutoff", DiffuseCutoff)
         .addArgument<AmberMask>("M")
         .addArgument<AmberMask>("L")
         .addArgument<double, int>("cutoff")
         .addArgument<double, int>("time_increment_ps", 0.1)
         .addArgument<string>("out");
 
-    interpreter
-        .registerFunction("crossAngleCutoff",
-                          [&task_list](auto &args) -> boost::any {
-                              auto task = make_shared<AngleDistributionBetweenTwoVectorWithCutoff>();
-                              try {
-                                  task->setParameters(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))),
-                                                      AutoConvert(get<3>(args.at(2))), AutoConvert(get<3>(args.at(3))),
-                                                      AutoConvert(get<3>(args.at(4))), AutoConvert(get<3>(args.at(5))),
-                                                      AutoConvert(get<3>(args.at(6))), AutoConvert(get<3>(args.at(7))),
-                                                      AutoConvert(get<3>(args.at(8))));
-                              } catch (std::exception &e) {
-                                  cerr << e.what() << " for function crossAngleCutoff (" << __FILE__ << ":" << __LINE__
-                                       << ")\n";
-                                  exit(EXIT_FAILURE);
-                              }
-                              task_list->emplace_back(task);
-                              cout << task->description();
-                              return shared_ptr<AbstractAnalysis>(task);
-                          })
+    REGISTER("crossAngleCutoff", AngleDistributionBetweenTwoVectorWithCutoff)
         .addArgument<AmberMask>("M")
         .addArgument<AmberMask>("L")
         .addArgument<shared_ptr<VectorSelector>>("vector1")
@@ -373,15 +384,6 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<double, int>("cutoff1", 0)
         .addArgument<double, int>("cutoff2")
         .addArgument<string>("out");
-    //  const AmberMask &M,
-    //        const AmberMask &L,
-    //        std::shared_ptr<VectorSelector> vector1,
-    //        std::shared_ptr<VectorSelector> vector2,
-    //        double angle_max,
-    //        double angle_width,
-    //        double cutoff1,
-    //        double cutoff2,
-    //        const std::string &outfilename
 
     interpreter
         .registerFunction("DipoleVector",
@@ -394,7 +396,7 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                                        << ")\n";
                                   exit(EXIT_FAILURE);
                               }
-                              return shared_ptr<VectorSelector>(vector);
+                              return static_pointer_cast<VectorSelector>(vector);
                           })
         .addArgument<AmberMask>("mask");
 
@@ -410,7 +412,7 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                     cerr << e.what() << " for function NormalVector (" << __FILE__ << ":" << __LINE__ << ")\n";
                     exit(EXIT_FAILURE);
                 }
-                return shared_ptr<VectorSelector>(vector);
+                return static_pointer_cast<VectorSelector>(vector);
             })
         .addArgument<AmberMask>("mask1")
         .addArgument<AmberMask>("mask2")
@@ -427,10 +429,18 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
                     cerr << e.what() << " for function TwoAtomVector (" << __FILE__ << ":" << __LINE__ << ")\n";
                     exit(EXIT_FAILURE);
                 }
-                return shared_ptr<VectorSelector>(vector);
+                return static_pointer_cast<VectorSelector>(vector);
             })
         .addArgument<AmberMask>("mask1")
         .addArgument<AmberMask>("mask2");
+
+    interpreter
+        .registerFunction("IntertiaVector",
+                          [](auto &args) -> boost::any {
+                              return IntertiaVector(AutoConvert(get<3>(args.at(0))), AutoConvert(get<3>(args.at(1))));
+                          })
+        .addArgument<AmberMask>("mask")
+        .addArgument<string>("axis");
 
     interpreter
         .registerFunction("Grid",
@@ -624,8 +634,7 @@ int executeAnalysis(const vector<string> &xyzfiles, int argc, char *const *argv,
     int current_frame_num = 0;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames)
-            break;
+        if (total_frames != 0 and current_frame_num > total_frames) break;
         if (current_frame_num % 10 == 0) {
             if (Clear) {
                 cout << "\r";
@@ -741,8 +750,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
     if (choose_bool("Do you want to use multiple files [N]:", Default(false))) {
         while (true) {
             std::string input_line = choose_file("next file [Enter for End]:").isExist(true).can_empty(true);
-            if (input_line.empty())
-                break;
+            if (input_line.empty()) break;
             if (getFileType(input_line) == FileType::TRAJ) {
                 std::cout << "traj file can not use multiple files [retype]" << std::endl;
                 continue;
@@ -756,8 +764,7 @@ void processTrajectory(const boost::program_options::options_description &desc,
         outfile.open(getOutputFilename(vm));
     }
 
-    if (vm.count("mask"))
-        reader->set_mask(vm["mask"].as<std::string>());
+    if (vm.count("mask")) reader->set_mask(vm["mask"].as<std::string>());
 
     std::shared_ptr<AbstractAnalysis> parallel_while_task;
     for (auto &task : *task_list) {
@@ -826,8 +833,7 @@ std::shared_ptr<Frame> getFrame(std::shared_ptr<std::list<std::shared_ptr<Abstra
     std::shared_ptr<Frame> frame;
     while ((frame = reader->readOneFrame())) {
         current_frame_num++;
-        if (total_frames != 0 and current_frame_num > total_frames)
-            break;
+        if (total_frames != 0 and current_frame_num > total_frames) break;
         std::cout << "\rProcessing Coordinate Frame  " << current_frame_num << "   " << std::flush;
         if (current_frame_num >= start && (current_frame_num - start) % step_size == 0) {
             if (current_frame_num == start) {

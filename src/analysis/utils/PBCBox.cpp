@@ -93,11 +93,14 @@ void PBCBox::image(double &xr, double &yr, double &zr) const {
     }
 
     if (box_type == Type::orthogonal) {
-        while (std::abs(xr) > 0.5 * axis[0]) xr -= sign(axis[0], xr);
-        while (std::abs(yr) > 0.5 * axis[1]) yr -= sign(axis[1], yr);
-        while (std::abs(zr) > 0.5 * axis[2]) zr -= sign(axis[2], zr);
+        while (std::abs(xr) > 0.5 * axis[0])
+            xr -= sign(axis[0], xr);
+        while (std::abs(yr) > 0.5 * axis[1])
+            yr -= sign(axis[1], yr);
+        while (std::abs(zr) > 0.5 * axis[2])
+            zr -= sign(axis[2], zr);
     } else {
-        gmx::rvec x1 = {xr, yr, zr};
+        gmx::rvec x1 = {static_cast<gmx::real>(xr), static_cast<gmx::real>(yr), static_cast<gmx::real>(zr)};
         gmx::rvec x2 = {0, 0, 0};
         gmx::rvec dx;
         gmx::pbc_dx(&pbc, x1, x2, dx);
@@ -108,7 +111,8 @@ void PBCBox::image(double &xr, double &yr, double &zr) const {
 }
 
 double PBCBox::volume() const {
-    if (box_type == Type::orthogonal) return axis[0] * axis[1] * axis[2];
+    if (box_type == Type::orthogonal)
+        return axis[0] * axis[1] * axis[2];
 
     const auto factor = 4.0 * std::sqrt(3) / 9.0;
     return factor * std::pow(axis[0], 3);

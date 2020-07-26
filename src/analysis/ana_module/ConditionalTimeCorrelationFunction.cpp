@@ -1,12 +1,10 @@
-//
-// Created by xiamr on 9/6/19.
-//
 
-#include "ConditionalTimeCorrelationFunction.hpp"
 
 #include <boost/range/algorithm.hpp>
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/irange.hpp>
+
+#include "ConditionalTimeCorrelationFunction.hpp"
 
 #include "data_structure/frame.hpp"
 #include "utils/LegendrePolynomial.hpp"
@@ -63,7 +61,8 @@ void ConditionalTimeCorrelationFunction::process(std::shared_ptr<Frame> &frame) 
     func_mapping.at(LegendrePolynomial)();
 }
 
-template <typename Function> void ConditionalTimeCorrelationFunction::calculateFrame(Function f) {
+template <typename Function>
+void ConditionalTimeCorrelationFunction::calculateFrame(Function f) {
     if (cb_vector.at(0).full()) {
         for (std::size_t i = 0; i < water_Ow_atoms.size(); ++i) {
             auto d_ref = cache_x[0][i];
@@ -134,4 +133,31 @@ void ConditionalTimeCorrelationFunction::readInfo() {
     max_time_gap_ps = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Gap in Picoseconds :");
 
     max_time_gap_frame = std::ceil(max_time_gap_ps / time_increment_ps);
+}
+
+void ConditionalTimeCorrelationFunction::setParameters(const AmberMask &M, const AmberMask &L,
+                                                       const std::shared_ptr<VectorSelector> &vector, int P,
+                                                       double width, double max_r, double time_increment_ps,
+                                                       double max_time_gap_ps, const std::string &out) {
+    reference_atom_mask = M;
+    water_Ow_atoms_mask = L;
+
+    vectorSelector = vector;
+
+    LegendrePolynomial = P;
+
+    distance_width = width;
+    max_distance = max_r;
+
+    distance_bins = static_cast<int>(max_distance / distance_width);
+
+    this->time_increment_ps = time_increment_ps;
+    this->max_time_gap_ps = max_time_gap_ps;
+    max_time_gap_frame = std::ceil(max_time_gap_ps / time_increment_ps);
+
+    this->outfilename = out;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
+        throw std::runtime_error("outfilename cannot empty");
+    }
 }

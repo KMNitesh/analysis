@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 #ifndef TINKER_FINDMINBETWEENTWOGROUPS_HPP
 #define TINKER_FINDMINBETWEENTWOGROUPS_HPP

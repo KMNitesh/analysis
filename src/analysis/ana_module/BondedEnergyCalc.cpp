@@ -1,10 +1,13 @@
 
-#include "BondedEnergyCalc.hpp"
-#include "data_structure/frame.hpp"
-#include "utils/common.hpp"
+#include <nlohmann/json.hpp>
+
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>
-#include <nlohmann/json.hpp>
+
+#include "BondedEnergyCalc.hpp"
+
+#include "data_structure/frame.hpp"
+#include "utils/common.hpp"
 
 BondedEnergyCalc::BondedEnergyCalc() {
     enable_forcefield = true;

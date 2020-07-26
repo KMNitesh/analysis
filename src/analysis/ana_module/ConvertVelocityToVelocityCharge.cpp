@@ -1,10 +1,8 @@
-//
-// Created by xiamr on 8/16/19.
-//
 
-#include "ConvertVelocityToVelocityCharge.hpp"
 
 #include <boost/range/algorithm.hpp>
+
+#include "ConvertVelocityToVelocityCharge.hpp"
 
 #include "data_structure/atom.hpp"
 #include "data_structure/frame.hpp"

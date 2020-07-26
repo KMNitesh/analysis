@@ -1,15 +1,14 @@
-//
-// Created by xiamr on 6/14/19.
-//
-#include "Cluster.hpp"
 
-#include <tbb/tbb.h>
+#include <type_traits>
 
 #include <boost/container_hash/hash.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/numeric.hpp>
-#include <type_traits>
+
+#include <tbb/tbb.h>
+
+#include "Cluster.hpp"
 
 #include "data_structure/frame.hpp"
 #include "utils/PBCUtils.hpp"
@@ -106,8 +105,7 @@ void Cluster::print(std::ostream &os) {
     for (auto &v : rmsd_list) {
         std::cout << v.i << "  " << v.j << "  " << v.rms << '\n';
         n++;
-        if (n > 99)
-            break;
+        if (n > 99) break;
     }
 
     auto c = do_cluster(rmsd_list, steps, this->cutoff);
@@ -209,8 +207,7 @@ std::vector<Cluster::conf_clust> Cluster::do_cluster(const ForwardRange &rmsd_li
     do {
         bChange = false;
         for (auto &k : rmsd_list) {
-            if (k.rms >= cutoff)
-                break;
+            if (k.rms >= cutoff) break;
             int diff = c[k.j].clust - c[k.i].clust;
             if (diff) {
                 bChange = true;
@@ -250,6 +247,11 @@ void Cluster::setSetting(const AmberMask &atomIndenter, double cutoff) {
     this->cutoff = cutoff;
 }
 
+void Cluster::setParameters(const AmberMask &mask, double cutoff, const std::string &out) {
+    setSetting(mask, cutoff);
+    setOutFilename(out);
+}
+
 /*
  *
  *
@@ -265,9 +267,8 @@ std::unordered_map<int, std::vector<int>> do_find_frames_in_same_clust(const std
     return ret;
 }
 
-std::unordered_map<int, std::pair<int, double>>
-do_find_medium_in_clust(const std::vector<Cluster::conf_clust> &clusts,
-                        const std::list<Cluster::rmsd_matrix> &rmsd_list) {
+std::unordered_map<int, std::pair<int, double>> do_find_medium_in_clust(
+    const std::vector<Cluster::conf_clust> &clusts, const std::list<Cluster::rmsd_matrix> &rmsd_list) {
     std::unordered_map<int, std::pair<int, double>> ret;
     assert(!clusts.empty());
     std::vector<double> rmsd_sum(clusts.size(), 0.0);

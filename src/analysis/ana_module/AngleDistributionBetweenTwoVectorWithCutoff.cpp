@@ -1,8 +1,8 @@
 
-#include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
-
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
+
+#include "AngleDistributionBetweenTwoVectorWithCutoff.hpp"
 
 #include "data_structure/frame.hpp"
 #include "nlohmann/json.hpp"
@@ -14,10 +14,8 @@ AngleDistributionBetweenTwoVectorWithCutoff::AngleDistributionBetweenTwoVectorWi
 
 void AngleDistributionBetweenTwoVectorWithCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
-        if (is_match(atom, this->metal_mask))
-            this->group1.insert(atom);
-        if (is_match(atom, this->ligand_mask))
-            this->group2.insert(atom);
+        if (is_match(atom, this->metal_mask)) this->group1.insert(atom);
+        if (is_match(atom, this->ligand_mask)) this->group2.insert(atom);
     });
     throw_assert(this->group1.size() == 1, "Group1 must has only one atom");
     throw_assert(!this->group1.empty(), "Group2 must has at least one atom");

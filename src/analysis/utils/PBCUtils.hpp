@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/29/19.
-//
+
 
 #ifndef TINKER_PBCUTILS_HPP
 #define TINKER_PBCUTILS_HPP
@@ -21,11 +19,14 @@ public:
                      std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> &mole_seq)
         : mols(mols), mole_seq(mole_seq){};
 
-    template <typename Edge, typename Graph> void tree_edge(Edge e, const Graph &g) {
+    template <typename Edge, typename Graph>
+    void tree_edge(Edge e, const Graph &g) {
         auto source = boost::source(e, g);
         auto target = boost::target(e, g);
         mole_seq.emplace_back(mols[source], mols[target]);
     }
+
+private:
     std::vector<std::shared_ptr<Molecule>> &mols;
     std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> &mole_seq;
 };
@@ -34,7 +35,8 @@ class AggregateVisitor : public boost::default_bfs_visitor {
 public:
     explicit AggregateVisitor(const std::shared_ptr<Frame> &frame) : frame(frame){};
 
-    template <typename Edge, typename Graph> void tree_edge(Edge e, const Graph &g) const {
+    template <typename Edge, typename Graph>
+    void tree_edge(Edge e, const Graph &g) const {
         auto &source = g[boost::source(e, g)];
         auto &target = g[boost::target(e, g)];
         auto r = target->getCoordinate() - source->getCoordinate();
@@ -85,8 +87,8 @@ public:
     static void move(MolPair &mols, const std::shared_ptr<Frame> &frame) { move(mols.first, mols.second, frame); };
 
 private:
-    static std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>>
-    calculate_intermol_imp(const std::set<std::shared_ptr<Molecule>> &mols_set, const std::shared_ptr<Frame> &frame);
+    static std::vector<std::pair<std::shared_ptr<Molecule>, std::shared_ptr<Molecule>>> calculate_intermol_imp(
+        const std::set<std::shared_ptr<Molecule>> &mols_set, const std::shared_ptr<Frame> &frame);
 
     static std::tuple<double, double, double> cal_box_center_shift(const std::shared_ptr<Frame> &frame);
 
@@ -95,4 +97,4 @@ private:
     mutable std::set<std::shared_ptr<Molecule>> mols_set;
 };
 
-#endif // TINKER_PBCUTILS_HPP
+#endif  // TINKER_PBCUTILS_HPP

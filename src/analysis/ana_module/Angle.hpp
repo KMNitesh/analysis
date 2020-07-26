@@ -13,6 +13,7 @@
 #include "utils/std.hpp"
 
 class Frame;
+class IntertiaVector;
 
 class Angle : public AbstractAnalysis {
 public:
@@ -28,9 +29,11 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Angle between two groups (mass-weighted)"; }
 
-protected:
     enum class AxisType { MIN, MAX };
 
+    void setParameters(const IntertiaVector &v1, const IntertiaVector &v2, const std::string &out);
+
+protected:
     Eigen::Matrix3d calculate_inertia(std::shared_ptr<Frame> &frame,
                                       const std::vector<std::shared_ptr<Atom>> &atom_group, PBCUtils::MolPair &mols);
 

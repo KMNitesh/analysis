@@ -65,7 +65,8 @@ void RMSFCal::save_coord(double *x, double *y, double *z, const std::shared_ptr<
 }
 
 void RMSFCal::append_pdb() {
-    if (!pdb_ostream) return;
+    if (!pdb_ostream)
+        return;
     for (const auto &element :
          join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
         *pdb_ostream << boost::format("ATOM  %5s %-4s %3s  %4s    %8.3f%8.3f%8.3f  1.00  0.00            \n") %
@@ -81,14 +82,16 @@ void RMSFCal::print(std::ostream &os) {
     os << "# " << title() << " # \n";
     os << "# mask_for_superpose  > " << mask_for_superpose << '\n';
     os << "# mask_for_rmsfcalc   > " << mask_for_rmsfcalc << '\n';
-    if (pdb_ostream) os << "# mask_for_first_frame_output   > " << mask_for_first_frame_output << '\n';
+    if (pdb_ostream)
+        os << "# mask_for_first_frame_output   > " << mask_for_first_frame_output << '\n';
     os << std::string(50, '#') << '\n';
     os << boost::format("#%15s %15s\n") % "AtomSeq" % "RMSF(Ang)";
     std::map<std::shared_ptr<Atom>, double> rms_values;
     for (const auto &element :
          join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
         auto rms = rmsvalue(element.index());
-        if (output_residue_average) rms_values[element.value()] = rms;
+        if (output_residue_average)
+            rms_values[element.value()] = rms;
         os << boost::format(" %15d %15.8f\n") % element.value()->seq % rms;
     }
     os << std::string(50, '#') << '\n';
@@ -116,7 +119,8 @@ void RMSFCal::saveJson(std::ostream &os) const {
     json["title"] = title();
     json["mask_fro_superpose"] = to_string(mask_for_superpose);
     json["mask_for_rmsfcalc"] = to_string(mask_for_rmsfcalc);
-    if (pdb_ostream) json["mask_for_first_frame_output"] = to_string(mask_for_first_frame_output);
+    if (pdb_ostream)
+        json["mask_for_first_frame_output"] = to_string(mask_for_first_frame_output);
     for (const auto &element :
          join(atoms_for_superpose_and_rmsfcalc, atoms_for_rmsfcalc) | boost::adaptors::indexed()) {
         json["RMSF"] = {
@@ -228,4 +232,17 @@ void RMSFCal::allocate_array_memory() {
     z2.resize(total_size);
 
     acc.resize(nfit2 + n);
+}
+
+void RMSFCal::setParameters(const AmberMask &superpose, const AmberMask &rmsf, bool avg_residue,
+                            const std::string &out) {
+    mask_for_superpose = superpose;
+    mask_for_rmsfcalc = rmsf;
+    output_residue_average = avg_residue;
+
+    outfilename = out;
+    boost::trim(outfilename);
+    if (outfilename.empty()) {
+        throw std::runtime_error("outfilename cannot empty");
+    }
 }

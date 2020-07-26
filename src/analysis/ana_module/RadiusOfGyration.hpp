@@ -26,6 +26,8 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Radius of gyration (mass-weighted)"; }
 
+    void setParameters(const AmberMask &mask, bool IncludeHydrogen, const std::string &out);
+
 protected:
     AmberMask atomMask;
     std::deque<std::pair<double, double>> series;

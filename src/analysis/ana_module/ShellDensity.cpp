@@ -80,3 +80,26 @@ void ShellDensity::processFirstFrame(std::shared_ptr<Frame> &frame) {
         if (is_match(atom, mask2)) group2.insert(atom);
     });
 }
+
+void ShellDensity::setParameters(const AmberMask &id1, const AmberMask &id2, double max_dist, double width,
+                                 std::string outfilename) {
+    this->mask1 = id1;
+    this->mask2 = id2;
+    if (max_dist <= 0) {
+        throw std::runtime_error("max_dist must large than zero");
+    }
+    auto rmax = max_dist;
+    if (width <= 0) {
+        throw std::runtime_error("max_dist must large than zero");
+    }
+
+    setOutFilename(outfilename);
+
+    distance_width = width;
+
+    distance_bins = int(rmax / distance_width);
+
+    for (int i = 1; i <= distance_bins; i++) {
+        hist[i] = 0;
+    }
+}

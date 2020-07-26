@@ -463,7 +463,6 @@ boost::any FunctionObject::invoke(vector<boost::any> &arguments,
                      "argument (" << std::get<0>(arg) << ") type not match , except " << std::get<2>(arg)() << " Actul"
                                   << getPrettyName(std::get<3>(arg)));
     }
-    std::cout << std::vector<std::string>();
     return f(args);
 }
 

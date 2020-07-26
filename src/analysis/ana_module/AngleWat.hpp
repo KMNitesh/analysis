@@ -1,14 +1,11 @@
-//
-// Created by xiamr on 6/30/19.
-//
 
 #ifndef TINKER_ANGLEWAT_HPP
 #define TINKER_ANGLEWAT_HPP
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
-#include "utils/std.hpp"
 #include "dsl/AmberMask.hpp"
+#include "utils/std.hpp"
 
 class Frame;
 

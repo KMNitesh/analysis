@@ -13,29 +13,51 @@
 #include "ana_module/AbstractAnalysis.hpp"
 #include "common.hpp"
 #include "dsl/AmberMask.hpp"
+#include "utils/IntertiaVector.hpp"
 
-template <typename... Ts> class TypeIs;
+template <typename... Ts>
+class TypeIs;
 
-template <> class TypeIs<> {
+template <>
+class TypeIs<> {
 public:
     bool operator()(const boost::any &) { return false; }
 
     std::vector<std::string> pretty_names() { return {}; }
 };
 
-template <typename T> inline std::string pretty_name() { return boost::typeindex::type_id<T>().pretty_name(); }
+template <typename T>
+inline std::string pretty_name() {
+    return boost::typeindex::type_id<T>().pretty_name();
+}
 
-template <> inline std::string pretty_name<std::string>() { return "string"; }
+template <>
+inline std::string pretty_name<std::string>() {
+    return "string";
+}
 
-template <> inline std::string pretty_name<Grid>() { return "Grid"; }
+template <>
+inline std::string pretty_name<Grid>() {
+    return "Grid";
+}
 
-template <> inline std::string pretty_name<AmberMask>() { return "AmberMask"; }
+template <>
+inline std::string pretty_name<AmberMask>() {
+    return "AmberMask";
+}
 
-template <> inline std::string pretty_name<std::shared_ptr<VectorSelector>>() { return "VectorSelector"; }
+template <>
+inline std::string pretty_name<std::shared_ptr<VectorSelector>>() {
+    return "VectorSelector";
+}
 
-template <> inline std::string pretty_name<std::shared_ptr<AbstractAnalysis>>() { return "BasicAnalysis"; }
+template <>
+inline std::string pretty_name<std::shared_ptr<AbstractAnalysis>>() {
+    return "BasicAnalysis";
+}
 
-template <typename T, typename... Ts> class TypeIs<T, Ts...> {
+template <typename T, typename... Ts>
+class TypeIs<T, Ts...> {
 public:
     bool operator()(const boost::any &val) { return val.type() == typeid(T) or TypeIs<Ts...>()(val); }
 
@@ -46,7 +68,8 @@ public:
     }
 };
 
-template <typename... Ts> class TypePrettyNames {
+template <typename... Ts>
+class TypePrettyNames {
 public:
     std::vector<std::string> operator()() { return TypeIs<Ts...>().pretty_names(); }
 };
@@ -86,6 +109,8 @@ public:
     operator std::shared_ptr<VectorSelector>() const { return boost::any_cast<std::shared_ptr<VectorSelector>>(v); }
 
     operator std::shared_ptr<AbstractAnalysis>() const { return boost::any_cast<std::shared_ptr<AbstractAnalysis>>(v); }
+
+    operator IntertiaVector() const { return boost::any_cast<IntertiaVector>(v); }
 };
 
-#endif // TINKER_TYPEUTILITY_HPP
+#endif  // TINKER_TYPEUTILITY_HPP

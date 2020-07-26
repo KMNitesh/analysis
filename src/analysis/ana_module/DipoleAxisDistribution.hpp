@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/30/19.
-//
+
 
 #ifndef TINKER_DIPOLEAXISDISTRIBUTION_HPP
 #define TINKER_DIPOLEAXISDISTRIBUTION_HPP

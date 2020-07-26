@@ -364,3 +364,15 @@ void RMSDCal::save_superposed_frame(double *x, double *y, double *z, const std::
 void RMSDCal::update(const std::shared_ptr<Frame> &frame) {
     mols = PBCUtils::calculate_intermol(join(atoms_for_superpose, atoms_for_rmscalc), frame);
 }
+
+void RMSDCal::setParameters(const AmberMask &mask_for_superpose, const AmberMask &mask_for_rmscalc,
+                            const std::string &out) {
+    this->mask_for_superpose = mask_for_superpose;
+    this->mask_for_rmscalc = mask_for_rmscalc;
+    
+    outfilename = out;
+    boost::trim(outfilename);
+    if (outfilename.empty()) {
+        throw std::runtime_error("outfilename cannot empty");
+    }
+}

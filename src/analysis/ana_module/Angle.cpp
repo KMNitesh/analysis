@@ -1,14 +1,15 @@
 
-#include "ana_module/Angle.hpp"
-
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 
+#include "ana_module/Angle.hpp"
+
 #include "ana_module/RMSDCal.hpp"
 #include "data_structure/frame.hpp"
 #include "data_structure/molecule.hpp"
+#include "utils/IntertiaVector.hpp"
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
 
@@ -99,5 +100,19 @@ void Angle::print(std::ostream &os) {
     os << std::setprecision(3);
     for (const auto &ele : deque | boost::adaptors::indexed(1)) {
         os << std::setw(10) << ele.index() << std::setw(15) << ele.value() << '\n';
+    }
+}
+
+void Angle::setParameters(const IntertiaVector &v1, const IntertiaVector &v2, const std::string &out) {
+    mask1 = v1.mask;
+    type1 = v1.axis;
+
+    mask2 = v2.mask;
+    type2 = v2.axis;
+
+    this->outfilename = out;
+    boost::trim(this->outfilename);
+    if (this->outfilename.empty()) {
+        throw std::runtime_error("outfilename cannot empty");
     }
 }

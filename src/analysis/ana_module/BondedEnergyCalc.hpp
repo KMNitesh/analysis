@@ -4,8 +4,8 @@
 
 #include "ana_module/AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
-#include "utils/BondEnergyCalculator.hpp"
 #include "dsl/AmberMask.hpp"
+#include "utils/BondEnergyCalculator.hpp"
 
 class Frame;
 
@@ -25,7 +25,7 @@ public:
 private:
     AmberMask mask;
     std::unique_ptr<BondEnergyCalculator> calculator;
-    std::deque<std::map<int,BondEnergyCalculator::Term>> energy_terms;
+    std::deque<std::map<int, BondEnergyCalculator::Term>> energy_terms;
 };
 
-#endif // TINKER_BONDEDENERGYCALC_HPP
+#endif  // TINKER_BONDEDENERGYCALC_HPP

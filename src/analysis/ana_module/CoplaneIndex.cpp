@@ -1,10 +1,10 @@
 
-#include "CoplaneIndex.hpp"
-
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
+
+#include "CoplaneIndex.hpp"
 
 #include "data_structure/frame.hpp"
 #include "nlohmann/json.hpp"
@@ -101,7 +101,7 @@ void CoplaneIndex::readInfo() {
     for (std::size_t i = 0; i < num; ++i) {
         for (std::size_t j = 0; j < 3; ++j) {
             select1group(mask_arrays[i][j], "Enter mark for atom (" + std::to_string(j + 1) + ") of plane (" +
-                                                      std::to_string(i + 1) + ") > ");
+                                                std::to_string(i + 1) + ") > ");
         }
     }
 }

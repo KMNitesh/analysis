@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 9/6/19.
-//
+
 
 #ifndef TINKER_CONDITIONALTIMECORRELATIONFUNCTION_HPP
 #define TINKER_CONDITIONALTIMECORRELATIONFUNCTION_HPP
@@ -32,6 +30,10 @@ public:
     [[nodiscard]] static std::string_view title() {
         return "Conditional Time Correlation Function (JCTC 2019, 15, 803−812)";
     }
+
+    void setParameters(const AmberMask &M, const AmberMask &L, const std::shared_ptr<VectorSelector> &vector, int P,
+                       double width, double max_r, double time_increment_ps, double max_time_gap_ps,
+                       const std::string &out);
 
 protected:
     void normalize();

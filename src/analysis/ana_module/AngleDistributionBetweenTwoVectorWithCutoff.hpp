@@ -1,16 +1,14 @@
-//
-// Created by xiamr on 8/6/19.
-//
+
 
 #ifndef TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP
 #define TINKER_ANGLEDISTRIBUTIONBETWEENTWOVECTORWITHCUTOFF_HPP
 
 #include "AbstractAnalysis.hpp"
 #include "data_structure/atom.hpp"
+#include "dsl/AmberMask.hpp"
 #include "utils/Histogram.hpp"
 #include "utils/VectorSelector.hpp"
 #include "utils/std.hpp"
-#include "dsl/AmberMask.hpp"
 
 class Frame;
 
@@ -26,7 +24,7 @@ public:
 
     void readInfo() override;
 
-    [[nodiscard]] std::string description() override;
+    [[nodiscard]] std::string description();
 
     [[nodiscard]] static std::string_view title() { return "Angle Distribution Between Two Vector with Cutoff"; }
 

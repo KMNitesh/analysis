@@ -5,6 +5,9 @@
 #ifndef TINKER_COMMON_HPP
 #define TINKER_COMMON_HPP
 
+#include <stdexcept>
+#include <string>
+#include <memory>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/graph/adjacency_list.hpp>

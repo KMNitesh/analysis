@@ -20,11 +20,11 @@ RadiusOfGyration::RadiusOfGyration() {
 }
 
 void RadiusOfGyration::processFirstFrame(std::shared_ptr<Frame> &frame) {
-    boost::for_each(frame->atom_list, [this](std::shared_ptr<Atom> &atom) {
+    for (auto &&atom : frame->atom_list) {
         if (is_match(atom, atomMask)) {
             moles.insert(atom->molecule.lock());
         }
-    });
+    }
 
     assert(!moles.empty());
 }
@@ -38,7 +38,8 @@ void RadiusOfGyration::process(std::shared_ptr<Frame> &frame) {
         double mol_mass{};
         auto mass_center = mol->calc_weigh_center(frame, bIncludeHydrogen);
         for (auto &atom : mol->atom_list) {
-            if (!bIncludeHydrogen and which(atom) == Symbol::Hydrogen) continue;
+            if (!bIncludeHydrogen and which(atom) == Symbol::Hydrogen)
+                continue;
             auto v = atom->getCoordinate() - mass_center;
             frame->image(v);
             radius2 += vector_norm2(v) * atom->mass.value();
@@ -69,4 +70,16 @@ void RadiusOfGyration::print(std::ostream &os) {
 void RadiusOfGyration::readInfo() {
     select1group(atomMask, "Enter mask for selected molecules : ");
     bIncludeHydrogen = choose_bool("Include Hydrogen Atom [N] : ", Default(false));
+}
+
+void RadiusOfGyration::setParameters(const AmberMask &mask, bool IncludeHydrogen, const std::string &out) {
+
+    atomMask = mask;
+    bIncludeHydrogen = IncludeHydrogen;
+
+    outfilename = out;
+    boost::trim(outfilename);
+    if (outfilename.empty()) {
+        throw std::runtime_error("outfilename cannot empty");
+    }
 }

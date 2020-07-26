@@ -5,6 +5,8 @@
 #ifndef TINKER_FRAME_HPP
 #define TINKER_FRAME_HPP
 
+#include "config.h"
+
 #include <Eigen/Eigen>
 #include <cassert>
 #include <list>
@@ -14,7 +16,6 @@
 #include <unordered_map>
 #include <utils/PBCBox.hpp>
 
-#include "config.h"
 #include "utils/common.hpp"
 
 namespace gmx {
@@ -75,4 +76,4 @@ public:
     std::multimap<std::array<std::shared_ptr<Atom>, 4>, pdihs> f_improper_dihedral_params;
 };
 
-#endif // TINKER_FRAME_HPP
+#endif  // TINKER_FRAME_HPP

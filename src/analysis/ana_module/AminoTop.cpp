@@ -1,10 +1,8 @@
-//
-// Created by xiamr on 6/14/19.
-//
 
-#include "AminoTop.hpp"
 
 #include <boost/assign.hpp>
+
+#include "AminoTop.hpp"
 
 #include "utils/common.hpp"
 
@@ -27,8 +25,7 @@ void AminoTop::readTop(const std::string &filename) {
     while (true) {
         std::getline(f, line);
         auto field = split(line);
-        if (field.empty())
-            break;
+        if (field.empty()) break;
         auto item = std::make_shared<AminoItem>();
         if (field.size() < 3) {
             throw std::runtime_error("file <" + filename + "> content sytanx error \n");

@@ -26,7 +26,7 @@ public:
 
     void readInfo() override;
 
-    [[nodiscard]] std::string description() override;
+    [[nodiscard]] std::string description();
 
     void setParameters(const AmberMask &M, const AmberMask &L, double cutoff, double time_increment_ps,
                        const std::string &outfilename);

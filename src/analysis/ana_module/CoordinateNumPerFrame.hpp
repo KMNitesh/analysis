@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 #ifndef TINKER_COORDINATENUMPERFRAME_HPP
 #define TINKER_COORDINATENUMPERFRAME_HPP
@@ -30,6 +28,8 @@ public:
     void readInfo() override;
 
     [[nodiscard]] static std::string_view title() { return "Coordinate Number per Frame"; }
+
+    void setParameters(const AmberMask &M, const AmberMask &L, double cutoff, const std::string &out);
 
 private:
     AmberMask ids1;

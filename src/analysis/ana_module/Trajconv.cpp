@@ -9,6 +9,7 @@
 #include "data_structure/molecule.hpp"
 #include "utils/PBCUtils.hpp"
 #include "utils/common.hpp"
+#include <algorithm>
 #include <boost/range/algorithm.hpp>
 
 Trajconv::Trajconv(std::shared_ptr<TrajectoryWriterFactoryInterface> factory)
@@ -111,4 +112,24 @@ void Trajconv::processFirstFrame(std::shared_ptr<Frame> &frame) {
 
     atoms_for_writetraj =
         isBlank(mask_for_writetraj) ? frame->atom_list : PBCUtils::find_atoms(mask_for_writetraj, frame);
+}
+
+void Trajconv::setParameters(const std::string &out, const std::string &pbc, const AmberMask &pbcmask,
+                             const AmberMask &outmask) {
+    writers.emplace_back(out, factory->make_instance(getFileType(out)));
+
+    static std::map<std::string, PBCType> mapping{{"", PBCType::None},
+                                                  {"oneAtom", PBCType::OneAtom},
+                                                  {"oneMol", PBCType::OneMol},
+                                                  {"atomGroup", PBCType::AtomGroup},
+                                                  {"allIntoBox", PBCType::AllIntoBox}};
+
+    if (auto it = mapping.find(pbc); it != mapping.end()) {
+        pbc_type = it->second;
+        mask = pbcmask;
+        mask_for_writetraj = outmask;
+    } else {
+        std::cerr << "pbc parameter must be one of oneAtom, oneMol, atomGroup, allIntoBox or empty\n";
+        exit(EXIT_FAILURE);
+    }
 }

@@ -1,10 +1,8 @@
-//
-// Created by xiamr on 9/4/19.
-//
 
-#include "OrientationResolvedRadialDistributionFunction.hpp"
 
 #include <boost/range/algorithm.hpp>
+
+#include "OrientationResolvedRadialDistributionFunction.hpp"
 
 #include "data_structure/frame.hpp"
 #include "utils/VectorSelectorFactory.hpp"
@@ -56,10 +54,10 @@ void OrientationResolvedRadialDistributionFunction::process(std::shared_ptr<Fram
 void OrientationResolvedRadialDistributionFunction::print(std::ostream &os) {
     normalize();
     os << std::string(50, '#') << '\n';
-    os << title() << '\n';
+    os << "# " << title() << " # \n";
     os << "# reference atom > " << reference_atom_mask << '\n';
     os << "# water Ow atoms > " << water_Ow_atom_mask << '\n';
-    os << vectorSelector;
+    os << "# " << vectorSelector;
     os << "# distance_width(Ang) > " << distance_width << '\n';
     os << "# angle_width(deg) > " << angle_width * 180 / M_PI << '\n';
     os << "# max_distance(Ang) > " << max_distance << '\n';
@@ -128,4 +126,27 @@ void OrientationResolvedRadialDistributionFunction::readInfo() {
     std::fill_n(hist.data(), hist.num_elements(), 0);
 
     temperature = choose(0.0, 10000.0, "Temperature [298] (K):", Default(298.0));
+}
+
+void OrientationResolvedRadialDistributionFunction::setParameters(const AmberMask &M, const AmberMask &L,
+                                                                  const std::shared_ptr<VectorSelector> &vector,
+                                                                  double dist_width, double ang_width, double max_dist,
+                                                                  double temperature, const std::string &out) {
+    reference_atom_mask = M;
+    water_Ow_atom_mask = L;
+    vectorSelector = vector;
+
+    distance_width = dist_width;
+    angle_width = ang_width / 180 * M_PI;
+
+    max_distance = max_dist;
+    distance_bins = static_cast<int>(max_distance / distance_width);
+    angle_bins = M_PI / angle_width;
+
+    hist.resize(boost::extents[angle_bins][distance_bins]);
+    std::fill_n(hist.data(), hist.num_elements(), 0);
+
+    this->temperature = temperature;
+
+    setOutFilename(out);
 }

@@ -25,10 +25,7 @@ bool operator==(const RotAcfCutoff::InnerAtom &i1, const RotAcfCutoff::InnerAtom
 }
 
 auto RotAcfCutoff::find_in(int seq) {
-    for (auto iter = inner_atoms.begin(); iter != inner_atoms.end(); ++iter) {
-        if (seq == iter->index) return iter;
-    }
-    return inner_atoms.end();
+    return std::find_if(begin(inner_atoms), end(inner_atoms), [seq](auto &&v) { return seq == v.index; });
 }
 
 void RotAcfCutoff::process(std::shared_ptr<Frame> &frame) {
@@ -66,16 +63,16 @@ void RotAcfCutoff::readInfo() {
     std::cout << "2. P2 = (1/2)(3x^2 -1)\n";
     LegendrePolynomial = choose(1, 2, "select > ");
     double cutoff = choose(0.0, std::numeric_limits<double>::max(), "Please enter distance cutoff:");
-    this->cutoff2 = cutoff * cutoff;
+    cutoff2 = cutoff * cutoff;
 
-    this->time_increment_ps =
+    time_increment_ps =
         choose(0.0, std::numeric_limits<double>::max(), "Enter the Time Increment in Picoseconds [0.1]:", Default(0.1));
-    this->max_time_grap = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Grap in Picoseconds :");
+    max_time_gap = choose(0.0, std::numeric_limits<double>::max(), "Enter the Max Time Gap in Picoseconds :");
 }
 
 void RotAcfCutoff::setParameters(const AmberMask &M, const AmberMask &L, std::shared_ptr<VectorSelector> vector,
                                  int LegendrePolynomial, double cutoff, double time_increment_ps,
-                                 double max_time_grap_ps, const std::string &outfilename) {
+                                 double max_time_gap_ps, const std::string &outfilename) {
     this->ids1 = M;
     this->ids2 = L;
 
@@ -102,12 +99,12 @@ void RotAcfCutoff::setParameters(const AmberMask &M, const AmberMask &L, std::sh
         this->time_increment_ps = time_increment_ps;
     }
 
-    if (max_time_grap_ps <= 0) {
-        throw runtime_error("`max_time_grap_ps` must be postive");
-    } else if (max_time_grap_ps <= this->time_increment_ps) {
-        throw runtime_error("`max_time_grap_ps` must be larger than `time_increment_ps`");
+    if (max_time_gap_ps <= 0) {
+        throw runtime_error("`max_time_gap_ps` must be postive");
+    } else if (max_time_gap_ps <= this->time_increment_ps) {
+        throw runtime_error("`max_time_gap_ps` must be larger than `time_increment_ps`");
     } else {
-        this->max_time_grap = max_time_grap_ps;
+        this->max_time_gap = max_time_gap_ps;
     }
     this->outfilename = outfilename;
     boost::trim(this->outfilename);
@@ -124,12 +121,12 @@ void RotAcfCutoff::print(std::ostream &os) {
     std::vector<std::pair<unsigned long long, double>> acf;
     acf.emplace_back(0, 0.0);
     switch (LegendrePolynomial) {
-        case 1:
-            calculateAutocorrelaionFunction(acf, LegendrePolynomialLevel1());
-            break;
-        case 2:
-            calculateAutocorrelaionFunction(acf, LegendrePolynomialLevel2());
-            break;
+    case 1:
+        calculateAutocorrelaionFunction(acf, LegendrePolynomialLevel1());
+        break;
+    case 2:
+        calculateAutocorrelaionFunction(acf, LegendrePolynomialLevel2());
+        break;
     }
 
     for (size_t i = 1; i < acf.size(); i++) {
@@ -155,12 +152,12 @@ void RotAcfCutoff::print(std::ostream &os) {
     os << " rotational autocorrelation function" << endl;
     os << "Legendre Polynomial : ";
     switch (LegendrePolynomial) {
-        case 1:
-            os << "P1 = x\n";
-            break;
-        case 2:
-            os << "P2 = (1/2)(3x^2 -1)\n";
-            break;
+    case 1:
+        os << "P1 = x\n";
+        break;
+    case 2:
+        os << "P2 = (1/2)(3x^2 -1)\n";
+        break;
     }
     os << "    Time Gap      ACF       integrate" << endl;
     os << "      (ps)                    (ps)" << endl;
@@ -173,7 +170,7 @@ void RotAcfCutoff::print(std::ostream &os) {
 
 template <typename Function>
 void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long long, double>> &acf, Function f) const {
-    size_t max_time_grap_step = ceil(max_time_grap / time_increment_ps);
+    size_t max_time_gap_step = ceil(max_time_gap / time_increment_ps);
     for (auto list_ptr : rots) {
         size_t i = 0;
         for (auto it1 = list_ptr->begin(); it1 != --list_ptr->end(); it1++) {
@@ -183,8 +180,10 @@ void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long lon
             for (it2++; it2 != list_ptr->end(); it2++) {
                 j++;
                 auto m = j - i;
-                if (m > max_time_grap_step) break;
-                if (m >= acf.size()) acf.emplace_back(0, 0.0);
+                if (m > max_time_gap_step)
+                    break;
+                if (m >= acf.size())
+                    acf.emplace_back(0, 0.0);
 
                 double cos = dot_multiplication(*it1, *it2);
 
@@ -197,8 +196,10 @@ void RotAcfCutoff::calculateAutocorrelaionFunction(vector<pair<unsigned long lon
 
 void RotAcfCutoff::processFirstFrame(std::shared_ptr<Frame> &frame) {
     boost::for_each(frame->atom_list, [this](shared_ptr<Atom> &atom) {
-        if (is_match(atom, this->ids1)) this->group1.insert(atom);
-        if (is_match(atom, this->ids2)) this->group2.insert(atom);
+        if (is_match(atom, this->ids1))
+            this->group1.insert(atom);
+        if (is_match(atom, this->ids2))
+            this->group2.insert(atom);
     });
     if (group1.size() > 1) {
         cerr << "the reference(metal cation) atom for RotAcfCutoff function can only have one\n";
@@ -216,8 +217,9 @@ string RotAcfCutoff::description() {
     ss << " P                 = " << this->LegendrePolynomial << "\n";
     ss << " cutoff            = " << sqrt(cutoff2) << " (Ang)\n";
     ss << " time_increment_ps = " << time_increment_ps << " (ps)\n";
-    ss << " max_time_grap_ps  = " << max_time_grap << " (ps)\n";
-    ss << " outfilename       = " << outfilename << "\n";
+    ss << " max_time_gap_ps   = " << max_time_gap << " (ps)\n";
+    if (!outfilename.empty())
+        ss << " outfilename       = " << outfilename << "\n";
     ss << string(title_line.size(), '-') << '\n';
     return ss.str();
 }

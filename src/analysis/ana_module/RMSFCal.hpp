@@ -35,6 +35,8 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "RMSF Calculator"; }
 
+    void setParameters(const AmberMask &superpose, const AmberMask &rmsf, bool avg_residue, const std::string &out);
+
 protected:
     std::unique_ptr<std::ostream> pdb_ostream;
 

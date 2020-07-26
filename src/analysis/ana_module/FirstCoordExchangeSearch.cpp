@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 #include "FirstCoordExchangeSearch.hpp"
 

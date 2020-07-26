@@ -1,6 +1,4 @@
-//
-// Created by xiamr on 6/14/19.
-//
+
 
 #ifndef TINKER_CLUSTER_HPP
 #define TINKER_CLUSTER_HPP
@@ -24,6 +22,8 @@ public:
     void processFirstFrame(std::shared_ptr<Frame> &frame) override;
 
     void readInfo() override;
+
+    void setParameters(const AmberMask &mask, double cutoff, const std::string &out);
 
     [[nodiscard]] static std::string_view title() { return "Cluster Analysis(linkage)"; }
 

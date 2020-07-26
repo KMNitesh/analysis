@@ -1,9 +1,9 @@
 
 
-#include "Distance2Plane.hpp"
-
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
+
+#include "Distance2Plane.hpp"
 
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"

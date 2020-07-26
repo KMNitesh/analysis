@@ -572,7 +572,7 @@ void PrintTopolgy::action(const std::string &topology_filename) {
                 weight += atom->mass.get();
                 break;
             case Mode::Geom:
-                sum += atom->getCoordinate() * atom->mass.get();
+                sum += atom->getCoordinate();
                 weight++;
                 break;
             case Mode::Noop:

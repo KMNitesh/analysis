@@ -1,6 +1,3 @@
-//
-// Created by xiamr on 7/4/19.
-//
 
 #include "DistanceAngle.hpp"
 

@@ -23,7 +23,6 @@ public:
 protected:
     virtual bool readOneFrameImpl(std::shared_ptr<Frame> &frame, const std::vector<std::shared_ptr<Atom>> &atoms) = 0;
 
-    static void apply_box(std::shared_ptr<Frame> &frame);
 };
 
 #endif  // TINKER_TRAJECTORYINTERFACE_HPP
