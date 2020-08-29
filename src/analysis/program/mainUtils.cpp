@@ -41,6 +41,7 @@ using namespace std::experimental;
 #include "ana_module/RotAcfCutoff.hpp"
 #include "ana_module/ShellDensity.hpp"
 #include "ana_module/Trajconv.hpp"
+#include "ana_module/VelocityAutocorrelationFunction.hpp"
 #include "data_structure/forcefield.hpp"
 #include "data_structure/frame.hpp"
 #include "dsl/Interpreter.hpp"
@@ -303,6 +304,11 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<AmberMask>("superpose")
         .addArgument<AmberMask>("rmsf")
         .addArgument<bool>("avg_residue", false)
+        .addArgument<string>("out");
+
+    REGISTER("vacf", VelocityAutocorrelationFunction)
+        .addArgument<double, int>("time_increment_ps", 0.1)
+        .addArgument<double, int>("max_time_gap_ps", 100)
         .addArgument<string>("out");
 
     REGISTER("orrdf", OrientationResolvedRadialDistributionFunction)
