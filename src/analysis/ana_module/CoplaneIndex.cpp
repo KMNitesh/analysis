@@ -7,6 +7,7 @@
 #include "CoplaneIndex.hpp"
 
 #include "data_structure/frame.hpp"
+#include "dsl/AmberMaskList.hpp"
 #include "nlohmann/json.hpp"
 #include "utils/common.hpp"
 #include "utils/std.hpp"
@@ -104,4 +105,24 @@ void CoplaneIndex::readInfo() {
                                                 std::to_string(i + 1) + ") > ");
         }
     }
+}
+
+void CoplaneIndex::setParameters(const std::string &amberList, const std::string &outfilename) {
+    AmberMaskListGrammar<std::string::const_iterator, qi::ascii::space_type> parser;
+
+    std::vector<std::vector<AmberMask>> maskList;
+    auto it = amberList.begin();
+
+    if (auto status = qi::phrase_parse(it, amberList.end(), parser, qi::ascii::space, maskList);
+        status and it == amberList.end()) {
+        for (auto &plane_mask : maskList) {
+            if (plane_mask.size() != 3) {
+                std::cerr << "plane mask for CPI must equal to 3\n";
+                std::exit(1);
+            }
+            mask_arrays.push_back({std::move(plane_mask[0]), std::move(plane_mask[1]), std::move(plane_mask[2])});
+        }
+    }
+    atom_arrays.resize(mask_arrays.size());
+    setOutFilename(outfilename);
 }

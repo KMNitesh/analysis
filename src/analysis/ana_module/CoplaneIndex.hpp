@@ -22,6 +22,8 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Coplane index"; }
 
+    void setParameters(const std::string &amberList, const std::string &outfilename);
+
 private:
     std::vector<std::array<AmberMask, 3>> mask_arrays;
 

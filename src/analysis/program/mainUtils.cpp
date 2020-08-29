@@ -26,6 +26,7 @@ using namespace std::experimental;
 #include "ana_module/Cluster.hpp"
 #include "ana_module/ConditionalTimeCorrelationFunction.hpp"
 #include "ana_module/CoordinateNumPerFrame.hpp"
+#include "ana_module/CoplaneIndex.hpp"
 #include "ana_module/DemixIndexOfTwoGroup.hpp"
 #include "ana_module/Diffuse.hpp"
 #include "ana_module/DiffuseCutoff.hpp"
@@ -390,6 +391,8 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<double, int>("cutoff1", 0)
         .addArgument<double, int>("cutoff2")
         .addArgument<string>("out");
+
+    REGISTER("cpi", CoplaneIndex).addArgument<string>("mask_list").addArgument<string>("out");
 
     interpreter
         .registerFunction("DipoleVector",
