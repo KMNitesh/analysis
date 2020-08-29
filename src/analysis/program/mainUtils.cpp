@@ -32,6 +32,7 @@ using namespace std::experimental;
 #include "ana_module/DiffuseCutoff.hpp"
 #include "ana_module/DipoleVectorSelector.hpp"
 #include "ana_module/Distance.hpp"
+#include "ana_module/HBond.hpp"
 #include "ana_module/OrientationResolvedRadialDistributionFunction.hpp"
 #include "ana_module/RMSDCal.hpp"
 #include "ana_module/RMSFCal.hpp"
@@ -172,7 +173,8 @@ struct FunObject {
     boost::any operator()(U &&args) {
         auto task = make_shared<T>();
         try {
-            setParameters(task, std::forward<U>(args));
+            setParameters(task, std::forward<U>(args),
+                          std::make_integer_sequence<std::size_t, get_args_number(&T::setParameters)>{});
         } catch (std::exception &e) {
             cerr << e.what() << " for function " << name << " (" << location.file_name() << ":" << location.line()
                  << ")\n";
@@ -184,13 +186,9 @@ struct FunObject {
     }
 
 private:
-    template <typename U, typename Args, typename... Numbers>
-    void setParameters(U &&task, Args &&args, Numbers &&... N) {
-        if constexpr (get_args_number(&T::setParameters) != sizeof...(N)) {
-            setParameters(std::forward<U>(task), std::forward<Args>(args), N..., sizeof...(N));
-        } else {
-            task->setParameters(AutoConvert(get<3>(args.at(N)))...);
-        }
+    template <typename U, typename Args, std::size_t... Numbers>
+    void setParameters(U &&task, Args &&args, std::integer_sequence<std::size_t, Numbers...>) {
+        task->setParameters(AutoConvert(get<3>(args.at(Numbers)))...);
     }
 
     template <typename U>
@@ -224,11 +222,11 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
 
         } catch (std::exception &e) {
             std::cerr << e.what() << '\n';
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
     } else {
         std::cerr << "program option error  \n";
-        exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE);
     }
 
     boost::optional<string> topology;
@@ -393,6 +391,14 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<string>("out");
 
     REGISTER("cpi", CoplaneIndex).addArgument<string>("mask_list").addArgument<string>("out");
+
+    REGISTER("hbond", HBond)
+        .addArgument<AmberMask>("donor")
+        .addArgument<AmberMask>("acceptor")
+        .addArgument<double, int>("distance")
+        .addArgument<double, int>("angle")
+        .addArgument<string>("criteria")
+        .addArgument<string>("out");
 
     interpreter
         .registerFunction("DipoleVector",

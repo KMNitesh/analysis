@@ -2,9 +2,10 @@
 // Created by xiamr on 6/14/19.
 //
 
-#include "HBond.hpp"
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/algorithm.hpp>
+
+#include "HBond.hpp"
 
 #include "data_structure/atom.hpp"
 #include "data_structure/forcefield.hpp"
@@ -48,12 +49,12 @@ void HBond::print(std::ostream &os) {
         os << "# Acceptor > " << mask2 << '\n';
     }
     switch (hbond_type) {
-    case HBondType::VMDVerion:
-        os << "#HBond criteria : VMD version\n";
-        break;
-    case HBondType::GMXVersion:
-        os << "#HBond criteria : GMX version\n";
-        break;
+        case HBondType::VMDVerion:
+            os << "#HBond criteria : VMD version\n";
+            break;
+        case HBondType::GMXVersion:
+            os << "#HBond criteria : GMX version\n";
+            break;
     }
     os << "#distance cutoff : " << donor_acceptor_dist_cutoff << '\n';
     os << "#angle cutoff : " << angle_cutoff << '\n';
@@ -93,6 +94,31 @@ void HBond::readInfo() {
     angle_cutoff = choose(0.0, "Angle cutoff:");
 }
 
+void HBond::setParameters(const AmberMask &donor, const AmberMask &acceptor, double distance, double angle,
+                          std::string criteria, const std::string &outfilename) {
+    if (donor == acceptor) {
+        mode = Selector::Both;
+    } else {
+        mode = Selector::Donor;
+    }
+    mode = donor == acceptor ? Selector::Both : Selector::Donor;
+
+    boost::trim(criteria);
+    boost::to_lower(criteria);
+    if (criteria == "vmd") {
+        hbond_type = HBondType::VMDVerion;
+    } else if (criteria == "gmx") {
+        hbond_type = HBondType::GMXVersion;
+    } else {
+        throw std::runtime_error("unknown critria type :" + criteria);
+    }
+
+    donor_acceptor_dist_cutoff = distance;
+    angle_cutoff = angle;
+
+    setOutFilename(outfilename);
+}
+
 void HBond::Selector_Donor_Acceptor(const std::shared_ptr<Frame> &frame) {
     for (const auto &[donor, hydrogen] : donor_hydrogens) {
         for (const auto &acceptor : acceptors) {
@@ -104,8 +130,7 @@ void HBond::Selector_Donor_Acceptor(const std::shared_ptr<Frame> &frame) {
 void HBond::Selector_Both(const std::shared_ptr<Frame> &frame) {
     for (const auto &[donor, hydrogen] : donor_hydrogens) {
         for (const auto &acceptor : acceptors) {
-            if (donor not_eq acceptor)
-                check_hbond(donor, hydrogen, acceptor, frame);
+            if (donor not_eq acceptor) check_hbond(donor, hydrogen, acceptor, frame);
         }
     }
 }
@@ -150,7 +175,6 @@ bool HBond::check_hbond(const std::shared_ptr<Atom> &donor, const std::shared_pt
 
 void HBond::record_hbond(const std::shared_ptr<Atom> &donor, const std::shared_ptr<Atom> &acceptor,
                          const std::shared_ptr<Frame> &frame) {
-
     auto distance = atom_distance(donor, acceptor, frame);
     // hbdist.back()[std::array{donor, acceptor}] = distance;
 
