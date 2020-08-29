@@ -12,7 +12,7 @@ void HBondLifeTimeContinuous::print(std::ostream &os) {
 }
 
 std::vector<double> HBondLifeTimeContinuous::calculateAcf() const {
-    auto max_time_grap_frame = std::ceil(max_time_grap_ps / time_increment_ps);
+    auto max_time_grap_frame = std::ceil(max_time_gap_ps / time_increment_ps);
     std::vector<long> acf(std::min<int>(hb_histroy.at(0).size(), max_time_grap_frame + 1), 0);
     std::vector<long> ntime(std::min<int>(hb_histroy.at(0).size(), max_time_grap_frame + 1), 0);
 

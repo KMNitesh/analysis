@@ -33,6 +33,7 @@ using namespace std::experimental;
 #include "ana_module/DipoleVectorSelector.hpp"
 #include "ana_module/Distance.hpp"
 #include "ana_module/HBond.hpp"
+#include "ana_module/HBondLifeTime.hpp"
 #include "ana_module/OrientationResolvedRadialDistributionFunction.hpp"
 #include "ana_module/RMSDCal.hpp"
 #include "ana_module/RMSFCal.hpp"
@@ -398,6 +399,14 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<double, int>("distance")
         .addArgument<double, int>("angle")
         .addArgument<string>("criteria")
+        .addArgument<string>("out");
+
+    REGISTER("hbondlife", HBondLifeTime)
+        .addArgument<AmberMask>("water_mask")
+        .addArgument<double, int>("dist_R_cutoff")
+        .addArgument<double, int>("angle_HOO_cutoff")
+        .addArgument<double, int>("time_increment_ps")
+        .addArgument<double, int>("max_time_gap_ps")
         .addArgument<string>("out");
 
     interpreter

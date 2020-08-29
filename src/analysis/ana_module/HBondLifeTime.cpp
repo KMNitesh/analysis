@@ -72,7 +72,7 @@ void HBondLifeTime::printData(std::ostream &os, const std::vector<double> &acf, 
     os << "# dist_R_cutoff     > " << dist_R_cutoff << '\n';
     os << "# angle_HOO_cutoff  > " << angle_HOO_cutoff << '\n';
     os << "# time_increment_ps > " << time_increment_ps << '\n';
-    os << "# max_time_grap_ps  > " << max_time_grap_ps << '\n';
+    os << "# max_time_grap_ps  > " << max_time_gap_ps << '\n';
     os << "# water_mask > " << water_mask << '\n';
     os << std::string(50, '#') << '\n';
 
@@ -86,7 +86,7 @@ void HBondLifeTime::printData(std::ostream &os, const std::vector<double> &acf, 
 }
 
 std::vector<double> HBondLifeTime::calculateAcf() const {
-    auto max_time_grap_frame = std::ceil(max_time_grap_ps / time_increment_ps);
+    auto max_time_grap_frame = std::ceil(max_time_gap_ps / time_increment_ps);
     std::vector<long> acf(std::min<int>(hb_histroy.at(0).size(), max_time_grap_frame + 1), 0);
     std::vector<long> ntime(std::min<int>(hb_histroy.at(0).size(), max_time_grap_frame + 1), 0);
 
@@ -116,6 +116,17 @@ void HBondLifeTime::readInfo() {
     dist_R_cutoff = choose(0.0, 100.0, "Distance Cutoff(O-O) for Hydogen Bond [3.5 Ang] :", Default(3.5));
     angle_HOO_cutoff = choose(0.0, 100.0, "Angle Cutoff(H-O-O) for Hydogen Bond [30 degree] :", Default(30.0));
     time_increment_ps = choose(0.0, 100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
-    max_time_grap_ps = choose(0.0, 100.0, "max_time_grap_ps [100 ps] :", Default(100.0));
+    max_time_gap_ps = choose(0.0, 100.0, "max_time_grap_ps [100 ps] :", Default(100.0));
     select1group(water_mask, "Enter mask for water atoms in system > ");
+}
+
+void HBondLifeTime::setParameters(const AmberMask &water_mask, double dist_R_cutoff, double angle_HOO_cutoff,
+                                  double time_increment_ps, double max_time_gap_ps, const std::string &outfilename) {
+    this->water_mask = water_mask;
+    this->dist_R_cutoff = dist_R_cutoff;
+    this->angle_HOO_cutoff = angle_HOO_cutoff;
+    this->time_increment_ps = time_increment_ps;
+    this->max_time_gap_ps = max_time_gap_ps;
+
+    setOutFilename(outfilename);
 }
