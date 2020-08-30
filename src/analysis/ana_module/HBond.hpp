@@ -39,6 +39,9 @@ public:
 
     [[nodiscard]] static std::string_view title() { return "Hydrogen Bond"; }
 
+    void setParameters(const AmberMask &donor, const AmberMask &acceptor, double distance, double angle,
+                       std::string criteria, const std::string &outfilename);
+
 private:
     void Selector_Both(const std::shared_ptr<Frame> &frame);
 

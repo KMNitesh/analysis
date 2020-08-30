@@ -28,6 +28,8 @@ public:
         return "Hydrogen Bond LifeTime for Water(Ci, history independent)";
     }
 
+    void setParameters(const AmberMask &water_mask,  double dist_R_cutoff,  double angle_HOO_cutoff, double time_increment_ps, double max_time_gap_ps, const std::string &outfilename);
+
 protected:
     AmberMask water_mask;
 
@@ -35,7 +37,7 @@ protected:
     double angle_HOO_cutoff;
 
     double time_increment_ps;
-    double max_time_grap_ps;
+    double max_time_gap_ps;
 
     std::vector<std::deque<int>> hb_histroy;
 

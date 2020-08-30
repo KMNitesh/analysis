@@ -2,12 +2,12 @@
 // Created by xiamr on 8/13/19.
 //
 
-#include "VelocityAutocorrelationFunction.hpp"
+#include <boost/range/algorithm.hpp>
+#include <boost/range/combine.hpp>
 
 #include <tbb/tbb.h>
 
-#include <boost/range/algorithm.hpp>
-#include <boost/range/combine.hpp>
+#include "VelocityAutocorrelationFunction.hpp"
 
 #include "data_structure/frame.hpp"
 #include "utils/common.hpp"
@@ -36,12 +36,12 @@ void VelocityAutocorrelationFunction::process(std::shared_ptr<Frame> &frame) {
 }
 
 void VelocityAutocorrelationFunction::print(std::ostream &os) {
-    acf = calculateAcf(velocities, std::ceil(max_time_grap_ps / time_increment_ps));
+    acf = calculateAcf(velocities, std::ceil(max_time_gap_ps / time_increment_ps));
 
     os << std::string(50, '#') << '\n';
     os << "# " << title() << '\n';
     os << "# time_increment_ps (ps) > " << time_increment_ps << '\n';
-    os << "# max_time_grap_ps  (ps) > " << max_time_grap_ps << '\n';
+    os << "# max_time_gap_ps  (ps) > " << max_time_gap_ps << '\n';
     os << std::string(50, '#') << '\n';
 
     os << boost::format("%15s %15s\n") % "Time(ps)" % "ACF";
@@ -54,17 +54,17 @@ void VelocityAutocorrelationFunction::print(std::ostream &os) {
 }
 
 std::vector<double> VelocityAutocorrelationFunction::calculateAcf(
-    const std::vector<std::deque<std::tuple<double, double, double>>> &velocities, int max_time_grap_frame) {
-    const auto max_calculate_length = std::min<std::size_t>(velocities.at(0).size(), max_time_grap_frame + 1);
+    const std::vector<std::deque<std::tuple<double, double, double>>> &velocities, int max_time_gap_frame) {
+    const auto max_calculate_length = std::min<std::size_t>(velocities.at(0).size(), max_time_gap_frame + 1);
 
     auto acf = tbb::parallel_reduce(
         tbb::blocked_range2d<size_t>(0, velocities.size(), 0, velocities.front().size()),
         std::vector<double>(max_calculate_length),
-        [&velocities, max_time_grap_frame](const tbb::blocked_range2d<size_t> &range, auto acf) {
+        [&velocities, max_time_gap_frame](const tbb::blocked_range2d<size_t> &range, auto acf) {
             for (auto index = range.rows().begin(); index != range.rows().end(); ++index) {
                 auto &vel = velocities[index];
                 for (auto i = range.cols().begin(); i != range.cols().end(); ++i) {
-                    for (auto j = i; j < std::min<std::size_t>(vel.size(), max_time_grap_frame + i + 1); ++j) {
+                    for (auto j = i; j < std::min<std::size_t>(vel.size(), max_time_gap_frame + i + 1); ++j) {
                         acf[j - i] += dot_multiplication(vel[i], vel[j]);
                     }
                 }
@@ -88,5 +88,12 @@ std::vector<double> VelocityAutocorrelationFunction::calculateAcf(
 
 void VelocityAutocorrelationFunction::readInfo() {
     time_increment_ps = choose(100.0, "time_increment_ps [0.1 ps] :", Default(0.1));
-    max_time_grap_ps = choose(10000.0, "max_time_grap_ps [100 ps] :", Default(100.0));
+    max_time_gap_ps = choose(10000.0, "max_time_gap_ps [100 ps] :", Default(100.0));
+}
+
+void VelocityAutocorrelationFunction::setParameters(double time_increment_ps, double max_time_gap_ps,
+                                                    const std::string &outfilename) {
+    this->time_increment_ps = time_increment_ps;
+    this->max_time_gap_ps = max_time_gap_ps;
+    setOutFilename(outfilename);
 }

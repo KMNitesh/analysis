@@ -26,11 +26,15 @@ using namespace std::experimental;
 #include "ana_module/Cluster.hpp"
 #include "ana_module/ConditionalTimeCorrelationFunction.hpp"
 #include "ana_module/CoordinateNumPerFrame.hpp"
+#include "ana_module/CoplaneIndex.hpp"
 #include "ana_module/DemixIndexOfTwoGroup.hpp"
 #include "ana_module/Diffuse.hpp"
 #include "ana_module/DiffuseCutoff.hpp"
 #include "ana_module/DipoleVectorSelector.hpp"
 #include "ana_module/Distance.hpp"
+#include "ana_module/HBond.hpp"
+#include "ana_module/HBondLifeTime.hpp"
+#include "ana_module/HBondLifeTimeContinuous.hpp"
 #include "ana_module/OrientationResolvedRadialDistributionFunction.hpp"
 #include "ana_module/RMSDCal.hpp"
 #include "ana_module/RMSFCal.hpp"
@@ -41,6 +45,7 @@ using namespace std::experimental;
 #include "ana_module/RotAcfCutoff.hpp"
 #include "ana_module/ShellDensity.hpp"
 #include "ana_module/Trajconv.hpp"
+#include "ana_module/VelocityAutocorrelationFunction.hpp"
 #include "data_structure/forcefield.hpp"
 #include "data_structure/frame.hpp"
 #include "dsl/Interpreter.hpp"
@@ -170,7 +175,8 @@ struct FunObject {
     boost::any operator()(U &&args) {
         auto task = make_shared<T>();
         try {
-            setParameters(task, std::forward<U>(args));
+            setParameters(task, std::forward<U>(args),
+                          std::make_integer_sequence<std::size_t, get_args_number(&T::setParameters)>{});
         } catch (std::exception &e) {
             cerr << e.what() << " for function " << name << " (" << location.file_name() << ":" << location.line()
                  << ")\n";
@@ -182,13 +188,9 @@ struct FunObject {
     }
 
 private:
-    template <typename U, typename Args, typename... Numbers>
-    void setParameters(U &&task, Args &&args, Numbers &&... N) {
-        if constexpr (get_args_number(&T::setParameters) != sizeof...(N)) {
-            setParameters(std::forward<U>(task), std::forward<Args>(args), N..., sizeof...(N));
-        } else {
-            task->setParameters(AutoConvert(get<3>(args.at(N)))...);
-        }
+    template <typename U, typename Args, std::size_t... Numbers>
+    void setParameters(U &&task, Args &&args, std::integer_sequence<std::size_t, Numbers...>) {
+        task->setParameters(AutoConvert(get<3>(args.at(Numbers)))...);
     }
 
     template <typename U>
@@ -222,11 +224,11 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
 
         } catch (std::exception &e) {
             std::cerr << e.what() << '\n';
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
     } else {
         std::cerr << "program option error  \n";
-        exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE);
     }
 
     boost::optional<string> topology;
@@ -303,6 +305,11 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<AmberMask>("superpose")
         .addArgument<AmberMask>("rmsf")
         .addArgument<bool>("avg_residue", false)
+        .addArgument<string>("out");
+
+    REGISTER("vacf", VelocityAutocorrelationFunction)
+        .addArgument<double, int>("time_increment_ps", 0.1)
+        .addArgument<double, int>("max_time_gap_ps", 100)
         .addArgument<string>("out");
 
     REGISTER("orrdf", OrientationResolvedRadialDistributionFunction)
@@ -383,6 +390,32 @@ void executeScript([[maybe_unused]] const boost::program_options::options_descri
         .addArgument<double, int>("angle_width", 0.5)
         .addArgument<double, int>("cutoff1", 0)
         .addArgument<double, int>("cutoff2")
+        .addArgument<string>("out");
+
+    REGISTER("cpi", CoplaneIndex).addArgument<string>("mask_list").addArgument<string>("out");
+
+    REGISTER("hbond", HBond)
+        .addArgument<AmberMask>("donor")
+        .addArgument<AmberMask>("acceptor")
+        .addArgument<double, int>("distance")
+        .addArgument<double, int>("angle")
+        .addArgument<string>("criteria")
+        .addArgument<string>("out");
+
+    REGISTER("hbondlifei", HBondLifeTime)
+        .addArgument<AmberMask>("water_mask")
+        .addArgument<double, int>("dist_R_cutoff")
+        .addArgument<double, int>("angle_HOO_cutoff")
+        .addArgument<double, int>("time_increment_ps")
+        .addArgument<double, int>("max_time_gap_ps")
+        .addArgument<string>("out");
+
+    REGISTER("hbondlifec", HBondLifeTimeContinuous)
+        .addArgument<AmberMask>("water_mask")
+        .addArgument<double, int>("dist_R_cutoff")
+        .addArgument<double, int>("angle_HOO_cutoff")
+        .addArgument<double, int>("time_increment_ps")
+        .addArgument<double, int>("max_time_gap_ps")
         .addArgument<string>("out");
 
     interpreter
