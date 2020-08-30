@@ -50,20 +50,20 @@ int main(int argc, char *argv[]) {
         std::cout << "current work dir : " << boost::filesystem::current_path() << '\n';
 
 #ifndef NDEBUG
-        std::cout << " Program Arugments < \n";
+        std::cout << " Program Arguments < \n";
         for (int i = 0; i < argc; i++) {
             std::cout << "argv[" << i << "] = " << argv[i] << '\n';
         }
-        std::cout << " > Program Arugments  \n";
-        std::cout << "Envirment Variables :\n";
+        std::cout << " > Program Arguments  \n";
+        std::cout << "Environment Variables :\n";
         std::cout << "ANALYSIS_VECTOR_RESERVE = " << getDefaultVectorReserve() << '\n';
 #endif
 
         auto desc = make_program_options();
         boost::program_options::variables_map vm;
         try {
-            boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(desc).run(),
-                                          vm);
+            boost::program_options::store(
+                boost::program_options::command_line_parser(argc, argv).options(desc).run(), vm);
         } catch (std::exception &e) {
             std::cerr << e.what() << '\n';
             std::cout << desc;
@@ -79,9 +79,10 @@ int main(int argc, char *argv[]) {
         verbose_message = vm.contains("verbose");
         debug_mode = vm.contains("debug");
 
-        program_configuration = vm.contains("config")
-                                    ? std::make_unique<ProgramConfiguration>(vm["config"].as<std::string>())
-                                    : std::make_unique<ProgramConfiguration>();
+        program_configuration =
+            vm.contains("config")
+                ? std::make_unique<ProgramConfiguration>(vm["config"].as<std::string>())
+                : std::make_unique<ProgramConfiguration>();
 
         bool keep_silent = vm["silent"].as<bool>();
 
@@ -89,7 +90,7 @@ int main(int argc, char *argv[]) {
          * examine all input files are already exist
          */
         std::vector<std::string> xyzfiles;
-        if (vm.count("file")) {
+        if (vm.contains("file")) {
             xyzfiles = vm["file"].as<std::vector<std::string>>();
             for (auto &xyzfile : xyzfiles) {
                 if (!boost::filesystem::exists(xyzfile)) {
@@ -99,15 +100,15 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if (vm.count("target") and vm.count("script")) {
+        if (vm.contains("target") and vm.contains("script")) {
             std::cerr << "target and script option cannot coexist\n";
             exit(EXIT_FAILURE);
         }
-        if (vm.count("target") and vm.count("script-file")) {
+        if (vm.contains("target") and vm.contains("script-file")) {
             std::cerr << "target and script-file option cannot coexist\n";
             exit(EXIT_FAILURE);
         }
-        if (vm.count("script") and vm.count("script-file")) {
+        if (vm.contains("script") and vm.contains("script-file")) {
             std::cerr << "script and script-file option cannot coexist\n";
             exit(EXIT_FAILURE);
         }
@@ -115,7 +116,7 @@ int main(int argc, char *argv[]) {
          *  when --target or -x option given,  fast trajectory convert mode is active
          *  Convert trajctory format for convenience
          */
-        if (vm.count("target")) {
+        if (vm.contains("target")) {
             fastTrajectoryConvert(vm, xyzfiles);
             exit(EXIT_SUCCESS);
         }
@@ -123,22 +124,22 @@ int main(int argc, char *argv[]) {
         /*
          * Enter script execution, for non-interactive mode
          */
-        if (vm.count("script") || vm.count("script-file")) {
+        if (vm.contains("script") || vm.contains("script-file")) {
             executeScript(desc, vm, xyzfiles, argc, argv);
             return EXIT_SUCCESS;
         }
 
-        if (vm.count("aim")) {
+        if (vm.contains("aim")) {
             MultiwfnAIMDriver::process(vm["aim"].as<std::string>());
             return EXIT_SUCCESS;
         }
 
-        if (vm.count("di")) {
+        if (vm.contains("di")) {
             DelocalizationIndex::process();
             return EXIT_SUCCESS;
         }
 
-        if (vm.count("adch")) {
+        if (vm.contains("adch")) {
             ADCHCharge::process();
             return EXIT_SUCCESS;
         }
@@ -149,7 +150,8 @@ int main(int argc, char *argv[]) {
          */
 
         struct Action {
-            Action(std::string_view name, std::function<void()> action) : name(name), action(std::move(action)) {}
+            Action(std::string_view name, std::function<void()> action)
+                : name(name), action(std::move(action)) {}
 
             std::string name;
             std::function<void()> action;
@@ -157,17 +159,24 @@ int main(int argc, char *argv[]) {
         Action actions[]{
             {"Trajectory Analysis", [&] { processTrajectory(desc, vm, xyzfiles, argc, argv); }},
             {"Print Topology", [&] { printTopolgy(vm); }},
-            {"Infrared radiation (IR) Spectrum", [&] { IRSpectrum::calculateSpectrum(getOutputFilename(vm)); }},
+            {"Infrared radiation (IR) Spectrum",
+             [&] { IRSpectrum::calculateSpectrum(getOutputFilename(vm)); }},
             {"Infrared radiation (IR) Spectrum from DeltaDipole",
              [&] { IRSpectrumDeltaDipole::calculateSpectrum(getOutputFilename(vm)); }},
-            {RamanSpectrum::title(), [&] { RamanSpectrum::calculateSpectrum(getOutputFilename(vm)); }},
-            {CrossCorrelation::title(), [&] { CrossCorrelation::calculate(getOutputFilename(vm)); }},
+            {RamanSpectrum::title(),
+             [&] { RamanSpectrum::calculateSpectrum(getOutputFilename(vm)); }},
+            {CrossCorrelation::title(),
+             [&] { CrossCorrelation::calculate(getOutputFilename(vm)); }},
             {GmxTopologyPrinter::title(),
-             [&] { GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm), getOutputFilename(vm)); }},
+             [&] {
+                 GmxTopologyPrinter::print(getTopologyFilename(vm), getPrmFilename(vm),
+                                           getOutputFilename(vm));
+             }},
             {GQuadruplexPdb2gmx::title(), [] { GQuadruplexPdb2gmx::convert(); }},
             {"Superpose and move for Residues", [] { GQuadruplexPdb2gmx::superpose_and_move(); }},
             {NBOSpin::title(), [] { NBOSpin::process(); }},
-            {"Renumber atom and residue num", [] { GQuadruplexPdb2gmx::renumberAtomAndResidueNum(); }},
+            {"Renumber atom and residue num",
+             [] { GQuadruplexPdb2gmx::renumberAtomAndResidueNum(); }},
             {Averager::title(), [] { Averager::process(); }},
             {ITS_PostProcess::title(), [] { ITS_PostProcess::process(); }},
             {ITS_Reweight::title(), [] { ITS_Reweight::process(); }},
@@ -202,8 +211,8 @@ int main(int argc, char *argv[]) {
         actions[mainMenu()].action();
 
     } catch (std::exception &e) {
-        std::cerr << "Exception(" << boost::typeindex::type_id_runtime(e).pretty_name() << ") : " << e.what()
-                  << std::endl;
+        std::cerr << "Exception(" << boost::typeindex::type_id_runtime(e).pretty_name()
+                  << ") : " << e.what() << std::endl;
     } catch (...) {
         boost::typeindex::stl_type_index sti = *std::current_exception().__cxa_exception_type();
         std::cerr << "Exception(" << sti.pretty_name() << ")\n";

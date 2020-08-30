@@ -2,6 +2,7 @@
 find_package(Threads REQUIRED)
 
 find_package(Boost 1.72 REQUIRED CONFIG COMPONENTS regex program_options filesystem iostreams)
+target_compile_definitions(Boost::headers INTERFACE BOOST_ALLOW_DEPRECATED_HEADERS)
 
 find_package(TBB 2020.1 REQUIRED COMPONENTS tbb tbbmalloc)
 target_compile_definitions(TBB::tbb INTERFACE TBB_SUPPRESS_DEPRECATED_MESSAGES)

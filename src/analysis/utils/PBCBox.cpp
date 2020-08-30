@@ -1,9 +1,9 @@
-#include "PBCBox.hpp"
 
 #include <boost/format.hpp>
 #include <cmath>
 
 #include "common.hpp"
+#include "PBCBox.hpp"
 
 void PBCBox::check_box_type() {
     if (numeric_near(angles[0], 90.0) and numeric_near(angles[1], 90.0) and numeric_near(angles[2], 90.0)) {
